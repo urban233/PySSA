@@ -20,16 +20,43 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module contains the sequence model."""
+import logging
+
 from PyQt5 import QtGui
+
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class SequenceModel(QtGui.QStandardItemModel):
-    def __init__(self):
+    """Contains the sequences of the project in form of a QStandardItemModel."""
+    
+    def __init__(self) -> None:
+        """Constructor."""
         super(SequenceModel, self).__init__()
 
     def add_sequence(self, a_sequence: str) -> None:
+        """Adds a sequence to the model.
+
+        Args:
+            a_sequence (str): The amino acid sequence to be added.
+            
+        Raises:
+            exception.IllegalArgumentError: If a_sequence is either None or an empty string.
+        """
+        # <editor-fold desc="Checks">
+        if a_sequence is None or a_sequence == "":
+            logger.error("a_sequence is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_sequence is either None or an empty string.")
+        
+        # </editor-fold>
+        
         i = self.rowCount()
         j = 0
         for tmp_amino_acid in a_sequence:
             self.setItem(i, j, QtGui.QStandardItem(tmp_amino_acid))
-            print(self.item(i,j).text())
+            logger.debug(self.item(i, j).text())

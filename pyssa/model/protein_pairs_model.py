@@ -20,25 +20,57 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module contains the protein pairs model."""
+import logging
+
+import zmq
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 
 from auxiliary_pymol import auxiliary_pymol_client
-from pyssa.internal.data_structures import protein, protein_pair, job
-from pyssa.util import enums
+from pyssa.internal.data_structures import protein_pair, job
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import enums, exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class ProteinPairsModel(QtGui.QStandardItemModel):
-
-    def __init__(self):
+    """Contains the protein pairs of the project in form of a QStandardItemModel."""
+    
+    def __init__(self) -> None:
+        """Constructor."""
         super().__init__()
 
     def build_model_from_scratch(self,
                                  the_protein_pair_objects: list["protein_pair.ProteinPair"],
-                                 the_main_socket,
-                                 a_socket):
-        """Builds the model from scratch."""
+                                 the_main_socket: zmq.Socket,
+                                 a_socket: zmq.Socket) -> None:
+        """Builds a model from scratch using the given protein objects.
+
+        Args:
+            the_protein_pair_objects (list[protein_pair.ProteinPair]): A list of protein objects.
+            the_main_socket (zmq.Socket): The main socket used for communication.
+            a_socket (zmq.Socket): A socket used for communication.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if the_protein_pair_objects is None:
+            logger.error("the_protein_pair_objects is None.")
+            raise exception.IllegalArgumentError("the_protein_pair_objects is None.")
+        if the_main_socket is None:
+            logger.error("the_main_socket is None.")
+            raise exception.IllegalArgumentError("the_main_socket is None.")
+        if a_socket is None:
+            logger.error("a_socket is None.")
+            raise exception.IllegalArgumentError("a_socket is None.")
+
+        # </editor-fold>
+        
         # TODO: multiprocessing code does not work (gets blocked if a prediction is running) and it is not really faster
         # pool_information = []
         # for tmp_protein_pair in the_protein_pair_objects:
@@ -52,12 +84,12 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
         tmp_root_item = self.invisibleRootItem()
         for tmp_protein_pair in the_protein_pair_objects:
             tmp_job_description = job.GeneralPurposeJobDescription(
-                enums.JobShortDescription.GET_ALL_SCENES_OF_SESSION
+                enums.JobShortDescription.GET_ALL_SCENES_OF_SESSION,
             )
             tmp_job_description.setup_dict(
                 {enums.JobDescriptionKeys.PYMOL_SESSION.value: str(tmp_protein_pair.pymol_session)})
             tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-                the_main_socket, a_socket, tmp_job_description
+                the_main_socket, a_socket, tmp_job_description,
             )
             tmp_all_scenes = tmp_reply["data"]
 
@@ -101,7 +133,25 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
 
     def check_if_scratch_scene_exists(self,
                                       a_model_index: QtCore.QModelIndex) -> bool:
-        """Checks if the scratch scene exists."""
+        """Check if a scratch scene exists for the given model index.
+
+        Args:
+            a_model_index (QtCore.QModelIndex): The model index.
+
+        Returns:
+            bool: True if a scratch scene exists, False otherwise.
+
+        Raises:
+            exception.IllegalArgumentError: If a_model_index is None.
+            ValueError: If the model index has an invalid type.
+        """
+        # <editor-fold desc="Checks">
+        if a_model_index is None:
+            logger.error("a_model_index is None.")
+            raise exception.IllegalArgumentError("a_model_index is None.")
+        
+        # </editor-fold>
+
         tmp_type = a_model_index.data(enums.ModelEnum.TYPE_ROLE)
         # on protein pair node
         if tmp_type == "protein_pair":
@@ -132,9 +182,27 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
     def add_scene(
             self,
             a_model_index: QtCore.QModelIndex,
-            the_scene_item_to_add: QtGui.QStandardItem
+            the_scene_item_to_add: QtGui.QStandardItem,
     ) -> None:
-        """Adds a scene to the model."""
+        """Add a scene item to the tree model.
+
+        Args:
+            a_model_index (QtCore.QModelIndex): The index of the tree model where the scene item should be added.
+            the_scene_item_to_add (QtGui.QStandardItem): The scene item to be added.
+
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+            ValueError: If the type of the model index is invalid.
+        """
+        # <editor-fold desc="Checks">
+        if a_model_index is None:
+            logger.error("a_model_index is None.")
+            raise exception.IllegalArgumentError("a_model_index is None.")
+        if the_scene_item_to_add is None:
+            logger.error("the_scene_item_to_add is None.")
+            raise exception.IllegalArgumentError("the_scene_item_to_add is None.")
+        
+        # </editor-fold>
         tmp_type = a_model_index.data(enums.ModelEnum.TYPE_ROLE)
         # on protein pair node
         if tmp_type == "protein_pair":
@@ -159,8 +227,22 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
         tmp_scenes_header_item.appendRow(the_scene_item_to_add)
 
     def remove_scene(self, the_model_index_of_the_scene: QtCore.QModelIndex) -> None:
-        """Removes a scene from the model."""
+        """Removes a scene from the model.
+
+        Args:
+            the_model_index_of_the_scene: The index of the scene to be removed.
+
+        Returns:
+            None
+
+        Raises:
+            exception.IllegalArgumentError: If the_model_index_of_the_scene is None.
+            ValueError: If the type of the item at the given index is not `scene`.
+        """
         # <editor-fold desc="Checks">
+        if the_model_index_of_the_scene is None:
+            logger.error("the_model_index_of_the_scene is None.")
+            raise exception.IllegalArgumentError("the_model_index_of_the_scene is None.")
         if self.data(the_model_index_of_the_scene, enums.ModelEnum.TYPE_ROLE) != "scene":
             raise ValueError("Wrong type!")
 
@@ -172,16 +254,38 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
 
     def add_protein_pair(self,
                          a_protein_pair: "protein_pair.ProteinPair",
-                         the_main_socket,
-                         a_socket):
-        """Adds a protein pair to the model."""
+                         the_main_socket: zmq.Socket,
+                         a_socket: zmq.Socket) -> None:
+        """Add a protein pair to the data model.
+
+        Args:
+            a_protein_pair (protein_pair.ProteinPair): The protein pair to add.
+            the_main_socket (zmq.Socket): The main socket used for communication.
+            a_socket (zmq.Socket): A socket used for communication.
+            
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if a_protein_pair is None:
+            logger.error("a_protein_pair is None.")
+            raise exception.IllegalArgumentError("a_protein_pair is None.")
+        if the_main_socket is None:
+            logger.error("the_main_socket is None.")
+            raise exception.IllegalArgumentError("the_main_socket is None.")
+        if a_socket is None:
+            logger.error("a_socket is None.")
+            raise exception.IllegalArgumentError("a_socket is None.")
+        
+        # </editor-fold>
+    
         tmp_job_description = job.GeneralPurposeJobDescription(
-            enums.JobShortDescription.GET_ALL_SCENES_OF_SESSION
+            enums.JobShortDescription.GET_ALL_SCENES_OF_SESSION,
         )
         tmp_job_description.setup_dict(
             {enums.JobDescriptionKeys.PYMOL_SESSION.value: str(a_protein_pair.pymol_session)})
         tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-            the_main_socket, a_socket, tmp_job_description
+            the_main_socket, a_socket, tmp_job_description,
         )
         tmp_all_scenes = tmp_reply["data"]
 
@@ -223,11 +327,21 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
         tmp_protein_pair_item.appendRow(tmp_protein_item_1)
         tmp_protein_pair_item.appendRow(tmp_protein_item_2)
 
-    def remove_protein_pair(self, the_model_index_of_the_scene: QtCore.QModelIndex):
-        """Removes a protein from the model."""
+    def remove_protein_pair(self, the_model_index_of_the_scene: QtCore.QModelIndex) -> None:
+        """Removes a protein pair from the model.
+
+        Args:
+            the_model_index_of_the_scene (QtCore.QModelIndex): The index of the protein pair in the scene.
+
+        Raises:
+            exception.IllegalArgumentError: If the_model_index_of_the_scene is None.
+            ValueError: If the type of the item at the given index is not "protein".
+        """
         # <editor-fold desc="Checks">
+        if the_model_index_of_the_scene is None:
+            logger.error("the_model_index_of_the_scene is None.")
+            raise exception.IllegalArgumentError("the_model_index_of_the_scene is None.")
         if self.data(the_model_index_of_the_scene, enums.ModelEnum.TYPE_ROLE) != "protein_pair":
-            tmp_value = self.data(the_model_index_of_the_scene, enums.ModelEnum.TYPE_ROLE)
             raise ValueError("Wrong type!")
 
         # </editor-fold>

@@ -24,24 +24,42 @@ import logging
 from pyssa.internal.data_structures import project
 from pyssa.internal.portal import protein_operations
 from pyssa.logging_pyssa import log_handlers
+from pyssa.util import exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 def check_chains_for_analysis(the_protein_1_name: str, the_protein_2_name: str, a_project: "project.Project") -> tuple:
     """Checks if the two proteins have only one chain.
 
     Args:
-        the_protein_1_name: the name of the first protein from the analysis.
-        the_protein_2_name: the name of the second protein from the analysis.
-        a_project: the current project.
+        the_protein_1_name (str): The name of the first protein from the analysis.
+        the_protein_2_name (str): The name of the second protein from the analysis.
+        a_project (project.Project): The current project.
 
     Returns:
-        a tuple with ("result", tmp_is_only_one_chain, tmp_analysis_run_name, tmp_protein_1, tmp_protein_2)
+        A tuple with the form ("result", tmp_is_only_one_chain, tmp_analysis_run_name, tmp_protein_1, tmp_protein_2).
+    
+    Raises:
+        exception.IllegalArgumentError: If the_protein_1_name is either None or an empty string.
+        exception.IllegalArgumentError: If the_protein_2_name is either None or an empty string.
+        exception.IllegalArgumentError: If a_project is None.
     """
-    # TODO: checks needed
-    # TODO: tests needed
+    # <editor-fold desc="Checks">
+    if the_protein_1_name is None or the_protein_1_name == "":
+        logger.error("the_protein_1_name is either None or an empty string.")
+        raise exception.IllegalArgumentError("the_protein_1_name is either None or an empty string.")
+    if the_protein_2_name is None or the_protein_2_name == "":
+        logger.error("the_protein_2_name is either None or an empty string.")
+        raise exception.IllegalArgumentError("the_protein_2_name is either None or an empty string.")
+    if a_project is None:
+        logger.error("a_project is None.")
+        raise exception.IllegalArgumentError("a_project is None.")
+    
+    # </editor-fold>
+    
     tmp_is_only_one_chain: bool = False
     tmp_analysis_run_name: str = ""
     tmp_protein_1 = a_project.search_protein(the_protein_1_name)
@@ -49,16 +67,16 @@ def check_chains_for_analysis(the_protein_1_name: str, the_protein_2_name: str, 
     if len(tmp_protein_1.get_protein_sequences()) == 1: # or len(tmp_protein_2.get_protein_sequences()) == 1:
         tmp_is_only_one_chain = True
         tmp_protein_1_first_protein_chain_letter = protein_operations.get_chain_letter_of_first_protein_sequence(
-            tmp_protein_1.chains
+            tmp_protein_1.chains,
         )
         tmp_protein_2_first_protein_chain_letter = protein_operations.get_chain_letter_of_first_protein_sequence(
-            tmp_protein_2.chains
+            tmp_protein_2.chains,
         )
         tmp_analysis_run_name = (
             f"{tmp_protein_1.get_molecule_object()};{tmp_protein_1_first_protein_chain_letter}"
             f"_vs_{tmp_protein_2.get_molecule_object()};{tmp_protein_2_first_protein_chain_letter}"
         )
-    return ("result", tmp_is_only_one_chain, tmp_analysis_run_name, tmp_protein_1, tmp_protein_2)
+    return "result", tmp_is_only_one_chain, tmp_analysis_run_name, tmp_protein_1, tmp_protein_2
 
 
 def check_chains_for_subsequent_analysis(
@@ -70,11 +88,33 @@ def check_chains_for_subsequent_analysis(
     """Checks if the two proteins have only one chain.
 
     Args:
-        the_protein_1_name: the name of the first protein from the analysis.
-        the_protein_2_name: the name of the second protein from the analysis.
-        a_project: the current project.
-        a_list_with_proteins_to_predict: a list of all proteins that should be predicted.
+        the_protein_1_name (str): The name of the first protein from the analysis.
+        the_protein_2_name (str): The name of the second protein from the analysis.
+        a_project (project.Project): The current project.
+        a_list_with_proteins_to_predict (list[str]): A list of all proteins that should be predicted.
+    
+    Raises:
+        exception.IllegalArgumentError: If the_protein_1_name is either None or an empty string.
+        exception.IllegalArgumentError: If the_protein_2_name is either None or an empty string.
+        exception.IllegalArgumentError: If a_project is None.
+        exception.IllegalArgumentError: If a_list_with_proteins_to_predict is None.
     """
+    # <editor-fold desc="Checks">
+    if the_protein_1_name is None or the_protein_1_name == "":
+        logger.error("the_protein_1_name is either None or an empty string.")
+        raise exception.IllegalArgumentError("the_protein_1_name is either None or an empty string.")
+    if the_protein_2_name is None or the_protein_2_name == "":
+        logger.error("the_protein_2_name is either None or an empty string.")
+        raise exception.IllegalArgumentError("the_protein_2_name is either None or an empty string.")
+    if a_project is None:
+        logger.error("a_project is None.")
+        raise exception.IllegalArgumentError("a_project is None.")
+    if a_list_with_proteins_to_predict is None:
+        logger.error("a_list_with_proteins_to_predict is None.")
+        raise exception.IllegalArgumentError("a_list_with_proteins_to_predict is None.")
+    
+    # </editor-fold>
+    
     tmp_protein_1_only_one_chain: bool = False
     tmp_protein_2_only_one_chain: bool = False
     tmp_sub_analysis_name_1: str = ""
@@ -101,4 +141,4 @@ def check_chains_for_subsequent_analysis(
         tmp_analysis_run_name = f"{tmp_sub_analysis_name_1}_vs_{tmp_sub_analysis_name_2}"
     else:
         tmp_analysis_run_name = ""
-    return ("result", tmp_analysis_run_name)
+    return "result", tmp_analysis_run_name
