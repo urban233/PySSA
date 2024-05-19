@@ -129,5 +129,4 @@ class DialogStartup(QtWidgets.QDialog):
             constants.DEMO_PROJECT_SCIEBO_URL,
             str(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")),
         )
-
         self.close()

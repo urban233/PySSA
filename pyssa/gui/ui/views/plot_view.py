@@ -57,7 +57,13 @@ class PlotWidget(QWidget):
         layout.addWidget(self.canvas)
         self.setLayout(layout)
 
-    def set_figure_size(self, width: float, height: float):
+    def set_figure_size(self, width: float, height: float) -> None:
+        """Set the size of the figure.
+
+        Args:
+            width (float): The width of the figure.
+            height (float): The height of the figure.
+        """
         self.figure.set_size_inches(width, height)
 
 
@@ -828,10 +834,10 @@ class PlotView(QtWidgets.QDialog):
 
     def highlight_table_selection_in_plot(self):
         tmp_x_value = self.table_view.model().index(
-            self.table_view.currentIndex().row(), 0
+            self.table_view.currentIndex().row(), 0,
         ).data(Qt.DisplayRole)
         tmp_y_value = float(self.table_view.model().index(
-            self.table_view.currentIndex().row(), 7
+            self.table_view.currentIndex().row(), 7,
         ).data(Qt.DisplayRole))
 
         # Clear the previous clicked point

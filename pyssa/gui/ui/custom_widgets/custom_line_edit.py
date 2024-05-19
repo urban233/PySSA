@@ -25,7 +25,10 @@ from PyQt5 import QtCore
 
 
 class CustomLineEdit(QtWidgets.QLineEdit):
-    def keyPressEvent(self, event):
+    """A custom line edit widget that allows only a subset of chars."""
+    
+    def keyPressEvent(self, event) -> None:
+        """Overrides keyPressEvent of QLineEdit class."""
         # Get the key code
         key_text = event.text()
 
@@ -38,18 +41,17 @@ class CustomLineEdit(QtWidgets.QLineEdit):
         # Call the base class implementation to handle other keys
         super(CustomLineEdit, self).keyPressEvent(event)
 
-
-class CustomLineEditForEnteringNumbers(QtWidgets.QLineEdit):
-    def keyPressEvent(self, event):
-        print("Hello")
-        # Get the key code
-        key_text = event.text()
-
-        # Check if the key is allowed, Backspace is allowed, or if it's an empty string (allowing empty input)
-        allowed_chars = set("0123456789")
-        if key_text not in allowed_chars and key_text != "" and event.key() != QtCore.Qt.Key_Backspace:
-            # Ignore the key event
-            return
-
-        # Call the base class implementation to handle other keys
-        super(CustomLineEditForEnteringNumbers, self).keyPressEvent(event)
+# class CustomLineEditForEnteringNumbers(QtWidgets.QLineEdit):
+#     def keyPressEvent(self, event):
+#         print("Hello")
+#         # Get the key code
+#         key_text = event.text()
+# 
+#         # Check if the key is allowed, Backspace is allowed, or if it's an empty string (allowing empty input)
+#         allowed_chars = set("0123456789")
+#         if key_text not in allowed_chars and key_text != "" and event.key() != QtCore.Qt.Key_Backspace:
+#             # Ignore the key event
+#             return
+# 
+#         # Call the base class implementation to handle other keys
+#         super(CustomLineEditForEnteringNumbers, self).keyPressEvent(event)

@@ -33,12 +33,10 @@ global_var_add_model = ("", False)
 
 
 class AddSequenceView(QtWidgets.QDialog):
-    """Class for a dialog to add proteins to a project."""
+    """Dialog for adding a sequence."""
 
-    """
-    A pyqtsignal that is used to hand-over the protein structure information.
-    """
     return_value = pyqtSignal(tuple)
+    """A pyqtsignal that is used to hand-over the sequence information."""
 
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor.

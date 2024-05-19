@@ -31,8 +31,10 @@ from pyssa.util import constants
 
 
 class AddSceneView(QtWidgets.QDialog):
-    # Define a custom signal
+    """Dialog for adding a scene."""
+    
     dialogClosed = QtCore.pyqtSignal(tuple)
+    """A signal indicating that the dialog is closed."""
 
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor."""

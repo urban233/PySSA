@@ -31,9 +31,11 @@ from pyssa.util import constants
 
 
 class AddProteinPairView(QtWidgets.QDialog):
-    # Define a custom signal
+    """Dialog for adding protein pairs."""
+    
     dialogClosed = QtCore.pyqtSignal(tuple)
-
+    """A signal indicating that the dialog is closed."""
+    
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor."""
         QtWidgets.QDialog.__init__(self, parent)

@@ -25,19 +25,29 @@ import os
 import pathlib
 from PyQt5 import QtWidgets
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import constants, global_variables
+from pyssa.util import constants, global_variables, exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 def color_bottom_frame_button(button: QtWidgets.QPushButton) -> None:
-    """This functions colors a button blue to signal it is ready to be pressed.
+    """Colors the button in the style of the bottom frame button.
 
     Args:
-        button:
-            button ui element
+        button (QtWidgets.QPushButton): The button to apply the style to.
+    
+    Raises:
+        exception.IllegalArgumentError: If `button` is None.
     """
+    # <editor-fold desc="Checks">
+    if button is None:
+        logger.error("button is None.")
+        raise exception.IllegalArgumentError("button is None.")
+    
+    # </editor-fold>
+    
     with open(
         os.path.join(global_variables.global_var_root_dir, "gui", "ui", "styles", "bottom_frame_button.css"),
         "r",
@@ -48,12 +58,21 @@ def color_bottom_frame_button(button: QtWidgets.QPushButton) -> None:
 
 
 def color_button_not_ready(button: QtWidgets.QPushButton) -> None:
-    """This functions colors a button white to signal it is NOT ready to be pressed.
+    """Colors the button in the style of the NOT ready button.
 
     Args:
-        button:
-            button ui element
+        button (QtWidgets.QPushButton): The button to apply the style to.
+    
+    Raises:
+        exception.IllegalArgumentError: If `button` is None.
     """
+    # <editor-fold desc="Checks">
+    if button is None:
+        logger.error("button is None.")
+        raise exception.IllegalArgumentError("button is None.")
+
+    # </editor-fold>
+    
     with open(
         os.path.join(global_variables.global_var_root_dir, "gui", "ui", "styles", "styles_start_button_not_ready.css"),
         "r",
@@ -95,33 +114,3 @@ def set_stylesheet_homepage(self) -> None:  # noqa: ANN001
         style = file.read()
         # Set the stylesheet of the application
         self.setStyleSheet(style)
-
-
-def color_sidebar_buttons(
-    last_button: QtWidgets.QPushButton,
-    active_button: QtWidgets.QPushButton,
-) -> QtWidgets.QPushButton:
-    """Colors the active sidebar button and the inactive sidebar button appropriately.
-
-    Args:
-        last_button: the inactive button on the sidebar.
-        active_button: the active button on the sidebar.
-    """
-    with open(
-        pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/ui/styles/sidebar_inactive.css"),
-        "r",
-        encoding="utf-8",
-    ) as file:
-        inactive_style = file.read()
-        file.close()
-    last_button.setStyleSheet(inactive_style)
-
-    with open(
-        pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/ui/styles/sidebar_active.css"),
-        "r",
-        encoding="utf-8",
-    ) as file:
-        active_style = file.read()
-        file.close()
-    active_button.setStyleSheet(active_style)
-    return active_button

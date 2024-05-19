@@ -20,6 +20,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the job entry widget."""
+import logging
+
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
@@ -31,10 +33,37 @@ from pyssa.internal.data_structures.data_classes import job_summary
 from pyssa.internal.thread.async_pyssa import custom_signals
 from pyssa.util import enums
 
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
+
 
 class JobEntryWidget(QtWidgets.QWidget):
     """A widget for the job overview."""
-    def __init__(self, a_job_description, a_job_base_information_object: "job_summary.JobBaseInformation"):
+    
+    def __init__(self, a_job_description: str, a_job_base_information_object: "job_summary.JobBaseInformation") -> None:
+        """Constructor.
+
+        Args:
+            a_job_description (str): The description of the job.
+            a_job_base_information_object (job_summary.JobBaseInformation): The base information object of the job.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if a_job_description is None:
+            logger.error("a_job_description is None.")
+            raise exception.IllegalArgumentError("a_job_description is None.")
+        if a_job_base_information_object is None:
+            logger.error("a_job_base_information_object is None.")
+            raise exception.IllegalArgumentError("a_job_base_information_object is None.")
+        
+        # </editor-fold>
+        
         super().__init__()
         self.ui = auto_job_entry_widget.Ui_Form()
         self.ui.setupUi(self)
@@ -102,11 +131,40 @@ class JobEntryWidget(QtWidgets.QWidget):
 
 
 class JobNotificationWidget(QtWidgets.QWidget):
+    """A widget for the job notification."""
+    
     def __init__(self,
-                 a_description,
+                 a_description: str,
                  a_job_base_information_object: "job_summary.JobBaseInformation",
                  job_is_from_current_project: bool,
-                 a_refresh_after_job_finished_signal: "custom_signals.RefreshAfterJobFinishedSignal"):
+                 a_refresh_after_job_finished_signal: "custom_signals.RefreshAfterJobFinishedSignal") -> None:
+        """Constructor.
+
+        Args:
+            a_description (str): A string representing the description of the job.
+            a_job_base_information_object (job_summary.JobBaseInformation): An object of type "job_summary.JobBaseInformation" representing the base information of the job.
+            job_is_from_current_project (bool): A boolean indicating whether the job is from the current project.
+            a_refresh_after_job_finished_signal (custom_signals.RefreshAfterJobFinishedSignal): An object of type "custom_signals.RefreshAfterJobFinishedSignal" representing the refresh signal after job is finished.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if a_description is None:
+            logger.error("a_description is None.")
+            raise exception.IllegalArgumentError("a_description is None.")
+        if a_job_base_information_object is None:
+            logger.error("a_job_base_information_object is None.")
+            raise exception.IllegalArgumentError("a_job_base_information_object is None.")
+        if job_is_from_current_project is None:
+            logger.error("job_is_from_current_project is None.")
+            raise exception.IllegalArgumentError("job_is_from_current_project is None.")
+        if a_refresh_after_job_finished_signal is None:
+            logger.error("a_refresh_after_job_finished_signal is None.")
+            raise exception.IllegalArgumentError("a_refresh_after_job_finished_signal is None.")
+        
+        # </editor-fold>
+        
         super().__init__()
         self.ui = auto_job_notification_widget.Ui_Form()
         self.ui.setupUi(self)
@@ -186,8 +244,10 @@ class JobNotificationWidget(QtWidgets.QWidget):
         self.ui.btn_refresh.clicked.connect(self._send_update_main_view_request)
         self.ui.btn_clear.clicked.connect(self._send_update_main_view_request)
 
-    def _send_open_other_project_request(self):
+    def _send_open_other_project_request(self) -> None:
+        """Sends a request to open another project."""
         self._refresh_after_job_finished_signal.emit_signal(False, self.job_base_information, self)
 
-    def _send_update_main_view_request(self):
+    def _send_update_main_view_request(self) -> None:
+        """Sends a request to update the main view."""
         self._refresh_after_job_finished_signal.emit_signal(True, self.job_base_information, self)

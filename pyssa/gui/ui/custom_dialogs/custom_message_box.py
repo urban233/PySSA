@@ -21,15 +21,19 @@
 #
 """Module for custom message boxes which are designed through subclassing QDialog."""
 import enum
+import logging
 
-from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
-from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.styles import styles
-from pyssa.util import constants
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import constants, exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class CustomMessageBoxIcons(enum.Enum):
@@ -41,8 +45,10 @@ class CustomMessageBoxIcons(enum.Enum):
 
 
 class CustomMessageBox(QtWidgets.QDialog):
-    # Define a custom signal
+    """A custom message box that is based on a QDialog."""
+    
     dialogClosed = QtCore.pyqtSignal(bool)
+    """A signal indicating that the dialog is closed."""
 
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor."""
@@ -82,16 +88,42 @@ class CustomMessageBox(QtWidgets.QDialog):
         self.setModal(True)
 
     def closeEvent(self, event):
+        """Overrides the closeEvent method of the QDialog class."""
         # Emit the custom signal when the window is closed
         self.dialogClosed.emit(False)
         event.accept()
 
 
 class CustomMessageBoxDelete(CustomMessageBox):
+    """A message box that contains a delete and cancel button."""
+    
     response: bool
-
+    """A boolean value indicating if the cancel button was clicked (set to False)."""
+    
     def __init__(self, a_message: str, a_window_title: str, an_icon_path: str) -> None:  # noqa: ANN001
-        """Constructor."""
+        """Constructor.
+
+        Args:
+            a_message (str): The message to be displayed in the dialog.
+            a_window_title (str): The title of the window.
+            an_icon_path (str): The path to the icon image file.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments is None.
+        """
+        # <editor-fold desc="Checks">
+        if a_message is None:
+            logger.error("a_message is None.")
+            raise exception.IllegalArgumentError("a_message is None.")
+        if a_window_title is None:
+            logger.error("a_window_title is None.")
+            raise exception.IllegalArgumentError("a_window_title is None.")
+        if an_icon_path is None:
+            logger.error("an_icon_path is None.")
+            raise exception.IllegalArgumentError("an_icon_path is None.")
+        
+        # </editor-fold>
+        
         super().__init__()
 
         self.response = False
@@ -118,22 +150,53 @@ class CustomMessageBoxDelete(CustomMessageBox):
         self.btn_left.clicked.connect(self.__slot_left_button)
         self.btn_right.clicked.connect(self.__slot_right_button)
 
-    def __slot_left_button(self):
-        """Method for the Delete button."""
+    def __slot_left_button(self) -> None:
+        """Clicks and handles the left button.
+
+        This method sets the response attribute to True and closes the current widget.
+        """
         self.response = True
         self.close()
 
-    def __slot_right_button(self):
-        """Method for the Cancel button."""
+    def __slot_right_button(self) -> None:
+        """Clicks and handles the right button.
+
+        This method sets the response attribute to False and closes the current widget.
+        """
         self.response = False
         self.close()
 
 
 class CustomMessageBoxOk(CustomMessageBox):
+    """A message box that contains an ok button."""
+    
     response: bool
-
+    """A boolean value indicating if the ok button was clicked (set to True)."""
+    
     def __init__(self, a_message: str, a_window_title: str, an_icon_path: str) -> None:  # noqa: ANN001
-        """Constructor."""
+        """Constructor.
+
+        Args:
+            a_message (str): The message to be displayed in the dialog.
+            a_window_title (str): The title of the window.
+            an_icon_path (str): The path to the icon image file.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments is None.
+        """
+        # <editor-fold desc="Checks">
+        if a_message is None:
+            logger.error("a_message is None.")
+            raise exception.IllegalArgumentError("a_message is None.")
+        if a_window_title is None:
+            logger.error("a_window_title is None.")
+            raise exception.IllegalArgumentError("a_window_title is None.")
+        if an_icon_path is None:
+            logger.error("an_icon_path is None.")
+            raise exception.IllegalArgumentError("an_icon_path is None.")
+        
+        # </editor-fold>
+        
         super().__init__()
 
         self.response = False
@@ -148,17 +211,45 @@ class CustomMessageBoxOk(CustomMessageBox):
 
         self.btn_left.clicked.connect(self.__slot_left_button)
 
-    def __slot_left_button(self):
-        """Method for the Delete button."""
+    def __slot_left_button(self) -> None:
+        """Clicks and handles the left button.
+
+        This method sets the response attribute to True and closes the current widget.
+        """
         self.response = True
         self.close()
 
 
 class CustomMessageBoxYesNo(CustomMessageBox):
+    """A message box that contains a yes and no button."""
+    
     response: bool
-
+    """A boolean value indicating if the no button was clicked (set to False)."""
+    
     def __init__(self, a_message: str, a_window_title: str, an_icon_path: str) -> None:  # noqa: ANN001
-        """Constructor."""
+        """Constructor.
+
+        Args:
+            a_message (str): The message to be displayed in the dialog.
+            a_window_title (str): The title of the window.
+            an_icon_path (str): The path to the icon image file.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments is None.
+        """
+        # <editor-fold desc="Checks">
+        if a_message is None:
+            logger.error("a_message is None.")
+            raise exception.IllegalArgumentError("a_message is None.")
+        if a_window_title is None:
+            logger.error("a_window_title is None.")
+            raise exception.IllegalArgumentError("a_window_title is None.")
+        if an_icon_path is None:
+            logger.error("an_icon_path is None.")
+            raise exception.IllegalArgumentError("an_icon_path is None.")
+        
+        # </editor-fold>
+        
         super().__init__()
 
         self.response = False
@@ -174,12 +265,18 @@ class CustomMessageBoxYesNo(CustomMessageBox):
         self.btn_left.clicked.connect(self.__slot_left_button)
         self.btn_right.clicked.connect(self.__slot_right_button)
 
-    def __slot_left_button(self):
-        """Method for the Delete button."""
+    def __slot_left_button(self) -> None:
+        """Clicks and handles the left button.
+
+        This method sets the response attribute to True and closes the current widget.
+        """
         self.response = True
         self.close()
 
-    def __slot_right_button(self):
-        """Method for the Cancel button."""
+    def __slot_right_button(self) -> None:
+        """Clicks and handles the right button.
+
+        This method sets the response attribute to False and closes the current widget.
+        """
         self.response = False
         self.close()

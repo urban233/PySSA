@@ -34,7 +34,7 @@ from pyssa.controller import interface_manager, add_protein_pair_view_controller
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.styles import styles
-from pyssa.gui.ui.views import distance_analysis_view, predict_monomer_view, predict_multimer_view, predict_protein_view
+from pyssa.gui.ui.views import predict_protein_view
 from pyssa.internal.data_structures import protein, chain
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
 from pyssa.internal.thread import tasks

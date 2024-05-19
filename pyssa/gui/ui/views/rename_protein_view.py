@@ -32,9 +32,11 @@ from pyssa.util import constants
 
 
 class RenameProteinView(QtWidgets.QDialog):
-    # Define a custom signal
+    """Class for the rename protein dialog."""
+    
     dialogClosed = QtCore.pyqtSignal(tuple)
-
+    """A signal indicating that the dialog is closed."""
+    
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor."""
         QtWidgets.QDialog.__init__(self, parent)

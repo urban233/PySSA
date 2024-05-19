@@ -32,8 +32,8 @@ from pyssa.util import constants
 class ResultsView(QtWidgets.QDialog):
     """Class representing an About dialog."""
 
-    string_model = QtCore.QStringListModel()
-    return_value = QtCore.pyqtSignal(str)
+    # string_model = QtCore.QStringListModel()
+    # return_value = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor.

@@ -20,20 +20,28 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the custom color grid widget."""
+import logging
+
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import QWidget, QPushButton
 
 from pyssa.internal.data_structures import chain
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class PyMOLColorGrid(QtWidgets.QWidget):
     """Class representing the color grid of PySSA."""
-    """
-    Button with selected color for color grid widget
-    """
+    
     btn_selected_color: QtWidgets.QPushButton
+    """Button with selected color for color grid widget"""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Constructor."""
         super().__init__()
 
         self.btn_selected_color: QtWidgets.QPushButton = QtWidgets.QPushButton()
@@ -176,6 +184,24 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         self.setGeometry(100, 100, self.minimumWidth(), self.minimumHeight())
 
     def generate_color_stylesheet(self, a_hex_color: str) -> str:
+        """Generates a color stylesheet for a QPushButton with the specified background color.
+
+        Args:
+            a_hex_color: A string representing a hexadecimal color code.
+
+        Returns:
+            A string representing the generated color stylesheet.
+        
+        Raises:
+            exception.IllegalArgumentError: If a_hex_color is either None or an empty string.
+        """
+        # <editor-fold desc="Checks">
+        if a_hex_color is None or a_hex_color == "":
+            logger.error("a_hex_color is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_hex_color is either None or an empty string.")
+        
+        # </editor-fold>
+        
         stylesheet = """QPushButton {
                 background-color: %s;
                 border: none;
@@ -197,9 +223,10 @@ class PyMOLColorGrid(QtWidgets.QWidget):
                 max-height: 20px;
             }
         """ % (a_hex_color, a_hex_color)
-        return stylesheet
+        return stylesheet  # noqa: RET504
 
     def set_all_tooltips(self) -> None:
+        """Sets tooltips for all color widgets."""
         self.c_red.setToolTip("red")
         self.c_tv_red.setToolTip("tv_red")
         self.c_salomon.setToolTip("salmon")
@@ -241,6 +268,11 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         self.c_black.setToolTip("black")
 
     def get_all_color_buttons(self) -> dict:
+        """Get all color buttons.
+
+        Returns:
+            A dictionary containing all color buttons. Each key represents the color name, and each value represents the corresponding color button.
+        """
         return {
             "red": self.c_red,
             "tv_red": self.c_tv_red,
@@ -273,12 +305,31 @@ class PyMOLColorGrid(QtWidgets.QWidget):
             "white": self.c_white,
             "grey70": self.c_grey_70,
             "grey30": self.c_grey_30,
-            "black": self.c_black
+            "black": self.c_black,
         }
 
-    def set_icon_for_selected_color(self, a_color):
+    def set_icon_for_selected_color(self, a_color: str) -> None:
+        """Sets the icon for the button with the given color.
+
+        Args:
+            a_color (str): The selected color to set the icon for.
+            
+        Raises:
+            exception.IllegalArgumentError: If a_color is either None or an empty string.
+        """
+        # <editor-fold desc="Checks">
+        if a_color is None or a_color == "":
+            logger.error("a_color is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_color is either None or an empty string.")
+        
+        # </editor-fold>
+        
         self.btn_selected_color = self.get_all_color_buttons()[a_color]
         self.btn_selected_color.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
 
-    def reset_icon_for_selected_color(self):
+    def reset_icon_for_selected_color(self) -> None:
+        """Reset the icon for the selected color.
+
+        This method resets the icon for the selected color button by setting it to empty.
+        """
         self.btn_selected_color.setIcon(QtGui.QIcon())

@@ -36,11 +36,9 @@ from pyssa.util import constants, gui_utils
 
 class MainView(QtWidgets.QMainWindow):
     """Class representing the main view of PySSA."""
+    
     dialogClosed = QtCore.pyqtSignal(tuple)
-    """
-    The spinner that shows up if something runs as Task
-    """
-    # wait_spinner: spinner.WaitingSpinner
+    """A signal indicating that the dialog is closed."""
 
     def __init__(self) -> None:
         """Constructor."""
@@ -532,7 +530,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_pair_tree_view_expand.setIcon(expand_all_protein_pair_icon)
         self.ui.btn_protein_pair_tree_view_expand.setText("")
         self.ui.btn_protein_pair_tree_view_expand.setIconSize(
-            expand_all_protein_pair_icon.actualSize(QtCore.QSize(14, 14))
+            expand_all_protein_pair_icon.actualSize(QtCore.QSize(14, 14)),
         )
 
         # collapse all
@@ -540,7 +538,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_pair_tree_view_collapse.setIcon(collapse_all_protein_pair_icon)
         self.ui.btn_protein_pair_tree_view_collapse.setText("")
         self.ui.btn_protein_pair_tree_view_collapse.setIconSize(
-            collapse_all_protein_pair_icon.actualSize(QtCore.QSize(18, 18))
+            collapse_all_protein_pair_icon.actualSize(QtCore.QSize(18, 18)),
         )
         # </editor-fold>
 

@@ -37,10 +37,8 @@ global_var_add_model = ("", False)
 class RestartUserPyMOLView(QtWidgets.QDialog):
     """Class for a dialog for the restart user pymol."""
 
-    """
-    A pyqtsignal that is used to hand-over the protein structure information.
-    """
     return_value = pyqtSignal(tuple)
+    """A signal that transfers the message that all windows should be closed."""
 
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor.
@@ -68,11 +66,12 @@ class RestartUserPyMOLView(QtWidgets.QDialog):
         self.setWindowTitle("Crash")
         self.setModal(True)
 
-    def _close_pyssa(self):
+    def _close_pyssa(self) -> None:
+        """Sends signal to close all windows related to PySSA."""
         tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
             "Do you want to close all windows related to PySSA?",
             "Close PySSA",
-            custom_message_box.CustomMessageBoxIcons.WARNING.value
+            custom_message_box.CustomMessageBoxIcons.WARNING.value,
         )
         tmp_dialog.exec_()
         if tmp_dialog.response:

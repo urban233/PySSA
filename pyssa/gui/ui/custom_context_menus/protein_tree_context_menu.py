@@ -20,13 +20,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the protein tree context menu."""
+import logging
+from typing import Callable
+
 from PyQt5 import QtWidgets
+
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class ProteinTreeContextMenu:
     """A custom context menu wrapper for the protein tree view of the main view window."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Constructor."""
         self._context_menu = QtWidgets.QMenu()
         self._expand_protein_action = QtWidgets.QAction("Expand Protein")
         self._collapse_protein_action = QtWidgets.QAction("Collapse Protein")
@@ -51,32 +62,121 @@ class ProteinTreeContextMenu:
         self._help_action.triggered.connect(self._generic_action)
 
     # <editor-fold desc="Connect actions from outside">
-    def connect_expand_protein_action(self, the_function_to_connect):
+    def connect_expand_protein_action(self, the_function_to_connect: Callable):
+        """Connects the `_expand_protein_action` triggered signal to a given callable.
+
+        Args:
+            the_function_to_connect: A callable object that will be connected to the triggered signal of the `_expand_protein_action` attribute.
+
+        Raises:
+            exception.IllegalArgumentError: If the_function_to_connect is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_function_to_connect is None:
+            logger.error("the_function_to_connect is None.")
+            raise exception.IllegalArgumentError("the_function_to_connect is None.")
+
+        # </editor-fold>
         self._expand_protein_action.triggered.disconnect()
         self._expand_protein_action.triggered.connect(the_function_to_connect)
 
-    def connect_collapse_protein_action(self, the_function_to_connect):
+    def connect_collapse_protein_action(self, the_function_to_connect: Callable):
+        """Connects the `_collapse_protein_action` triggered signal to a given callable.
+
+        Args:
+            the_function_to_connect: A callable object that will be connected to the triggered signal of the `_collapse_protein_action` attribute.
+
+        Raises:
+            exception.IllegalArgumentError: If the_function_to_connect is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_function_to_connect is None:
+            logger.error("the_function_to_connect is None.")
+            raise exception.IllegalArgumentError("the_function_to_connect is None.")
+
+        # </editor-fold>
+        
         self._collapse_protein_action.triggered.disconnect()
         self._collapse_protein_action.triggered.connect(the_function_to_connect)
 
-    def connect_clean_protein_action(self, the_function_to_connect):
+    def connect_clean_protein_action(self, the_function_to_connect: Callable):
+        """Connects the `_clean_protein_action` triggered signal to a given callable.
+
+        Args:
+            the_function_to_connect: A callable object that will be connected to the triggered signal of the `_clean_protein_action` attribute.
+
+        Raises:
+            exception.IllegalArgumentError: If the_function_to_connect is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_function_to_connect is None:
+            logger.error("the_function_to_connect is None.")
+            raise exception.IllegalArgumentError("the_function_to_connect is None.")
+
+        # </editor-fold>
+        
         self._clean_protein_action.triggered.disconnect()
         self._clean_protein_action.triggered.connect(the_function_to_connect)
     
-    def connect_rename_protein_action(self, the_function_to_connect):
+    def connect_rename_protein_action(self, the_function_to_connect: Callable):
+        """Connects the `_rename_protein_action` triggered signal to a given callable.
+
+        Args:
+            the_function_to_connect: A callable object that will be connected to the triggered signal of the `_rename_protein_action` attribute.
+
+        Raises:
+            exception.IllegalArgumentError: If the_function_to_connect is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_function_to_connect is None:
+            logger.error("the_function_to_connect is None.")
+            raise exception.IllegalArgumentError("the_function_to_connect is None.")
+
+        # </editor-fold>
+        
         self._rename_protein_action.triggered.disconnect()
         self._rename_protein_action.triggered.connect(the_function_to_connect)
         
-    def connect_show_sequence_action(self, the_function_to_connect):
+    def connect_show_sequence_action(self, the_function_to_connect: Callable):
+        """Connects the `_show_sequence_action` triggered signal to a given callable.
+
+        Args:
+            the_function_to_connect: A callable object that will be connected to the triggered signal of the `_show_sequence_action` attribute.
+
+        Raises:
+            exception.IllegalArgumentError: If the_function_to_connect is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_function_to_connect is None:
+            logger.error("the_function_to_connect is None.")
+            raise exception.IllegalArgumentError("the_function_to_connect is None.")
+
+        # </editor-fold>
+        
         self._show_sequence_action.triggered.disconnect()
         self._show_sequence_action.triggered.connect(the_function_to_connect)
 
-    def connect_help_action(self, the_function_to_connect):
+    def connect_help_action(self, the_function_to_connect: Callable):
+        """Connects the `_help_action` triggered signal to a given callable.
+
+        Args:
+            the_function_to_connect: A callable object that will be connected to the triggered signal of the `_help_action` attribute.
+
+        Raises:
+            exception.IllegalArgumentError: If the_function_to_connect is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_function_to_connect is None:
+            logger.error("the_function_to_connect is None.")
+            raise exception.IllegalArgumentError("the_function_to_connect is None.")
+
+        # </editor-fold>
+        
         self._help_action.triggered.disconnect()
         self._help_action.triggered.connect(the_function_to_connect)
     # </editor-fold>
     
-    def _generic_action(self):
+    def _generic_action(self) -> None:
         raise NotImplementedError("The called action is not connected to a function!")
     
     def get_context_menu(self,
@@ -84,8 +184,36 @@ class ProteinTreeContextMenu:
                          the_type: str,
                          is_protein_in_any_pair_flag: bool,
                          is_protein_in_session_flag: bool,
-                         is_protein_expanded: bool):
+                         is_protein_expanded: bool) -> QtWidgets.QMenu:
+        """Gets the context menu for the current situation.
+
+        Args:
+            the_selected_indexes (list): List of QModelIndex objects representing the selected indexes.
+            the_type (str): Type of the selected object. Can be "chain" or "scene".
+            is_protein_in_any_pair_flag (bool): Flag indicating if the selected protein is in any protein pair.
+            is_protein_in_session_flag (bool): Flag indicating if the selected protein is in the session.
+            is_protein_expanded (bool): Flag indicating if the selected protein is expanded.
+
+        Returns:
+            QMenu: The context menu that should be displayed.
+        
+        Raises:
+            exception.IllegalArgumentError: If any argument except the_selected_indexes is None.
+        """
         # <editor-fold desc="Checks">
+        if the_type is None:
+            logger.error("the_type is None.")
+            raise exception.IllegalArgumentError("the_type is None.")
+        if is_protein_in_any_pair_flag is None:
+            logger.error("is_protein_in_any_pair_flag is None.")
+            raise exception.IllegalArgumentError("is_protein_in_any_pair_flag is None.")
+        if is_protein_in_session_flag is None:
+            logger.error("is_protein_in_session_flag is None.")
+            raise exception.IllegalArgumentError("is_protein_in_session_flag is None.")
+        if is_protein_expanded is None:
+            logger.error("is_protein_expanded is None.")
+            raise exception.IllegalArgumentError("is_protein_expanded is None.")
+        
         if len(the_selected_indexes) > 0:
             level = 0
             index = the_selected_indexes[0]

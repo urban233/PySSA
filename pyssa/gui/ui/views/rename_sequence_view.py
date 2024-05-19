@@ -32,8 +32,10 @@ from pyssa.util import constants
 
 
 class RenameSequenceView(QtWidgets.QDialog):
-    # Define a custom signal
+    """Class for the rename sequence dialog."""
+
     dialogClosed = QtCore.pyqtSignal(tuple)
+    """A signal indicating that the dialog is closed."""
 
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor."""

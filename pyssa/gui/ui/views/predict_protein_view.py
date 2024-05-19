@@ -31,12 +31,12 @@ from pyssa.util import constants
 
 
 class PredictProteinView(QtWidgets.QDialog):
-    """Class for a dialog to add proteins to a project."""
+    """Class for a dialog to predict protein structures."""
 
-    """
-    A pyqtsignal that is used to hand-over the protein structure information.
-    """
-    return_value = pyqtSignal(tuple)
+    # """
+    # A pyqtsignal that is used to hand-over the protein structure information.
+    # """
+    # return_value = pyqtSignal(tuple)
 
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor.

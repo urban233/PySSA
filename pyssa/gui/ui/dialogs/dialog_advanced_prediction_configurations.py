@@ -20,29 +20,48 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module that contains the dialog for the advanced configuration of the ColabFold prediction."""
+import logging
+
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_advanced_prediction_configurations import Ui_Dialog
 from pyssa.util import gui_utils
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 
+from pyssa.util import exception
+from pyssa.logging_pyssa import log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
+
 
 class DialogAdvancedPredictionConfigurations(QtWidgets.QDialog):
     """Class that contains the dialog for the advanced configuration of the ColabFold."""
 
-    def __init__(self, prediction_config, parent=None) -> None:  # noqa: ANN001
+    def __init__(self, prediction_config: "prediction_configuration.PredictionConfiguration", parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
-            prediction_config: the configuration of the ColabFold prediction.
+            prediction_config (prediction_configuration.PredictionConfiguration): The configuration of the ColabFold prediction.
             parent: The parent.
+        
+        Raises:
+            exception.IllegalArgumentError: If `prediction_config` is None.
         """
+        # <editor-fold desc="Checks">
+        if prediction_config is None:
+            logger.error("prediction_config is None.")
+            raise exception.IllegalArgumentError("prediction_config is None.")
+        
+        # </editor-fold>
+        
         QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
 
-        self.prediction_config: prediction_configuration.PredictionConfiguration = prediction_config
+        self.prediction_config: "prediction_configuration.PredictionConfiguration" = prediction_config
 
         self.ui.cb_amber.setChecked(self.prediction_config.amber_force_field)
         item_list_templates = [

@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the about dialog."""
+"""Module for the About dialog."""
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
@@ -57,8 +57,8 @@ class DialogAbout(QtWidgets.QDialog):
         self.setWindowTitle("About")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
-    def _fill_table_view(self):
-        """Fill the table with the packages"""
+    def _fill_table_view(self) -> None:
+        """Fill the table with the packages."""
         tmp_table_model = QtGui.QStandardItemModel()
         tmp_table_model.setHorizontalHeaderLabels(["Name", "Version", "License"])
         # Sample data

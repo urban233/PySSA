@@ -25,11 +25,20 @@ from PyQt5 import QtCore
 
 
 class PermanentMessageLabel(QtWidgets.QLabel):
+    """A custom label widget that can send a signal if the text changes."""
+    
     textChanged = QtCore.pyqtSignal(str)
-
-    def __init__(self, parent=None):
+    """A signal indicating that the text changed."""
+    
+    def __init__(self, parent=None) -> None:  # noqa: ANN001
+        """Constructor."""
         super().__init__(parent)
 
-    def setText(self, text):
+    def setText(self, text) -> None:
+        """Overrides the setText method of the QLabel class.
+
+        Args:
+            text (str): The text to set.
+        """
         super().setText(text)
         self.textChanged.emit(text)

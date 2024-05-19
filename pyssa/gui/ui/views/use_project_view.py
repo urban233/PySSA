@@ -26,15 +26,14 @@ import glob
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.gui.ui.forms.auto_generated import auto_use_project_view
 from pyssa.gui.ui.styles import styles
-from pyssa.util import constants, input_validator
+from pyssa.util import constants
 
 
 class UseProjectView(QtWidgets.QDialog):
-    """Class representing an Open dialog."""
+    """Class representing the use project dialog."""
 
     def __init__(self) -> None:
         """Constructor."""

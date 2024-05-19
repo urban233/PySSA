@@ -30,12 +30,13 @@ from pyssa.util import constants
 
 
 class SettingsView(QtWidgets.QDialog):
-    """Class representing a Create dialog."""
+    """Class representing the settings dialog."""
+    
     dialogClosed = QtCore.pyqtSignal(tuple)
-
+    """A signal indicating that the dialog is closed."""
+    
     def __init__(self) -> None:
-        """Constructor.
-        """
+        """Constructor."""
         QtWidgets.QDialog.__init__(self)
         # build ui object
         self.ui = auto_settings_view.Ui_Dialog()

@@ -40,11 +40,11 @@ from pyssa.controller import pymol_session_manager, settings_manager, main_tasks
 from pyssa.gui.ui.custom_widgets import job_entry
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import rename_protein_view, use_project_view, \
-    predict_multimer_view, add_sequence_view, add_scene_view, settings_view, predict_protein_view, \
+    add_sequence_view, add_scene_view, settings_view, predict_protein_view, \
     fasta_file_import_preview_view, rename_sequence_view, add_protein_pair_view, advanced_prediction_configurations, \
     restart_user_pymol_view
 from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
-from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
+from pyssa.gui.ui.views import main_view, distance_analysis_view, results_view, add_protein_view
 from pyssa.gui.ui.views import hotspots_protein_regions_view
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import project, settings, chain, protein, protein_pair
@@ -70,7 +70,7 @@ class InterfaceManager:
 
     _main_view: "main_view.MainView"
     _settings_view: "settings_view.SettingsView"
-    _predict_monomer_view: "predict_monomer_view.PredictMonomerView"
+    #_predict_monomer_view: "predict_monomer_view.PredictMonomerView"
     _predict_protein_view: "predict_protein_view.PredictProteinView"
     _distance_analysis_view: "distance_analysis_view.DistanceAnalysisView"
     _create_project_view: "create_project_view.CreateProjectView"
@@ -105,8 +105,8 @@ class InterfaceManager:
         # View definitions
         self._main_view = main_view.MainView()
         self._settings_view = settings_view.SettingsView()
-        self._predict_monomer_view = predict_monomer_view.PredictMonomerView()
-        self._predict_multimer_view = predict_multimer_view.PredictMultimerView()
+        #self._predict_monomer_view = predict_monomer_view.PredictMonomerView()
+        #self._predict_multimer_view = predict_multimer_view.PredictMultimerView()
         self._predict_protein_view = predict_protein_view.PredictProteinView()
         self._distance_analysis_view = distance_analysis_view.DistanceAnalysisView()
         self._create_project_view = create_project_view.CreateProjectView()
@@ -335,11 +335,11 @@ class InterfaceManager:
         return self._rename_sequence_view
 
     # <editor-fold desc="Prediction">
-    def get_predict_monomer_view(self) -> "predict_monomer_view.PredictMonomerView":
-        return self._predict_monomer_view
+    # def get_predict_monomer_view(self) -> "predict_monomer_view.PredictMonomerView":
+    #     return self._predict_monomer_view
 
-    def get_predict_multimer_view(self) -> "predict_multimer_view.PredictMultimerView":
-        return self._predict_multimer_view
+    # def get_predict_multimer_view(self) -> "predict_multimer_view.PredictMultimerView":
+    #     return self._predict_multimer_view
 
     def get_predict_protein_view(self):
         return self._predict_protein_view

@@ -25,19 +25,16 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
-from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.forms.auto_generated.auto_advanced_prediction_configurations_view import Ui_Dialog
 from pyssa.gui.ui.styles import styles
-from pyssa.util import constants, tools, gui_utils
+from pyssa.util import constants
 
 
 class AdvancedPredictionConfigurationsView(QtWidgets.QDialog):
     """Class for the advanced prediction configurations dialog."""
 
-    """
-    A pyqtsignal that is used to hand-over the protein structure information.
-    """
     return_value = pyqtSignal(tuple)
+    """A pyqtsignal that is used to hand-over the config information."""
 
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor.

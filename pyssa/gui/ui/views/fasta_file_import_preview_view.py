@@ -35,7 +35,8 @@ from pyssa.gui.ui.forms.auto_generated.auto_fasta_file_import_preview_view impor
 class FastaFileImportPreviewView(QDialog):
     """A QDialog that allows users to customize the fasta file import."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
+        """Constructor."""
         QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = Ui_Dialog()
