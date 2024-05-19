@@ -44,8 +44,8 @@ def handle_request(a_job_type: str, a_queue: queue.Queue, a_socket: zmq.Socket) 
     # <editor-fold desc="Checks">
     if a_job_type is None:
         return False
-    if a_queue is None or a_queue.empty():
-        print("a_queue is None or empty.")
+    if a_queue is None:
+        print("a_queue is None.")
         return False
     if a_socket is None:
         return False

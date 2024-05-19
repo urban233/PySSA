@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for functions which change the ui in some way."""
+import logging
 from typing import Union
 
 from PyQt5 import QtCore
@@ -27,7 +28,12 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from pyssa.gui.ui.custom_widgets import toggle_button
-from pyssa.util import input_validator
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import input_validator, exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 def select_matching_string_in_q_list_view(a_string_to_match: str,
@@ -35,13 +41,29 @@ def select_matching_string_in_q_list_view(a_string_to_match: str,
                                           a_q_line_edit: QtWidgets.QLineEdit) -> None:
     """Selects a QListView item from a QListView with a string to match and sets it into a q_line_edit.
 
+    Args:
+        a_string_to_match (str): The string to match in the QListView.
+        a_q_list_view_to_select (QtWidgets.QListView): The QListView to select in.
+        a_q_line_edit (QtWidgets.QLineEdit): The QLineEdit widget associated with the QListView.
+    
+    Raises:
+        exception.IllegalArgumentError: If either `a_string_to_match`, `a_q_list_view_to_select` or `a_q_line_edit` is None.
+
     Notes:
         This function must run in the MAIN THREAD!
     """
-    # Clears any active selections
-    # if a_q_list_view_to_select.currentIndex().isValid():
-    #     a_q_list_view_to_select.selectionModel().clearCurrentIndex()
+    # <editor-fold desc="Checks">
+    if a_string_to_match is None:
+        logger.error("a_string_to_match is None.")
+        raise exception.IllegalArgumentError("a_string_to_match is None.")
+    if a_q_list_view_to_select is None:
+        logger.error("a_label a_q_list_view_to_select None.")
+        raise exception.IllegalArgumentError("a_q_list_view_to_select is None.")
+    if a_q_line_edit is None:
+        logger.error("a_q_line_edit is None.")
+        raise exception.IllegalArgumentError("a_q_line_edit is None.")
 
+    # </editor-fold>
     if a_string_to_match == "":
         a_q_line_edit.clear()
         a_q_list_view_to_select.selectionModel().clearCurrentIndex()
@@ -54,13 +76,31 @@ def select_matching_string_in_q_list_view(a_string_to_match: str,
     # Sets the selection
     a_q_list_view_to_select.selectionModel().setCurrentIndex(
         tmp_match_items[0].index(),
-        QtCore.QItemSelectionModel.Clear | QtCore.QItemSelectionModel.Select
+        QtCore.QItemSelectionModel.Clear | QtCore.QItemSelectionModel.Select,
     )
     a_q_line_edit.setText(tmp_match_items[0].data(Qt.DisplayRole))
 
 
 def set_pymol_scene_name_into_label(a_scene_name: str, a_label: QtWidgets.QLabel) -> None:
-    """Sets a pymol scene name to a label."""
+    """Sets the PyMOL scene name into a QLabel widget and sets the tooltip.
+
+    Args:
+        a_scene_name (str): The PyMOL scene name to be displayed in the label.
+        a_label (QtWidgets.QLabel): The QLabel widget to display the PyMOL scene name.
+    
+    Raises:
+        exception.IllegalArgumentError: If either `a_scene_name` or `a_label` is None.
+    """
+    # <editor-fold desc="Checks">
+    if a_scene_name is None:
+        logger.error("a_scene_name is None.")
+        raise exception.IllegalArgumentError("a_scene_name is None.")
+    if a_label is None:
+        logger.error("a_label is None.")
+        raise exception.IllegalArgumentError("a_label is None.")
+    
+    # </editor-fold>
+    
     if len(a_scene_name) > 45:
         a_label.setText(f"PyMOL Scene: {a_scene_name[:45]}...")
         a_label.setToolTip(f"PyMOL Scene: {a_scene_name}")
@@ -70,13 +110,11 @@ def set_pymol_scene_name_into_label(a_scene_name: str, a_label: QtWidgets.QLabel
 
 
 def set_checked_async(a_checkbox_like_widget: Union[QtWidgets.QCheckBox, "toggle_button.ToggleButton"],
-                      a_check_state: bool):
-    """
-    Set the checked state of the given checkbox-like widget which is `async proof`.
+                      a_check_state: bool) -> None:
+    """Set the checked state of the given checkbox-like widget which is `async proof`.
 
     Args:
-        a_checkbox_like_widget (Union[QtWidgets.QCheckBox, "toggle_button.ToggleButton"]):
-            The checkbox-like widget to set the checked state for.
+        a_checkbox_like_widget (Union[QtWidgets.QCheckBox, "toggle_button.ToggleButton"]): The checkbox-like widget to set the checked state for.
         a_check_state (bool): The actual check state the checkbox-like widget should take.
     """
     # <editor-fold desc="Checks">

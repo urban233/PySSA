@@ -38,7 +38,7 @@ class FileIsEmptyError(Exception):
         super().__init__(message)
 
 
-class NoInternetConnection(Exception):
+class NoInternetConnectionError(Exception):
     """Class for a no internet exception type."""
 
     def __init__(self, message: str) -> None:
@@ -52,6 +52,14 @@ class ActionIsNotRunnableError(Exception):
     def __init__(self, message: str = "") -> None:
         """Constructor."""
         super().__init__("self.is_runnable is set to False. " + message)
+
+
+class NotMainThreadError(Exception):
+    """Class for a not main thread exception type."""
+
+    def __init__(self, message: str = "") -> None:
+        """Constructor."""
+        super().__init__("Call was from a separate thread but this function must only be called from the main thread! " + message)
 
 
 class DirectoryNotFoundError(Exception):

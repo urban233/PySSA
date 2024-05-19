@@ -24,6 +24,8 @@ from typing import Optional
 
 import zmq
 from PyQt5 import QtCore
+from PyQt5.QtCore import pyqtSignal
+
 from pyssa.internal.thread import tasks
 from pyssa_pymol import pymol_enums, commands, local_logging
 
@@ -38,6 +40,8 @@ class UserPyMOLInterface(QtCore.QObject):
         This class is used to receive command requests form PySSA and send it to User PyMOL.
     """
 
+    _command_info = pyqtSignal(tuple)  # Form (command_name, args)
+    
     def __init__(self) -> None:
         """Constructor."""
         super().__init__()
@@ -66,6 +70,15 @@ class UserPyMOLInterface(QtCore.QObject):
             pymol_enums.CommandEnum.PNG: commands.png,
         }
         self._should_restart_service = False
+        self._command_info.connect(self._run_command_in_main_thread)
+        
+        # Socket definitions
+        context = zmq.Context()
+        self._recv_socket = context.socket(zmq.PULL)
+        self._recv_socket.bind("tcp://127.0.0.1:9071")
+        self._sender_socket = context.socket(zmq.PUSH)
+        self._sender_socket.bind("tcp://127.0.0.1:9072")
+        
         self._task = tasks.LegacyTask(
             target=self.main_loop,
             args=(0, 0),
@@ -98,192 +111,199 @@ class UserPyMOLInterface(QtCore.QObject):
         try:
             while tmp_user_pymol_should_be_closed is False:
                 logger.info("Waiting for data from the client ...")
-                data = main_socket.recv_json()
+                #data = main_socket.recv_json()
+                data = self._recv_socket.recv_json()
                 print("Received data: ", data)
                 logger.info(f"Received arguments: {data['arguments']}")
-
                 if data["command"] == pymol_enums.CommandEnum.CLOSE_USER_PYMOL.value:
                     logger.info("Set boolean to close user pymol ...")
                     tmp_user_pymol_should_be_closed = True
-                elif data["command"] == pymol_enums.CommandEnum.REINITIALIZE_SESSION.value:
-                    logger.info("Running command: reinitialize_session")
-                    tmp_result: tuple[bool, str] = commands.reinitialize_session()
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.LOAD_PYMOL_SESSION.value:
-                    logger.info("Running command: load_pymol_session")
-                    _, tmp_filepath = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.load_pymol_session(tmp_filepath)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.SAVE_PYMOL_SESSION.value:
-                    logger.info("Running command: save_pymol_session")
-                    _, tmp_filepath = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.save_pymol_session(tmp_filepath)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.GET_ALL_OBJECT_NAMES.value:
-                    logger.info("Running command: get_all_object_names")
-                    tmp_result: tuple[bool, str, Optional[list]] = commands.get_all_object_names()
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.GET_MODEL.value:
-                    logger.info("Running command: get_model")
-                    _, tmp_selection_string = data["arguments"]
-                    tmp_result: tuple = commands.get_model(tmp_selection_string)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.LOAD_SCENE.value:
-                    logger.info("Running command: load_scene")
-                    _, tmp_scene_name = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.load_scene(tmp_scene_name)
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.GET_SCENE_LIST.value:
-                    logger.info("Running command: get_scene_list")
-                    tmp_result: tuple[bool, str, Optional[list]] = commands.get_scene_list()
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.SET_CUSTOM_SETTINGS.value:
-                    logger.info("Running command: set_custom_settings")
-                    tmp_setting_name, tmp_value = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.set_custom_setting(tmp_setting_name, tmp_value)
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.GET_RESIDUE_COLORS.value:
-                    logger.info("Running command: get_residue_colors")
-                    _, tmp_selection_string = data["arguments"]
-                    tmp_result: tuple[bool, str, Optional[dict]] = commands.get_residue_colors(tmp_selection_string)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.GET_CHAIN_COLOR.value:
-                    logger.info("Running command: get_chain_color")
-                    tmp_selection_string, tmp_chain_letter = data["arguments"]
-                    tmp_result: tuple[bool, str, Optional[tuple]] = commands.get_chain_color(tmp_selection_string, tmp_chain_letter)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.GET_RESIDUE_COLOR_CONFIG.value:
-                    logger.info("Running command: get_residue_color_config")
-                    tmp_selection_string, tmp_chain_letter = data["arguments"]
-                    tmp_result: tuple[bool, str, Optional[list]] = commands.get_residue_color_config(tmp_selection_string, tmp_chain_letter)
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.GET_CHAIN_REPR_STATE.value:
-                    logger.info("Running command: get_chain_repr_state")
-                    tmp_selection_string, tmp_chain_letter = data["arguments"]
-                    tmp_result: tuple[bool, str, Optional[dict]] = commands.get_chain_repr_state(tmp_selection_string, tmp_chain_letter)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.SHOW_CUSTOM_REPRESENTATION.value:
-                    logger.info("Running command: show_custom_representation")
-                    tmp_representation, tmp_selection_string = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.show_custom_representation(tmp_representation, tmp_selection_string)
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.HIDE_CUSTOM_REPRESENTATION.value:
-                    logger.info("Running command: hide_custom_representation")
-                    tmp_representation, tmp_selection_string = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.hide_custom_representation(tmp_representation, tmp_selection_string)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.ZOOM_WITH_CUSTOM_PARAMETERS.value:
-                    logger.info("Running command: zoom_with_custom_parameters")
-                    tmp_selection_string, tmp_buffer_size, tmp_state, tmp_complete_flag = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.zoom_with_custom_parameters(
-                        tmp_selection_string, tmp_buffer_size, tmp_state, tmp_complete_flag,
-                    )
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.COLOR_SELECTION.value:
-                    logger.info("Running command: color_selection")
-                    tmp_pymol_color, tmp_selection_string = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.color_selection(tmp_pymol_color, tmp_selection_string)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.SET_BACKGROUND_COLOR.value:
-                    logger.info("Running command: set_background_color")
-                    _, tmp_pymol_color = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.set_background_color(tmp_pymol_color)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.SET_DEFAULT_GRAPHIC_SETTINGS.value:
-                    logger.info("Running command: set_default_graphic_settings")
-                    tmp_result: tuple[bool, str] = commands.set_default_graphics_settings()
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.SCENE.value:
-                    logger.info("Running command: scene")
-                    a_key, an_action = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.scene(a_key, an_action)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.SELECT.value:
-                    logger.info("Running command: select")
-                    a_name, a_selection_string = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.select(a_name, a_selection_string)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.RAY.value:
-                    logger.info("Running command: ray")
-                    tmp_width, tmp_height, tmp_renderer = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.ray(tmp_width, tmp_height, tmp_renderer)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.DRAW.value:
-                    logger.info("Running command: draw")
-                    tmp_width, tmp_height, tmp_antialias_value = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.draw(tmp_width, tmp_height, tmp_antialias_value)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
-                elif data["command"] == pymol_enums.CommandEnum.PNG.value:
-                    logger.info("Running command: png")
-                    tmp_image_filepath, tmp_dpi_value = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.png(tmp_image_filepath, tmp_dpi_value)
-                    logger.info(f"Command result: {tmp_result}")
-                    main_socket.send_json(
-                        {"success": tmp_result[0], "message": str(tmp_result[1])},
-                    )
+                else:
+                    self._command_info.emit((data["command"], data["arguments"]))
+                
+                # if data["command"] == pymol_enums.CommandEnum.CLOSE_USER_PYMOL.value:
+                #     logger.info("Set boolean to close user pymol ...")
+                #     tmp_user_pymol_should_be_closed = True
+                # elif data["command"] == pymol_enums.CommandEnum.REINITIALIZE_SESSION.value:
+                #     logger.info("Running command: reinitialize_session")
+                #     tmp_result: tuple[bool, str] = commands.reinitialize_session()
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.LOAD_PYMOL_SESSION.value:
+                #     logger.info("Running command: load_pymol_session")
+                #     _, tmp_filepath = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.load_pymol_session(tmp_filepath)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.SAVE_PYMOL_SESSION.value:
+                #     logger.info("Running command: save_pymol_session")
+                #     _, tmp_filepath = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.save_pymol_session(tmp_filepath)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.GET_ALL_OBJECT_NAMES.value:
+                #     logger.info("Running command: get_all_object_names")
+                #     tmp_result: tuple[bool, str, Optional[list]] = commands.get_all_object_names()
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.GET_MODEL.value:
+                #     logger.info("Running command: get_model")
+                #     _, tmp_selection_string = data["arguments"]
+                #     tmp_result: tuple = commands.get_model(tmp_selection_string)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.LOAD_SCENE.value:
+                #     logger.info("Running command: load_scene")
+                #     _, tmp_scene_name = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.load_scene(tmp_scene_name)
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.GET_SCENE_LIST.value:
+                #     logger.info("Running command: get_scene_list")
+                #     tmp_result: tuple[bool, str, Optional[list]] = commands.get_scene_list()
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.SET_CUSTOM_SETTINGS.value:
+                #     logger.info("Running command: set_custom_settings")
+                #     tmp_setting_name, tmp_value = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.set_custom_setting(tmp_setting_name, tmp_value)
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.GET_RESIDUE_COLORS.value:
+                #     logger.info("Running command: get_residue_colors")
+                #     _, tmp_selection_string = data["arguments"]
+                #     tmp_result: tuple[bool, str, Optional[dict]] = commands.get_residue_colors(tmp_selection_string)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.GET_CHAIN_COLOR.value:
+                #     logger.info("Running command: get_chain_color")
+                #     tmp_selection_string, tmp_chain_letter = data["arguments"]
+                #     tmp_result: tuple[bool, str, Optional[tuple]] = commands.get_chain_color(tmp_selection_string, tmp_chain_letter)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.GET_RESIDUE_COLOR_CONFIG.value:
+                #     logger.info("Running command: get_residue_color_config")
+                #     tmp_selection_string, tmp_chain_letter = data["arguments"]
+                #     tmp_result: tuple[bool, str, Optional[list]] = commands.get_residue_color_config(tmp_selection_string, tmp_chain_letter)
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.GET_CHAIN_REPR_STATE.value:
+                #     logger.info("Running command: get_chain_repr_state")
+                #     tmp_selection_string, tmp_chain_letter = data["arguments"]
+                #     tmp_result: tuple[bool, str, Optional[dict]] = commands.get_chain_repr_state(tmp_selection_string, tmp_chain_letter)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.SHOW_CUSTOM_REPRESENTATION.value:
+                #     logger.info("Running command: show_custom_representation")
+                #     tmp_representation, tmp_selection_string = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.show_custom_representation(tmp_representation, tmp_selection_string)
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.HIDE_CUSTOM_REPRESENTATION.value:
+                #     logger.info("Running command: hide_custom_representation")
+                #     tmp_representation, tmp_selection_string = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.hide_custom_representation(tmp_representation, tmp_selection_string)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.ZOOM_WITH_CUSTOM_PARAMETERS.value:
+                #     logger.info("Running command: zoom_with_custom_parameters")
+                #     tmp_selection_string, tmp_buffer_size, tmp_state, tmp_complete_flag = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.zoom_with_custom_parameters(
+                #         tmp_selection_string, tmp_buffer_size, tmp_state, tmp_complete_flag,
+                #     )
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.COLOR_SELECTION.value:
+                #     logger.info("Running command: color_selection")
+                #     tmp_pymol_color, tmp_selection_string = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.color_selection(tmp_pymol_color, tmp_selection_string)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.SET_BACKGROUND_COLOR.value:
+                #     logger.info("Running command: set_background_color")
+                #     _, tmp_pymol_color = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.set_background_color(tmp_pymol_color)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.SET_DEFAULT_GRAPHIC_SETTINGS.value:
+                #     logger.info("Running command: set_default_graphic_settings")
+                #     tmp_result: tuple[bool, str] = commands.set_default_graphics_settings()
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.SCENE.value:
+                #     logger.info("Running command: scene")
+                #     a_key, an_action = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.scene(a_key, an_action)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.SELECT.value:
+                #     logger.info("Running command: select")
+                #     a_name, a_selection_string = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.select(a_name, a_selection_string)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.RAY.value:
+                #     logger.info("Running command: ray")
+                #     tmp_width, tmp_height, tmp_renderer = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.ray(tmp_width, tmp_height, tmp_renderer)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.DRAW.value:
+                #     logger.info("Running command: draw")
+                #     tmp_width, tmp_height, tmp_antialias_value = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.draw(tmp_width, tmp_height, tmp_antialias_value)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
+                # elif data["command"] == pymol_enums.CommandEnum.PNG.value:
+                #     logger.info("Running command: png")
+                #     tmp_image_filepath, tmp_dpi_value = data["arguments"]
+                #     tmp_result: tuple[bool, str] = commands.png(tmp_image_filepath, tmp_dpi_value)
+                #     logger.info(f"Command result: {tmp_result}")
+                #     main_socket.send_json(
+                #         {"success": tmp_result[0], "message": str(tmp_result[1])},
+                #     )
         except Exception as e:
+            print(e)
             main_socket.send_json({"success": False, "message": str(e)})
         finally:
             return 0, 0
@@ -296,3 +316,194 @@ class UserPyMOLInterface(QtCore.QObject):
             a_placeholder_2: Placeholder argument 2 for use with LegacyTask class.
         """
         logger.info("Finished main loop")
+    
+    def _run_command_in_main_thread(self, the_command_info: tuple) -> None:
+        """Runs the command in the main thread.
+        
+        Args:
+            the_command_info (tuple): A tuple containing the command name and arguments.
+        """
+        logger.info("Running in Main Thread.")
+        print("Running in Main Thread.")
+        tmp_command_name, tmp_args = the_command_info
+        if tmp_command_name == pymol_enums.CommandEnum.REINITIALIZE_SESSION.value:
+            logger.info("Running command: reinitialize_session")
+            tmp_result: tuple[bool, str] = commands.reinitialize_session()
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.LOAD_PYMOL_SESSION.value:
+            logger.info("Running command: load_pymol_session")
+            _, tmp_filepath = tmp_args
+            tmp_result: tuple[bool, str] = commands.load_pymol_session(tmp_filepath)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.SAVE_PYMOL_SESSION.value:
+            logger.info("Running command: save_pymol_session")
+            _, tmp_filepath = tmp_args
+            tmp_result: tuple[bool, str] = commands.save_pymol_session(tmp_filepath)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.GET_ALL_OBJECT_NAMES.value:
+            logger.info("Running command: get_all_object_names")
+            tmp_result: tuple[bool, str, Optional[list]] = commands.get_all_object_names()
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.GET_MODEL.value:
+            logger.info("Running command: get_model")
+            _, tmp_selection_string = tmp_args
+            tmp_result: tuple = commands.get_model(tmp_selection_string)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.LOAD_SCENE.value:
+            logger.info("Running command: load_scene")
+            _, tmp_scene_name = tmp_args
+            tmp_result: tuple[bool, str] = commands.load_scene(tmp_scene_name)
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.GET_SCENE_LIST.value:
+            logger.info("Running command: get_scene_list")
+            tmp_result: tuple[bool, str, Optional[list]] = commands.get_scene_list()
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.SET_CUSTOM_SETTINGS.value:
+            logger.info("Running command: set_custom_settings")
+            tmp_setting_name, tmp_value = tmp_args
+            tmp_result: tuple[bool, str] = commands.set_custom_setting(tmp_setting_name, tmp_value)
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.GET_RESIDUE_COLORS.value:
+            logger.info("Running command: get_residue_colors")
+            _, tmp_selection_string = tmp_args
+            tmp_result: tuple[bool, str, Optional[dict]] = commands.get_residue_colors(tmp_selection_string)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.GET_CHAIN_COLOR.value:
+            logger.info("Running command: get_chain_color")
+            tmp_selection_string, tmp_chain_letter = tmp_args
+            tmp_result: tuple[bool, str, Optional[tuple]] = commands.get_chain_color(tmp_selection_string,
+                                                                                     tmp_chain_letter)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.GET_RESIDUE_COLOR_CONFIG.value:
+            logger.info("Running command: get_residue_color_config")
+            tmp_selection_string, tmp_chain_letter = tmp_args
+            tmp_result: tuple[bool, str, Optional[list]] = commands.get_residue_color_config(tmp_selection_string,
+                                                                                             tmp_chain_letter)
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.GET_CHAIN_REPR_STATE.value:
+            logger.info("Running command: get_chain_repr_state")
+            tmp_selection_string, tmp_chain_letter = tmp_args
+            tmp_result: tuple[bool, str, Optional[dict]] = commands.get_chain_repr_state(tmp_selection_string,
+                                                                                         tmp_chain_letter)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.SHOW_CUSTOM_REPRESENTATION.value:
+            logger.info("Running command: show_custom_representation")
+            tmp_representation, tmp_selection_string = tmp_args
+            tmp_result: tuple[bool, str] = commands.show_custom_representation(tmp_representation, tmp_selection_string)
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.HIDE_CUSTOM_REPRESENTATION.value:
+            logger.info("Running command: hide_custom_representation")
+            tmp_representation, tmp_selection_string = tmp_args
+            tmp_result: tuple[bool, str] = commands.hide_custom_representation(tmp_representation, tmp_selection_string)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.ZOOM_WITH_CUSTOM_PARAMETERS.value:
+            logger.info("Running command: zoom_with_custom_parameters")
+            tmp_selection_string, tmp_buffer_size, tmp_state, tmp_complete_flag = tmp_args
+            tmp_result: tuple[bool, str] = commands.zoom_with_custom_parameters(
+                tmp_selection_string, tmp_buffer_size, tmp_state, tmp_complete_flag,
+            )
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.COLOR_SELECTION.value:
+            logger.info("Running command: color_selection")
+            tmp_pymol_color, tmp_selection_string = tmp_args
+            tmp_result: tuple[bool, str] = commands.color_selection(tmp_pymol_color, tmp_selection_string)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.SET_BACKGROUND_COLOR.value:
+            logger.info("Running command: set_background_color")
+            _, tmp_pymol_color = tmp_args
+            tmp_result: tuple[bool, str] = commands.set_background_color(tmp_pymol_color)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.SET_DEFAULT_GRAPHIC_SETTINGS.value:
+            logger.info("Running command: set_default_graphic_settings")
+            tmp_result: tuple[bool, str] = commands.set_default_graphics_settings()
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.SCENE.value:
+            logger.info("Running command: scene")
+            a_key, an_action = tmp_args
+            tmp_result: tuple[bool, str] = commands.scene(a_key, an_action)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.SELECT.value:
+            logger.info("Running command: select")
+            a_name, a_selection_string = tmp_args
+            tmp_result: tuple[bool, str] = commands.select(a_name, a_selection_string)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.RAY.value:
+            logger.info("Running command: ray")
+            tmp_width, tmp_height, tmp_renderer = tmp_args
+            tmp_result: tuple[bool, str] = commands.ray(tmp_width, tmp_height, tmp_renderer)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.DRAW.value:
+            logger.info("Running command: draw")
+            tmp_width, tmp_height, tmp_antialias_value = tmp_args
+            tmp_result: tuple[bool, str] = commands.draw(tmp_width, tmp_height, tmp_antialias_value)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )
+        elif tmp_command_name == pymol_enums.CommandEnum.PNG.value:
+            logger.info("Running command: png")
+            tmp_image_filepath, tmp_dpi_value = tmp_args
+            tmp_result: tuple[bool, str] = commands.png(tmp_image_filepath, tmp_dpi_value)
+            logger.info(f"Command result: {tmp_result}")
+            self._sender_socket.send_json(
+                {"success": tmp_result[0], "message": str(tmp_result[1])},
+            )

@@ -28,7 +28,7 @@ from pyssa.util import pyssa_keys
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
-
+__docformat__ = "google"
 
 # def calculate_distance_between_ca_atoms(ref_prot_name: str, model_prot_name: str) -> dict[str, np.ndarray]:
 #     """Calculates the distance between two alpha carbon-atoms.
@@ -94,29 +94,26 @@ logger.addHandler(log_handlers.log_file_handler)
 #     return result_hashtable
 
 
-def get_chain_and_position(results_hashtable: dict[str, np.ndarray], i: int) -> tuple:
+def get_chain_and_position(results_hashtable: dict[str, np.ndarray], index: int) -> tuple:
     """This function gets the chain and the residue postion from the results hash table.
 
     Args:
-        results_hashtable (dict(str, np.ndarray)):
-            hash table which contains all information from the
-            distance calculation
-        i (int):
-            interator for the results hash table index
+        results_hashtable (dict[str, np.ndarray]): A hash table which contains all information from the distance calculation.
+        index (int): An interator for the results hash table index.
 
     Returns:
-        tuple
+        A tuple of ref_chain, ref_pos, ref_resi, model_chain, model_pos, model_resi for a specific index.
     """
     ref_chain_array = results_hashtable.get(pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN)
-    ref_chain = ref_chain_array[i]
+    ref_chain = ref_chain_array[index]
     ref_pos_array = results_hashtable.get(pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION)
-    ref_pos = ref_pos_array[i]
+    ref_pos = ref_pos_array[index]
     ref_resi_array = results_hashtable.get(pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI)
-    ref_resi = ref_resi_array[i]
+    ref_resi = ref_resi_array[index]
     model_chain_array = results_hashtable.get(pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN)
-    model_chain = model_chain_array[i]
+    model_chain = model_chain_array[index]
     model_pos_array = results_hashtable.get(pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION)
-    model_pos = model_pos_array[i]
+    model_pos = model_pos_array[index]
     model_resi_array = results_hashtable.get(pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI)
-    model_resi = model_resi_array[i]
-    return (ref_chain, ref_pos, ref_resi, model_chain, model_pos, model_resi)
+    model_resi = model_resi_array[index]
+    return ref_chain, ref_pos, ref_resi, model_chain, model_pos, model_resi

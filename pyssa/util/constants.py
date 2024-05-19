@@ -243,7 +243,7 @@ PYMOL_COLORS = [
     "magenta", "purple", "pink", "hotpink",
     "cyan", "aquamarine", "palecyan", "teal",
     "orange", "tv_orange", "lightorange", "olive",
-    "white", "grey70", "grey30", "black", "By RMSD", "atomic"
+    "white", "grey70", "grey30", "black", "By RMSD", "atomic",
 ]
 
 PYMOL_COLORS_WITH_INDICES = {
@@ -282,7 +282,7 @@ PYMOL_COLORS_WITH_INDICES = {
     "By RMSD": "By RMSD",
     27: "N-blue",
     28: "O-red",
-    "By Element": "By Element"
+    "By Element": "By Element",
 }
 
 AMINO_ACID_CODE = {
@@ -420,5 +420,5 @@ PYMOL_REPS_WITH_INDICES = {
         64: 'ribbon',
         128: 'lines',
         256: 'mesh',
-        512: 'dots'
+        512: 'dots',
 }

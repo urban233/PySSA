@@ -37,17 +37,30 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 def get_prediction_name_and_seq_from_table(
     table: "QtWidgets.QTableWidget",
-) -> list[prediction_protein_info.PredictionProteinInfo]:
-    """This function gets the names and sequences of the table which stores the predictions to run.
+) -> list["prediction_protein_info.PredictionProteinInfo"]:
+    """Gets the names and sequences of the table which stores the predictions to run.
 
     Args:
-        table: a pyqt table which contains the proteins to predict
-    Returns: a list of tuples with name and sequence
+        table (QtWidgets.QTableWidget): A PyQt table widget which contains the proteins to predict.
+    
+    Returns:
+        A list of tuples with name and sequence.
+    
+    Raises:
+        exception.IllegalArgumentError: If table is None.
     """
+    # <editor-fold desc="Checks">
+    if table is None:
+        logger.error("table is None.")
+        raise exception.IllegalArgumentError("table is None.")
+    
+    # </editor-fold>
+    
     # list which consists of tuples of the protein name and protein sequence
     predictions: list[tuple[str, str]] = []
     for i in range(table.rowCount()):
@@ -73,15 +86,14 @@ def get_prediction_name_and_seq_from_table(
 
 
 def get_relaxed_rank_1_pdb_file(
-    proteins_to_predict: list[prediction_protein_info.PredictionProteinInfo],
-) -> list[tuple[prediction_protein_info.PredictionProteinInfo, str]]:
+    proteins_to_predict: list["prediction_protein_info.PredictionProteinInfo"],
+) -> list[tuple["prediction_protein_info.PredictionProteinInfo", str]]:
     """This function gets the prediction models which were relaxed and ranked number one.
 
     Args:
-        proteins_to_predict:
-            list of tuples which consists of the protein name and sequence
+        proteins_to_predict (list[prediction_protein_info.PredictionProteinInfo]): A list of tuples which consists of the protein name and sequence
     Returns:
-        a list of tuples with the name of the modelled protein and the actual filename
+        A list of tuples with the name of the modelled protein and the actual filename
     """
     # <editor-fold desc="Checks">
     if proteins_to_predict[0].name == "":
@@ -108,9 +120,12 @@ def get_relaxed_rank_1_pdb_file(
 
 def delete_pyssa_colabfold_directory_in_wsl2() -> bool:
     """Deletes the pyssa_colabfold directory in WSL2.
-
+    
+    Returns:
+        A boolean indicating the success of the operation.
+    
     Raises:
-        SubprocessExecutionError: If return code of subprocess is non-zero
+        exception.UnableToDeleteDirectoryError: If shutil.rmtree could not remove the pyssa_colabfold dir.
     """
     tmp_pyssa_colabfold_path: str = r"\\wsl$\almaColabfold9\home\rhel_user\pyssa_colabfold"
     try:
@@ -127,7 +142,8 @@ def copy_pyssa_colabfold_directory_to_wsl2() -> None:
     """Copies the pyssa_colabfold directory to WSL2.
 
     Raises:
-        SubprocessExecutionError: If return code of subprocess is non-zero
+        exception.DirectoryNotFoundError: If the str(pathlib.Path(f"{constants.PLUGIN_PATH}/pyssa_colabfold")) path does not exists.
+        exception.UnableToCopyDirectoryError: If shutil.copytree could not copy the pyssa_colabfold dir.
     """
     tmp_pyssa_colabfold_wsl_path: str = r"\\wsl$\almaColabfold9\home\rhel_user\pyssa_colabfold"
     tmp_pyssa_colabfold_windows_path: str = str(pathlib.Path(f"{constants.PLUGIN_PATH}/pyssa_colabfold"))

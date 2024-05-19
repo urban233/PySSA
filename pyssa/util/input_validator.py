@@ -20,23 +20,48 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the input validator class."""
+import logging
 import re
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
-from pyssa.gui.ui.styles import styles
+
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 def validate_input_for_project_name(the_current_entered_text: str,
                                     the_current_projects: set) -> tuple[bool, str, str]:
     """Validates the input for a project name.
 
+    Args:
+        the_current_entered_text (str): The text entered by the user.
+        the_current_projects (set): The set of existing project names.
+    
     Returns:
-        a boolean indicating if the input is valid
-        a string that contains the stylesheet for the line edit
-        a string that contains a message
+        A tuple with three elements:
+            a boolean indicating if the input is valid
+            a string that contains the stylesheet for the line edit
+            a string that contains a message
+    
+    Raises:
+        exception.IllegalArgumentError: If either `the_current_entered_text` or `the_current_projects` is None.
     """
+    # <editor-fold desc="Checks">
+    if the_current_entered_text is None:
+        logger.error("the_current_entered_text is None.")
+        raise exception.IllegalArgumentError("the_current_entered_text is None.")
+    if the_current_projects is None:
+        logger.error("the_current_projects is None.")
+        raise exception.IllegalArgumentError("the_current_projects is None.")
+    
+    # </editor-fold>
+    
     allowed_chars = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
                      'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D',
                      'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
@@ -46,13 +71,22 @@ def validate_input_for_project_name(the_current_entered_text: str,
             return False, """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""", "Invalid character."
     if the_current_entered_text in the_current_projects:
         return False, """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""", "Project name already exists!"
-    elif the_current_entered_text == "":
+    if the_current_entered_text == "":
         return False, """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""", "Please enter a project name."
     else:
         return True, """QLineEdit {color: #000000; border-color: #DCDBE3;}""", ""
 
 
 def find_match_in_model(a_model, a_text_to_search_for) -> list[QtGui.QStandardItem]:
+    """Find match in model.
+
+    Args:
+        a_model: The model to search in.
+        a_text_to_search_for: The text to search for.
+
+    Returns:
+        A list of exactly or partially matched items in the model.
+    """
     tmp_exactly_matched_items = a_model.findItems(
         a_text_to_search_for,
         QtCore.Qt.MatchExactly,
@@ -63,379 +97,151 @@ def find_match_in_model(a_model, a_text_to_search_for) -> list[QtGui.QStandardIt
     )
     if len(tmp_exactly_matched_items) == 1:
         return tmp_exactly_matched_items
-    else:
-        return tmp_partial_matched_items
-
+    return tmp_partial_matched_items
 
 
 class InputValidator:
     """Class for validating any input from the user."""
 
     line_edit: QtWidgets.QLineEdit
+    """The line edit widget to validate."""
 
     def __init__(self, a_line_edit: QtWidgets.QLineEdit) -> None:
-        """Empty constructor."""
+        """Constructor.
+        
+        Args:
+            a_line_edit (QtWidgets.QLineEdit): The line edit widget to validate.
+        
+        Raises:
+            exception.IllegalArgumentError: If a_line_edit is None.
+        """
+        # <editor-fold desc="Checks">
+        if a_line_edit is None:
+            logger.error("a_line_edit is None.")
+            raise exception.IllegalArgumentError("a_line_edit is None.")
+        
+        # </editor-fold>
+        
         self.line_edit = a_line_edit
 
     def validate_input_for_sequence_name(self,
-                                        the_current_entered_text: str,
-                                        the_current_sequences: set) -> tuple[bool, str]:
+                                         the_current_entered_text: str,
+                                         the_current_sequences: set) -> tuple[bool, str]:
         """Validates the input for a protein name.
 
+        Args:
+            the_current_entered_text (str): The text entered for the sequence name.
+            the_current_sequences (set): A set of existing sequence names.
+
         Returns:
-            True: if the input is valid, False if the input is invalid + a message
+            A tuple containing a boolean indicating whether the input is valid and a string representing an error message if applicable.
+        
+        Raises:
+            exception.IllegalArgumentError: If either `the_current_entered_text` or `the_current_sequences` is None.
         """
+        # <editor-fold desc="Checks">
+        if the_current_entered_text is None:
+            logger.error("the_current_entered_text is None.")
+            raise exception.IllegalArgumentError("the_current_entered_text is None.")
+        if the_current_sequences is None:
+            logger.error("the_current_sequences is None.")
+            raise exception.IllegalArgumentError("the_current_sequences is None.")
+        
+        # </editor-fold>
+        
         allowed_chars = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-', '_'}
         for char in the_current_entered_text:
             if char not in allowed_chars:
                 self.line_edit.setStyleSheet(
-                    """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                    """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
                 )
                 return False, "Invalid character!"
         if the_current_entered_text in the_current_sequences:
             self.line_edit.setStyleSheet(
-                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
             )
             return False, "Sequence name already exists!"
-        elif the_current_entered_text == "":
+        if the_current_entered_text == "":
             self.line_edit.setStyleSheet(
-                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
             )
             return False, "Please enter a sequence name!"
-        else:
-            self.line_edit.setStyleSheet(
-                """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
-            )
-            return True, ""
+        self.line_edit.setStyleSheet(
+            """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
+        )
+        return True, ""
 
-    def validate_input_for_protein_sequence(self, the_current_entered_text: str):
+    def validate_input_for_protein_sequence(self, the_current_entered_text: str) -> tuple[bool, str]:
         """Validates the input for a protein sequence.
 
+        Args:
+            the_current_entered_text (str): The text entered by the user.
+
         Returns:
-            True: if the input is valid, False if the input is invalid + a message
+            A tuple containing a boolean value indicating whether the input is valid and a string message. 
+            If the input is valid, the boolean value will be True and the message will be an empty string. 
+            If the input is invalid, the boolean value will be False and the message will describe the error.
+        
+        Raises:
+            exception.IllegalArgumentError: If the_current_entered_text is None.
         """
+        # <editor-fold desc="Checks">
+        if the_current_entered_text is None:
+            logger.error("the_current_entered_text is None.")
+            raise exception.IllegalArgumentError("the_current_entered_text is None.")
+        
+        # </editor-fold>
+        
         allowed_chars = {"C", "D", "S", "Q", "K", "I", "P", "T", "F", "N", "G", "H", "L", "R", "W", "A", "V", "E", "Y", "M", ","}
         for char in the_current_entered_text:
             if char not in allowed_chars:
                 self.line_edit.setStyleSheet(
-                    """QTextEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                    """QTextEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
                 )
                 return False, "Invalid character!"
         if the_current_entered_text == "":
             self.line_edit.setStyleSheet(
-                """QTextEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                """QTextEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
             )
             return False, "Please enter a protein sequence!"
         elif the_current_entered_text[-1] == "," and the_current_entered_text[-2] == ",":
             self.line_edit.setStyleSheet(
-                """QTextEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                """QTextEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
             )
             return False, "You already entered a protein sequence delimter!"
         elif self._detect_multiple_commas(the_current_entered_text) > 0:
             self.line_edit.setStyleSheet(
-                """QTextEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                """QTextEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
             )
             return False, "You already entered a protein sequence delimter!"
         else:
             self.line_edit.setStyleSheet(
-                """QTextEdit {color: #000000; border-color: #DCDBE3;}"""
+                """QTextEdit {color: #000000; border-color: #DCDBE3;}""",
             )
             return True, ""
 
-    def _detect_multiple_commas(self, text) -> int:
+    def _detect_multiple_commas(self, text: str) -> int:
+        """Detects the number of commas in the text.
+
+        Args:
+            text (str): The text to search for multiple commas.
+
+        Returns:
+            The number of occurrences of multiple commas in the text.
+
+        Raises:
+            exception.IllegalArgumentError: If text is None.
+        """
+        # <editor-fold desc="Checks">
+        if text is None:
+            logger.error("text is None.")
+            raise exception.IllegalArgumentError("text is None.")
+        
+        # </editor-fold>
+        
         pattern = r',{2,}'
         matches = re.findall(pattern, text)
         return len(matches)
-
-    @staticmethod
-    def validate_project_name_use_project(
-        list_of_projects: QtCore.QStringListModel,
-        txt_for_project_name: QtWidgets.QLineEdit,
-        lbl_for_status_project_name: QtWidgets.QLabel,
-        btn_for_next_step: QtWidgets.QPushButton,
-        cb_for_add_reference: QtWidgets.QCheckBox = None
-    #     list_model = list_of_projects
-    #     txt_for_project_name = txt_for_project_name
-    #     lbl_for_status_project_name = lbl_for_status_project_name
-    #     btn_for_selected_project = btn_for_next_step
-    #     cb_for_selected_project = cb_for_add_reference
-    #
-    #     if list_model is not None:
-    #         list_of_projects.currentItem().setSelected(False)
-    #     # set color for lineEdit
-    #     txt_for_project_name.setStyleSheet("color: #f44336")
-    #     if len(txt_for_project_name.text()) == 0:
-    #         lbl_for_status_project_name.hide()
-    #         if cb_for_selected_project is not None:
-    #             cb_for_selected_project.setCheckable(False)
-    #             cb_for_selected_project.setStyleSheet("color: #E1E1E1;")
-    #         btn_for_next_step.setEnabled(False)
-    #         styles.color_button_not_ready(btn_for_next_step)
-    #     elif len(txt_for_project_name.text()) > 20:
-    #         lbl_for_status_project_name.setText("Project name is too long (max. 20 characters).")
-    #         btn_for_next_step.setEnabled(False)
-    #         styles.color_button_not_ready(btn_for_next_step)
-    #         return
-    #     else:
-    #         regex = Qt.QtCore.QRegularExpression()
-    #         regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
-    #         validator = QtGui.QRegularExpressionValidator(regex)
-    #         for i in range(len(txt_for_project_name.text())):
-    #             result = validator.validate(txt_for_project_name.text(), i)
-    #             if result[0] > 0:
-    #                 txt_for_project_name.setStyleSheet("color: #000000")
-    #                 lbl_for_status_project_name.setText("")
-    #                 if cb_for_add_reference is not None:
-    #                     cb_for_add_reference.setCheckable(True)
-    #                     cb_for_add_reference.setStyleSheet("color: black;")
-    #                 btn_for_next_step.setEnabled(True)
-    #                 styles.color_button_ready(btn_for_next_step)
-    #             else:
-    #                 txt_for_project_name.setStyleSheet("color: #f44336")
-    #                 lbl_for_status_project_name.setText("Invalid character.")
-    #                 if cb_for_add_reference is not None:
-    #                     cb_for_add_reference.setCheckable(False)
-    #                     cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
-    #                 btn_for_next_step.setEnabled(False)
-    #                 styles.color_button_not_ready(btn_for_next_step)
-    #                 return
-    #         item = list_model.findItems(
-    #             txt_for_project_name.text(),
-    #             Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly,
-    #         )
-    #         if len(item) != 0:
-    #             list_model.setCurrentItem(item[0])
-    #             txt_for_project_name.setStyleSheet("color: #f44336")
-    #             lbl_for_status_project_name.setText("Project name already exists.")
-    #             if cb_for_add_reference is not None:
-    #                 cb_for_add_reference.setCheckable(False)
-    #                 cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
-    #             btn_for_next_step.setEnabled(False)
-    #             styles.color_button_not_ready(btn_for_next_step)
-    ) -> None:
-        """This function validates the input of the project name in real-time.
-
-                Args:
-                    list_of_projects:
-                        list widget which holds all projects from the workspace
-                    txt_for_project_name:
-                        line edit widget which is used to enter the project name
-                    lbl_for_status_project_name:
-                        label which is used to give feedback if the input is legal or not
-                    btn_for_next_step:
-                        push button which is used to execute either the next step or to create a project
-                    cb_for_add_reference (optional):
-                        checkbox widget which is used to add a reference
-                """
-        #if list_of_projects is not None and list_of_projects.currentIndex().isValid():
-         #    list_of_projects.clearSelection()
-
-        # Set color for lineEdit
-        txt_for_project_name.setStyleSheet("color: #f44336")
-        lbl_for_status_project_name.setStyleSheet("color: #f44336")
-
-        if len(txt_for_project_name.text()) == 0:
-            lbl_for_status_project_name.setText("")
-
-            if cb_for_add_reference is not None:
-                cb_for_add_reference.setCheckable(False)
-                cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
-
-            btn_for_next_step.setEnabled(False)
-
-        elif len(txt_for_project_name.text()) > 20:
-            lbl_for_status_project_name.setText("Project name is too long (max. 20 characters).")
-            btn_for_next_step.setEnabled(False)
-
-        else:
-            regex = QtCore.QRegularExpression()
-            regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
-            validator = QtGui.QRegularExpressionValidator(regex)
-            for i in range(len(txt_for_project_name.text())):
-                result = validator.validate(txt_for_project_name.text(), i)
-
-                if result[0] > 0:
-                    txt_for_project_name.setStyleSheet("color: #000000")
-                    lbl_for_status_project_name.setText("")
-
-                    if cb_for_add_reference is not None:
-                        cb_for_add_reference.setCheckable(True)
-                        cb_for_add_reference.setStyleSheet("color: black;")
-
-                    btn_for_next_step.setEnabled(True)
-
-                else:
-                    txt_for_project_name.setStyleSheet("color: #f44336")
-                    lbl_for_status_project_name.setText("Invalid character.")
-
-                    if cb_for_add_reference is not None:
-                        cb_for_add_reference.setCheckable(False)
-                        cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
-
-                    btn_for_next_step.setEnabled(False)
-                    return
-
-            item = list_of_projects.match(
-                list_of_projects.index(0, 0),
-                Qt.MatchExactly,
-                txt_for_project_name.text()
-            )
-
-            if len(item) != 0:
-                list_of_projects.index(0, 0)
-                txt_for_project_name.setStyleSheet("color: #f44336")
-                lbl_for_status_project_name.setText("Project name already exists.")
-
-                if cb_for_add_reference is not None:
-                    cb_for_add_reference.setCheckable(False)
-                    cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
-
-                btn_for_next_step.setEnabled(False)
-
-    @staticmethod
-    def validate_project_name_delete_project(
-            list_of_projects: QtCore.QStringListModel,
-            txt_for_project_name: QtWidgets.QLineEdit,
-            lbl_for_status_project_name: QtWidgets.QLabel,
-            btn_for_next_step: QtWidgets.QPushButton,
-            cb_for_add_reference: QtWidgets.QCheckBox = None
-            #     list_model = list_of_projects
-            #     txt_for_project_name = txt_for_project_name
-            #     lbl_for_status_project_name = lbl_for_status_project_name
-            #     btn_for_selected_project = btn_for_next_step
-            #     cb_for_selected_project = cb_for_add_reference
-            #
-            #     if list_model is not None:
-            #         list_of_projects.currentItem().setSelected(False)
-            #     # set color for lineEdit
-            #     txt_for_project_name.setStyleSheet("color: #f44336")
-            #     if len(txt_for_project_name.text()) == 0:
-            #         lbl_for_status_project_name.hide()
-            #         if cb_for_selected_project is not None:
-            #             cb_for_selected_project.setCheckable(False)
-            #             cb_for_selected_project.setStyleSheet("color: #E1E1E1;")
-            #         btn_for_next_step.setEnabled(False)
-            #         styles.color_button_not_ready(btn_for_next_step)
-            #     elif len(txt_for_project_name.text()) > 20:
-            #         lbl_for_status_project_name.setText("Project name is too long (max. 20 characters).")
-            #         btn_for_next_step.setEnabled(False)
-            #         styles.color_button_not_ready(btn_for_next_step)
-            #         return
-            #     else:
-            #         regex = Qt.QtCore.QRegularExpression()
-            #         regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
-            #         validator = QtGui.QRegularExpressionValidator(regex)
-            #         for i in range(len(txt_for_project_name.text())):
-            #             result = validator.validate(txt_for_project_name.text(), i)
-            #             if result[0] > 0:
-            #                 txt_for_project_name.setStyleSheet("color: #000000")
-            #                 lbl_for_status_project_name.setText("")
-            #                 if cb_for_add_reference is not None:
-            #                     cb_for_add_reference.setCheckable(True)
-            #                     cb_for_add_reference.setStyleSheet("color: black;")
-            #                 btn_for_next_step.setEnabled(True)
-            #                 styles.color_button_ready(btn_for_next_step)
-            #             else:
-            #                 txt_for_project_name.setStyleSheet("color: #f44336")
-            #                 lbl_for_status_project_name.setText("Invalid character.")
-            #                 if cb_for_add_reference is not None:
-            #                     cb_for_add_reference.setCheckable(False)
-            #                     cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
-            #                 btn_for_next_step.setEnabled(False)
-            #                 styles.color_button_not_ready(btn_for_next_step)
-            #                 return
-            #         item = list_model.findItems(
-            #             txt_for_project_name.text(),
-            #             Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly,
-            #         )
-            #         if len(item) != 0:
-            #             list_model.setCurrentItem(item[0])
-            #             txt_for_project_name.setStyleSheet("color: #f44336")
-            #             lbl_for_status_project_name.setText("Project name already exists.")
-            #             if cb_for_add_reference is not None:
-            #                 cb_for_add_reference.setCheckable(False)
-            #                 cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
-            #             btn_for_next_step.setEnabled(False)
-            #             styles.color_button_not_ready(btn_for_next_step)
-    ) -> None:
-        """This function validates the input of the project name in real-time.
-
-                Args:
-                    list_of_projects:
-                        list widget which holds all projects from the workspace
-                    txt_for_project_name:
-                        line edit widget which is used to enter the project name
-                    lbl_for_status_project_name:
-                        label which is used to give feedback if the input is legal or not
-                    btn_for_next_step:
-                        push button which is used to execute either the next step or to create a project
-                    cb_for_add_reference (optional):
-                        checkbox widget which is used to add a reference
-                """
-        # if list_of_projects is not None and list_of_projects.currentIndex().isValid():
-        #    list_of_projects.clearSelection()
-
-        # Set color for lineEdit
-        txt_for_project_name.setStyleSheet("color: #f44336")
-        lbl_for_status_project_name.setStyleSheet("color: #f44336")
-
-        if len(txt_for_project_name.text()) == 0:
-            lbl_for_status_project_name.setText("")
-
-            if cb_for_add_reference is not None:
-                cb_for_add_reference.setCheckable(False)
-                cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
-
-            btn_for_next_step.setEnabled(False)
-
-        elif len(txt_for_project_name.text()) > 20:
-            lbl_for_status_project_name.setText("Project name is too long (max. 20 characters).")
-            btn_for_next_step.setEnabled(False)
-
-        else:
-            regex = QtCore.QRegularExpression()
-            regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
-            validator = QtGui.QRegularExpressionValidator(regex)
-            for i in range(len(txt_for_project_name.text())):
-                result = validator.validate(txt_for_project_name.text(), i)
-
-                if result[0] > 0:
-                    txt_for_project_name.setStyleSheet("color: #000000")
-                    lbl_for_status_project_name.setText("")
-
-                    if cb_for_add_reference is not None:
-                        cb_for_add_reference.setCheckable(True)
-                        cb_for_add_reference.setStyleSheet("color: black;")
-
-                    btn_for_next_step.setEnabled(True)
-
-                else:
-                    txt_for_project_name.setStyleSheet("color: #f44336")
-                    lbl_for_status_project_name.setText("Invalid character.")
-
-                    if cb_for_add_reference is not None:
-                        cb_for_add_reference.setCheckable(False)
-                        cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
-
-                    btn_for_next_step.setEnabled(False)
-                    return
-
-            item = list_of_projects.match(
-                list_of_projects.index(0, 0),
-                Qt.MatchExactly,
-                txt_for_project_name.text()
-            )
-
-            # if len(item) != 0:
-            #     list_of_projects.index(0, 0)
-            #     txt_for_project_name.setStyleSheet("color: #f44336")
-            #     lbl_for_status_project_name.setText("Project name already exists.")
-
-                # if cb_for_add_reference is not None:
-                #     cb_for_add_reference.setCheckable(False)
-                #     cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
-                #
-                # btn_for_next_step.setEnabled(False)
 
     @staticmethod
     def validate_search_input(
@@ -445,20 +251,37 @@ class InputValidator:
         txt_for_selected_project: QtWidgets.QLineEdit = None,
         status_message: str = None,
     ) -> None:
-        """This function validates the input of the project name in real-time.
+        """Validates the input of the project name in real-time.
 
         Args:
-            list_for_projects:
-                list widget where all projects from the workspace are stored
-            txt_for_search:
-                line edit widget which ii used for entering the search term
-            lbl_for_status_search:
-                label which gives feedback
-            txt_for_selected_project:
-                line edit widget which is used to display the selected project
-            status_message:
-                the message which should get displayed.
+            list_for_projects (QtCore.QStringListModel): A list widget where all projects from the workspace are stored.
+            txt_for_search (QtWidgets.QLineEdit): A line edit widget which is used for entering the search term.
+            lbl_for_status_search (QtWidgets.QLabel): A label which gives feedback.
+            txt_for_selected_project (QtWidgets.QLineEdit): A line edit widget which is used to display the selected project.
+            status_message (str): The message which should get displayed. Default is None.
+
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
         """
+        # <editor-fold desc="Checks">
+        if list_for_projects is None:
+            logger.error("list_for_projects is None.")
+            raise exception.IllegalArgumentError("list_for_projects is None.")
+        if txt_for_search is None:
+            logger.error("txt_for_search is None.")
+            raise exception.IllegalArgumentError("txt_for_search is None.")
+        if lbl_for_status_search is None:
+            logger.error("lbl_for_status_search is None.")
+            raise  exception.IllegalArgumentError("lbl_for_status_search is None.")
+        if txt_for_selected_project is None:
+            logger.error("txt_for_selected_project is None.")
+            raise exception.IllegalArgumentError("txt_for_selected_project is None.")
+        if status_message is None:
+            logger.error("status_message is None.")
+            raise exception.IllegalArgumentError("status_message is None.")
+        
+        # </editor-fold>
+        
         list_model = list_for_projects
         txt_for_search = txt_for_search
         lbl_for_status_search = lbl_for_status_search
@@ -503,13 +326,26 @@ class InputValidator:
         """This function validates the input of the protein name in real-time.
 
         Args:
-            txt_for_protein_name:
-                line edit widget which ii used for entering the protein name
-            lbl_for_status_protein_name:
-                label which gives feedback if the protein name is legal
-            btn_next:
-                push button which is used for the next step
+            txt_for_protein_name (QtWidgets.QTextEdit): A line edit widget which ii used for entering the protein name.
+            lbl_for_status_protein_name (QtWidgets.QLabel): A label which gives feedback if the protein name is legal.
+            btn_next (QtWidgets.QPushButton): A push button which is used for the next step.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
         """
+        # <editor-fold desc="Checks">
+        if txt_for_protein_name is None:
+            logger.error("txt_for_protein_name is None.")
+            raise exception.IllegalArgumentError("txt_for_protein_name is None.")
+        if lbl_for_status_protein_name is None:
+            logger.error("lbl_for_status_protein_name is None.")
+            raise exception.IllegalArgumentError("lbl_for_status_protein_name is None.")
+        if btn_next is None:
+            logger.error("btn_next is None.")
+            raise exception.IllegalArgumentError("btn_next is None.")
+        
+        # </editor-fold>
+        
         # set color for lineEdit
         txt_for_protein_name.setStyleSheet("color: #f44336")
         if len(txt_for_protein_name.text()) == 0:
@@ -532,41 +368,4 @@ class InputValidator:
                     lbl_for_status_protein_name.setText("Invalid character.")
                     if btn_next is not None:
                         btn_next.setEnabled(False)
-                    return
-
-    @staticmethod
-    def validate_protein_sequence(
-        txt_protein_sequence: QtWidgets.QTextEdit,
-        lbl_status_protein_sequence: QtWidgets.QLabel,
-        btn_next: QtWidgets.QPushButton,
-    ) -> None:
-        """This function validates the input of the protein sequence in real-time.
-
-        Args:
-            txt_protein_sequence:
-                line edit widget which is used to enter the protein sequence
-            lbl_status_protein_sequence:
-                label which gives feedback if the protein sequence is legal or not
-            btn_next:
-                button which is used to get to the next step
-        """
-        # set color for lineEdit
-        txt_protein_sequence.setStyleSheet("color: #f44336")
-        if len(txt_protein_sequence.toPlainText()) == 0:
-            lbl_status_protein_sequence.setText("")
-            btn_next.setEnabled(False)
-        else:
-            regex = Qt.QtCore.QRegularExpression()
-            regex.setPattern("(([A])|([C-I])|([K-N])|([P-T])|([V-W])|([Y]))+")
-            validator = QtGui.QRegularExpressionValidator(regex)
-            for i in range(len(txt_protein_sequence.toPlainText())):
-                result = validator.validate(txt_protein_sequence.toPlainText(), i)
-                if result[0] > 0:
-                    txt_protein_sequence.setStyleSheet("color: #000000")
-                    lbl_status_protein_sequence.setText("")
-                    btn_next.setEnabled(True)
-                else:
-                    txt_protein_sequence.setStyleSheet("color: #f44336")
-                    lbl_status_protein_sequence.setText("Invalid character.")
-                    btn_next.setEnabled(False)
                     return

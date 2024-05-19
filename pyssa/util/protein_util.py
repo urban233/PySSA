@@ -24,7 +24,7 @@ import logging
 from pyssa.io_pyssa import safeguard
 from pyssa.internal.data_structures import chain
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import constants
+from pyssa.util import constants, exception
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -34,22 +34,25 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 def check_if_protein_is_from_file_or_id(molecule_object: str) -> tuple:
-    """This function checks if a protein is from a .pdb file or from a PDB ID.
+    """Checks if a protein is from a .pdb file or from a PDB ID.
 
     Args:
-        molecule_object:
-            the name of the protein which is also used within pymol
+        molecule_object (str): The name of the protein which is also used within pymol.
+
     Returns:
-        a tuple with the molecule object and the basename
+        A tuple with the molecule object and the basename.
+    
+    Raises:
+        exception.IllegalArgumentError: If molecule_object is either None or an empty string.
     """
     # <editor-fold desc="Checks">
-    safeguard.Safeguard.check_if_value_is_not_none(molecule_object, logger)
-    if molecule_object == "":
-        logger.error("An argument is illegal.")
-        raise ValueError("An argument is illegal.")
+    if molecule_object is None or molecule_object == "":
+        logger.error("molecule_object is either None or an empty string.")
+        raise exception.IllegalArgumentError("molecule_object is either None or an empty string.")
 
     # </editor-fold>
 
@@ -69,16 +72,19 @@ def filter_chains_for_protein_chains(chains: list["chain.Chain"]) -> list["chain
     """Filters the chains for protein chains only.
 
     Args:
-        chains: a list of chains which occur in the protein
-    Returns: a list of protein chains only
+        chains (list[chain.Chain]): A list of chains which occur in the protein.
+
+    Returns:
+        A list of protein chains only.
+    
+    Raises:
+        exception.IllegalArgumentError: If chains is either None or an empty list.
     """
     # <editor-fold desc="Checks">
-    safeguard.Safeguard.check_if_value_is_not_none(chains, logger)
-    if not safeguard.Safeguard.check_if_list_is_empty(
-        chains,
-    ):
-        logger.error("An argument is illegal.")
-        raise ValueError("An argument is illegal.")
+    if chains is None or len(chains) == 0:
+        logger.error("chains is either None or an empty list.")
+        raise exception.IllegalArgumentError("chains is either None or an empty list.")
+    
     # </editor-fold>
 
     protein_chains = []
@@ -89,7 +95,24 @@ def filter_chains_for_protein_chains(chains: list["chain.Chain"]) -> list["chain
 
 
 def get_chains_as_list_of_tuples(chains: list["chain.Chain"]) -> list[tuple[str, "sequence.Sequence", str]]:
-    """Gets the chains as a list of tuples containing the chain letter, sequence and type."""
+    """Gets the chains as a list of tuples containing the chain letter, sequence and type.
+    
+    Args:
+        chains (list[chain.Chain]): A list of chains which occur in the protein.
+    
+    Returns:
+        A list of tuples containing the chain letter, sequence and type.
+    
+    Raises:
+        exception.IllegalArgumentError: If chains is either None or an empty list.
+    """
+    # <editor-fold desc="Checks">
+    if chains is None or len(chains) == 0:
+        logger.error("chains is either None or an empty list.")
+        raise exception.IllegalArgumentError("chains is either None or an empty list.")
+    
+    # </editor-fold>
+    
     chains_information = []
     for tmp_chain in chains:
         chains_information.append((tmp_chain.chain_letter, tmp_chain.chain_sequence, tmp_chain.chain_type))
@@ -97,9 +120,26 @@ def get_chains_as_list_of_tuples(chains: list["chain.Chain"]) -> list[tuple[str,
 
 
 def create_chains_from_list_of_tuples(
-        chains_as_list_of_tuples: list[tuple[str, "sequence.Sequence", str]]
+        chains_as_list_of_tuples: list[tuple[str, "sequence.Sequence", str]],
 ) -> list["chain.Chain"]:
-    """Creates chain objects from a list of tuples containing the chain letter, sequence and type."""
+    """Creates chain objects from a list of tuples containing the chain letter, sequence and type.
+    
+    Args:
+        chains_as_list_of_tuples (list[tuple[str, "sequence.Sequence", str]]): A list of tuples containing the chain letter, sequence and type.
+    
+    Returns:
+        A list of chain objects.
+    
+    Raises:
+        exception.IllegalArgumentError: If chains_as_list_of_tuples is None.
+    """
+    # <editor-fold desc="Checks">
+    if chains_as_list_of_tuples is None:
+        logger.error("chains_as_list_of_tuples is None.")
+        raise exception.IllegalArgumentError("chains_as_list_of_tuples is None.")
+    
+    # </editor-fold>
+    
     chains: list["chain.Chain"] = []
     for tmp_chain_information in chains_as_list_of_tuples:
         chains.append(chain.Chain(tmp_chain_information[0], tmp_chain_information[1], tmp_chain_information[2]))
@@ -110,9 +150,26 @@ def get_chains_from_list_of_chain_names(a_protein: "protein.Protein", chain_name
     """Gets the chains from a list of chain names.
 
     Args:
-        a_protein: the protein from which the chains are used.
-        chain_names: a list of chain names.
+        a_protein (protein.Protein): the protein from which the chains are used.
+        chain_names (list): a list of chain names.
+    
+    Returns:
+        A list of chain objects.
+    
+    Raises:
+        exception.IllegalArgumentError: If a_protein is None.
+        exception.IllegalArgumentError: If chain_names is either None or an empty list.
     """
+    # <editor-fold desc="Checks">
+    if a_protein is None:
+        logger.error("a_protein is None.")
+        raise exception.IllegalArgumentError("a_protein is None.")
+    if chain_names is None or len(chain_names) == 0:
+        logger.error("chain_names is either None or an empty list.")
+        raise exception.IllegalArgumentError("chain_names is either None or an empty list.")
+    
+    # </editor-fold>
+    
     chains: list["chain.Chain"] = []
     for tmp_chain in a_protein.chains:
         for tmp_chain_name in chain_names:

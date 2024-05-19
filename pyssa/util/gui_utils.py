@@ -20,24 +20,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for functions which reduce code duplicates in the main module."""
-import typing
+import logging
 import os
 import pathlib
 
-from PyQt5.QtGui import QIcon
-from PyQt5 import QtGui
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
 from pyssa.gui.ui.custom_dialogs import custom_message_box
-from pyssa.gui.ui.styles import styles
-from pyssa.util import tools, constants
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import exception
 from pyssa.util.void import rvoid
 
-if typing.TYPE_CHECKING:
-    from pyssa.internal.data_structures import project
-    from pyssa.internal.data_structures import settings
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 def fill_combo_box(combo_box: QtWidgets.QComboBox, item_list: list) -> None:
@@ -48,38 +44,46 @@ def fill_combo_box(combo_box: QtWidgets.QComboBox, item_list: list) -> None:
              pyqt combo box which should be filled
         item_list (list):
             list of items which should be placed in the combo box
+    
+    Raises:
+        exception.IllegalArgumentError: If combo_box is None.
+        exception.IllegalArgumentError: If item_list is either None or an empty list.
     """
+    # <editor-fold desc="Checks">
+    if combo_box is None:
+        logger.error("combo_box is None.")
+        raise exception.IllegalArgumentError("combo_box is None.")
+    if item_list is None or len(item_list) == 0:
+        logger.error("item_list is either None or an empty list.")
+        raise exception.IllegalArgumentError("item_list is either None or an empty list.")
+    
+    # </editor-fold>
+    
     combo_box.clear()
     for item in item_list:
         combo_box.addItem(item)
 
 
-def create_directory(parent_path: pathlib.Path, dir_name: str) -> None:
-    """This function creates a directory with a given path and directory name.
-
-    Args:
-        parent_path:
-            parent path where the new directory should be created
-        dir_name:
-            name of the new directory
-    """
-    new_dir = f"{str(parent_path)}/{dir_name}"
-    if not os.path.exists(new_dir):
-        os.mkdir(new_dir)
-
-
 def choose_directory(self, txt_box_dir: QtWidgets.QLineEdit) -> None:  # noqa: ANN001
-    """This function is for choosing a filepath with the QFileDialog.
-
-    Example:
-        txt_box_dir: self.ui.txt_workspace_dir
+    """Open s a QFileDialog to choose a filepath.
 
     Args:
-        self:
-            main_window object
-        txt_box_dir:
-            qt textbox object which holds the current path
+        self: The main_window object.
+        txt_box_dir (QtWidgets.QLineEdit): The QLineEdit widget containing the current directory path.
+
+    Raises:
+        exception.IllegalArgumentError: If either `self` or `txt_box_dir` is None.
     """
+    # <editor-fold desc="Checks">
+    if self is None:
+        logger.error("self is None.")
+        raise exception.IllegalArgumentError("self is None.")
+    if txt_box_dir is None:
+        logger.error("txt_box_dir is None.")
+        raise exception.IllegalArgumentError("txt_box_dir is None.")
+    
+    # </editor-fold>
+    
     current_file_path = pathlib.Path(txt_box_dir.text())
     new_file_path = pathlib.Path(
         QtWidgets.QFileDialog.getExistingDirectory(
@@ -96,7 +100,7 @@ def choose_directory(self, txt_box_dir: QtWidgets.QLineEdit) -> None:  # noqa: A
         tmp_dialog = custom_message_box.CustomMessageBoxOk(
             "You do not have write permissions for this directroy. Please choose another one.",
             "Permission Error",
-            custom_message_box.CustomMessageBoxIcons.WARNING.value
+            custom_message_box.CustomMessageBoxIcons.WARNING.value,
         )
         tmp_dialog.exec_()
         txt_box_dir.setText(str(current_file_path))
@@ -105,24 +109,42 @@ def choose_directory(self, txt_box_dir: QtWidgets.QLineEdit) -> None:  # noqa: A
 
 
 def hide_gui_elements(gui_elements: list) -> None:
-    """This function hides gui elements.
+    """Hides gui elements.
 
     Args:
-        gui_elements:
-            a list of pyqt gui elements
+        gui_elements (list): A list of pyqt gui elements.
+    
+    Raises:
+        exception.IllegalArgumentError: If gui_elements is None.
     """
+    # <editor-fold desc="Checks">
+    if gui_elements is None:
+        logger.error("gui_elements is None.")
+        raise exception.IllegalArgumentError("gui_elements is None.")
+    
+    # </editor-fold>
+    
     for gui_element in gui_elements:
         if gui_element is not None:
             gui_element.hide()
 
 
 def show_gui_elements(gui_elements: list) -> None:
-    """This function shows gui elements.
+    """Shows gui elements.
 
     Args:
-        gui_elements:
-            a list of pyqt gui elements
+        gui_elements (list): A list of pyqt gui elements.
+    
+    Raises:
+        exception.IllegalArgumentError: If gui_elements is None.
     """
+    # <editor-fold desc="Checks">
+    if gui_elements is None:
+        logger.error("gui_elements is None.")
+        raise exception.IllegalArgumentError("gui_elements is None.")
+    
+    # </editor-fold>
+    
     for gui_element in gui_elements:
         if gui_element is not None:
             gui_element.show()
@@ -132,24 +154,46 @@ def manage_gui_visibility(gui_elements_to_show: list, gui_elements_to_hide: list
     """Manages a combination of "show_gui_elements" and "hide_gui_elements" manage the visibility of gui elements.
 
     Args:
-        gui_elements_to_show:
-            list which contains the gui elements which should be displayed
-        gui_elements_to_hide:
-            list which contains the gui elements which should be hidden
+        gui_elements_to_show (list): A list which contains the gui elements which should be displayed.
+        gui_elements_to_hide (list): A list which contains the gui elements which should be hidden.
+    
+    Raises:
+        exception.IllegalArgumentError: If either `gui_elements_to_show` or `gui_elements_to_hide` is None.
     """
+    # <editor-fold desc="Checks">
+    if gui_elements_to_show is None:
+        logger.error("gui_elements_to_show is None.")
+        raise exception.IllegalArgumentError("gui_elements_to_show is None.")
+    if gui_elements_to_hide is None:
+        logger.error("gui_elements_to_hide is None.")
+        raise exception.IllegalArgumentError("gui_elements_to_hide is None.")
+    
+    # </editor-fold>
+    
     show_gui_elements(gui_elements_to_show)
     hide_gui_elements(gui_elements_to_hide)
 
 
 def disable_text_box(text_box: QtWidgets.QLineEdit, text_box_label: QtWidgets.QLabel) -> None:
-    """This function disables a text box and grays out the corresponding label.
+    """Disables a text box and grays out the corresponding label.
 
     Args:
-        text_box:
-            pyqt line edit
-        text_box_label:
-            pyqt label which describes the text box
+        text_box (QtWidgets.QLineEdit): A PyQt line edit.
+        text_box_label (QtWidgets.QLabel): A PyQt label which describes the text box.
+    
+    Raises:
+        exception.IllegalArgumentError: If either `text_box` or `text_box_label` is None.
     """
+    # <editor-fold desc="Checks">
+    if text_box is None:
+        logger.error("text_box is None.")
+        raise exception.IllegalArgumentError("text_box is None.")
+    if text_box_label is None:
+        logger.error("text_box_label is None.")
+        raise exception.IllegalArgumentError("text_box_label is None.")
+    
+    # </editor-fold>
+    
     text_box_label.setStyleSheet("color: #E1E1E1")
     text_box.setStyleSheet("background-color: white")
     text_box.setEnabled(False)
@@ -159,56 +203,22 @@ def enable_text_box(text_box: QtWidgets.QLineEdit, text_box_label: QtWidgets.QLa
     """This function enables a text box and colors the corresponding label black.
 
     Args:
-        text_box:
-            pyqt line edit
-        text_box_label:
-            pyqt label which describes the text box
+        text_box (QtWidgets.QLineEdit): A PyQt line edit.
+        text_box_label (QtWidgets.QLabel): A PyQt label which describes the text box.
+    
+    Raises:
+        exception.IllegalArgumentError: If either `text_box` or `text_box_label` is None.
     """
+    # <editor-fold desc="Checks">
+    if text_box is None:
+        logger.error("text_box is None.")
+        raise exception.IllegalArgumentError("text_box is None.")
+    if text_box_label is None:
+        logger.error("text_box_label is None.")
+        raise exception.IllegalArgumentError("text_box_label is None.")
+    
+    # </editor-fold>
+    
     text_box_label.setStyleSheet("color: black")
     text_box.setStyleSheet("background-color: white")
     text_box.setEnabled(True)
-
-
-def fill_list_view_with_protein_names(
-    app_project: "project.Project",
-    list_view_project_proteins: QtWidgets.QListWidget,
-) -> None:
-    """Fills a list with protein names.
-
-    Args:
-        app_project: the app project.
-        list_view_project_proteins: a QListWidget for the protein names.
-    """
-    for tmp_protein in app_project.proteins:
-        list_view_project_proteins.addItem(tmp_protein.get_molecule_object())
-
-
-def fill_list_view_with_protein_pair_names(
-    app_project: "project.Project",
-    list_view_project_proteins: QtWidgets.QListWidget,
-) -> None:
-    """Fills a list with protein pair names.
-
-    Args:
-        app_project: the app project.
-        list_view_project_proteins: a QListWidget for the protein pair names.
-    """
-    for tmp_protein_pair in app_project.protein_pairs:
-        list_view_project_proteins.addItem(tmp_protein_pair.name)
-
-
-def setup_standard_block_box(block_box: QMessageBox, window_title: str, msg_text: str) -> QMessageBox:
-    """Sets up the default values for a given block box.
-
-    Args:
-        block_box: the block box to configure.
-        window_title: the window title for the block box.
-        msg_text: the message for the block box.
-    """
-    block_box.setStandardButtons(QMessageBox.NoButton)
-    block_box.setIcon(QMessageBox.Information)
-    block_box.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-    styles.set_stylesheet(block_box)
-    block_box.setWindowTitle(window_title)
-    block_box.setText(msg_text)
-    return block_box

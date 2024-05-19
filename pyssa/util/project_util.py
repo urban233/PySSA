@@ -27,12 +27,15 @@ from pyssa.io_pyssa import path_util
 from pyssa.logging_pyssa import log_handlers
 from typing import TYPE_CHECKING
 
+from pyssa.util import exception
+
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import project
 
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 def get_all_filepaths_from_project(
@@ -43,10 +46,29 @@ def get_all_filepaths_from_project(
     """Gets all filepaths from a given project.
 
     Args:
-        app_project: the app project to get the filepaths from.
-        subfolder: the subfolder to search in.
-        extension: the extension to search for.
+        app_project (project.Project): The app project to get the filepaths from.
+        subfolder (str): The subfolder to search in.
+        extension (str): The extension to search for.
+    
+    Returns:
+        A list of the filepaths.
+    
+    Raises:
+        exception.IllegalArgumentError: If app_project is None or subfolder is either None or an empty string or extension is either None or an empty .
     """
+    # <editor-fold desc="Checks">
+    if app_project is None:
+        logger.error("app_project is None.")
+        raise exception.IllegalArgumentError("app_project is None.")
+    if subfolder is None or subfolder == "":
+        logger.error("subfolder is either None or an empty string.")
+        raise exception.IllegalArgumentError("subfolder is either None or an empty string.")
+    if extension is None or extension == "":
+        logger.error("extension is either None or an empty string.")
+        raise exception.IllegalArgumentError("extension is either None or an empty string.")
+    
+    # </editor-fold>
+    
     tmp_dirnames = []
     folder = os.path.join(app_project.folder_paths["project"], subfolder)
     if len(os.listdir(folder)) > 0:

@@ -21,6 +21,7 @@
 #
 """Module for all asynchronous functions that are related to the pymol session."""
 import logging
+import threading
 import time
 from typing import Optional
 
@@ -39,10 +40,9 @@ __docformat__ = "google"
 # <editor-fold desc="PyMOL session related functions">
 def reinitialize_session(
         the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
-        a_protein_name: str = ""
+        a_protein_name: str = "",
 ) -> tuple[bool]:
-    """
-    Reinitializes the PyMOL session.
+    """Reinitializes the PyMOL session.
 
     Args:
         the_pymol_session_manager: The Pymol session manager object.
@@ -82,10 +82,9 @@ def reinitialize_session(
 def load_protein_pymol_session(
         a_protein: "protein.Protein",
         the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
-        needs_to_be_reinitialized_flag: bool = False
+        needs_to_be_reinitialized_flag: bool = False,
 ) -> tuple[Optional["pymol_session_manager.PymolSessionManager"], bool]:
-    """
-    Loads a protein pymol session.
+    """Loads a protein pymol session.
 
     Args:
         a_protein (protein.Protein): The protein object to load into the PyMOL session.
@@ -110,7 +109,7 @@ def load_protein_pymol_session(
         return None, False
 
     # </editor-fold>
-
+    
     if needs_to_be_reinitialized_flag:
         logger.info("The current session is not empty. Reinitialize session now ...")
         the_pymol_session_manager.reinitialize_session()
@@ -158,7 +157,7 @@ def save_protein_pymol_session_to_database(
             tmp_protein.pymol_session = the_interface_manager.pymol_session_manager.save_current_session_as_base64()
             db_manager.update_pymol_session_of_protein(
                 tmp_protein.get_id(),
-                tmp_protein.pymol_session
+                tmp_protein.pymol_session,
             )
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
@@ -177,7 +176,7 @@ def save_protein_pair_pymol_session_to_database(
             tmp_protein_pair.pymol_session = the_interface_manager.pymol_session_manager.save_current_session_as_base64()
             db_manager.update_pymol_session_of_protein_pair(
                 tmp_protein_pair.get_id(),
-                tmp_protein_pair.pymol_session
+                tmp_protein_pair.pymol_session,
             )
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
@@ -191,10 +190,9 @@ def save_protein_pair_pymol_session_to_database(
 # <editor-fold desc="PyMOL scene related functions">
 def create_new_scene(
         a_scene_name: str,
-        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
 ) -> tuple[bool, str]:
-    """
-    Creates a new scene in the current PyMOL session which gets appended to the current ones.
+    """Creates a new scene in the current PyMOL session which gets appended to the current ones.
 
     Args:
         a_scene_name (str): The name of the new scene.
@@ -218,7 +216,7 @@ def create_new_scene(
 
     try:
         the_pymol_session_manager.user_pymol_connector.scene(
-            a_key=a_scene_name, an_action="append"
+            a_key=a_scene_name, an_action="append",
         )
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
@@ -228,8 +226,7 @@ def create_new_scene(
 
 
 def load_scene(the_pymol_session_manager: "pymol_session_manager.PymolSessionManager", a_scene_name: str) -> tuple[bool]:
-    """
-    Loads a scene in the current PyMOL session.
+    """Loads a scene in the current PyMOL session.
 
     Args:
         the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PyMOL session manager instance.
@@ -260,10 +257,9 @@ def load_scene(the_pymol_session_manager: "pymol_session_manager.PymolSessionMan
 
 def update_scene(
         the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
-        a_placeholder_1
+        a_placeholder_1,
 ) -> tuple[bool, str]:
-    """
-    Updates the current pymol scene. Creates a `_scratch_` scene if the current scene is `base`
+    """Updates the current pymol scene. Creates a `_scratch_` scene if the current scene is `base`
 
     Args:
         the_pymol_session_manager: The PymolSessionManager object responsible for managing the PyMOL session.
@@ -284,11 +280,11 @@ def update_scene(
     try:
         if the_pymol_session_manager.is_the_current_pymol_scene_base() is False:
             the_pymol_session_manager.user_pymol_connector.scene(
-                a_key="auto", an_action="update"
+                a_key="auto", an_action="update",
             )
         else:
             the_pymol_session_manager.user_pymol_connector.scene(
-                a_key="_scratch_", an_action="update"
+                a_key="_scratch_", an_action="update",
             )
             the_pymol_session_manager.current_scene_name = "_scratch_"
     except Exception as e:
@@ -300,10 +296,9 @@ def update_scene(
 
 def delete_scene(
         the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
-        a_placeholder_1
+        a_placeholder_1,
 ) -> tuple[bool]:
-    """
-    Deletes the current scene in the current PyMOL session.
+    """Deletes the current scene in the current PyMOL session.
 
     Args:
         the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PyMOL session manager instance.
@@ -321,7 +316,7 @@ def delete_scene(
 
     try:
         the_pymol_session_manager.user_pymol_connector.scene(
-            a_key=the_pymol_session_manager.current_scene_name, an_action="clear"
+            a_key=the_pymol_session_manager.current_scene_name, an_action="clear",
         )
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
@@ -337,10 +332,9 @@ def delete_scene(
 def color_pymol_selection(
         a_color: str,
         a_pymol_selection: str,
-        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
 ) -> tuple[bool, str]:
-    """
-    Colors a given pymol selection with a given color.
+    """Colors a given pymol selection with a given color.
 
     Args:
         a_color (str): The color to be applied to the protein chain.
@@ -368,7 +362,7 @@ def color_pymol_selection(
 
     try:
         the_pymol_session_manager.color_protein(
-            a_color, a_pymol_selection
+            a_color, a_pymol_selection,
         )
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
@@ -382,10 +376,9 @@ def reset_color_pymol_selection_atoms_by_element(
         a_chain_letter: str,
         the_current_active_chain_color_of_protein: str,
         a_pymol_selection: str,
-        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
 ) -> tuple:
-    """
-    Reset the color of protein chain atoms by element for a given protein.
+    """Reset the color of protein chain atoms by element for a given protein.
 
     Args:
         a_protein_name (str): The name of the protein.
@@ -418,7 +411,7 @@ def reset_color_pymol_selection_atoms_by_element(
 
     try:
         tmp_residue_config: "residue_color_config.ResidueColorConfig" = the_pymol_session_manager.get_residue_color_config_of_a_given_selection(
-            a_protein_name, a_chain_letter
+            a_protein_name, a_chain_letter,
         )
         if tmp_residue_config.atoms_are_colored_by_elements():
             tmp_chain_color = the_current_active_chain_color_of_protein
@@ -439,10 +432,9 @@ def reset_color_pymol_selection_atoms_by_element(
 
 def color_pymol_selection_atoms_by_element(
         a_pymol_selection: str,
-        the_pymol_session_manager: "pymol_session_manager.PyMolSessionManager"
+        the_pymol_session_manager: "pymol_session_manager.PyMolSessionManager",
 ) -> tuple:
-    """
-    Colors protein chain atoms based on the element for a given protein.
+    """Colors protein chain atoms based on the element for a given protein.
 
     Args:
         a_pymol_selection (str): The PyMOL selection of atoms for a protein chain.
@@ -463,10 +455,10 @@ def color_pymol_selection_atoms_by_element(
 
     try:
         the_pymol_session_manager.color_protein(
-            "atomic", f"{a_pymol_selection} and not elem C"
+            "atomic", f"{a_pymol_selection} and not elem C",
         )
         the_pymol_session_manager.color_protein(
-            "grey70", f"{a_pymol_selection} and elem C"
+            "grey70", f"{a_pymol_selection} and elem C",
         )
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
@@ -478,10 +470,9 @@ def color_pymol_selection_atoms_by_element(
 def get_residue_color_config_of_a_given_protein_chain(
         a_protein_name: str,
         a_chain_letter: str,
-        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
 ) -> tuple[bool, Optional["residue_color_config.ResidueColorConfig"]]:
-    """
-    Gets the colors of C-, N-, and O-atoms for the first residue of the given selection.
+    """Gets the colors of C-, N-, and O-atoms for the first residue of the given selection.
 
     Args:
         a_protein_name (str): The name of the protein.
@@ -511,7 +502,7 @@ def get_residue_color_config_of_a_given_protein_chain(
 
     try:
         tmp_residue_config: "residue_color_config.ResidueColorConfig" = the_pymol_session_manager.get_residue_color_config_of_a_given_selection(
-            a_protein_name, a_chain_letter
+            a_protein_name, a_chain_letter,
         )
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
@@ -522,10 +513,9 @@ def get_residue_color_config_of_a_given_protein_chain(
 
 def set_background_color(
         a_background_color: str,
-        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
 ) -> tuple[bool]:
-    """
-    Sets the background color of the PyMOL session.
+    """Sets the background color of the PyMOL session.
 
     Args:
         a_background_color (str): The desired background color as a valid pymol color.
@@ -559,10 +549,9 @@ def set_background_color(
 def get_representation_config_of_a_given_protein_chain(
         a_selection_string: str,
         a_chain_letter: str,
-        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
 ) -> tuple[bool, Optional[dict]]:
-    """
-    Returns the representation state of a specific chain in PyMOL.
+    """Returns the representation state of a specific chain in PyMOL.
 
     Args:
         a_selection_string: A string representing the selection of atoms in the protein chain.
@@ -600,10 +589,9 @@ def get_representation_config_of_a_given_protein_chain(
 def show_specific_representation(
         a_representation: enums.PyMOLRepresentation,
         a_selection_string: str,
-        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
 ) -> tuple[bool]:
-    """
-    Shows a given representation for the given selection string.
+    """Shows a given representation for the given selection string.
 
     Args:
         a_representation: An instance of enums.PyMOLRepresentation, specifying the representation to show.
@@ -628,7 +616,7 @@ def show_specific_representation(
 
     try:
         the_pymol_session_manager.show_specific_representation(
-            a_representation.value, a_selection_string
+            a_representation.value, a_selection_string,
         )
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
@@ -640,10 +628,9 @@ def show_specific_representation(
 def hide_specific_representation(
         a_representation: enums.PyMOLRepresentation,
         a_selection_string: str,
-        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
 ) -> tuple[bool]:
-    """
-    Hides a given representation for the given selection string.
+    """Hides a given representation for the given selection string.
 
     Args:
         a_representation: An instance of enums.PyMOLRepresentation, specifying the representation to show.
@@ -668,7 +655,7 @@ def hide_specific_representation(
 
     try:
         the_pymol_session_manager.hide_specific_representation(
-            a_representation.value, a_selection_string
+            a_representation.value, a_selection_string,
         )
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
@@ -679,10 +666,9 @@ def hide_specific_representation(
 
 def hide_all_representations(
         a_selection_string: str,
-        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
 ) -> tuple[bool]:
-    """
-    Hides all representations for the given selection string.
+    """Hides all representations for the given selection string.
 
     Args:
         a_selection_string: A string representing the selection criteria for the objects.
@@ -714,7 +700,7 @@ def hide_all_representations(
         ]
         for tmp_representation in tmp_all_representations:
             the_pymol_session_manager.hide_specific_representation(
-                tmp_representation.value, a_selection_string
+                tmp_representation.value, a_selection_string,
             )
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")

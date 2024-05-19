@@ -19,24 +19,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module which contains the void function."""
-from pyssa.util import constants, exception
+"""Module for util methods related to threading."""
+import logging
+import threading
+
+from pyssa.logging_pyssa import log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
-def rvoid(a_python_object) -> None:  # noqa: ANN001
-    """Only logs that a return value of a function or method is not used.
-    
-    Args:
-        a_python_object (object): the object to be void.
-        
-    Raises:
-        exception.IllegalArgumentError: If a_python_object is None.
+def is_main_thread() -> bool:
+    """Check if the current thread is the main thread.
+  
+    Returns:
+        The boolean True if the current thread is the main thread, False otherwise.
     """
-    # <editor-fold desc="Checks">
-    if a_python_object is None:
-        constants.PYSSA_LOGGER.error("a_python_object is None.")
-        raise exception.IllegalArgumentError("a_python_object is None.")
-    
-    # </editor-fold>
-    
-    constants.PYSSA_LOGGER.debug("VOID: Return value: %s is not used.", a_python_object)
+    if threading.current_thread() == threading.main_thread():
+      logger.info("Running in main thread.")
+      return True
+    logger.info("Running in separate thread.")
+    return False

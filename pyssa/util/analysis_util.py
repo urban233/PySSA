@@ -32,22 +32,49 @@ from pyssa.util import protein_util, exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import project
-    from pyssa.internal.data_structures import settings
 
 
 def transform_gui_input_to_practical_data(
     a_list_with_analysis_names: list,
     a_project: "project.Project",
-    a_cutoff: float, cycles: int,
+    a_cutoff: float, 
+    cycles: int,
 ) -> list:
-    """Transforms the input from the gui to a practical data basis that can be used to set up analysis runs.
+    """Transforms GUI input into practical data for analysis.
+
+    Args:
+        a_list_with_analysis_names (list): A list with analysis names.
+        a_project (project.Project): The project object.
+        a_cutoff (float): The cutoff value.
+        cycles (int): The number of cycles.
+
+    Returns:
+        list: The transformed distance analysis runs.
 
     Raises:
-        UnableToTransformDataForAnalysis: If the transformation process failed.
+        exception.IllegalArgumentError: If an argument is illegal.
+        exception.UnableToTransformDataForAnalysisError: If the transformation process fails or an unknown error occurs.
     """
+    # <editor-fold desc="Checks">
+    if a_list_with_analysis_names is None or len(a_list_with_analysis_names) == 0:
+        logger.error("a_list_with_analysis_names is either None or an empty list.")
+        raise exception.IllegalArgumentError("a_list_with_analysis_names is either None or an empty list.")
+    if a_project is None:
+        logger.error("a_project is None.")
+        raise exception.IllegalArgumentError("a_project is None.")
+    if a_cutoff is None or a_cutoff < 0:
+        logger.error("a_cutoff is either None or a negative number.")
+        raise exception.IllegalArgumentError("a_cutoff is either None or a negative number.")
+    if cycles is None or cycles < 0:
+        logger.error("cycles is either None or a negative number.")
+        raise exception.IllegalArgumentError("cycles is either None or a negative number.")
+    
+    # </editor-fold>
+    
     distance_analysis_runs = []
     try:
         for tmp_analysis_name in a_list_with_analysis_names:
@@ -55,7 +82,7 @@ def transform_gui_input_to_practical_data(
                 tmp_analysis_name,
                 a_project,
                 a_cutoff,
-                cycles
+                cycles,
             )
             protein_pair_for_analysis = input_transformer.transform_gui_input_to_distance_analysis_object()
             new_protein_pair = copy.deepcopy(protein_pair_for_analysis)
@@ -77,17 +104,23 @@ def transform_gui_input_to_practical_data(
 
 def split_analysis_run_name_in_protein_name_and_chain(an_analysis_run_name: str) -> list[Union[str, list[str]]]:
     """Splits the analysis run name into protein name and chain.
-
+    
+    Args:
+        an_analysis_run_name (str): The analysis run name that will be split.
+    
+    Returns:
+        A list of the analysis run name split into protein name and chain.
+    
     Raises:
         IllegalArgumentException: If the argument is None or an empty string or does not contain the _vs_.
     """
     # <editor-fold desc="Checks">
     if an_analysis_run_name is None or an_analysis_run_name == "":
-        logger.error(f"The argument 'an_analysis_run_name' is illegal: {an_analysis_run_name}!")
-        raise exception.IllegalArgumentError("An argument is illegal.")
+        logger.error("an_analysis_run_name is either None or an empty string.")
+        raise exception.IllegalArgumentError("an_analysis_run_name is either None or an empty string.")
     if an_analysis_run_name.find("_vs_") == -1:
-        logger.error("The argument 'an_analysis_run_name' is invalid because no '_vs_' is present.")
-        raise exception.IllegalArgumentError("An argument is illegal")
+        logger.error("an_analysis_run_name is invalid because no '_vs_' is present.")
+        raise exception.IllegalArgumentError("an_analysis_run_name is invalid because no '_vs_' is present.")
 
     # </editor-fold>
 
@@ -117,16 +150,23 @@ def create_selection_strings_for_structure_alignment(
 ) -> selection.Selection:
     """Creates the selection string for the structure alignment for a single protein.
 
+    Args:
+        a_protein (protein.Protein): The protein object to create selection strings from.
+        selected_chains (list): A list of chain names to select.
+
+    Returns:
+        A selection object containing the selected chains from the protein.
+
     Raises:
-        IllegalArgumentError: If an argument is None.
+        IllegalArgumentError: If `a_protein` or `selected_chains` is None.
     """
     # <editor-fold desc="Checks">
     if a_protein is None:
-        logger.error(f"The argument 'a_value' is illegal: {a_protein}!")
-        raise exception.IllegalArgumentError("")
+        logger.error("a_protein is None")
+        raise exception.IllegalArgumentError("a_protein is None")
     if selected_chains is None:
-        logger.error(f"The argument 'a_value' is illegal: {selected_chains}!")
-        raise exception.IllegalArgumentError("")
+        logger.error("selected_chains is None")
+        raise exception.IllegalArgumentError("selected_chains is None")
 
     # </editor-fold>
 
@@ -148,12 +188,29 @@ def create_selection_strings_for_structure_alignment(
 
 
 def get_highest_start_index(ref_index: int, model_index: int) -> int:
-    """Gets the highest index of two indices.
+    """Gets the highest start index between the reference index and the model index.
 
     Args:
-        ref_index: the index of the reference protein.
-        model_index: the index of the model protein.
+        ref_index (int): The reference index.
+        model_index (int): The model index.
+
+    Returns:
+        An integer that is the highest start index between the reference index and the model index.
+
+    Raises:
+        exception.IllegalArgumentError: If an argument is None.
+        ValueError: If the reference index is not greater than, less than, or equal to the model index.
     """
+    # <editor-fold desc="Checks">
+    if ref_index is None:
+        logger.error("ref_index is None.")
+        raise exception.IllegalArgumentError("ref_index is None.")
+    if model_index is None:
+        logger.error("model_index is None.")
+        raise exception.IllegalArgumentError("model_index is None.")
+    
+    # </editor-fold>
+    
     if ref_index > model_index:
         return ref_index
     if ref_index < model_index:

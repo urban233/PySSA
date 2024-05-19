@@ -21,6 +21,7 @@
 #
 """Module for the interface manager."""
 import glob
+import logging
 import os
 import pathlib
 import shutil
@@ -36,7 +37,6 @@ from application_process import application_process_manager
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.controller import pymol_session_manager, settings_manager, main_tasks_manager, \
     status_bar_manager, job_manager, watcher
-from pyssa.controller.database_manager import logger
 from pyssa.gui.ui.custom_widgets import job_entry
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import rename_protein_view, use_project_view, \
@@ -52,13 +52,19 @@ from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import locks, custom_signals
 from pyssa.io_pyssa import filesystem_io
+from pyssa.logging_pyssa import log_handlers
 from pyssa.model import proteins_model, protein_pairs_model
-from pyssa.util import enums, constants, main_window_util, ui_util
+from pyssa.util import enums, constants, main_window_util, ui_util, exception
 from pyssa.util.void import rvoid
+from pyssa.internal.thread import thread_util
+
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class InterfaceManager:
-
     """A manager for all views."""
     string_model = QtCore.QStringListModel()
 
@@ -169,8 +175,8 @@ class InterfaceManager:
                 # Copy db file into new workspace
                 tmp_project_database_filepath = str(
                     pathlib.Path(
-                        f"{self.get_application_settings().workspace_path}/{tmp_filename}"
-                    )
+                        f"{self.get_application_settings().workspace_path}/{tmp_filename}",
+                    ),
                 )
                 tmp_src_filepath = str(pathlib.Path(f"{path_of_demo_projects}/{tmp_filename}"))
                 shutil.copyfile(tmp_src_filepath, tmp_project_database_filepath)
@@ -203,11 +209,12 @@ class InterfaceManager:
         self._protein_pair_model: "protein_pairs_model.ProteinPairsModel" = protein_pairs_model.ProteinPairsModel()
         self._build_workspace_model()
 
+    # <editor-fold desc="Application process manager related methods">
     def start_app_process_manager(self):
         self._app_process_manager_thread = tasks.LegacyTask(
             target=self.app_process_manager.check_process,
             args=(0, 0),
-            post_func=self._closed_app_process_manager
+            post_func=self._closed_app_process_manager,
         )
         self._app_process_manager_thread.start()
 
@@ -221,7 +228,7 @@ class InterfaceManager:
         self._app_process_manager_thread = tasks.LegacyTask(
             target=self._recover_user_pymol,
             args=(0, 0),
-            post_func=self.__await_recover_user_pymol
+            post_func=self.__await_recover_user_pymol,
         )
         self._app_process_manager_thread.start()
 
@@ -262,7 +269,9 @@ class InterfaceManager:
         else:
             return
         self.pymol_session_manager.load_current_scene()
-
+    
+    # </editor-fold>
+    
     # <editor-fold desc="Getter Methods">
     # <editor-fold desc="Settings">
     def get_settings_manager(self):
@@ -285,7 +294,7 @@ class InterfaceManager:
         db_pattern = os.path.join(self._settings_manager.settings.get_workspace_path(), '*.db')
         self.string_model.setStringList(
             # Filters the workspace for all project files based on the xml extension
-            [os.path.basename(file).replace(".db", "") for file in glob.glob(db_pattern)]
+            [os.path.basename(file).replace(".db", "") for file in glob.glob(db_pattern)],
         )
         return self.string_model
 
@@ -377,7 +386,7 @@ class InterfaceManager:
 
     def get_current_protein_tree_index_type(self):
         return self._main_view.ui.proteins_tree_view.model().data(
-            self.get_current_protein_tree_index(), enums.ModelEnum.TYPE_ROLE
+            self.get_current_protein_tree_index(), enums.ModelEnum.TYPE_ROLE,
         )
 
     def get_current_protein_tree_index_object(self):
@@ -405,11 +414,11 @@ class InterfaceManager:
             return self._main_view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
         elif tmp_type == "scene":
             return self._main_view.ui.proteins_tree_view.currentIndex().parent().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
+                enums.ModelEnum.OBJECT_ROLE,
             )
         elif tmp_type == "chain":
             return self._main_view.ui.proteins_tree_view.currentIndex().parent().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
+                enums.ModelEnum.OBJECT_ROLE,
             )
         else:
             raise ValueError("Unknown type!")
@@ -492,7 +501,7 @@ class InterfaceManager:
             raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
         elif tmp_type == "chain":
             self._main_view.ui.proteins_tree_view.model().setData(
-                self._main_view.ui.proteins_tree_view.currentIndex(), a_color, enums.ModelEnum.CHAIN_COLOR_ROLE
+                self._main_view.ui.proteins_tree_view.currentIndex(), a_color, enums.ModelEnum.CHAIN_COLOR_ROLE,
             )
         else:
             raise ValueError("Unknown type!")
@@ -520,7 +529,7 @@ class InterfaceManager:
 
     def get_current_protein_pair_tree_index_type(self):
         return self._main_view.ui.protein_pairs_tree_view.model().data(
-            self.get_current_protein_pair_tree_index(), enums.ModelEnum.TYPE_ROLE
+            self.get_current_protein_pair_tree_index(), enums.ModelEnum.TYPE_ROLE,
         )
 
     def get_current_protein_pair_tree_index_object(self):
@@ -553,18 +562,18 @@ class InterfaceManager:
                 enums.ModelEnum.OBJECT_ROLE)
         elif tmp_type == "scene":
             return self._main_view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
+                enums.ModelEnum.OBJECT_ROLE,
             )
         elif tmp_type == "chain":
             return self._main_view.ui.protein_pairs_tree_view.currentIndex().parent().parent().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
+                enums.ModelEnum.OBJECT_ROLE,
             )
         elif tmp_type == "header" and tmp_display_role == "Scenes":
             return self._main_view.ui.protein_pairs_tree_view.currentIndex().parent().data(
                 enums.ModelEnum.OBJECT_ROLE)
         elif tmp_type == "header" and tmp_display_role == "Chains":
             return self._main_view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
+                enums.ModelEnum.OBJECT_ROLE,
             )
         elif tmp_type == "":
             raise ValueError("Nothing there!")
@@ -591,7 +600,7 @@ class InterfaceManager:
             raise ValueError(f"Cannot get a protein object with the type: {tmp_type}")
         elif tmp_type == "chain":
             return self._main_view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
+                enums.ModelEnum.OBJECT_ROLE,
             )
         elif tmp_type == "header" and tmp_display_role == "Scenes":
             raise ValueError(f"Cannot get a protein object with the type: {tmp_type}")
@@ -680,10 +689,22 @@ class InterfaceManager:
 
     # </editor-fold>
 
-    def add_protein_to_current_project(self, a_protein: "protein.Protein"):
+    def add_protein_to_current_project(self, a_protein: "protein.Protein") -> None:
+        """This method adds a given Protein object to the current project.
+        
+        The Protein object must already exist.
+        
+        Args:
+            a_protein (protein.Protein): A Protein object that will be added to the current project.    
+        """
         self._current_project.add_existing_protein(a_protein)
 
-    def add_protein_pair_to_current_project(self, a_protein_pair: "protein_pair.ProteinPair"):
+    def add_protein_pair_to_current_project(self, a_protein_pair: "protein_pair.ProteinPair") -> None:
+        """Adds a protein pair to the current project.
+
+        Args:
+            a_protein_pair (protein_pair.ProteinPair): A ProteinPair object that will be added to the current project.   
+        """
         self._current_project.add_protein_pair(a_protein_pair)
 
     # <editor-fold desc="Setter Methods">
@@ -710,7 +731,7 @@ class InterfaceManager:
     # <editor-fold desc="Protein">
     def set_current_chain_color_for_ui_for_proteins(
             self,
-            the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+            the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
     ) -> None:
         """Checks which color the protein chain has and sets the index of the combobox accordingly."""
         tmp_protein = self.get_current_active_protein_object()
@@ -945,8 +966,18 @@ class InterfaceManager:
     # </editor-fold>
 
     # <editor-fold desc="Refresh Methods">
-    def refresh_main_view(self):
+    def refresh_main_view(self) -> None:
         """Modifies the UI of the main view based on an app model."""
+        # <editor-fold desc="Thread check">
+        if thread_util.is_main_thread() is False:
+            logger.warning(
+                "Method 'refresh_main_view' was called from a separate thread. "
+                "Cannot run this method because it has to be called from the main thread!",
+            )
+            raise exception.NotMainThreadError()
+        
+        # </editor-fold>
+            
         self._main_view.ui.project_tab_widget.setEnabled(True)
         self._main_view.ui.lbl_logo.hide()
         # Settings
@@ -1276,7 +1307,17 @@ class InterfaceManager:
         tmp_project_item.setData(tmp_filepath, enums.ModelEnum.FILEPATH_ROLE)
         tmp_root_item.appendRow(tmp_project_item)
 
-    def disable_proteins_tab_buttons(self):
+    def disable_proteins_tab_buttons(self) -> None:
+        # <editor-fold desc="Thread check">
+        if thread_util.is_main_thread() is False:
+            logger.warning(
+                "Method 'disable_proteins_tab_buttons' was called from a separate thread. "
+                "Cannot run this method because it has to be called from the main thread!",
+            )
+            raise exception.NotMainThreadError()
+
+        # </editor-fold>
+        
         self._main_view.ui.btn_save_protein.setEnabled(False)
         self._main_view.ui.btn_delete_protein.setEnabled(False)
         self._main_view.ui.btn_open_protein_session.setEnabled(False)
@@ -1284,7 +1325,17 @@ class InterfaceManager:
         self._main_view.ui.btn_update_protein_scene.setEnabled(False)
         self._main_view.ui.btn_delete_protein_scene.setEnabled(False)
 
-    def disable_protein_pairs_tab_buttons(self):
+    def disable_protein_pairs_tab_buttons(self) -> None:
+        # <editor-fold desc="Thread check">
+        if thread_util.is_main_thread() is False:
+            logger.warning(
+                "Method 'disable_protein_pairs_tab_buttons' was called from a separate thread. "
+                "Cannot run this method because it has to be called from the main thread!",
+            )
+            raise exception.NotMainThreadError()
+
+        # </editor-fold>
+    
         self._main_view.ui.btn_save_protein_pair.setEnabled(False)
         self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
         self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
@@ -1459,7 +1510,7 @@ class InterfaceManager:
             self,
             an_object_type: str,
             is_protein_in_pair: bool,
-            the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+            the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
     ) -> None:
         self._main_view.ui.lbl_info_2.hide()
 
@@ -1698,13 +1749,13 @@ class InterfaceManager:
     # <editor-fold desc="Scene">
     def add_scene_to_proteins_model(
             self,
-            a_scene_name
+            a_scene_name,
     ):
         tmp_scene_item = QtGui.QStandardItem(a_scene_name)
         tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
         self._protein_model.add_scene(
             self.get_current_protein_tree_index(),
-            tmp_scene_item
+            tmp_scene_item,
         )
 
     def show_protein_pymol_scene_configuration(self):
@@ -2055,7 +2106,7 @@ class InterfaceManager:
             raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
         elif tmp_type == "chain":
             self._main_view.ui.protein_pairs_tree_view.model().setData(
-                self._main_view.ui.protein_pairs_tree_view.currentIndex(), a_color, enums.ModelEnum.CHAIN_COLOR_ROLE
+                self._main_view.ui.protein_pairs_tree_view.currentIndex(), a_color, enums.ModelEnum.CHAIN_COLOR_ROLE,
             )
         else:
             raise ValueError("Unknown type!")
@@ -2083,7 +2134,7 @@ class InterfaceManager:
     def get_current_chain_color_of_current_protein_pair_pymol_session(
             self,
             a_protein_name: str,
-            the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+            the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
     ):
         """This method should not be used anymore!"""
         tmp_protein = self.get_current_active_protein_object_of_protein_pair()
@@ -2150,13 +2201,13 @@ class InterfaceManager:
     # <editor-fold desc="Scene">
     def add_scene_to_protein_pairs_model(
             self,
-            a_scene_name
+            a_scene_name,
     ):
         tmp_scene_item = QtGui.QStandardItem(a_scene_name)
         tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
         self._protein_pair_model.add_scene(
             self.get_current_protein_pair_tree_index(),
-            tmp_scene_item
+            tmp_scene_item,
         )
 
     def show_protein_pair_pymol_scene_configuration(self):
@@ -2338,10 +2389,8 @@ class InterfaceManager:
         self._main_view.btn_open_job_overview.setIcon(self._main_view.icon_jobs_running)
 
     def update_job_entry(self, update_job_entry_signal_values):
-        """
-
-        Notes:
-            Gets signal from the classes of job.py with the signal "update_job_entry_signal"
+        """Notes:
+        Gets signal from the classes of job.py with the signal "update_job_entry_signal"
 
         """
         _, a_description, a_value = update_job_entry_signal_values

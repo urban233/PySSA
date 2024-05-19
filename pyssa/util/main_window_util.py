@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the main window utility functions."""
+import logging
 import sys
 import pathlib
 import os
@@ -27,8 +28,13 @@ import requests
 from typing import TYPE_CHECKING
 
 from pyssa.gui.ui.custom_dialogs import custom_message_box
-from pyssa.util import constants, gui_utils, tools
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import constants, tools, exception
 from pyssa.util import globals
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import settings
@@ -51,52 +57,69 @@ def check_operating_system() -> None:
         globals.g_os = "linux"
         globals.g_plugin_path = f"{tmp_linux_pymol_plugin_root_path}/{constants.PLUGIN_NAME}"
 
-    constants.PYSSA_LOGGER.info(f"Started on platform: {globals.g_os}")
+    logger.info(f"Started on platform: {globals.g_os}")
 
 
 def check_version_number() -> None:
     """Check version of pyssa against the remote."""
-    constants.PYSSA_LOGGER.info("Checking version of localhost with remote ...")
+    logger.info("Checking version of localhost with remote ...")
     url = "https://w-hs.sciebo.de/s/0kR11n8PkLDo1gB/download"
     try:
         response = requests.get(url)
 
         if response.status_code == 503:
-            constants.PYSSA_LOGGER.warning(
+            logger.warning(
                 "The connection to the refresh servers failed. If could not determine if a new version is available.",
             )
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "The connection to the refresh servers failed. "
                 "It could not determine if a new version is available. You can start the PySSA now.",
                 "No Internet Connection",
-                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value,
             )
             tmp_dialog.exec_()
         else:
             print(f"Latest version: {response.text}")
             if response.text != constants.VERSION_NUMBER[1:]:
-                constants.PYSSA_LOGGER.info("here is a new version of PySSA available.")
+                logger.info("here is a new version of PySSA available.")
                 tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "There is a new version for your PySSA!\n"
                     f"To install the latest version {response.text}, open the PySSA Installer and click on Update.",
                     "New Version!",
-                    custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                    custom_message_box.CustomMessageBoxIcons.INFORMATION.value,
                 )
                 tmp_dialog.exec_()
     except requests.exceptions.RequestException as e:
-        constants.PYSSA_LOGGER.error(f"Downloading the version file of the remote failed! Error: {e}")
-    constants.PYSSA_LOGGER.info("Checking version of localhost with remote finished.")
+        logger.error(f"Downloading the version file of the remote failed! Error: {e}")
+    logger.info("Checking version of localhost with remote finished.")
 
 
 def setup_app_settings(the_app_settings: "settings.Settings") -> "settings.Settings":
-    """Sets up application settings."""
+    """Sets up application settings.
+    
+    Args:
+        the_app_settings: The settings object for the application.
+    
+    Returns:
+        The deserialized settings object.
+        
+    Raises:
+        exception.IllegalArgumentError: If the_app_settings is None.
+    """
+    # <editor-fold desc="Checks">
+    if the_app_settings is None:
+        logger.error("the_app_settings is None.")
+        raise exception.IllegalArgumentError("the_app_settings is None.")
+    
+    # </editor-fold>
+    
     try:
         tmp_settings: "settings.Settings" = the_app_settings.deserialize_settings()
     except Exception as e:
-        constants.PYSSA_LOGGER.warning("The settings file is damaged or outdated.")
+        logger.warning("The settings file is damaged or outdated.")
         tmp_dialog = custom_message_box.CustomMessageBoxOk(
             "The settings file is damaged or outdated. You have to restore the settings to use PySSA!", "Restore Settings",
-            custom_message_box.CustomMessageBoxIcons.WARNING.value
+            custom_message_box.CustomMessageBoxIcons.WARNING.value,
         )
         tmp_dialog.exec_()
         tools.restore_default_settings(the_app_settings)

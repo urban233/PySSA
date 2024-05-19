@@ -44,6 +44,7 @@ class UserPyMOLConnector:
     Notes:
         This class is used within PySSA to communicate PyMOL commands.
     """
+    
     def __init__(self, an_app_process_manager: "application_process_manager.ApplicationProcessManager") -> None:
         """Initializes an instance of the class.
 
@@ -64,13 +65,16 @@ class UserPyMOLConnector:
         self._main_socket = context.socket(zmq.REQ)
         self._main_socket.setsockopt(zmq.REQ_RELAXED, 1)
         self._main_socket.connect("tcp://127.0.0.1:9070")
-        self._poller = zmq.Poller()
-        self._poller.register(self._main_socket, zmq.POLLIN)
+        # self._poller = zmq.Poller()
+        # self._poller.register(self._main_socket, zmq.POLLIN)
 
         self._sender_socket = context.socket(zmq.PUSH)
         self._sender_socket.connect("tcp://127.0.0.1:9071")
         self._recv_socket = context.socket(zmq.PULL)
         self._recv_socket.connect("tcp://127.0.0.1:9072")
+
+        self._poller = zmq.Poller()
+        self._poller.register(self._recv_socket, zmq.POLLIN)
 
     def reinitialize_session(self) -> dict:
         """Reinitializes the PyMOL session.
@@ -927,13 +931,14 @@ class UserPyMOLConnector:
         # if tmp_reply_is_ready:
         #     logger.debug("Return response from PyMOL.")
         #     return the_main_socket.recv_json()
-        self._main_socket.send_json(a_pymol_command.get_command())
+        #self._main_socket.send_json(a_pymol_command.get_command())
+        self._sender_socket.send_json(a_pymol_command.get_command())
         tmp_reply_is_ready = False
         i = 0
         logger.debug(a_pymol_command.command)
         while tmp_reply_is_ready is False:
             logger.debug(f"Waiting for an event to poll (with timeout of {a_timeout})  ...")
-            tmp_events = self._main_socket.poll(a_timeout)
+            tmp_events = self._recv_socket.poll(a_timeout)
             logger.debug(f"{i} - {tmp_events} - {a_pymol_command.command}")
             if tmp_events:
                 logger.debug("An event is received.")
@@ -950,7 +955,9 @@ class UserPyMOLConnector:
         logger.debug("Exit while-loop.")
         if tmp_reply_is_ready:
             logger.debug("Return response from PyMOL.")
-            return self._main_socket.recv_json()
+            tmp_reply = self._recv_socket.recv_json()
+            logger.debug(tmp_reply)
+            return tmp_reply
         return {}
 
     def reset_connection(self) -> None:

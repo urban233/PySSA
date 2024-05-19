@@ -35,84 +35,84 @@ from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 
 
-def get_proteins_of_project_xml(xml_filepath: pathlib.Path, result_queue, lock) -> None:  # noqa: ANN001
-    """Gets the protein information from the project xml file.
-
-    Args:
-        xml_filepath: a path to the project xml file.
-        result_queue: a queue to put the protein information into.
-        lock: a lock to prevent the unauthorized access to the memory.
-    """
-    tmp_protein_names: collections.deque = collections.deque()
-    tmp_protein_infos: collections.deque = collections.deque()
-    xml_deserializer = filesystem_io.XmlDeserializer(xml_filepath)
-    project_name = str(xml_filepath.name).replace(".xml", "")
-    for tmp_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
-        molecule_object = tmp_protein.attrib[attribute_names.PROTEIN_MOLECULE_OBJECT]
-        if molecule_object not in tmp_protein_names:
-            tmp_protein_names.append(molecule_object)
-            tmp_protein_infos.append(
-                basic_protein_info.BasicProteinInfo(
-                    molecule_object,
-                    tmp_protein.attrib[attribute_names.ID],
-                    project_name,
-                ),
-            )
-    with lock:
-        result_queue.put((list(tmp_protein_names), list(tmp_protein_infos)))
-
-
-def scan_workspace_for_non_duplicate_proteins(the_workspace_path: pathlib.Path) -> np.ndarray:
-    """Scans the workspace for non-duplicate proteins.
-
-    Args:
-        the_workspace_path: Path to the current workspace.
-    """
-    tmp_workspace_path: str = str(the_workspace_path)
-    # List of XML file paths
-    xml_files = [
-        f"{tmp_workspace_path}/{tmp_project_file}"
-        for tmp_project_file in os.listdir(tmp_workspace_path)
-        if not os.path.isdir(pathlib.Path(f"{tmp_workspace_path}/{tmp_project_file}"))
-    ]
-    # Using ThreadPoolExecutor to read XML files in parallel
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        # Create a queue and a lock for thread safety
-        result_queue = Queue()
-        lock = Lock()
-
-        # Map each XML file to the read_xml_file function in parallel
-        futures = [
-            executor.submit(get_proteins_of_project_xml, pathlib.Path(file_path), result_queue, lock)
-            for file_path in xml_files
-        ]
-
-        # Wait for all tasks to complete
-        concurrent.futures.wait(futures)
-
-        # Retrieve results from the queue in the main thread
-        all_proteins_of_workspace: collections.deque = collections.deque()
-        while not result_queue.empty():
-            result = result_queue.get()
-            protein_name, protein_info = result
-            all_proteins_of_workspace.append(result[1])
-            # print(f"Name: {protein_name}, Info: {protein_info}")
-        flatten_proteins = list(itertools.chain(*all_proteins_of_workspace))
-        print(flatten_proteins)
-        # Use a set to store unique elements
-        unique_proteins_set = set()
-        # Iterate through the list and add unique elements to the set
-        for protein in flatten_proteins:
-            unique_proteins_set.add(protein)
-
-        return np.array(list(unique_proteins_set))
-
-
-def scan_workspace_for_valid_projects(the_workspace_path: pathlib.Path) -> list[str]:
-    """Scans the workspace for valid projects.
-
-    Args:
-        the_workspace_path: Path to the current workspace.
-    """
-    directory_content = os.listdir(str(the_workspace_path))
-    return [file for file in directory_content if file.endswith(".xml")]
+# def get_proteins_of_project_xml(xml_filepath: pathlib.Path, result_queue, lock) -> None:  # noqa: ANN001
+#     """Gets the protein information from the project xml file.
+# 
+#     Args:
+#         xml_filepath: a path to the project xml file.
+#         result_queue: a queue to put the protein information into.
+#         lock: a lock to prevent the unauthorized access to the memory.
+#     """
+#     tmp_protein_names: collections.deque = collections.deque()
+#     tmp_protein_infos: collections.deque = collections.deque()
+#     xml_deserializer = filesystem_io.XmlDeserializer(xml_filepath)
+#     project_name = str(xml_filepath.name).replace(".xml", "")
+#     for tmp_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
+#         molecule_object = tmp_protein.attrib[attribute_names.PROTEIN_MOLECULE_OBJECT]
+#         if molecule_object not in tmp_protein_names:
+#             tmp_protein_names.append(molecule_object)
+#             tmp_protein_infos.append(
+#                 basic_protein_info.BasicProteinInfo(
+#                     molecule_object,
+#                     tmp_protein.attrib[attribute_names.ID],
+#                     project_name,
+#                 ),
+#             )
+#     with lock:
+#         result_queue.put((list(tmp_protein_names), list(tmp_protein_infos)))
+# 
+# 
+# def scan_workspace_for_non_duplicate_proteins(the_workspace_path: pathlib.Path) -> np.ndarray:
+#     """Scans the workspace for non-duplicate proteins.
+# 
+#     Args:
+#         the_workspace_path: Path to the current workspace.
+#     """
+#     tmp_workspace_path: str = str(the_workspace_path)
+#     # List of XML file paths
+#     xml_files = [
+#         f"{tmp_workspace_path}/{tmp_project_file}"
+#         for tmp_project_file in os.listdir(tmp_workspace_path)
+#         if not os.path.isdir(pathlib.Path(f"{tmp_workspace_path}/{tmp_project_file}"))
+#     ]
+#     # Using ThreadPoolExecutor to read XML files in parallel
+#     with concurrent.futures.ThreadPoolExecutor() as executor:
+#         # Create a queue and a lock for thread safety
+#         result_queue = Queue()
+#         lock = Lock()
+# 
+#         # Map each XML file to the read_xml_file function in parallel
+#         futures = [
+#             executor.submit(get_proteins_of_project_xml, pathlib.Path(file_path), result_queue, lock)
+#             for file_path in xml_files
+#         ]
+# 
+#         # Wait for all tasks to complete
+#         concurrent.futures.wait(futures)
+# 
+#         # Retrieve results from the queue in the main thread
+#         all_proteins_of_workspace: collections.deque = collections.deque()
+#         while not result_queue.empty():
+#             result = result_queue.get()
+#             protein_name, protein_info = result
+#             all_proteins_of_workspace.append(result[1])
+#             # print(f"Name: {protein_name}, Info: {protein_info}")
+#         flatten_proteins = list(itertools.chain(*all_proteins_of_workspace))
+#         print(flatten_proteins)
+#         # Use a set to store unique elements
+#         unique_proteins_set = set()
+#         # Iterate through the list and add unique elements to the set
+#         for protein in flatten_proteins:
+#             unique_proteins_set.add(protein)
+# 
+#         return np.array(list(unique_proteins_set))
+# 
+# 
+# def scan_workspace_for_valid_projects(the_workspace_path: pathlib.Path) -> list[str]:
+#     """Scans the workspace for valid projects.
+# 
+#     Args:
+#         the_workspace_path: Path to the current workspace.
+#     """
+#     directory_content = os.listdir(str(the_workspace_path))
+#     return [file for file in directory_content if file.endswith(".xml")]

@@ -2005,12 +2005,8 @@ class MainViewController:
             save_dialog = QtWidgets.QFileDialog()
             full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
             if full_file_name == ("", ""):
-                tools.quick_log_and_display(
-                    "info",
-                    "No file has been selected.",
-                    self._view.status_bar,
-                    "No file has been selected.",
-                )
+                logger.info("No file has been selected.")
+                self.update_status("No file has been selected.")
                 return
 
             # --- New job approach
@@ -2042,12 +2038,8 @@ class MainViewController:
             save_dialog = QtWidgets.QFileDialog()
             full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
             if full_file_name == ("", ""):
-                tools.quick_log_and_display(
-                    "info",
-                    "No file has been selected.",
-                    self._view.status_bar,
-                    "No file has been selected.",
-                )
+                logger.info("No file has been selected.")
+                self.update_status("No file has been selected.")
                 return
 
             self._active_task = tasks.LegacyTask(

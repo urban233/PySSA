@@ -241,19 +241,19 @@ class ProjectWatcher:
                 gui_elements_to_show.append(ui.btn_image_analysis_page)
             gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
 
-    def check_workspace_for_projects(self, workspace: pathlib.Path, ui) -> None:  # noqa: ANN001
-        """Checks the workspace for any projects.
-
-        Args:
-            workspace: the path to the workspace.
-            ui: an instance of the PySSA ui class.
-        """
-        if len(tools.scan_workspace_for_valid_projects(workspace, ui.list_delete_projects)) > 0:
-            ui.btn_delete_page.show()
-            ui.btn_open_page.show()
-        else:
-            ui.btn_delete_page.hide()
-            ui.btn_open_page.hide()
+    # def check_workspace_for_projects(self, workspace: pathlib.Path, ui) -> None:  # noqa: ANN001
+    #     """Checks the workspace for any projects.
+    # 
+    #     Args:
+    #         workspace: the path to the workspace.
+    #         ui: an instance of the PySSA ui class.
+    #     """
+    #     if len(tools.scan_workspace_for_valid_projects(workspace, ui.list_delete_projects)) > 0:
+    #         ui.btn_delete_page.show()
+    #         ui.btn_open_page.show()
+    #     else:
+    #         ui.btn_delete_page.hide()
+    #         ui.btn_open_page.hide()
 
     def count_proteins_in_project(self) -> None:
         """Counts the number of pdb files in the project pdb directory.

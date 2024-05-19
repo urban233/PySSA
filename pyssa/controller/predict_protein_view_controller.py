@@ -65,7 +65,7 @@ class PredictProteinViewController(QtCore.QObject):
         self.has_internet_connection = True  # flag to determine from the main_view_controller.py if there is a working internet connection
         try:
             self.restore_ui_defaults()
-        except exception.NoInternetConnection:
+        except exception.NoInternetConnectionError:
             logger.warning("No internet connection")
             self.has_internet_connection = False
         self._fill_protein_to_predict_table_with_sequences(the_selected_indexes, a_prediction_type, the_watcher)
@@ -102,7 +102,7 @@ class PredictProteinViewController(QtCore.QObject):
             if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
                 tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "The script for bringing the documentation window in front could not be found!", "Documentation",
-                    custom_message_box.CustomMessageBoxIcons.ERROR.value
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value,
                 )
                 tmp_dialog.exec_()
             else:
@@ -121,7 +121,7 @@ class PredictProteinViewController(QtCore.QObject):
         """Opens the prediction configuration dialog window."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Edit' advanced configurations button was clicked.")
         self._external_controller = advanced_prediction_configurations_view_controller.AdvancedPredictionConfigurationsViewController(
-            self._interface_manager, self.prediction_configuration
+            self._interface_manager, self.prediction_configuration,
         )
         self._external_controller.user_input.connect(self._post_show_prediction_configuration)
         self._interface_manager.get_advanced_prediction_configurations_view().show()
@@ -140,10 +140,10 @@ class PredictProteinViewController(QtCore.QObject):
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "You do not have a working internet connection\nbut that is necessary for this operation!",
                 "Internet Connection",
-                custom_message_box.CustomMessageBoxIcons.ERROR.value
+                custom_message_box.CustomMessageBoxIcons.ERROR.value,
             )
             tmp_dialog.exec_()
-            raise exception.NoInternetConnection("No working internet connection.")
+            raise exception.NoInternetConnectionError("No working internet connection.")
 
         self._view.ui.list_analysis_overview.clear()
         self._view.ui.btn_analysis_remove.hide()
@@ -466,7 +466,7 @@ class PredictProteinViewController(QtCore.QObject):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked.")
         self._external_controller = add_protein_pair_view_controller.AddProteinPairViewController(
             self._interface_manager, self._watcher, self._get_all_current_analysis_runs(), self._get_all_current_protein_pair_names(),
-            a_list_of_extra_proteins=self.temporary_protein_objs
+            a_list_of_extra_proteins=self.temporary_protein_objs,
         )
 
         self._external_controller.user_input.connect(self._post_add_protein_pair)
@@ -952,7 +952,7 @@ class PredictProteinViewController(QtCore.QObject):
             ("job_input",
              tmp_prediction_runs,
              self.prediction_configuration,
-             True)
+             True),
         )
 
     # </editor-fold>
