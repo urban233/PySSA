@@ -71,37 +71,3 @@ class Sequence:
 
         self.name: str = protein_name
         self.sequence: str = single_sequence
-
-    def serialize(self, filepath: pathlib.Path, filename: str) -> None:
-        """This function serializes the sequence object.
-
-        Args:
-            filepath:
-                filepath to store the object serialization
-            filename:
-                filename of the object serialization WITH .json extension
-        """
-        # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_filepath(filepath):
-            logger.error("The directory does not exists!")
-            raise NotADirectoryError("The directory does not exists!")
-
-        # </editor-fold>
-
-        sequence_serializer = filesystem_io.ObjectSerializer(self, filepath, filename)
-        sequence_attribute_dict = {"name": self.name, "sequence": self.sequence}
-        sequence_serializer.set_custom_object_dict(sequence_attribute_dict)
-        sequence_serializer.serialize_object()
-        logger.info(f"Sequence {self.name} was serialized.")
-
-    @staticmethod
-    def deserialize(filepath: pathlib.Path, filename: str) -> "Sequence":
-        """Deserializes the sequence object.
-
-        Args:
-            filepath: a filepath where the object serialization are stored
-            filename: a filename of the object serialization WITH .json extension
-
-        Returns: a ProteinSequence object
-        """
-        return filesystem_io.ObjectDeserializer(filepath, filename).deserialize_sequence()

@@ -285,29 +285,6 @@ class Project:
     #     # with open(a_filepath, "w", encoding="utf-8") as tmp_file:
     #     #     tmp_file.write(xml_string)
 
-    @staticmethod
-    def deserialize_project(a_filepath: pathlib.Path, app_settings: "settings.Settings") -> "Project":
-        """Constructs the protein object from the xml file.
-
-        Args:
-            a_filepath (pathlib.Path): the filepath of the project xml file
-            app_settings (settings.Settings): the settings object of the main window
-
-        Raises:
-            ValueError: if one of the arguments are None or path not exist
-
-        Returns:
-            a complete project object deserialized from a xml file
-        """
-        # <editor-fold desc="Checks">
-        safeguard.Safeguard.check_if_value_is_not_none(a_filepath, logger)
-        safeguard.Safeguard.check_filepath(a_filepath)
-        safeguard.Safeguard.check_if_value_is_not_none(app_settings, logger)
-
-        # </editor-fold>
-
-        return filesystem_io.XmlDeserializer.deserialize_project(a_filepath, app_settings)
-
     def search_protein(self, a_protein_name: str) -> "protein.Protein":
         """Searches the project for a specific protein name.
 

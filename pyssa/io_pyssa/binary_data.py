@@ -20,21 +20,39 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for handling binary data."""
+import logging
 import pathlib
-import typing
 import base64
 import os
 
-if typing.TYPE_CHECKING:
-    from pyssa.io_pyssa import path_util
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 def create_base64_string_from_file(filepath: pathlib.Path) -> str:
     """Creates a base64 string from a binary file.
 
     Args:
-        filepath: a filepath to a binary file.
+        filepath (pathlib.Path): A filepath to a binary file.
+    
+    Raises:
+        exception.IllegalArgumentError: If `filepath` is either None or an empty string.
+        FileNotFoundError: If `filepath` does not exist.
     """
+    # <editor-fold desc="Checks">
+    if filepath is None or filepath == "":
+        logger.error("filepath is either None or an empty string.")
+        raise exception.IllegalArgumentError("filepath is either None or an empty string.")
+    if not os.path.exists(filepath):
+        logger.error("filepath does not exist.")
+        raise FileNotFoundError("filepath does not exist.")
+        
+    # </editor-fold>
+    
     with open(filepath, "rb") as binary_file:
         binary_data = binary_file.read()
         binary_file.close()
@@ -42,13 +60,26 @@ def create_base64_string_from_file(filepath: pathlib.Path) -> str:
     return base64.b64encode(binary_data).decode("utf-8")
 
 
-def write_binary_file_from_base64_string(filepath: pathlib.Path, base64_data) -> None:  # noqa: ANN001
+def write_binary_file_from_base64_string(filepath: pathlib.Path, base64_data: str) -> None:
     """Writes base64 data to a binary file.
 
     Args:
         filepath: a filepath to a binary file.
         base64_data: a base64 string to write.
+
+    Raises:
+        exception.IllegalArgumentError: If `filepath` is either None or an empty string or if `base64_data` is either None or an empty string.
     """
+    # <editor-fold desc="Checks">
+    if filepath is None or filepath == "":
+        logger.error("filepath is either None or an empty string.")
+        raise exception.IllegalArgumentError("filepath is either None or an empty string.")
+    if base64_data is None or base64_data == "":
+        logger.error("base64_data is either None or an empty string.")
+        raise exception.IllegalArgumentError("base64_data is either None or an empty string.")
+    
+    # </editor-fold>
+    
     # Decode base64 string to binary data
     binary_data_export = base64.b64decode(base64_data)
     # Ensure that the directory exists

@@ -22,22 +22,41 @@
 """Module for handling biological data."""
 import logging
 import os.path
-import typing
 import pathlib
 import requests
-from xml.etree import ElementTree
 
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import exception
 
-if typing.TYPE_CHECKING:
-    from pyssa.io_pyssa import path_util
-
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
-def download_pdb_file(pdb_id, save_path):
+def download_pdb_file(pdb_id: str, save_path: str) -> None:
+    """Downloads a pdb file with a given pdb_id and saves it to a given path.
+
+    Args:
+        pdb_id (str): A string representing the PDB ID of the file to be downloaded.
+        save_path (str): A string representing the path to save the downloaded file.  # TODO: find out if the path is a filepath
+    
+    Raises:
+        exception.IllegalArgumentError: If either `pdb_id` or `save_path` is None.")
+        exception.DirectoryNotFoundError: If save_path does not exist.
+    """
+    # <editor-fold desc="Checks">
+    if pdb_id is None:
+        logger.error("pdb_id is None.")
+        raise exception.IllegalArgumentError("pdb_id is None.")
+    if save_path is None:
+        logger.error("save_path is None.")
+        raise exception.IllegalArgumentError("save_path is None.")
+    if not os.path.exists(save_path):
+        logger.error("save_path does not exist.")
+        raise exception.DirectoryNotFoundError("save_path does not exist.")
+    
+    # </editor-fold>
+    
     pdb_url = f'https://files.rcsb.org/download/{pdb_id.upper()}.pdb'
 
     try:
@@ -45,68 +64,15 @@ def download_pdb_file(pdb_id, save_path):
         response.raise_for_status()  # Check for errors
         with open(save_path, 'w') as pdb_file:
             pdb_file.write(response.text)
-        print(f"PDB file {pdb_id} downloaded successfully to {save_path}")
+        logger.error(f"PDB file {pdb_id} downloaded successfully to {save_path}")
     except requests.exceptions.HTTPError as errh:
-        print(f"HTTP Error: {errh}")
+        logger.error(f"HTTP Error: {errh}")
     except requests.exceptions.ConnectionError as errc:
-        print(f"Error Connecting: {errc}")
+        logger.error(f"Error Connecting: {errc}")
     except requests.exceptions.Timeout as errt:
-        print(f"Timeout Error: {errt}")
+        logger.error(f"Timeout Error: {errt}")
     except requests.exceptions.RequestException as err:
-        print(f"Error: {err}")
-
-
-def convert_pdb_file_into_xml_element(filepath: "path_util.FilePath") -> ElementTree.Element:
-    """This function creates a xml string of an existing pdb file.
-
-    Args:
-        filepath:
-            path where the pdb file is stored
-    Returns:
-        a xml string
-    """
-    # TODO: write checks for function arguments
-    # Read the PDB file
-    pdb_file = open(filepath.get_filepath(), "r")
-    pdb_contents = pdb_file.read()
-    # Convert the PDB to XML format
-    root = ElementTree.Element("pdb_data")
-    for line in pdb_contents.splitlines():
-        if line.startswith("ATOM") or line.startswith("HETATM"):
-            atom = ElementTree.SubElement(root, "atom")
-            atom.text = line
-    # Write out the XML file
-    return root
-
-
-def convert_xml_string_to_pdb_file(xml_contents: "ElementTree.ElementTree", path_pdb: "pathlib.Path") -> None:
-    """This function writes a pdb file based on a xml string which contains the pdb information.
-
-    Args:
-        xml_contents:
-            a xml element which holds the pdb_data
-        path_pdb:
-            full filepath to the pdb file which should get written, with filename and extension!
-    """
-    # TODO: write checks for function arguments
-    # Write out the PDB file
-    pdb_file = open(path_pdb, "w")
-    for tmp_line in convert_pdb_xml_string_to_list(xml_contents):
-        pdb_file.write(f"{tmp_line} \n")
-    pdb_file.close()
-
-
-def convert_pdb_xml_string_to_list(root) -> list:  # noqa: ANN001
-    """Converts the xml string of pdb information to a list.
-
-    Args:
-        root: the xml root element.
-    """
-    # TODO: write checks for function arguments
-    pdb_lines = []
-    for tmp_atom in root.iter("atom"):
-        pdb_lines.append(tmp_atom.text)
-    return pdb_lines
+        logger.error(f"Error: {err}")
 
 
 def convert_pdb_data_list_to_pdb_file(a_pdb_filepath: pathlib.Path, a_pdb_data: list) -> None:
@@ -149,22 +115,28 @@ def convert_pdb_data_list_to_pdb_file(a_pdb_filepath: pathlib.Path, a_pdb_data: 
     pdb_file.close()
 
 
-def convert_pdb_data_list_to_xml_string(pdb_data: list) -> ElementTree.Element:
-    """Converts the list of pdb information into a xml string.
+def build_pdb_file(records: list, a_filepath: str) -> None:
+    """Builds a pdb file for the given records.
 
     Args:
-        pdb_data: a list of pdb information.
+        records (list): A list of dictionaries containing the information of each record.
+        a_filepath (str): The file path of the PDB file to be created.
+    
+    Raises:
+        exception.IllegalArgumentError: If records is either None or an empty list or a_filepath is None or an empty string.
     """
-    # Convert the PDB to XML format
-    root = ElementTree.Element("pdb_data")
-    for line in pdb_data:
-        if line.startswith("ATOM") or line.startswith("HETATM"):
-            atom = ElementTree.SubElement(root, "atom")
-            atom.text = line
-    return root
-
-
-def build_pdb_file(records, a_filepath):
+    # <editor-fold desc="Checks">
+    if records is None or len(records) == 0:
+        logger.error("records is either None or an empty list.")
+        raise exception.IllegalArgumentError("records is either None or an empty list.")
+    if a_filepath is None or a_filepath == "":
+        logger.error("a_filepath is either None or an empty string.")
+        raise exception.IllegalArgumentError("a_filepath is either None or an empty string.")
+    if os.path.exists(a_filepath):
+        logger.warning("a_filepath already exists.")
+    
+    # </editor-fold>
+    
     with open(a_filepath, 'w') as pdb_file:
         for record in records:
             record_type = record['record_type']
@@ -196,9 +168,30 @@ def build_pdb_file(records, a_filepath):
     pdb_file.close()
 
 
-def parse_pdb_file(a_filepath):
-    records = []
+def parse_pdb_file(a_filepath: str) -> list[dict]:
+    """Parses an existing pdb file.
 
+    Args:
+        a_filepath: The filepath of the PDB file to be parsed.
+
+    Returns:
+        A list of dictionaries containing the parsed records from the PDB file.
+
+    Raises:
+        exception.IllegalArgumentError: If `a_filepath` is either None or an empty string.
+        FileNotFoundError: If `a_filepath` does not exist.
+    """
+    # <editor-fold desc="Checks">
+    if a_filepath is None or a_filepath == "":
+        logger.error("a_filepath is either None or an empty string.")
+        raise exception.IllegalArgumentError("a_filepath is either None or an empty string.")
+    if not os.path.exists(a_filepath):
+        logger.error("a_filepath does not exist.")
+        raise FileNotFoundError("a_filepath does not exist.")
+    
+    # </editor-fold>
+    
+    records = []
     with open(a_filepath, 'r') as pdb_file:
         for line in pdb_file:
             record_type = line[0:6].strip()
@@ -235,7 +228,7 @@ def parse_pdb_file(a_filepath):
                     'temperature_factor': temperature_factor,
                     'segment_identifier': segment_identifier,
                     'element_symbol': element_symbol,
-                    'charge': charge
+                    'charge': charge,
                 })
             elif record_type == "TER":
                 try:
@@ -259,7 +252,7 @@ def parse_pdb_file(a_filepath):
                         'temperature_factor': 0.0,
                         'segment_identifier': "",
                         'element_symbol': "",
-                        'charge': ""
+                        'charge': "",
                     })
                 except ValueError:
                     logger.warning("PDB file has only the record type for TER.")
@@ -279,7 +272,7 @@ def parse_pdb_file(a_filepath):
                         'temperature_factor': 0.0,
                         'segment_identifier': "",
                         'element_symbol': "",
-                        'charge': ""
+                        'charge': "",
                     })
             elif record_type == "HETATM":
                 atom_number_het = int(line[6:11])
@@ -312,6 +305,6 @@ def parse_pdb_file(a_filepath):
                     'temperature_factor': temperature_factor_het,
                     'segment_identifier': segment_identifier_het,
                     'element_symbol': element_symbol_het,
-                    'charge': charge_het
+                    'charge': charge_het,
                 })
     return records

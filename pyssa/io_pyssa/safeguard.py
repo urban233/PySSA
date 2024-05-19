@@ -67,16 +67,6 @@ class Safeguard:
         return False
 
     @staticmethod
-    def check_if_value_is_in_table_v_header(value, table) -> bool:  # noqa: ANN001
-        """Checks if a value is in a vertical header of a QTableWidget."""
-        for i in range(table.rowCount()):
-            header = table.verticalHeaderItem(i).text()
-            new_value = value
-            if header == new_value:
-                return True
-        return False
-
-    @staticmethod
     def check_if_value_is_not_none(a_value, a_logger) -> None:  # noqa: ANN001
         """Checks if a value is None or not.
 

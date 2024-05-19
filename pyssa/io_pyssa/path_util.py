@@ -34,26 +34,26 @@ class FilePath:
     """This class is a hybrid class of pathlib.Path and QtCore.QFileInfo."""
 
     # <editor-fold desc="Class attributes">
-    """
-    a complete absolute path to a specific file
-    """
     _filepath: pathlib.Path
     """
-    a complete absolute path to a specific directory
+    A complete absolute path to a specific file
     """
     _dirname: pathlib.Path
     """
-    the name of the file with the file extension
+    A complete absolute path to a specific directory
     """
     _basename: str
     """
-    the name of the file WITHOUT file extension
+    The name of the file with the file extension
     """
     _filename: str
     """
-    the file extension of the file
+    The name of the file WITHOUT file extension
     """
     _extension: str
+    """
+    The file extension of the file
+    """
 
     # </editor-fold>
 
@@ -61,10 +61,10 @@ class FilePath:
         """Constructor.
 
         Args:
-            filepath: an existing filepath
+            filepath: An existing filepath.
 
         Raises:
-            FileNotFoundError if given filepath does not exists
+            FileNotFoundError: If given filepath does not exist.
         """
         if os.path.exists(str(filepath)):
             # complete file path was given
@@ -75,32 +75,60 @@ class FilePath:
             raise FileNotFoundError("You need to pass an existing filepath!")
 
     def split_filepath(self) -> tuple[pathlib.Path, str]:
-        """Split the filepath in path to the parent directory and the actual filepath."""
+        """Splits the filepath in path to the parent directory and the actual filepath.
+        
+        Returns:
+            A tuple with the path and the filename.
+        """
         string_version = str(self._filepath)
         file_info = QtCore.QFileInfo(string_version)
         return pathlib.Path(file_info.canonicalPath()), f"{file_info.baseName()}.{file_info.suffix()}"
 
     def split_file_extension_from_name(self) -> tuple[str, str]:
-        """Splits the extension of the filepath from its name."""
+        """Splits the extension of the filepath from its name.
+        
+        Returns:
+            A tuple with the filename and the extension.
+        """
         file_info = QtCore.QFileInfo(str(self._filepath))
         return file_info.baseName(), f".{file_info.suffix()}"
 
     def get_filepath(self) -> pathlib.Path:
-        """Gets the filepath."""
+        """Gets the filepath.
+        
+        Returns:
+            The `_filepath` of the instance.
+        """
         return self._filepath
 
     def get_dirname(self) -> pathlib.Path:
-        """Gets the directory path of the filepath."""
+        """Gets the directory path of the filepath.
+        
+        Returns:
+            The `_dirname` of the instance.
+        """
         return self._dirname
 
     def get_basename(self) -> str:
-        """Gets the basename of the filepath."""
+        """Gets the basename of the filepath.
+        
+        Returns:
+            The `_basename` of the instance.
+        """
         return self._basename
 
     def get_filename(self) -> str:
-        """Gets the filename of the filepath."""
+        """Gets the filename of the filepath.
+        
+        Returns:
+            The `_filename` of the instance.
+        """
         return self._filename
 
     def get_file_extension(self) -> str:
-        """Gets the file extension of the filepath as a string."""
+        """Gets the file extension of the filepath as a string.
+        
+        Returns:
+            The `_extension` of the instance.
+        """
         return self._extension

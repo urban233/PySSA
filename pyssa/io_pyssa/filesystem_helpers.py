@@ -31,13 +31,21 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def create_directory(a_directory_path: "pathlib.Path") -> None:
-    """Creates a directory if it doesn't already exist."""
+def create_directory(a_directory_path: pathlib.Path) -> None:
+    """Creates a directory if it doesn't already exist.
+    
+    Args:
+        a_directory_path (pathlib.Path): Path to the directory to create.
+    """
     if not os.path.exists(str(a_directory_path)):
         os.mkdir(str(a_directory_path))
 
 
 def delete_directory(a_directory_path: pathlib.Path) -> None:
-    """Deletes a directory and all its subdirectories."""
+    """Deletes a directory and all its subdirectories.
+    
+    Args:
+        a_directory_path (pathlib.Path): Path to the directory to delete recursively.
+    """
     if os.path.exists(a_directory_path):
         shutil.rmtree(a_directory_path)
