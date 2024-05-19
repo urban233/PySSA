@@ -28,6 +28,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from pyssa.gui.ui.custom_widgets import toggle_button
+from pyssa.internal.thread import thread_util
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import input_validator, exception
 
@@ -48,9 +49,7 @@ def select_matching_string_in_q_list_view(a_string_to_match: str,
     
     Raises:
         exception.IllegalArgumentError: If either `a_string_to_match`, `a_q_list_view_to_select` or `a_q_line_edit` is None.
-
-    Notes:
-        This function must run in the MAIN THREAD!
+        exception.NotMainThreadError: If function is called not from the main thread.
     """
     # <editor-fold desc="Checks">
     if a_string_to_match is None:
@@ -62,8 +61,11 @@ def select_matching_string_in_q_list_view(a_string_to_match: str,
     if a_q_line_edit is None:
         logger.error("a_q_line_edit is None.")
         raise exception.IllegalArgumentError("a_q_line_edit is None.")
-
+    if not thread_util.is_main_thread():
+        raise exception.NotMainThreadError()
+    
     # </editor-fold>
+    
     if a_string_to_match == "":
         a_q_line_edit.clear()
         a_q_list_view_to_select.selectionModel().clearCurrentIndex()
@@ -90,6 +92,7 @@ def set_pymol_scene_name_into_label(a_scene_name: str, a_label: QtWidgets.QLabel
     
     Raises:
         exception.IllegalArgumentError: If either `a_scene_name` or `a_label` is None.
+        exception.NotMainThreadError: If function is called not from the main thread.
     """
     # <editor-fold desc="Checks">
     if a_scene_name is None:
@@ -98,6 +101,8 @@ def set_pymol_scene_name_into_label(a_scene_name: str, a_label: QtWidgets.QLabel
     if a_label is None:
         logger.error("a_label is None.")
         raise exception.IllegalArgumentError("a_label is None.")
+    if not thread_util.is_main_thread():
+        raise exception.NotMainThreadError()
     
     # </editor-fold>
     
@@ -116,13 +121,21 @@ def set_checked_async(a_checkbox_like_widget: Union[QtWidgets.QCheckBox, "toggle
     Args:
         a_checkbox_like_widget (Union[QtWidgets.QCheckBox, "toggle_button.ToggleButton"]): The checkbox-like widget to set the checked state for.
         a_check_state (bool): The actual check state the checkbox-like widget should take.
+    
+    Raises:
+        exception.IllegalArgumentError: If either `a_checkbox_like_widget` or `a_check_state` is None.
+        exception.NotMainThreadError: If function is called not from the main thread.
     """
     # <editor-fold desc="Checks">
     if a_checkbox_like_widget is None:
-        return
+        logger.error("a_checkbox_like_widget is None.")
+        raise exception.IllegalArgumentError("a_checkbox_like_widget is None.")
     if a_check_state is None:
-        return
-
+        logger.error("a_check_state is None.")
+        raise exception.IllegalArgumentError("a_check_state is None.")
+    if not thread_util.is_main_thread():
+        raise exception.NotMainThreadError()
+    
     # </editor-fold>
 
     a_checkbox_like_widget.blockSignals(True)

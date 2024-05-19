@@ -27,6 +27,7 @@ import pathlib
 from PyQt5 import QtWidgets
 
 from pyssa.gui.ui.custom_dialogs import custom_message_box
+from pyssa.internal.thread import thread_util
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import exception
 from pyssa.util.void import rvoid
@@ -48,6 +49,7 @@ def fill_combo_box(combo_box: QtWidgets.QComboBox, item_list: list) -> None:
     Raises:
         exception.IllegalArgumentError: If combo_box is None.
         exception.IllegalArgumentError: If item_list is either None or an empty list.
+        exception.NotMainThreadError: If function is called not from the main thread.
     """
     # <editor-fold desc="Checks">
     if combo_box is None:
@@ -56,6 +58,8 @@ def fill_combo_box(combo_box: QtWidgets.QComboBox, item_list: list) -> None:
     if item_list is None or len(item_list) == 0:
         logger.error("item_list is either None or an empty list.")
         raise exception.IllegalArgumentError("item_list is either None or an empty list.")
+    if not thread_util.is_main_thread():
+        raise exception.NotMainThreadError()
     
     # </editor-fold>
     
@@ -73,6 +77,7 @@ def choose_directory(self, txt_box_dir: QtWidgets.QLineEdit) -> None:  # noqa: A
 
     Raises:
         exception.IllegalArgumentError: If either `self` or `txt_box_dir` is None.
+        exception.NotMainThreadError: If function is called not from the main thread.
     """
     # <editor-fold desc="Checks">
     if self is None:
@@ -81,6 +86,8 @@ def choose_directory(self, txt_box_dir: QtWidgets.QLineEdit) -> None:  # noqa: A
     if txt_box_dir is None:
         logger.error("txt_box_dir is None.")
         raise exception.IllegalArgumentError("txt_box_dir is None.")
+    if not thread_util.is_main_thread():
+        raise exception.NotMainThreadError()
     
     # </editor-fold>
     
@@ -116,11 +123,14 @@ def hide_gui_elements(gui_elements: list) -> None:
     
     Raises:
         exception.IllegalArgumentError: If gui_elements is None.
+        exception.NotMainThreadError: If function is called not from the main thread.
     """
     # <editor-fold desc="Checks">
     if gui_elements is None:
         logger.error("gui_elements is None.")
         raise exception.IllegalArgumentError("gui_elements is None.")
+    if not thread_util.is_main_thread():
+        raise exception.NotMainThreadError()
     
     # </editor-fold>
     
@@ -137,11 +147,14 @@ def show_gui_elements(gui_elements: list) -> None:
     
     Raises:
         exception.IllegalArgumentError: If gui_elements is None.
+        exception.NotMainThreadError: If function is called not from the main thread.
     """
     # <editor-fold desc="Checks">
     if gui_elements is None:
         logger.error("gui_elements is None.")
         raise exception.IllegalArgumentError("gui_elements is None.")
+    if not thread_util.is_main_thread():
+        raise exception.NotMainThreadError()
     
     # </editor-fold>
     
@@ -159,6 +172,7 @@ def manage_gui_visibility(gui_elements_to_show: list, gui_elements_to_hide: list
     
     Raises:
         exception.IllegalArgumentError: If either `gui_elements_to_show` or `gui_elements_to_hide` is None.
+        exception.NotMainThreadError: If function is called not from the main thread.
     """
     # <editor-fold desc="Checks">
     if gui_elements_to_show is None:
@@ -167,6 +181,8 @@ def manage_gui_visibility(gui_elements_to_show: list, gui_elements_to_hide: list
     if gui_elements_to_hide is None:
         logger.error("gui_elements_to_hide is None.")
         raise exception.IllegalArgumentError("gui_elements_to_hide is None.")
+    if not thread_util.is_main_thread():
+        raise exception.NotMainThreadError()
     
     # </editor-fold>
     
@@ -183,6 +199,7 @@ def disable_text_box(text_box: QtWidgets.QLineEdit, text_box_label: QtWidgets.QL
     
     Raises:
         exception.IllegalArgumentError: If either `text_box` or `text_box_label` is None.
+        exception.NotMainThreadError: If function is called not from the main thread.
     """
     # <editor-fold desc="Checks">
     if text_box is None:
@@ -191,6 +208,8 @@ def disable_text_box(text_box: QtWidgets.QLineEdit, text_box_label: QtWidgets.QL
     if text_box_label is None:
         logger.error("text_box_label is None.")
         raise exception.IllegalArgumentError("text_box_label is None.")
+    if not thread_util.is_main_thread():
+        raise exception.NotMainThreadError()
     
     # </editor-fold>
     
@@ -208,6 +227,7 @@ def enable_text_box(text_box: QtWidgets.QLineEdit, text_box_label: QtWidgets.QLa
     
     Raises:
         exception.IllegalArgumentError: If either `text_box` or `text_box_label` is None.
+        exception.NotMainThreadError: If function is called not from the main thread.
     """
     # <editor-fold desc="Checks">
     if text_box is None:
@@ -216,6 +236,8 @@ def enable_text_box(text_box: QtWidgets.QLineEdit, text_box_label: QtWidgets.QLa
     if text_box_label is None:
         logger.error("text_box_label is None.")
         raise exception.IllegalArgumentError("text_box_label is None.")
+    if not thread_util.is_main_thread():
+        raise exception.NotMainThreadError()
     
     # </editor-fold>
     

@@ -26,6 +26,8 @@ import logging
 import shutil
 import subprocess
 from typing import TYPE_CHECKING
+
+from pyssa.internal.thread import thread_util
 from pyssa.util import constants
 from pyssa.util import exception
 from pyssa.util import globals
@@ -53,11 +55,14 @@ def get_prediction_name_and_seq_from_table(
     
     Raises:
         exception.IllegalArgumentError: If table is None.
+        exception.NotMainThreadError: If function is called not from the main thread.
     """
     # <editor-fold desc="Checks">
     if table is None:
         logger.error("table is None.")
         raise exception.IllegalArgumentError("table is None.")
+    if not thread_util.is_main_thread():
+        raise exception.NotMainThreadError()
     
     # </editor-fold>
     

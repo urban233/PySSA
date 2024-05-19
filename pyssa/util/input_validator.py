@@ -27,6 +27,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 
+from pyssa.internal.thread import thread_util
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import exception
 
@@ -114,12 +115,15 @@ class InputValidator:
         
         Raises:
             exception.IllegalArgumentError: If a_line_edit is None.
+            exception.NotMainThreadError: If function is called not from the main thread.
         """
         # <editor-fold desc="Checks">
         if a_line_edit is None:
             logger.error("a_line_edit is None.")
             raise exception.IllegalArgumentError("a_line_edit is None.")
-        
+        if not thread_util.is_main_thread():
+            raise exception.NotMainThreadError()
+
         # </editor-fold>
         
         self.line_edit = a_line_edit
@@ -138,6 +142,7 @@ class InputValidator:
         
         Raises:
             exception.IllegalArgumentError: If either `the_current_entered_text` or `the_current_sequences` is None.
+            exception.NotMainThreadError: If function is called not from the main thread.
         """
         # <editor-fold desc="Checks">
         if the_current_entered_text is None:
@@ -146,7 +151,9 @@ class InputValidator:
         if the_current_sequences is None:
             logger.error("the_current_sequences is None.")
             raise exception.IllegalArgumentError("the_current_sequences is None.")
-        
+        if not thread_util.is_main_thread():
+            raise exception.NotMainThreadError()
+
         # </editor-fold>
         
         allowed_chars = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-', '_'}
@@ -184,11 +191,14 @@ class InputValidator:
         
         Raises:
             exception.IllegalArgumentError: If the_current_entered_text is None.
+            exception.NotMainThreadError: If function is called not from the main thread.
         """
         # <editor-fold desc="Checks">
         if the_current_entered_text is None:
             logger.error("the_current_entered_text is None.")
             raise exception.IllegalArgumentError("the_current_entered_text is None.")
+        if not thread_util.is_main_thread():
+            raise exception.NotMainThreadError()
         
         # </editor-fold>
         
@@ -262,6 +272,7 @@ class InputValidator:
 
         Raises:
             exception.IllegalArgumentError: If any of the arguments are None.
+            exception.NotMainThreadError: If function is called not from the main thread.
         """
         # <editor-fold desc="Checks">
         if list_for_projects is None:
@@ -279,7 +290,9 @@ class InputValidator:
         if status_message is None:
             logger.error("status_message is None.")
             raise exception.IllegalArgumentError("status_message is None.")
-        
+        if not thread_util.is_main_thread():
+            raise exception.NotMainThreadError()
+
         # </editor-fold>
         
         list_model = list_for_projects
@@ -332,6 +345,7 @@ class InputValidator:
         
         Raises:
             exception.IllegalArgumentError: If any of the arguments are None.
+            exception.NotMainThreadError: If function is called not from the main thread.
         """
         # <editor-fold desc="Checks">
         if txt_for_protein_name is None:
@@ -343,6 +357,8 @@ class InputValidator:
         if btn_next is None:
             logger.error("btn_next is None.")
             raise exception.IllegalArgumentError("btn_next is None.")
+        if not thread_util.is_main_thread():
+            raise exception.NotMainThreadError()
         
         # </editor-fold>
         
