@@ -20,22 +20,28 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the main view of the PySSA plugin."""
-import pathlib
+import logging
 
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractItemView
-from pyssa.gui.ui.custom_widgets import custom_line_edit, toggle_button, color_grid, custom_label
+from pyssa.gui.ui.custom_widgets import custom_line_edit, toggle_button, color_grid
 from pyssa.gui.ui.forms.auto_generated import auto_main_view
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
+from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants, gui_utils
+from pyssa.util import exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class MainView(QtWidgets.QMainWindow):
-    """Class representing the main view of PySSA."""
+    """This class represents the main view of the application."""
     
     dialogClosed = QtCore.pyqtSignal(tuple)
     """A signal indicating that the dialog is closed."""
@@ -50,31 +56,33 @@ class MainView(QtWidgets.QMainWindow):
         self.progress_bar = QtWidgets.QProgressBar()
         self.status_bar.addWidget(self.progress_bar)
         self.progress_bar.hide()
-        # self.wait_spinner = spinner.WaitingSpinner(
-        #     parent=self,
-        #     center_on_parent=True,
-        #     disable_parent_when_spinning=True,
-        #     modality=Qt.ApplicationModal,
-        #     roundness=100.0,
-        #     fade=45.0,
-        #     radius=14,
-        #     lines=8,
-        #     line_length=17,
-        #     line_width=10,
-        #     speed=1.25,
-        #     color=QtGui.QColor(75, 145, 247),
-        # )
         self.add_custom_widgets()
         self.initialize_ui()
         self.add_custom_job_panels()
         gui_utils.fill_combo_box(self.ui.box_protein_color, constants.PYMOL_COLORS)
         gui_utils.fill_combo_box(self.ui.box_protein_pair_color, constants.PYMOL_COLORS)
 
-    def closeEvent(self, event):
+    def closeEvent(self, event) -> None:  # noqa: ANN001
+        """Overrides the closeEvent of the QMainWindow class.
+
+        Args:
+            event: The event object representing the close event.
+        """
+        # <editor-fold desc="Checks">
+        if event is None:
+            logger.error("event is None.")
+            raise exception.IllegalArgumentError("event is None.")
+        
+        # </editor-fold>
+        
         # Emit the custom signal when the window is closed
         self.dialogClosed.emit(("", event))
 
-    def add_custom_job_panels(self):
+    def add_custom_job_panels(self) -> None:
+        """Add custom job panels.
+
+        Creates and configures the GUI elements for the job panels, including buttons, labels, and icons.
+        """
         # job panel related gui elements
         self.btn_open_job_overview = QtWidgets.QPushButton()
         self.lbl_job_overview = QtWidgets.QLabel("No running jobs.")
@@ -156,7 +164,8 @@ class MainView(QtWidgets.QMainWindow):
                                                      self.lbl_job_notification)  # After inserting the widget count is 2
         self.ui.job_notification_layout.setAlignment(self.lbl_job_notification, QtCore.Qt.AlignHCenter)
 
-    def add_custom_widgets(self):
+    def add_custom_widgets(self) -> None:
+        """Add custom widgets to the UI for controlling protein and protein pair representations."""
         # Protein
         self.tg_protein_white_bg = toggle_button.ToggleWidget()
         self.ui.protein_white_bg_layout.addWidget(self.tg_protein_white_bg)
@@ -599,7 +608,8 @@ class MainView(QtWidgets.QMainWindow):
         constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
         constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
 
-    def disable_menu_bar_without_exit_application(self):
+    def disable_menu_bar_without_exit_application(self) -> None:
+        """Disables the menu entries but not 'Exit Application'."""
         self.ui.menuProject.setEnabled(True)
         self.ui.action_new_project.setEnabled(False)
         self.ui.action_open_project.setEnabled(False)
@@ -616,65 +626,53 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.menuSettings.setEnabled(False)
         self.ui.menuAbout.setEnabled(False)
 
-    def disable_tab_widget(self):
+    def disable_tab_widget(self) -> None:
+        """Disables the tab widget in the user interface."""
         self.ui.project_tab_widget.setEnabled(False)
 
-    def disable_job_panels(self):
+    def disable_job_panels(self) -> None:
+        """Disables the job overview panel, job notification panel, and corresponding buttons."""
         self.ui.frame_job_overview.setEnabled(False)
         self.ui.frame_job_notification.setEnabled(False)
         self.btn_open_job_overview.setEnabled(False)
         self.btn_open_job_notification.setEnabled(False)
 
-    def enable_job_panels(self):
+    def enable_job_panels(self) -> None:
+        """Enables the job overview panel, job notification panel,and the corresponding buttons."""
         self.ui.frame_job_overview.setEnabled(True)
         self.ui.frame_job_notification.setEnabled(True)
         self.btn_open_job_overview.setEnabled(True)
         self.btn_open_job_notification.setEnabled(True)
 
-    def build_sequence_table(self):
+    def build_sequence_table(self) -> None:
+        """Builds the sequence table.
+
+        This method initializes and populates the sequence table widget with column labels.
+        """
         #self.line_edit_seq_name = custom_line_edit.CustomLineEdit()
         self.ui.seqs_table_widget.verticalHeader().setVisible(False)
         self.ui.seqs_table_widget.setColumnCount(2)
         self.ui.seqs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
 
-    # def build_proteins_table(self):
-    #     self.cb_chain_color = QtWidgets.QComboBox()
-    #     self.cb_chain_representation = QtWidgets.QComboBox()
-    #
-    #     self.ui.proteins_table_widget.verticalHeader().setVisible(False)
-    #     self.ui.proteins_table_widget.setColumnCount(2)
-    #     self.ui.proteins_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
-    #     gui_utils.fill_combo_box(self.cb_chain_color, constants.PYMOL_COLORS)
-    #     self.cb_chain_color.adjustSize()
-    #     gui_utils.fill_combo_box(self.cb_chain_representation, constants.PYMOL_REPRESENTATIONS)
-    #     self.cb_chain_representation.adjustSize()
-    #
-    # def build_protein_pairs_table(self):
-    #     self.cb_chain_color_protein_pair = QtWidgets.QComboBox()
-    #     self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
-    #
-    #     self.ui.protein_pairs_table_widget.setColumnCount(2)
-    #     self.ui.protein_pairs_table_widget.verticalHeader().setVisible(False)
-    #     self.ui.protein_pairs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
-    #     gui_utils.fill_combo_box(self.cb_chain_color_protein_pair, constants.PYMOL_COLORS)
-    #     self.cb_chain_color_protein_pair.adjustSize()
-    #     gui_utils.fill_combo_box(self.cb_chain_representation_protein_pair, constants.PYMOL_REPRESENTATIONS)
-    #     self.cb_chain_representation_protein_pair.adjustSize()
+    def setup_sequences_table(self, row_count: int) -> None:
+        """Sets up the sequences table widget by setting the desired number of rows using the given row_count.
 
-    def setup_sequences_table(self, row_count):
+        Args:
+            row_count: The number of rows to set for the sequences table widget.
+        
+        Raises:
+            exception.IllegalArgumentError: If `row_count` is either None or has a value less than 0.
+        """
+        # <editor-fold desc="Checks">
+        if row_count is None or row_count < 0:
+            logger.error("row_count is either None or has a value less than 0.")
+            raise exception.IllegalArgumentError("row_count is either None or has a value less than 0.")
+        
+        # </editor-fold>
+        
         #self.line_edit_seq_name.setStyleSheet("QLineEdit { background-color: white; border-radius: 0; }")
         self.ui.seqs_table_widget.setRowCount(row_count)
         #self.ui.seqs_table_widget.setCellWidget(0, 1, self.line_edit_seq_name)
-
-    def setup_proteins_table(self, row_count):
-        self.ui.proteins_table_widget.setRowCount(row_count)
-        self.ui.proteins_table_widget.setCellWidget(0, 1, self.cb_chain_color)
-        self.ui.proteins_table_widget.setCellWidget(1, 1, self.cb_chain_representation)
-
-    def setup_protein_pairs_table(self, row_count):
-        self.ui.protein_pairs_table_widget.setRowCount(row_count)
-        self.ui.protein_pairs_table_widget.setCellWidget(0, 1, self.cb_chain_color_protein_pair)
-        self.ui.protein_pairs_table_widget.setCellWidget(1, 1, self.cb_chain_representation_protein_pair)
 
     def _create_all_tooltips(self) -> None:
         """Creates all tooltips for the gui elements."""

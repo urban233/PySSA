@@ -85,5 +85,10 @@ Args:
 
 # Scratch
 
-"""Checks if a selection is empty."""
+"""Constructor.
+
+        Args:
+            protein_pair_from_project: the protein pair which should be used for the distance histogram.
+            parent: the parent.
+        """
 

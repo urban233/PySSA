@@ -21,6 +21,9 @@
 #
 """Module for the plot view."""
 import copy
+import logging
+from typing import Optional
+
 import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
@@ -29,9 +32,10 @@ from PyQt5 import QtCore
 
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import histogram_properties_view
-from pyssa.internal.data_structures import protein_pair, selection
+from pyssa.internal.data_structures import protein_pair, selection, project
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
+from pyssa.logging_pyssa import log_handlers
 from pyssa.util import pyssa_keys, enums
 from pyssa.util import constants
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QScrollArea
@@ -39,6 +43,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backend_bases import MouseButton
 from matplotlib.figure import Figure
 from matplotlib import ticker
+from pyssa.util import exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class PlotWidget(QWidget):
@@ -63,19 +72,52 @@ class PlotWidget(QWidget):
         Args:
             width (float): The width of the figure.
             height (float): The height of the figure.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None or have a value less than zero.
         """
+        # <editor-fold desc="Checks">
+        if width is None or width < 0:
+            logger.error("width is either None or a value less than 0.")
+            raise exception.IllegalArgumentError("width is either None or a value less than 0.")
+        if height is None or height < 0:
+            logger.error("height is either None or a value less than 0.")
+            raise exception.IllegalArgumentError("height is either None or a value less than 0.")
+        
+        # </editor-fold>
+        
         self.figure.set_size_inches(width, height)
 
 
 class PlotView(QtWidgets.QDialog):
-    def __init__(self, protein_pair_from_project: "protein_pair.ProteinPair", a_project, the_protein_pair,
+    """Dialog window for the distance data visualizer."""
+    
+    def __init__(self, protein_pair_from_project: "protein_pair.ProteinPair", a_project: "project.Project", the_protein_pair: "protein_pair.ProteinPair",
                  parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
-            protein_pair_from_project: the protein pair which should be used for the distance histogram.
-            parent: the parent.
+            protein_pair_from_project (protein_pair.ProteinPair): The protein pair object obtained from the project.
+            a_project (project.Project): The project object.
+            the_protein_pair (protein_pair.ProteinPair): Another protein pair object.
+            parent: The parent widget (optional).
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
         """
+        # <editor-fold desc="Checks">
+        if protein_pair_from_project is None:
+            logger.error("protein_pair_from_project is None.")
+            raise exception.IllegalArgumentError("protein_pair_from_project is None.")
+        if a_project is None:
+            logger.error("a_project is None.")
+            raise exception.IllegalArgumentError("a_project is None.")
+        if the_protein_pair is None:
+            logger.error("the_protein_pair is None.")
+            raise exception.IllegalArgumentError("the_protein_pair is None.")
+        
+        # </editor-fold>
+        
         QtWidgets.QDialog.__init__(self, parent)
         self._protein_pair = the_protein_pair
         self._current_project = a_project
@@ -228,7 +270,8 @@ class PlotView(QtWidgets.QDialog):
         self.setup_context_menu()
         self._connect_all_signals()
 
-    def _initialize_ui(self):
+    def _initialize_ui(self) -> None:
+        """Initializes the user interface by defining and setting up all the required UI elements such as scroll areas, plot widgets, menu bar, labels, and actions."""
         # <editor-fold desc="Define basic ui elements">
         self.scroll_area = QScrollArea()
         self.plot_widget_dplot = PlotWidget()
@@ -433,12 +476,22 @@ class PlotView(QtWidgets.QDialog):
         self.change_selection_color()
 
     # <editor-fold desc="Help related methods">
-    def open_help(self, a_page_name: str):
+    def open_help(self, a_page_name: str) -> None:
         """Opens the pyssa documentation window if it's not already open.
 
         Args:
             a_page_name (str): a name of a documentation page to display
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_page_name` is None.
         """
+        # <editor-fold desc="Checks">
+        if a_page_name is None:
+            logger.error("a_page_name is None.")
+            raise exception.IllegalArgumentError("a_page_name is None.")
+        
+        # </editor-fold>
+        
         self._active_task = tasks.LegacyTask(
             target=util_async.open_documentation_on_certain_page,
             args=(a_page_name, 0),
@@ -447,17 +500,21 @@ class PlotView(QtWidgets.QDialog):
         self._active_task.start()
 
     @staticmethod
-    def __await_open_help():
+    def __await_open_help() -> None:
+        """Logs that the help center opened."""
         constants.PYSSA_LOGGER.info("Opening help center finished.")
 
-    def _open_help_center(self):
+    def _open_help_center(self) -> None:
+        """Opens the help dialog."""
         self.open_help("help/")
 
-    def _open_distance_data_visualizer_help(self):
+    def _open_distance_data_visualizer_help(self) -> None:
+        """Opens the help dialog on the distance_data_visualizer page."""
         self.open_help("help/results/distance_data_visualizer")
     # </editor-fold>
 
-    def _connect_all_signals(self):
+    def _connect_all_signals(self) -> None:
+        """Connects all UI elements to their corresponding slot functions in the class."""
         self.action_table.triggered.connect(self.hide_distance_table)
 
         self.action_hide_residue_pair_no.triggered.connect(self.__action_hide_residue_pair_no)
@@ -493,7 +550,16 @@ class PlotView(QtWidgets.QDialog):
         #self.plot_widget_dplot.canvas.mpl_connect('motion_notify_event', self._on_move)
 
     # <editor-fold desc="QSplitter related methods">
-    def hide_distance_table(self):
+    def hide_distance_table(self) -> None:
+        """Hide or show the distance table widget based on the state of the action_table checkbox.
+
+        If the action_table checkbox is checked, the distance table widget is hidden by moving the splitter
+        of the vertical splitter to a lower position. The position is calculated by subtracting 450 from the
+        highest position of the vertical splitter.
+
+        If the action_table checkbox is unchecked, the distance table widget is shown by moving the splitter
+        of the vertical splitter to the highest position.
+        """
         if self.action_table.isChecked():
             tmp_index = self.vertical_splitter.indexOf(self.container_widget)
             tmp_lowest, tmp_highest = self.vertical_splitter.getRange(tmp_index)
@@ -503,7 +569,12 @@ class PlotView(QtWidgets.QDialog):
             tmp_lowest, tmp_highest = self.vertical_splitter.getRange(tmp_index)
             self.vertical_splitter.moveSplitter(tmp_highest, tmp_index)
 
-    def move_horizontal_splitter(self):
+    def move_horizontal_splitter(self) -> None:
+        """Moves the horizontal splitter based on the state of the plot and histogram actions.
+
+        This method checks the state of the plot and histogram actions and moves the horizontal splitter accordingly. 
+        It determines the index and range of the horizontal splitter, and then moves the splitter based on the checked actions.
+        """
         if self.action_plot.isChecked() and self.action_histogram.isChecked():
             # Both should be displayed
             tmp_index = self.horizontal_splitter.indexOf(self.plot_widget_dhistogram)
@@ -529,15 +600,23 @@ class PlotView(QtWidgets.QDialog):
             tmp_lowest, tmp_highest = self.vertical_splitter.getRange(tmp_index)
             self.vertical_splitter.moveSplitter(tmp_highest, tmp_index)
 
-    def delayed_resize(self):
+    def delayed_resize(self) -> None:
+        """Starts a delay timer and clears the figures.
+
+        This method starts or restarts a timer when the splitter is moved. 
+        When the timer is triggered, the plot widgets are cleared and the resize timer is started.
+        """
         # Start or restart the timer when the splitter is moved
         self.plot_widget_dplot.figure.clear()
         self.plot_widget_dhistogram.figure.clear()
         self.resize_timer.start()
 
-    def actual_resize(self):
-        """Perform the actual resizing operation. This method will be called after the timer interval has elapsed"""
-        print("Resizing starts now ...")
+    def actual_resize(self) -> None:
+        """Performs the actual resizing operation.
+        
+        This method will be called after the timer interval has elapsed.
+        """
+        logger.debug("Resizing starts now ...")
         if self.container_widget.size().width() == 0:
             self.action_table.setChecked(False)
         else:
@@ -558,13 +637,22 @@ class PlotView(QtWidgets.QDialog):
 
         self.toggle_graphics_visibility()
 
-    def toggle_graphics_visibility(self):
+    def toggle_graphics_visibility(self) -> None:
+        """Toggle the visibility of the graphics components.
+
+        This method is used to toggle the visibility of the graphics components in the application. 
+        The visibility is determined by the states of the 'Plot' and 'Histogram' actions. 
+        If both actions are checked, the distance plot and histogram will be displayed. 
+        If only the 'Plot' action is checked, only the distance plot will be displayed. 
+        If only the 'Histogram' action is checked, only the distance histogram will be displayed. 
+        If neither action is checked, both components will be hidden.
+        """
         self.table_view.selectionModel().clearSelection()
         self.plot_widget_dplot.figure.clear()
         self.plot_widget_dhistogram.figure.clear()
         if self.action_plot.isChecked() and self.action_histogram.isChecked():
-            print(self.scroll_area.size())
-            print(self.scroll_area.width() / 100)
+            logger.debug(self.scroll_area.size())
+            logger.debug(self.scroll_area.width() / 100)
 
             self.plot_widget_dplot.show()
             self.plot_widget_dhistogram.show()
@@ -582,7 +670,7 @@ class PlotView(QtWidgets.QDialog):
                 self.plot_widget_dhistogram.figure.tight_layout()
                 self.plot_widget_dhistogram.canvas.draw()
             except np.linalg.LinAlgError:
-                print("A layout cannot be applied to the histogram.")
+                logger.debug("A layout cannot be applied to the histogram.")
 
         elif self.action_plot.isChecked() and not self.action_histogram.isChecked():
             self.plot_widget_dplot.show()
@@ -604,7 +692,7 @@ class PlotView(QtWidgets.QDialog):
                 self.plot_widget_dhistogram.figure.tight_layout()
                 self.plot_widget_dhistogram.canvas.draw()
             except np.linalg.LinAlgError:
-                print("A layout cannot be applied to the histogram.")
+                logger.debug("A layout cannot be applied to the histogram.")
         else:
             tmp_index = self.vertical_splitter.indexOf(self.container_widget)
             tmp_lowest, tmp_highest = self.vertical_splitter.getRange(tmp_index)
@@ -614,14 +702,24 @@ class PlotView(QtWidgets.QDialog):
 
     # </editor-fold>
 
-    def __slot_sync_with_pymol(self):
-        if self.action_sync_with_pymol.isChecked():
-            self._sync_with_pymol_flag = True
-        else:
-            self._sync_with_pymol_flag = False
+    def __slot_sync_with_pymol(self) -> None:
+        """This method was implemented in an earlier version of PySSA but was removed.
+        
+        Use the code below as starting point if the feature should come back.
+        """
+        # if self.action_sync_with_pymol.isChecked():
+        #     self._sync_with_pymol_flag = True
+        # else:
+        #     self._sync_with_pymol_flag = False
+        raise NotImplementedError()
 
     # <editor-fold desc="Plotting related methods">
-    def create_all_graphics(self):
+    def create_all_graphics(self) -> None:
+        """Create all graphics for the plot widgets.
+
+        This method shows the plot widgets and creates the distance plot and histogram. 
+        It also sets up the default settings for the plots.
+        """
         self.plot_widget_dplot.show()
         self.plot_widget_dhistogram.show()
         #num_subplots = 2  # Adjust this number based on your requirements
@@ -653,7 +751,11 @@ class PlotView(QtWidgets.QDialog):
         self.plot_widget_dplot.canvas.draw()
         self.plot_widget_dhistogram.canvas.draw()
 
-    def setup_plot_defaults(self):
+    def setup_plot_defaults(self) -> None:
+        """Set up the default plot settings.
+
+        This method sets up the default settings for the plot, including the axis labels, title, x-axis limits, and tick settings.
+        """
         # Set axis labels
         self._ax_plot.set_xlabel("Residue Pair No.")
         self._ax_plot.set_ylabel("Distance In Å")
@@ -663,7 +765,13 @@ class PlotView(QtWidgets.QDialog):
         # Set the number of ticks for the x and y axes
         self._ax_plot.xaxis.set_major_locator(ticker.MultipleLocator(10))
 
-    def setup_histogram_defaults(self):
+    def setup_histogram_defaults(self) -> None:
+        """Sets up default settings for the histogram plot.
+
+        This method is used to customize the appearance of the histogram plot. 
+        It moves the entire x-axis to the top, sets the title, axis labels, and y-axis inversion. 
+        It also removes spines where no axis are present and sets the major locator for the x-axis.
+        """
         # Move the entire x-axis to the top
         self._ax_hist.xaxis.tick_top()
         self._ax_hist.xaxis.set_label_position("top")
@@ -684,7 +792,8 @@ class PlotView(QtWidgets.QDialog):
         self._ax_hist.set_ylabel("Distance Interval In Å")
         self._ax_hist.xaxis.set_major_locator(ticker.MultipleLocator(self._histogram_properties[enums.HistogramPropertiesEnum.X_AXIS_UNITS]))
 
-    def create_distance_plot(self):
+    def create_distance_plot(self) -> None:
+        """Creates a distance plot by plotting the distance values against the index of the values."""
         # data for actual distance plot line
         distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data
         distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
@@ -695,7 +804,8 @@ class PlotView(QtWidgets.QDialog):
         self._ax_plot.plot(distance_list, color="#367AF6")
         self._ax_plot.grid(True, linestyle='--', color='lightgray', linewidth=0.7)
 
-    def create_distance_histogram(self):
+    def create_distance_histogram(self) -> None:
+        """Create a distance histogram based on the distance data."""
         distance_data: dict[
             str,
             np.ndarray,
@@ -730,49 +840,14 @@ class PlotView(QtWidgets.QDialog):
         self.plot_widget_dhistogram.resize(tmp_histogram_width, tmp_histogram_height)
         self.plot_widget_dhistogram.set_figure_size(tmp_histogram_width / 100, tmp_histogram_height / 100)
 
-    def create_distance_histogram_old(self):
-        distance_data: dict[
-            str,
-            np.ndarray,
-        ] = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data
-        distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
-        distance_list.sort()
-        length = len(distance_list)
-        max_distance = distance_list[length - 1]
-
-        n, self.bins, self.patches = self._ax_hist.hist(
-            distance_list,
-            bins=np.arange(0, max_distance + 0.25, 0.25),
-            orientation="horizontal",
-            rwidth=0.7,
-            color="#4B91F7",
-        )
-
-        # Add labels to the non-zero frequency histogram bars
-        for bin_value, patch in zip(n, self.patches):
-            x = patch.get_x() + patch.get_width() + 0.1
-            y = patch.get_y() + patch.get_height() / 2
-            self._ax_hist.annotate(
-                f"{bin_value}",
-                xy=(x, y),
-                xycoords="data",
-                xytext=(3, 0),
-                textcoords="offset points",
-                ha="left",
-                va="center",
-            )
-
-            # Calculate the midpoints between bin edges
-            bin_midpoints = (self.bins[:-1] + self.bins[1:]) / 2
-            # Set y-ticks at the bin midpoints
-            self._ax_hist.set_yticks(bin_midpoints)
-            # Set custom tick labels
-            custom_labels = [f"{bin_start} - {bin_end}" for bin_start, bin_end in zip(self.bins[:-1], self.bins[1:])]
-            self._ax_hist.set_yticklabels(custom_labels)
-
     # </editor-fold>
 
-    def on_canvas_click(self, event):
+    def on_canvas_click(self, event) -> None:  # noqa: ANN001
+        """Modifies the plots based on the on_canvas_click event.
+
+        Args:
+            event: The event object that contains information about the click event.
+        """
         if event.button is MouseButton.LEFT:
             x_clicked, y_clicked = event.xdata, event.ydata
             # Clear the previous clicked point
@@ -799,8 +874,8 @@ class PlotView(QtWidgets.QDialog):
                             f"Chain {self.active_row_information[1]} Position {self.active_row_information[2]} Residue {self.active_row_information[3]} and "
                             f"{tmp_prot_2_name} Chain {self.active_row_information[4]} Position {self.active_row_information[5]} Residue {self.active_row_information[6]}")
                 self.lbl_status.setText(msg)
-                if self._sync_with_pymol_flag:
-                    self.highlight_residue_in_pymol(x_nearest, tmp_prot_1_name)
+                # if self._sync_with_pymol_flag:
+                #     self.highlight_residue_in_pymol(x_nearest, tmp_prot_1_name)
             else:
                 self.lbl_status.setText(f"Status: Residue pair no. = {x_nearest}, Distance (Å) = {y_nearest}")
             # Change the selection color
@@ -808,13 +883,32 @@ class PlotView(QtWidgets.QDialog):
         elif event.button is MouseButton.RIGHT:
             print("Open Context Menu ...")
 
-    def change_selection_color(self):
+    def change_selection_color(self) -> None:
+        """Changes the color palette of the table view."""
         palette = self.table_view.palette()
         palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor("red"))
         palette.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor("white"))
         self.table_view.setPalette(palette)
 
-    def search_point_by_id(self, target_id):
+    def search_point_by_id(self, target_id: int) -> Optional[tuple]:
+        """Searches a point by its ID.
+
+        Args:
+            target_id (int): The id of the point to search for.
+
+        Returns:
+            A tuple containing the information of the point if found, otherwise None.
+        
+        Raises:
+            exception.IllegalArgumentError: If `target_id` is None.
+        """
+        # <editor-fold desc="Checks">
+        if target_id is None:
+            logger.error("target_id is None.")
+            raise exception.IllegalArgumentError("target_id is None.")
+        
+        # </editor-fold>
+        
         for row in range(self.csv_model.rowCount()):
             id_item = self.csv_model.item(row, 0)  # Assuming running id is in the first column
             if id_item and id_item.text() == str(target_id):
@@ -832,7 +926,11 @@ class PlotView(QtWidgets.QDialog):
                 return self.active_row_information  # Return True if the id is found
         return None
 
-    def highlight_table_selection_in_plot(self):
+    def highlight_table_selection_in_plot(self) -> None:
+        """Highlights the selected row in the table by plotting a scatter point in the corresponding position on the plot.
+        
+        Also updates the status label with information about the selected row.
+        """
         tmp_x_value = self.table_view.model().index(
             self.table_view.currentIndex().row(), 0,
         ).data(Qt.DisplayRole)
@@ -872,7 +970,22 @@ class PlotView(QtWidgets.QDialog):
             self.lbl_status.setText(f"Status: Residue pair no. = {tmp_x_value}, Distance (Å) = {tmp_y_value}")
         self.highlight_histogram_bar(float(tmp_y_value))
 
-    def highlight_histogram_bar(self, point_to_highlight):
+    def highlight_histogram_bar(self, point_to_highlight: float) -> None:
+        """Highlights the histogram bar that lies in the interval of the point in the plot.
+
+        Args:
+            point_to_highlight (float): The data point to be highlighted in the histogram.
+        
+        Raises:
+            exception.IllegalArgumentError: If `point_to_highlight` is None.
+        """
+        # <editor-fold desc="Checks">
+        if point_to_highlight is None:
+            logger.error("point_to_highlight is None.")
+            raise exception.IllegalArgumentError("point_to_highlight is None.")
+        
+        # </editor-fold>
+        
         # Highlight a specific data point (example: point_to_highlight)
         if self.highlighted_bin_index is not None:
             self.bars[self.highlighted_bin_index].set_facecolor('#367AF6')
@@ -891,65 +1004,87 @@ class PlotView(QtWidgets.QDialog):
         # Update the plot
         self.plot_widget_dhistogram.canvas.draw()
 
-    def highlight_residue_in_pymol(self, the_current_id, tmp_prot_1_name):
-        self.table_view.currentIndex()
-        tmp_id, tmp_chain_1, tmp_pos_1, tmp_residue_1, _, _, _ = self.search_point_by_id(the_current_id)
-        tmp_pymol_selection = selection.Selection(tmp_prot_1_name)
-        tmp_pymol_selection.set_single_selection("", tmp_chain_1, tmp_residue_1, "")
-        # TODO: this needs to be changed to new architecture
-        # cmd.zoom(tmp_pymol_selection.selection_string)
-        # cmd.show("sticks", tmp_pymol_selection.selection_string)
+    def highlight_residue_in_pymol(self, the_current_id: int, tmp_prot_1_name: str) -> None:
+        """This method was implemented in an earlier version of PySSA but was removed.
+
+        Use the code below as starting point if the feature should come back.
+        """
+        # self.table_view.currentIndex()
+        # tmp_id, tmp_chain_1, tmp_pos_1, tmp_residue_1, _, _, _ = self.search_point_by_id(the_current_id)
+        # tmp_pymol_selection = selection.Selection(tmp_prot_1_name)
+        # tmp_pymol_selection.set_single_selection("", tmp_chain_1, tmp_residue_1, "")
+        # # TODO: this needs to be changed to new architecture
+        # # cmd.zoom(tmp_pymol_selection.selection_string)
+        # # cmd.show("sticks", tmp_pymol_selection.selection_string)
+        raise NotImplementedError()
 
     # <editor-fold desc="Distance table related methods for show and hide colums">
-    def __action_hide_residue_pair_no(self):
+    def __action_hide_residue_pair_no(self) -> None:
+        """Hides the residue pair no. column in the table view."""
         self.table_view.hideColumn(0)
 
-    def __action_hide_protein_1_chain(self):
+    def __action_hide_protein_1_chain(self) -> None:
+        """Hides the protein 1 chain column in the table view."""
         self.table_view.hideColumn(1)
 
-    def __action_hide_protein_1_position(self):
+    def __action_hide_protein_1_position(self) -> None:
+        """Hides the protein 1 position column in the table view."""
         self.table_view.hideColumn(2)
 
-    def __action_hide_protein_1_residue(self):
+    def __action_hide_protein_1_residue(self) -> None:
+        """Hides the protein 1 residue column in the table view."""
         self.table_view.hideColumn(3)
 
-    def __action_hide_protein_2_chain(self):
+    def __action_hide_protein_2_chain(self) -> None:
+        """Hides the protein 2 chain column in the table view."""
         self.table_view.hideColumn(4)
 
-    def __action_hide_protein_2_position(self):
+    def __action_hide_protein_2_position(self) -> None:
+        """Hides the protein 2 position column in the table view."""
         self.table_view.hideColumn(5)
 
-    def __action_hide_protein_2_residue(self):
+    def __action_hide_protein_2_residue(self) -> None:
+        """Hides the protein 2 residue column in the table view."""
         self.table_view.hideColumn(6)
 
-    def __action_hide_distances(self):
+    def __action_hide_distances(self) -> None:
+        """Hides the distances column in the table view."""
         self.table_view.hideColumn(7)
 
-    def __action_show_residue_pair_no(self):
+    def __action_show_residue_pair_no(self) -> None:
+        """Shows the residue pair no. column in the table view."""
         self.table_view.showColumn(0)
 
-    def __action_show_protein_1_chain(self):
+    def __action_show_protein_1_chain(self) -> None:
+        """Shows the protein 1 chain column in the table view."""
         self.table_view.showColumn(1)
 
-    def __action_show_protein_1_position(self):
+    def __action_show_protein_1_position(self) -> None:
+        """Shows the protein 1 position column in the table view."""
         self.table_view.showColumn(2)
 
-    def __action_show_protein_1_residue(self):
+    def __action_show_protein_1_residue(self) -> None:
+        """Shows the protein 1 residue column in the table view."""
         self.table_view.showColumn(3)
 
-    def __action_show_protein_2_chain(self):
+    def __action_show_protein_2_chain(self) -> None:
+        """Shows the protein 2 chain column in the table view."""
         self.table_view.showColumn(4)
 
-    def __action_show_protein_2_position(self):
+    def __action_show_protein_2_position(self) -> None:
+        """Shows the protein 2 position column in the table view."""
         self.table_view.showColumn(5)
 
-    def __action_show_protein_2_residue(self):
+    def __action_show_protein_2_residue(self) -> None:
+        """Shows the protein 2 residue column in the table view."""
         self.table_view.showColumn(6)
 
-    def __action_show_distances(self):
+    def __action_show_distances(self) -> None:
+        """Shows the distances column in the table view."""
         self.table_view.showColumn(7)
 
-    def __action_show_all_columns(self):
+    def __action_show_all_columns(self) -> None:
+        """Hides all columns in the table view."""
         self.table_view.showColumn(0)
         self.table_view.showColumn(1)
         self.table_view.showColumn(2)
@@ -960,10 +1095,11 @@ class PlotView(QtWidgets.QDialog):
         self.table_view.showColumn(7)
     # </editor-fold>
 
-    def __slot_open_context_menu_for_histogram(self):
-        pass
+    def __slot_open_context_menu_for_histogram(self) -> None:
+        raise NotImplementedError()
 
     def setup_context_menu(self) -> None:
+        """Sets up the context menu for the distance data visualizer."""
         self.context_menu = QtWidgets.QMenu()
         self.hide_selected_column = QtWidgets.QAction(self.tr("Hide Column"))
         self.context_menu.addAction(self.hide_selected_column)
@@ -971,7 +1107,7 @@ class PlotView(QtWidgets.QDialog):
 
         # Set the context menu for the buttons
         self.table_view.setContextMenuPolicy(3)
-        self.table_view.customContextMenuRequested.connect(self._show_context_menu_for_seq_list)
+        self.table_view.customContextMenuRequested.connect(self._show_context_menu)
 
         # <editor-fold desc="Context menu setup for histogram">
         # for matplotlib histogram
@@ -989,12 +1125,22 @@ class PlotView(QtWidgets.QDialog):
         self.plot_widget_dhistogram.customContextMenuRequested.connect(self._show_context_menu_for_histogram)
         # </editor-fold>
 
-    def _show_context_menu_for_seq_list(self, a_point):
+    def _show_context_menu(self, a_point: QtCore.QPoint) -> None:
+        """Shows the context menu.
+
+        Args:
+            a_point (QtCore.QPoint): A QPoint object representing the position where the context menu should be shown.
+        """
         self.hide_selected_column.triggered.disconnect()
         self.hide_selected_column.triggered.connect(self._hide_selected_column)
         self.context_menu.exec_(self.table_view.mapToGlobal(a_point))
 
-    def _show_context_menu_for_histogram(self, a_point):
+    def _show_context_menu_for_histogram(self, a_point: QtCore.QPoint) -> None:
+        """Shows the context menu for the histogram figure.
+
+        Args:
+            a_point (QtCore.QPoint): A QPoint object representing the position where the context menu should be shown.
+        """
         self.properties_hist.triggered.disconnect()
         self.properties_hist.triggered.connect(self._open_properties_view)
         self.properties_hist_restore.triggered.disconnect()
@@ -1002,13 +1148,29 @@ class PlotView(QtWidgets.QDialog):
         # add here more action connections
         self.context_menu_hist.exec_(self.plot_widget_dhistogram.mapToGlobal(a_point))
 
-    def _open_properties_view(self):
+    def _open_properties_view(self) -> None:
+        """Opens the histogram properties dialog."""
         # self.properties_view =
         self._histogram_properties_view = histogram_properties_view.HistogramPropertiesView(self._histogram_properties)
         self._histogram_properties_view.new_properties.connect(self.post_open_properties_view)
         self._histogram_properties_view.show()
 
-    def post_open_properties_view(self, new_properties: tuple):
+    def post_open_properties_view(self, new_properties: tuple) -> None:
+        """Updates the histogram properties view after coming back from the properties' dialog.
+
+        Args:
+            new_properties (tuple): A tuple containing the new values for the x-axis units and distance interval.
+        
+        Raises:
+            exception.IllegalArgumentError: If `new_properties` is None.
+        """
+        # <editor-fold desc="Checks">
+        if new_properties is None:
+            logger.error("new_properties is None.")
+            raise exception.IllegalArgumentError("new_properties is None.")
+        
+        # </editor-fold>
+        
         tmp_current_x_axis_units = self._histogram_properties[enums.HistogramPropertiesEnum.X_AXIS_UNITS]
         tmp_current_distance_interval = self._histogram_properties[enums.HistogramPropertiesEnum.DISTANCE_INTERVAL]
         tmp_x_axis_units = int(new_properties[0])
@@ -1020,10 +1182,12 @@ class PlotView(QtWidgets.QDialog):
 
             self.actual_resize()
 
-    def _restore_default_histogram_properties(self):
+    def _restore_default_histogram_properties(self) -> None:
+        """Restores the histogram properties to the default values."""
         self._histogram_properties[enums.HistogramPropertiesEnum.X_AXIS_UNITS] = constants.DEFAULT_HISTOGRAM_PROPERTIES[enums.HistogramPropertiesEnum.X_AXIS_UNITS]
         self._histogram_properties[enums.HistogramPropertiesEnum.DISTANCE_INTERVAL] = constants.DEFAULT_HISTOGRAM_PROPERTIES[enums.HistogramPropertiesEnum.DISTANCE_INTERVAL]
         self.actual_resize()
 
-    def _hide_selected_column(self):
+    def _hide_selected_column(self) -> None:
+        """Hides a selected column from the table view."""
         self.table_view.hideColumn(self.table_view.currentIndex().column())
