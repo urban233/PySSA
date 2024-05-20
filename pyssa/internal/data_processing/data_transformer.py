@@ -39,28 +39,33 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 def transform_protein_name_seq_tuple_to_sequence_obj(
-    proteins_to_predict: list[prediction_protein_info.PredictionProteinInfo],
+    proteins_to_predict: list["prediction_protein_info.PredictionProteinInfo"],
 ) -> list["protein.Protein"]:
     """Transforms the list of proteins to a list of protein objects.
 
     Args:
-        proteins_to_predict:
-            list of tuples which consists of the protein name and sequence
-    Raises:
-        IllegalArgumentError: If an argument is illegal
+        proteins_to_predict: A list of tuples which consists of the protein name and sequence.
+    
     Returns:
-        a list of protein objects
+        A list of protein objects.
+    
+    Raises:
+        IllegalArgumentError: If `proteins_to_predict` is None or the first element in an empty string.
     """
     # <editor-fold desc="Checks">
+    if proteins_to_predict is None:
+        logger.error("proteins_to_predict is None.")
+        raise exception.IllegalArgumentError("proteins_to_predict is None.")
     if proteins_to_predict[0].name == "":
-        logger.error("An argument is illegal.")
-        raise exception.IllegalArgumentError("An argument is illegal.")
+        logger.error("proteins_to_predict[0] is an empty string.")
+        raise exception.IllegalArgumentError("proteins_to_predict[0] is an empty string.")
     if not proteins_to_predict[0].sequences:
-        logger.error("An argument is illegal.")
-        raise exception.IllegalArgumentError("An argument is illegal.")
+        logger.error("proteins_to_predict[0] has no sequence.")
+        raise exception.IllegalArgumentError("proteins_to_predict[0] has no sequence.")
 
     # </editor-fold>
 
@@ -81,37 +86,29 @@ def transform_protein_name_seq_tuple_to_sequence_obj(
 
 
 class DistanceAnalysisDataTransformer:
-    """This class is used to transform data from the gui to a manageable format."""
+    """Transforms data from the gui to a manageable format."""
 
     # <editor-fold desc="Class attributes">
-    """
-    the name of a single analysis run
-    """
     analysis_run_name: str
-    """
-    the current project of the main window
-    """
+    """The name of a single analysis run."""
+    
     current_project: "project.Project"
-    """
-    the settings of pyssa
-    """
+    """The current project of the main window."""
+    
     settings: "settings.Settings"
-    """
-    the information about the analysis run, includes the names and chains and analysis name
-    """
+    """The settings of PySSA."""
+    
     analysis_run: "analysis_run_info.AnalysisRunInfo"
-    """
-    a tuple of two proteins
-    """
+    """The information about the analysis run, includes the names and chains and analysis name."""
+    
     proteins: tuple["protein.Protein", "protein.Protein"]
-    """
-    the protein pair for the distance analysis
-    """
+    """A tuple of two proteins."""
+    
     analysis_protein_pair: "protein_pair.ProteinPair"
-    """
-    the distance analysis object
-    """
+    """The protein pair for the distance analysis."""
+    
     analysis_distance: "distance_analysis.DistanceAnalysis"
+    """The distance analysis object."""
 
     # </editor-fold>
 
@@ -119,25 +116,33 @@ class DistanceAnalysisDataTransformer:
         self,
         an_analysis_run_name: str,
         the_app_project: "project.Project",
-        a_cutoff: float, cycles: int
+        a_cutoff: float, 
+        cycles: int,
     ) -> None:
         """Constructor.
 
         Args:
-            an_analysis_run_name (str): the name of the analysis run
-            the_app_project: the project of the main window
-            the_app_settings: the settings of the application
+            an_analysis_run_name (str): The name of the analysis run.
+            the_app_project (project.Project): The project object for the app.
+            a_cutoff (float): The cutoff value.
+            cycles (int): The number of cycles.
 
         Raises:
-            IllegalArgumentError: If an argument is unusable.
+            exception.IllegalArgumentError: If any of the arguments are None.
         """
         # <editor-fold desc="Checks">
         if an_analysis_run_name is None:
-            logger.error(f"The argument 'an_analysis_run_name' is illegal: {an_analysis_run_name}")
-            raise exception.IllegalArgumentError("An argument is illegal.")
+            logger.error("an_analysis_run_name is None.")
+            raise exception.IllegalArgumentError("an_analysis_run_name is None.")
         if the_app_project is None:
-            logger.error(f"The argument 'the_app_project' is illegal: {the_app_project}")
-            raise exception.IllegalArgumentError("An argument is illegal.")
+            logger.error("the_app_project is None.")
+            raise exception.IllegalArgumentError("the_app_project is None.")
+        if a_cutoff is None:
+            logger.error("a_cutoff is None.")
+            raise exception.IllegalArgumentError("a_cutoff is None.")
+        if cycles is None:
+            logger.error("cycles is None.")
+            raise exception.IllegalArgumentError("cycles is None.")
         # </editor-fold>
 
         self.analysis_run_name: str = an_analysis_run_name
@@ -149,8 +154,7 @@ class DistanceAnalysisDataTransformer:
         """Create the analysis run info based on the analysis run name.
 
         Raises:
-            UnableToCreateAnalysisRunInfoError: If the analysis run name is illegal and no analysis run info
-            can be created.
+            UnableToCreateAnalysisRunInfoError: If the analysis run name is illegal and no analysis run info can be created.
         """
         try:
             tmp_analysis_run_infos: list[
@@ -202,7 +206,11 @@ class DistanceAnalysisDataTransformer:
         self.proteins = (protein_1, protein_2)
 
     def _create_analysis_name(self) -> str:
-        """Creates the name of the analysis."""
+        """Creates the name of the analysis.
+        
+        Returns:
+            The analysis name.
+        """
         if len(self.proteins[0].chains) != 0:
             analysis_name = f"{self.proteins[0].get_molecule_object()};{self.analysis_run.protein_chains_1}_vs_{self.proteins[1].get_molecule_object()};{self.analysis_run.protein_chains_2}"  # noqa
             analysis_name = analysis_name.replace(";", "_")
@@ -256,7 +264,10 @@ class DistanceAnalysisDataTransformer:
 
     def transform_gui_input_to_distance_analysis_object(self) -> "protein_pair.ProteinPair":
         """Transforms the gui data into a distance analysis object.
-
+        
+        Returns:
+            The protein pair object that gets analyzed.
+        
         Raises:
             UnableToTransformDataForAnalysisError: If an error occurs during the transformation process.
         """

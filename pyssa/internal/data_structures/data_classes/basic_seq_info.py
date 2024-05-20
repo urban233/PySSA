@@ -25,8 +25,16 @@ from dataclasses import dataclass
 
 @dataclass
 class BasicSeqInfo:
-    """Class which holds basic information about a sequence."""
+    """Holds basic information about a sequence."""
 
+    # <editor-fold desc="Class attributes">
     name: str
+    """The name of the sequence."""
+    
     chain: str  # noqa: A003
+    """The chain letter of the sequence."""
+    
     seq: str
+    """The sequence string."""
+    
+    # </editor-fold>

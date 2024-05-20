@@ -33,7 +33,12 @@ from pyssa.util import constants
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
+"""
+This module is currently not in use!
+It is an experimental module for using and integrating ESMFold with PySSA. 
+"""
 
 class EsmFold:
     """This class contains information about the ESMFold prediction engine."""

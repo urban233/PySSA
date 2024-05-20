@@ -24,17 +24,17 @@ import os
 import pathlib
 import logging
 
+import zmq
+
 from auxiliary_pymol import auxiliary_pymol_client
-from pyssa.io_pyssa import safeguard
 from pyssa.internal.portal import protein_operations
 from pyssa.internal.data_structures import selection, job
-from pyssa.util import protein_util, enums
+from pyssa.util import enums
 from pyssa.util import exception
-from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.io_pyssa import bio_data
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants
-from typing import TYPE_CHECKING, TextIO
+from typing import TYPE_CHECKING, TextIO, Optional
 from pyssa.internal.data_structures import chain
 
 
@@ -51,56 +51,45 @@ class Protein:
     """Stores one protein in a PyMOL compatible form."""
 
     # <editor-fold desc="Class attributes">
-    """
-    the unique identifier of the protein
-    """
     _id: int
-    """
-    the name of the protein which is also used within pymol
-    """
+    """The unique identifier of the protein."""
+    
     _pymol_molecule_object: str
-    """
-    a pymol conform selection
-    """
+    """The name of the protein which is also used within pymol."""
+    
     pymol_selection: selection.Selection
-    """
-    a list of chains which occur in the protein
-    """
+    """A pymol conform selection."""
+    
     chains: list["chain.Chain"] = []
-    """
-    a base64 string of the pymol session
-    """
+    """A list of chains which occur in the protein."""
+    
     pymol_session: str = ""
-    """
-    a list of pdb information
-    """
+    """A base64 string of the pymol session."""
+    
     _pdb_data: list[dict]
-    """
-    the project id from the database
-    """
+    """A list of pdb information."""
+    
     db_project_id: int
+    """The project id from the database."""
 
     # </editor-fold>
 
     def __init__(
         self,
-        molecule_object: str
+        molecule_object: str,
     ) -> None:
         """Constructor.
 
         Args:
-            molecule_object (str): the name of the protein which is also used within pymol
-            the_project_id (int): the id of the project in the database
+            molecule_object (str): The name of the protein which is also used within pymol.
 
         Raises:
-            NotADirectoryError: If directory not found.
-            FileNotFoundError: If file not found.
+            exception.IllegalArgumentError: If `molecule_object` is either None or an empty string.
         """
         # <editor-fold desc="Checks">
-        safeguard.Safeguard.check_if_value_is_not_none(molecule_object, logger)
-        if molecule_object == "":
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
+        if molecule_object is None or molecule_object == "":
+            logger.error("molecule_object is either None or an empty string.")
+            raise exception.IllegalArgumentError("molecule_object is either None or an empty string.")
         if molecule_object.find(" "):
             molecule_object = molecule_object.replace(" ", "_")
 
@@ -112,102 +101,43 @@ class Protein:
         self.chains: list["chain.Chain"] = []
         self._pdb_data = []
 
-        #self._id = uuid.uuid4()
-        #self.pdb_cache_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
-        #if pdb_data is not None:
-        #    self._pdb_data = pdb_data
-        # if pdb_filepath == "" and pdb_xml_string != "":
-        #     self._pymol_molecule_object = molecule_object
-        #     if not os.path.exists(constants.CACHE_PROTEIN_DIR):
-        #         os.mkdir(constants.CACHE_PROTEIN_DIR)
-        #     bio_data.convert_xml_string_to_pdb_file(pdb_xml_string, self.pdb_cache_path)
-        #     self.chains = protein_operations.get_protein_chains(
-        #         molecule_object,
-        #         constants.CACHE_PROTEIN_DIR,
-        #         f"{self._id}.pdb",
-        #     )
-        #     self._pdb_data = bio_data.convert_pdb_xml_string_to_list(pdb_xml_string)
-        #     os.remove(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
-        #     self.pymol_selection = selection.Selection(self._pymol_molecule_object)
-        #     self.pymol_selection.selection_string = ""
-        #     self.load_protein_in_pymol()
-        #     if protein_operations.count_states_of_molecule_object(self._pymol_molecule_object) > 1:
-        #         logger.info(f"Protein {molecule_object} has more than one state. Trying to consolidate to one state.")
-        #         try:
-        #             protein_operations.consolidate_molecule_object_to_first_state(self._pymol_molecule_object)
-        #             tmp_pdb_cache_filepath = pathlib.Path(
-        #                 f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb",
-        #             )
-        #             pymol_io.save_protein_to_pdb_file(
-        #                 tmp_pdb_cache_filepath,
-        #                 self._pymol_molecule_object,
-        #             )
-        #             self._pdb_data = bio_data.convert_pdb_xml_string_to_list(
-        #                 bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_pdb_cache_filepath)),
-        #             )
-        #             self.load_protein_in_pymol()
-        #         except Exception as e:
-        #             logger.error(f"Protein states could not be consolidated! Ran into error: {e}")
-        #         else:
-        #             logger.info(f"Consolidation of protein {molecule_object} finished without any errors.")
-        #     # saves pymol session into a base64 string
-        #     self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self._pymol_molecule_object)
-        # elif pdb_filepath != "" and pdb_xml_string == "":
-        #     self._pymol_molecule_object = pdb_filepath.get_filename().replace(" ", "_")
-        #     self.chains = protein_operations.get_protein_chains(
-        #         molecule_object,
-        #         pdb_filepath.get_dirname(),
-        #         pdb_filepath.get_basename(),
-        #     )
-        #     self._pdb_data = bio_data.convert_pdb_xml_string_to_list(
-        #         bio_data.convert_pdb_file_into_xml_element(pdb_filepath),
-        #     )
-        #     self.pymol_selection = selection.Selection(self._pymol_molecule_object)
-        #     self.pymol_selection.selection_string = ""
-        #     self.load_protein_in_pymol()
-        #     if protein_operations.count_states_of_molecule_object(self._pymol_molecule_object) > 1:
-        #         logger.info(f"Protein {molecule_object} has more than one state. Trying to consolidate to one state.")
-        #         try:
-        #             protein_operations.consolidate_molecule_object_to_first_state(self._pymol_molecule_object)
-        #             tmp_pdb_cache_filepath = pathlib.Path(
-        #                 f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb",
-        #             )
-        #             pymol_io.save_protein_to_pdb_file(
-        #                 tmp_pdb_cache_filepath,
-        #                 self._pymol_molecule_object,
-        #             )
-        #             self._pdb_data = bio_data.convert_pdb_xml_string_to_list(
-        #                 bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_pdb_cache_filepath)),
-        #             )
-        #         except Exception as e:
-        #             logger.error(f"Protein states could not be consolidated! Ran into error: {e}")
-        #         else:
-        #             logger.info(f"Consolidation of protein {molecule_object} finished without any errors.")
-        #
-        #     # saves pymol session into a base64 string
-        #     self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self._pymol_molecule_object)
-        # elif pdb_filepath == "" and pdb_xml_string == "":
-        #     self._pymol_molecule_object = molecule_object
-        #     self.pymol_selection = selection.Selection(self._pymol_molecule_object)
-        #     self.pymol_selection.selection_string = ""
-        # else:
-        #     raise ValueError("Function has too many arguments.")
+    def add_protein_structure_data_from_pdb_db(self, a_pdb_id: str, the_main_socket: zmq.Socket, a_socket: zmq.Socket) -> None:
+        """Adds protein structure data based on a protein from the PDB database.
 
-    def add_protein_structure_data_from_pdb_db(self, a_pdb_id, the_main_socket, a_socket) -> None:
-        """Adds protein structure data based on a protein from the PDB database."""
+        Args:
+            a_pdb_id (str): The ID of the protein structure in the PDB database.
+            the_main_socket (zmq.Socket): The main ZeroMQ socket for communication.
+            a_socket (zmq.Socket): An auxiliary ZeroMQ socket for communication.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if a_pdb_id is None:
+            logger.error("a_pdb_id is None.")
+            raise exception.IllegalArgumentError("a_pdb_id is None.")
+        if the_main_socket is None:
+            logger.error("the_main_socket is None.")
+            raise exception.IllegalArgumentError("the_main_socket is None.")
+        if a_socket is None:
+            logger.error("a_socket is None.")
+            raise exception.IllegalArgumentError("a_socket is None.")
+        
+        # </editor-fold>
+        
         tmp_pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb")
         bio_data.download_pdb_file(a_pdb_id, tmp_pdb_filepath)
         self.chains = protein_operations.get_protein_chains(
-            tmp_pdb_filepath, the_main_socket, a_socket
+            tmp_pdb_filepath, the_main_socket, a_socket,
         )
 
         tmp_job_description = job.GeneralPurposeJobDescription(
-            enums.JobShortDescription.CONSOLIDATE_MOLECULE_OBJECT_TO_FIRST_STATE
+            enums.JobShortDescription.CONSOLIDATE_MOLECULE_OBJECT_TO_FIRST_STATE,
         )
         tmp_job_description.setup_dict({enums.JobDescriptionKeys.PDB_FILEPATH.value: str(tmp_pdb_filepath)})
         print(tmp_job_description.job_information)
         tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-            the_main_socket, a_socket, tmp_job_description
+            the_main_socket, a_socket, tmp_job_description,
         )
         print(tmp_reply)
         self._pdb_data = bio_data.parse_pdb_file(tmp_reply["data"])
@@ -217,17 +147,40 @@ class Protein:
         except Exception as e:
             logger.error(f"Could not delete pdb file! Ran into error: {e}")
 
-    def add_protein_structure_data_from_local_pdb_file(self, a_filepath: pathlib.Path, the_main_socket, a_socket) -> None:
-        """Adds protein structure data based on a protein from the local filesystem."""
+    def add_protein_structure_data_from_local_pdb_file(self, a_filepath: pathlib.Path, the_main_socket: zmq.Socket, a_socket: zmq.Socket) -> None:
+        """Adds protein structure data based on a protein from the local filesystem.
+
+        Args:
+            a_filepath (pathlib.Path): The filepath of the PDB file to be processed.
+            the_main_socket (zmq.Socket): The main socket for communication.
+            a_socket (zmq.Socket): A secondary socket for communication.
+
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+            FileNotFoundError: If the PDB file specified by `a_filepath` cannot be found.
+        """
+        # <editor-fold desc="Checks">
+        if a_filepath is None:
+            logger.error("a_filepath is None.")
+            raise exception.IllegalArgumentError("a_filepath is None.")
+        if the_main_socket is None:
+            logger.error("the_main_socket is None.")
+            raise exception.IllegalArgumentError("the_main_socket is None.")
+        if a_socket is None:
+            logger.error("a_socket is None.")
+            raise exception.IllegalArgumentError("a_socket is None.")
+        
+        # </editor-fold>
+        
         self.chains = protein_operations.get_protein_chains(
-            a_filepath, the_main_socket, a_socket
+            a_filepath, the_main_socket, a_socket,
         )
         tmp_job_description = job.GeneralPurposeJobDescription(
-            enums.JobShortDescription.CONSOLIDATE_MOLECULE_OBJECT_TO_FIRST_STATE
+            enums.JobShortDescription.CONSOLIDATE_MOLECULE_OBJECT_TO_FIRST_STATE,
         )
         tmp_job_description.setup_dict({enums.JobDescriptionKeys.PDB_FILEPATH.value: str(a_filepath)})
         tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-            the_main_socket, a_socket, tmp_job_description
+            the_main_socket, a_socket, tmp_job_description,
         )
         if tmp_reply["data"] == "":
             logger.error(f"Could not find pdb file! Ran into error: {tmp_reply}")
@@ -239,25 +192,53 @@ class Protein:
             logger.error(f"Could not delete pdb file! Ran into error: {e}")
 
     def add_id_to_all_chains(self, the_last_chain_id: int) -> None:
+        """Adds an ID to each chain in the list of chains.
+
+        Args:
+            the_last_chain_id: int. The ID to start assigning to each chain.
+        
+        Raises:
+            exception.IllegalArgumentError: If the_last_chain_id is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_last_chain_id is None:
+            logger.error("the_last_chain_id is None.")
+            raise exception.IllegalArgumentError("the_last_chain_id is None.")
+        
+        # </editor-fold>
+        
         i = the_last_chain_id
         for tmp_chain in self.chains:
             tmp_chain.set_id(i)
             i += 1
 
-    def create_new_pymol_session(self, the_main_socket, the_general_purpose_socket) -> None:
+    def create_new_pymol_session(self, the_main_socket: zmq.Socket, the_general_purpose_socket: zmq.Socket) -> None:
         """Creates a new pymol session by loading the protein into PyMOL.
 
+        Args:
+            the_main_socket (zmq.Socket): The main ZMQ socket used for communication with the auxiliary PyMOL process.
+            the_general_purpose_socket (zmq.Socket): The general purpose ZMQ socket used for communication with the auxiliary PyMOL process.
+
         Raises:
-            UnableToCreatePdbFileError:If the pdb file cannot be created.
-            UnableToOpenPdbFileError:If the pdb file cannot be opened.
-            UnableToLoadPdbFileError:If the pdb file cannot be loaded.
+            exception.IllegalArgumentError: If the_main_socket or the_general_purpose_socket is None.
+            ValueError: If there is no pdb data in the current object.
+            UnableToCreatePdbFileError: If an error occurs while building the pdb file.
+            UnableToOpenFileError: If the pdb file could not be opened for writing.
+
         """
         # <editor-fold desc="Checks">
+        if the_main_socket is None:
+            logger.error("the_main_socket is None.")
+            raise exception.IllegalArgumentError("the_main_socket is None.")
+        if the_general_purpose_socket is None:
+            logger.error("the_general_purpose_socket is None.")
+            raise exception.IllegalArgumentError("the_general_purpose_socket is None.")
         pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb")
         if not os.path.exists(constants.CACHE_PROTEIN_DIR):
             os.mkdir(constants.CACHE_PROTEIN_DIR)
         if len(self._pdb_data) == 0:
             raise ValueError("No pdb data in current object!")
+        
         # </editor-fold>
 
         try:
@@ -281,61 +262,122 @@ class Protein:
         tmp_job_description.setup_dict({enums.JobDescriptionKeys.PDB_FILEPATH.value: str(
             pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb"))})
         tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-            the_main_socket, the_general_purpose_socket, tmp_job_description
+            the_main_socket, the_general_purpose_socket, tmp_job_description,
         )
         self.pymol_session = tmp_reply["data"][0]
 
-    def set_id(self, value):
-        self._id = value
+    def set_id(self, a_value: int) -> None:
+        """Sets the id of the protein object.
+
+        Args:
+            a_value (int): The new value to set for the ID.
+            
+        Raises:
+            exception.IllegalArgumentError: If a_value is either None or has a value less than 0.
+        """
+        # <editor-fold desc="Checks">
+        if a_value is None or a_value < 0:
+            logger.error("a_value is either None or has a value less than 0.")
+            raise exception.IllegalArgumentError("a_value is either None or has a value less than 0.")
+        
+        # </editor-fold>
+        
+        self._id = a_value
 
     def get_molecule_object(self) -> str:
-        """This function gets the molecule object.
+        """Gets the molecule object.
 
         Returns:
             the pymol_molecule_object
         """
         return self._pymol_molecule_object
 
-    def set_molecule_object(self, value: str) -> None:
-        """This function sets the molecule object.
+    def set_molecule_object(self, a_value: str) -> None:
+        """Sets the molecule object.
 
         Args:
-            value:
-                a new molecule object
+            a_value (str): A new molecule object.
+        
+        Raises:
+            exception.IllegalArgumentError: If a_value is either None or has a value less than 0.
         """
-        self._pymol_molecule_object = value
+        # <editor-fold desc="Checks">
+        if a_value is None or a_value == "":
+            logger.error("a_value_to_check is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_value_to_check is either None or an empty string.")
+        
+        # </editor-fold>
+        
+        self._pymol_molecule_object = a_value
         for tmp_chain in self.chains:
             if tmp_chain.chain_type != "non_protein_chain":
-                tmp_chain.chain_sequence.name = value
-        self.pymol_selection.molecule_object = value
+                tmp_chain.chain_sequence.name = a_value
+        self.pymol_selection.molecule_object = a_value
 
     def get_all_sequences(self) -> list["sequence.Sequence"]:
-        """Gets all sequences of the protein as list of sequences."""
-        tmp_sequences = []
+        """Gets all sequences of the protein as list of sequences.
+        
+        Returns:
+            A list of sequence objects.
+        """
+        tmp_sequences: list["sequence.Sequence"] = []
         for tmp_chain in self.chains:
             tmp_sequences.append(tmp_chain.chain_sequence)
         return tmp_sequences
 
     def get_protein_sequences(self) -> list["sequence.Sequence"]:
-        """Gets all protein sequences of the protein as list of sequences."""
+        """Gets all protein sequences of the protein as list of sequences.
+        
+        Returns:
+            A list of sequence objects.
+        """
         return protein_operations.get_protein_sequences_from_protein(self._pymol_molecule_object, self.chains)
 
-    def get_sequences_based_on_chain_letter(self, chain_letter: str) -> "sequence.Sequence":
+    def get_sequences_based_on_chain_letter(self, chain_letter: str) -> Optional["sequence.Sequence"]:
         """Gets the sequence based on the provided chain letter.
 
         Args:
             chain_letter: the letter of which the sequence is to be needed.
+        
+        Raises:
+            exception.IllegalArgumentError: If chain_letter is either None or an empty string.
         """
+        # <editor-fold desc="Checks">
+        if chain_letter is None or chain_letter == "":
+            logger.error("chain_letter is either None or an empty string.")
+            raise exception.IllegalArgumentError("chain_letter is either None or an empty string.")
+        
+        # </editor-fold>
+        
         for tmp_chain in self.chains:
             if chain_letter == tmp_chain.chain_letter:
                 return tmp_chain.chain_sequence
         return None
 
     def get_pdb_data(self) -> list:
-        """Gets the pdb information of the protein."""
+        """Gets the pdb information of the protein.
+        
+        Returns:
+            A list with the pdb data.
+        """
         return self._pdb_data
 
     def set_pdb_data(self, pdb_data: list) -> None:
+        """Sets the pdb information of the protein.
+        
+        Args:
+            pdb_data: A list containing the pdb data.
+        
+        Raises:
+            exception.IllegalArgumentError: If pdb_data is None.
+        """
+        # <editor-fold desc="Checks">
+        if pdb_data is None:
+            logger.error("pdb_data is None.")
+            raise exception.IllegalArgumentError("pdb_data is None.")
+        
+        # </editor-fold>
+        
         self._pdb_data = pdb_data
 
     def get_id(self) -> int:
@@ -383,11 +425,29 @@ class Protein:
         """Appends a chain to the protein.
 
         Args:
-            chain_name: name of the chain to append to the protein.
-            chain_sequence: sequence of the chain to append to the protein.
-            chain_type: type of chain to append to the protein.
+            chain_name (str): name of the chain to append to the protein.
+            chain_sequence (sequence.Sequence): sequence of the chain to append to the protein.
+            chain_type (str): type of chain to append to the protein.
+        
+        Raises:
+            exception.IllegalArgumentError: If chain_name is either None or an empty string.
+            exception.IllegalArgumentError: If chain_sequence is None.
+            exception.IllegalArgumentError: If chain_type is either None or an empty string.
         """
+        # <editor-fold desc="Checks">
+        if chain_name is None or chain_name == "":
+            logger.error("chain_name is either None or an empty string.")
+            raise exception.IllegalArgumentError("chain_name is either None or an empty string.")
+        if chain_sequence is None:
+            logger.error("chain_sequence is None.")
+            raise exception.IllegalArgumentError("chain_sequence is None.")
+        if chain_type is None or chain_type == "":
+            logger.error("chain_type is either None or an empty string.")
+            raise exception.IllegalArgumentError("chain_type is either None or an empty string.")
         # TODO: add check if chain or any type of chain information already exists
+        
+        # </editor-fold>
+        
         self.chains.append(chain.Chain(chain_letter=chain_name, chain_sequence=chain_sequence, chain_type=chain_type))
 
     def add_chain_names_to_chains(self) -> None:
@@ -400,40 +460,73 @@ class Protein:
             else:
                 raise ValueError("Chain name exists.")
 
-    def get_chain_by_letter(self, a_letter: str) -> "chain.Chain":
-        """Returns the chain of a certain letter"""
+    def get_chain_by_letter(self, a_letter: str) -> Optional["chain.Chain"]:
+        """Returns the chain of a certain letter.
+        
+        Args:
+            a_letter (str): The letter of the chain to be returned.
+        
+        Returns:
+            The chain of a certain letter or None if the letter could not be found.
+        """
+        # <editor-fold desc="Checks">
+        if a_letter is None or a_letter == "":
+            logger.error("a_letter is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_letter is either None or an empty string.")
+        
+        # </editor-fold>
+        
         for tmp_chain in self.chains:
             if tmp_chain.chain_letter == a_letter:
                 return tmp_chain
-        return chain.Chain("", "", "")
+        return None
 
-    def set_selections_from_chains_ca(self) -> None:
-        """Sets a selection based on the chains of the protein.
+    # def set_selections_from_chains_ca(self) -> None:
+    #     """Sets a selection based on the chains of the protein.
+    # 
+    #     Notes:
+    #         The selection selects only the alpha-C's.
+    #     """
+    #     self.pymol_selection.set_selections_from_chains_ca(protein_util.filter_chains_for_protein_chains(self.chains))
 
-        Notes:
-            The selection selects only the alpha-C's.
+    # def set_selection_without_chains_ca(self) -> None:
+    #     """Sets a selection without any chains of the protein.
+    # 
+    #     Notes:
+    #         The selection selects only the alpha-C's.
+    #     """
+    #     self.pymol_selection.set_selections_without_chains_ca()
+
+    def clean_protein(self, the_main_socket: zmq.Socket, the_general_purpose_socket: zmq.Socket) -> None:
+        """Cleans the protein objects and sets the new pdb data into the instance.
+
+        Args:
+            the_main_socket (zmq.Socket): The main ZeroMQ socket for communication with the auxiliary pymol client.
+            the_general_purpose_socket (zmq.Socket): The general purpose ZeroMQ socket for communication with the auxiliary pymol client.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
         """
-        self.pymol_selection.set_selections_from_chains_ca(protein_util.filter_chains_for_protein_chains(self.chains))
-
-    def set_selection_without_chains_ca(self) -> None:
-        """Sets a selection without any chains of the protein.
-
-        Notes:
-            The selection selects only the alpha-C's.
-        """
-        self.pymol_selection.set_selections_without_chains_ca()
-
-    def clean_protein(self, the_main_socket, the_general_purpose_socket):
+        # <editor-fold desc="Checks">
+        if the_main_socket is None:
+            logger.error("the_main_socket is None.")
+            raise exception.IllegalArgumentError("the_main_socket is None.")
+        if the_general_purpose_socket is None:
+            logger.error("the_general_purpose_socket is None.")
+            raise exception.IllegalArgumentError("the_general_purpose_socket is None.")
+        
+        # </editor-fold>
+        
         tmp_job_description = job.GeneralPurposeJobDescription(
             enums.JobShortDescription.CLEAN_PROTEIN_UPDATE_STRUCTURE)
         tmp_job_description.setup_dict(
             {
                 enums.JobDescriptionKeys.PYMOL_SESSION.value: str(self.pymol_session),
-                enums.JobDescriptionKeys.PROTEIN_NAME.value: str(self._pymol_molecule_object)
-            }
+                enums.JobDescriptionKeys.PROTEIN_NAME.value: str(self._pymol_molecule_object),
+            },
         )
         tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-            the_main_socket, the_general_purpose_socket, tmp_job_description
+            the_main_socket, the_general_purpose_socket, tmp_job_description,
         )
         if tmp_reply["data"][0].find("ERROR") != -1:
             raise ValueError(f"{tmp_reply['data'][0]}; {tmp_reply['data'][1]}")
@@ -443,29 +536,33 @@ class Protein:
         self._pdb_data = tmp_pdb_data
 
     def get_object_as_dict_for_database(self) -> dict:
-        """Serializes the protein object to a dict which can be inserted into a database."""
+        """Serializes the protein object to a dict which can be inserted into a database.
+        
+        Returns:
+            A dict with the molecule_object, the pymol_session and the project id.
+        """
         return {
             enums.DatabaseEnum.PROTEIN_NAME.value: self._pymol_molecule_object,
             enums.DatabaseEnum.PROTEIN_PYMOL_SESSION.value: self.pymol_session,
             "project_id": self.db_project_id,
         }
 
-    def duplicate_protein(self):  # noqa: ANN201
-        """Duplicates the protein object."""
-        tmp_protein = Protein(
-            molecule_object=self._pymol_molecule_object,
-        )
-        logger.debug(tmp_protein.chains[0])
-        # tmp_protein.pymol_selection.selection_string = self.pymol_selection.selection_string
-        # tmp_protein.chains = self.chains
-        # # TODO: create new session file for duplicate
-        return tmp_protein
+    # def duplicate_protein(self):  # noqa: ANN201
+    #     """Duplicates the protein object."""
+    #     tmp_protein = Protein(
+    #         molecule_object=self._pymol_molecule_object,
+    #     )
+    #     logger.debug(tmp_protein.chains[0])
+    #     # tmp_protein.pymol_selection.selection_string = self.pymol_selection.selection_string
+    #     # tmp_protein.chains = self.chains
+    #     # # TODO: create new session file for duplicate
+    #     return tmp_protein
 
-    def set_all_attributes(self, attrib_dict: dict, pdb_data: list, pymol_session: str) -> None:
-        """Sets all attributes of the protein."""
-        """The unique identifier of the protein."""
-        self._id = attrib_dict[attribute_names.ID]
-        self._pymol_molecule_object = attrib_dict[attribute_names.PROTEIN_MOLECULE_OBJECT]
-        self.pymol_selection.selection_string = attrib_dict[attribute_names.PROTEIN_SELECTION]
-        self._pdb_data = pdb_data
-        self.pymol_session = pymol_session
+    # def set_all_attributes(self, attrib_dict: dict, pdb_data: list, pymol_session: str) -> None:
+    #     """Sets all attributes of the protein."""
+    #     """The unique identifier of the protein."""
+    #     self._id = attrib_dict[attribute_names.ID]
+    #     self._pymol_molecule_object = attrib_dict[attribute_names.PROTEIN_MOLECULE_OBJECT]
+    #     self.pymol_selection.selection_string = attrib_dict[attribute_names.PROTEIN_SELECTION]
+    #     self._pdb_data = pdb_data
+    #     self.pymol_session = pymol_session

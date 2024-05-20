@@ -20,32 +20,52 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module contains the CurrentSession dataclass."""
-from dataclasses import dataclass
+__docformat__ = "google"
+
+from pyssa.util import exception
 
 
-@dataclass
-class CurrentSession:
-    """Class which holds information about the current pymol session.
-
-    This is a dataclass with:
-        type (str)
-        name (str)
-        session (str)
-
-    DO NOT USE THIS CLASS ANYMORE IN PRODUCTION!
-    """
-
-    type: str  # noqa: A003
-    name: str
-    session: str
+# @dataclass
+# class CurrentSession:
+#     """Holds information about the current pymol session.
+# 
+#     DO NOT USE THIS CLASS ANYMORE IN PRODUCTION!
+#     """
+# 
+#     type: str  # noqa: A003
+#     name: str
+#     session: str
 
 
 class CurrentPymolSession:
-    """Class which holds information about the current pymol session"""
+    """Holds information about the current pymol session."""
 
+    # <editor-fold desc="Class attributes">
     session_name: str
+    """The name of the current pymol session."""
+    
     object_type: str
+    """The object type of the current pymol session."""
+    
+    # </editor-fold>
 
     def __init__(self, a_session_name: str, an_object_type) -> None:
+        """Constructor.
+
+        Args:
+            a_session_name (str): The name of the session.
+            an_object_type (any): The type of the object.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if a_session_name is None:
+            raise exception.IllegalArgumentError("a_session_name is None.")
+        if an_object_type is None:
+            raise exception.IllegalArgumentError("an_object_type is None.")
+        
+        # </editor-fold>
+        
         self.session_name = a_session_name
         self.object_type = an_object_type

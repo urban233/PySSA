@@ -20,6 +20,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for graphic operations in pymol."""
+
+"""
+This module could be obsolete because the functionality is moved to the auxiliary PyMOL.
+But before deleting this module a usage analysis needs to be conducted!
+"""
+
 from pyssa.internal.data_structures import protein_pair
 from pyssa.util import constants, protein_pair_util
 

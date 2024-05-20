@@ -30,69 +30,61 @@ from pyssa.util import exception
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein
     from pyssa.internal.data_structures import structure_analysis
-    from pyssa.internal.data_structures import sequence
-
+    
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class ProteinPair:
     """This class consists of two Protein objects. It is used to have a better workflow for the analysis."""
 
     # <editor-fold desc="Class attributes">
-    """
-    the unique identifier of the protein
-    """
     _id: int
+    """The unique identifier of the protein."""
 
-    """
-    the first protein of the protein pair
-    """
     protein_1: "protein.Protein"
+    """The first protein of the protein pair."""
 
-    """
-    the second protein of the protein pair
-    """
     protein_2: "protein.Protein"
+    """The second protein of the protein pair."""
 
-    """
-    a directory where all results related to the protein will be stored
-    """
     distance_analysis: "structure_analysis.DistanceAnalysis" = None
+    """A directory where all results related to the protein will be stored."""
 
-    """
-    the full filepath where the session file is stored
-    """
     pymol_session_filepath: path_util.FilePath
+    """The full filepath where the session file is stored."""
 
-    """
-    a base64 string of the pymol session
-    """
     pymol_session: str
+    """A base64 string of the pymol session."""
 
-    """
-    the project id from the database
-    """
     db_project_id: int
+    """The project id from the database."""
 
+    # </editor-fold>
+    
     def __init__(self, protein_1: "protein.Protein", protein_2: "protein.Protein") -> None:
         """Constructor.
 
         Args:
-            protein_1 (core.protein.Protein):
-                reference Protein object
-            protein_2 (core.Protein):
-                model Protein object
+            protein_1 (protein.Protein): The first protein object.
+            protein_2 (protein.Protein): The second protein object.
 
         Raises:
-            IllegalArgumentError: If an argument is None.
+            exception.IllegalArgumentError: If any of the arguments are None.
+        
+        Notes:
+            The protein objects getting "deep copied"!
         """
+        # <editor-fold desc="Checks">
         if protein_1 is None:
-            logger.error(f"The argument 'protein_1' is illegal: {protein_1}!")
-            raise exception.IllegalArgumentError("An argument is illegal.")
+            logger.error("protein_1 is None.")
+            raise exception.IllegalArgumentError("protein_1 is None.")
         if protein_2 is None:
-            logger.error(f"The argument 'protein_2' is illegal: {protein_2}!")
-            raise exception.IllegalArgumentError("An argument is illegal.")
+            logger.error("protein_2 is None.")
+            raise exception.IllegalArgumentError("protein_2 is None.")
+        
+        # </editor-fold>
 
         self.protein_1: "protein.Protein" = copy.deepcopy(protein_1)
         self.protein_2: "protein.Protein" = copy.deepcopy(protein_2)
@@ -103,21 +95,54 @@ class ProteinPair:
         """Sets the distance analysis object.
 
         Args:
-            a_value (distance_analysis.DistanceAnalysis): a distance analysis object
+            a_value (distance_analysis.DistanceAnalysis): A distance analysis object.
 
         Raises:
-            IllegalArgumentError: If the argument is None.
+            exception.IllegalArgumentError: If a_value is None.
         """
+        # <editor-fold desc="Checks">
         if a_value is None:
-            logger.error(f"The argument 'a_value' is illegal: {a_value}!")
-            raise exception.IllegalArgumentError("")
+            logger.error("a_value is None.")
+            raise exception.IllegalArgumentError("a_value is None.")
+        
+        # </editor-fold>
+        
         self.distance_analysis = a_value
 
-    def get_id(self):
+    def get_id(self) -> int:
+        """Returns the ID of the object.
+
+        Returns:
+            The ID of the object.
+        """
         return self._id
 
-    def set_id(self, value):
-        self._id = value
+    def set_id(self, a_value: int) -> None:
+        """Set the value of the ID for the object.
+
+        Args:
+            a_value (int): The new value to assign to the ID.
+
+        Raises:
+            exception.IllegalArgumentError: If a_value is either None or a value less than 0.
+        """
+        # <editor-fold desc="Checks">
+        if a_value is None or a_value < 0:
+            logger.error("a_value is either None or a value less than 0.")
+            raise exception.IllegalArgumentError("a_value is either None or a value less than 0.")
+        
+        # </editor-fold>
+        
+        self._id = a_value
 
     def get_protein_name_without_chains(self) -> str:
+        """Returns the name of the protein without chains.
+
+        The method returns a string representing the name of the protein without the chains. 
+        It combines the molecule objects of protein_1 and protein_2 with a hyphen in between.
+
+        Returns:
+            The name of the protein pair without chains.
+
+        """
         return f"{self.protein_1.get_molecule_object()}-{self.protein_2.get_molecule_object()}"

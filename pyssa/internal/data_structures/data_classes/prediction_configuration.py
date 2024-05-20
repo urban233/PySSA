@@ -22,15 +22,28 @@
 """Module contains the PredictionConfiguration dataclass."""
 from dataclasses import dataclass
 
+__docformat__ = "google"
+
 
 @dataclass
 class PredictionConfiguration:
-    """Class which holds information about the prediction configuration."""
+    """Holds information about the prediction configuration."""
 
+    # <editor-fold desc="Class attributes">
     amber_force_field: bool
+    """A boolean indicating if the amber force field should be used."""
+    
     templates: str
+    """A string indicating which templates should be used."""
+    
+    # </editor-fold>
 
     def get_tuple_notation(self) -> tuple[bool, str]:
-        """Gets the configuration as a tuple."""
+        """Retrieves the tuple notation of the current instance.
+
+        Returns:
+            A tuple containing a boolean value indicating the status of the amber force field
+            and a string representing the templates.
+        """
         tuple_notation: tuple[bool, str] = (self.amber_force_field, self.templates)
         return tuple_notation

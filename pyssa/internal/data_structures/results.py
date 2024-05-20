@@ -30,84 +30,88 @@ from pyssa.io_pyssa import path_util
 from pyssa.io_pyssa import binary_data
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
-from pyssa.util import pyssa_keys
+from pyssa.util import pyssa_keys, exception
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class DistanceAnalysisResults:
     """Contains the results of the distance analysis done in PyMOL."""
 
-    """
-    The data of the distance analysis including: position, chain, residue, residue number and distance.
-    """
+    # <editor-fold desc="Class attributes">
     distance_data: dict[str, np.ndarray]
+    """The data of the distance analysis including: position, chain, residue, residue number and distance."""
 
-    """
-    The base64 string of the pymol session used for the distance analysis
-    """
     pymol_session: str
+    """The base64 string of the pymol session used for the distance analysis."""
 
-    """
-    The RMSD value of the protein pair.
-    """
     rmsd: float
+    """The RMSD value of the protein pair."""
 
-    """
-    The aligned residues of the protein pair.
-    """
     aligned_aa: str
+    """The aligned residues of the protein pair."""
 
-    """
-    A tuple with the basename and the base64 string of the structure alignment image
-    """
     structure_aln_image: tuple[str, str] = ()
+    """A tuple with the basename and the base64 string of the structure alignment image."""
 
-    """
-    A list of tuples with the basename and the base64 string of the interesting region image
-    """
     interesting_regions_images: list[tuple[str, str]] = []
+    """A list of tuples with the basename and the base64 string of the interesting region image."""
+    
+    # </editor-fold>
 
     def __init__(self, distance_data: dict, pymol_session: str, rmsd: float, aligned_aa: str) -> None:
-        """Constructor."""
+        """Constructor.
+
+        Args:
+            distance_data (dict): The distance data containing information about the distances between atoms.
+            pymol_session (str): The PyMOL session file name or path.
+            rmsd (float): The root-mean-square deviation (RMSD) value.
+            aligned_aa (str): The aligned amino acid sequence.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if distance_data is None:
+            logger.error("distance_data is None.")
+            raise exception.IllegalArgumentError("distance_data is None.")
+        if pymol_session is None:
+            logger.error("pymol_session is None.")
+            raise exception.IllegalArgumentError("pymol_session is None.")
+        if rmsd is None:
+            logger.error("rmsd is None.")
+            raise exception.IllegalArgumentError("rmsd is None.")
+        if aligned_aa is None:
+            logger.error("aligned_aa is None.")
+            raise exception.IllegalArgumentError("aligned_aa is None.")
+        
+        # </editor-fold>
+        
         self.distance_data = distance_data
         self.pymol_session = pymol_session
         self.rmsd = rmsd
         self.aligned_aa = aligned_aa
 
-    def set_structure_aln_image(self, filepath: path_util.FilePath) -> None:
-        """This function sets the structure alignment image."""
-        self.structure_aln_image = (filepath.get_basename(), binary_data.create_base64_string_from_file(filepath))
-
-    def set_interesting_region_images(self, filepaths: list[path_util.FilePath]) -> None:
-        """This function sets the interesting region images.
+    def export_distance_data_as_csv(self, a_filepath: str) -> None:
+        """Exports distance data as a CSV file.
 
         Args:
-            filepaths (list[path_util.FilePath]): List of file paths.
+            a_filepath (str): The file path to save the CSV file.
+        
+        Raises:
+            exception.IllegalArgumentError: If a_filepath is either None or an empty string.
         """
-        for tmp_filepath in filepaths:
-            self.interesting_regions_images.append(
-                (tmp_filepath.get_basename(), binary_data.create_base64_string_from_file(tmp_filepath)),
-            )
-
-    def create_image_png_files_from_base64(self) -> None:
-        """Creates png files from the base64 data."""
-        binary_data.write_binary_file_from_base64_string(
-            pathlib.Path(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/{self.structure_aln_image[0]}"),
-            self.structure_aln_image[1],
-        )
-        for tmp_interesting_reg in self.interesting_regions_images:
-            binary_data.write_binary_file_from_base64_string(
-                pathlib.Path(
-                    f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_interesting_reg[0]}",
-                ),
-                tmp_interesting_reg[1],
-            )
-
-    def export_distance_data_as_csv(self, a_filepath):
+        # <editor-fold desc="Checks">
+        if a_filepath is None or a_filepath == "":
+            logger.error("a_filepath is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_filepath is either None or an empty string.")
+        
+        # </editor-fold>
+        
         tmp_data_to_write = np.transpose([
             self.distance_data["index"],
             self.distance_data["ref_chain"],
@@ -130,82 +134,7 @@ class DistanceAnalysisResults:
                     "Protein_2_Chain",
                     "Protein_2_Position",
                     "Protein_2_Residue",
-                    "Distance"
+                    "Distance",
             ])
             # Write the data to the TSV file
             csv_writer.writerows(tmp_data_to_write)
-
-
-    def serialize_distance_analysis_results(self, tmp_distance_analysis) -> None:  # noqa: ANN001
-        """Serializes the distance analysis results object."""
-        tmp_results_data = ElementTree.SubElement(tmp_distance_analysis, element_names.DISTANCE_ANALYSIS_RESULTS)
-        tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_RMSD, str(self.rmsd))
-        tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA, str(self.aligned_aa))
-
-        # logger.debug(f"These are the keys of the self.distance_data hashtable: {self.distance_data.keys()}")
-        # logger.debug(f"These are the values of the self.distance_data hashtable: {self.distance_data.values()}")
-        # <editor-fold desc="Distance data">
-        tmp_distance_data = ElementTree.SubElement(tmp_results_data, element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS)
-        tmp_index_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_INDEX_LIST)
-        tmp_index_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX].tolist())
-        tmp_prot_1_chain_data = ElementTree.SubElement(
-            tmp_distance_data,
-            element_names.DISTANCE_ANALYSIS_PROT_1_CHAIN_LIST,
-        )
-        tmp_prot_1_chain_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN].tolist())
-        tmp_prot_1_position_data = ElementTree.SubElement(
-            tmp_distance_data,
-            element_names.DISTANCE_ANALYSIS_PROT_1_POSITION_LIST,
-        )
-        tmp_prot_1_position_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION].tolist())
-        tmp_prot_1_residue_data = ElementTree.SubElement(
-            tmp_distance_data,
-            element_names.DISTANCE_ANALYSIS_PROT_1_RESIDUE_LIST,
-        )
-        tmp_prot_1_residue_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI].tolist())
-        tmp_prot_2_chain_data = ElementTree.SubElement(
-            tmp_distance_data,
-            element_names.DISTANCE_ANALYSIS_PROT_2_CHAIN_LIST,
-        )
-        tmp_prot_2_chain_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN].tolist())
-        tmp_prot_2_position_data = ElementTree.SubElement(
-            tmp_distance_data,
-            element_names.DISTANCE_ANALYSIS_PROT_2_POSITION_LIST,
-        )
-        tmp_prot_2_position_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION].tolist())
-        tmp_prot_2_residue_data = ElementTree.SubElement(
-            tmp_distance_data,
-            element_names.DISTANCE_ANALYSIS_PROT_2_RESIDUE_LIST,
-        )
-        tmp_prot_2_residue_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI].tolist())
-        tmp_distances_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_DISTANCES_LIST)
-        tmp_distances_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES].tolist())
-
-        # </editor-fold>
-
-        # <editor-fold desc="Images">
-        if len(self.structure_aln_image) != 0:
-            tmp_image_data = ElementTree.SubElement(tmp_results_data, element_names.DISTANCE_ANALYSIS_IMAGES)
-            tmp_image_structure_aln = ElementTree.SubElement(
-                tmp_image_data,
-                element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE,
-            )
-            tmp_image_structure_aln.set(
-                attribute_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE_BASENAME,
-                self.structure_aln_image[0],
-            )
-            tmp_image_structure_aln.text = self.structure_aln_image[1]
-
-            if len(self.interesting_regions_images) != 0:
-                for tmp_base64_image in self.interesting_regions_images:
-                    tmp_image_interesting_reg = ElementTree.SubElement(
-                        tmp_image_data,
-                        element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS,
-                    )
-                    tmp_image_interesting_reg.set(
-                        attribute_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS_BASENAME,
-                        tmp_base64_image[0],
-                    )
-                    tmp_image_interesting_reg.text = tmp_base64_image[1]
-
-        # </editor-fold>

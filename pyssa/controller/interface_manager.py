@@ -50,7 +50,7 @@ from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import project, settings, chain, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.thread import tasks
-from pyssa.internal.thread.async_pyssa import locks, custom_signals
+from pyssa.internal.thread.async_pyssa import custom_signals
 from pyssa.io_pyssa import filesystem_io
 from pyssa.logging_pyssa import log_handlers
 from pyssa.model import proteins_model, protein_pairs_model
@@ -92,7 +92,7 @@ class InterfaceManager:
     _current_pymol_session: "current_session.CurrentPymolSession"
 
     project_lock: QtCore.QMutex
-    pymol_lock: "locks.PyMOL_LOCK"
+    #pymol_lock: "locks.PyMOL_LOCK"
     # _application_settings: "settings.Settings"
     current_tab_index: int = 0
 
@@ -196,7 +196,7 @@ class InterfaceManager:
         self._current_pymol_session = current_session.CurrentPymolSession("", "")
 
         self.project_lock = QtCore.QMutex()
-        self.pymol_lock: "locks.PyMOL_LOCK" = locks.PyMOL_LOCK()
+        #self.pymol_lock: "locks.PyMOL_LOCK" = locks.PyMOL_LOCK()
 
         self.job_manager.start_auxiliary_pymol()
         self.start_app_process_manager()

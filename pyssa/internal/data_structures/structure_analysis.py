@@ -25,11 +25,13 @@ import pathlib
 import numpy as np
 from typing import TYPE_CHECKING
 
+import zmq
+
 from auxiliary_pymol import auxiliary_pymol_client
 from pyssa.controller import database_manager
-from pyssa.io_pyssa import path_util, filesystem_helpers, bio_data
+from pyssa.io_pyssa import filesystem_helpers, bio_data
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import constants, distance_analysis_util, pyssa_keys, enums, constant_messages
+from pyssa.util import constants, pyssa_keys, enums, constant_messages
 from pyssa.util import exception
 from pyssa.internal.data_structures import results, job
 
@@ -41,23 +43,41 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class Analysis:
     """Contains information about the type of analysis."""
 
+    # <editor-fold desc="Class attributes">
     analysis_list: list["protein_pair.ProteinPair"] = []
+    """A list of protein pairs to analyze."""
+    
     app_project: "project.Project"
+    """The project object for which analysis is being performed."""
+    
+    # </editor-fold>
 
     def __init__(self, app_project: "project.Project") -> None:
-        """Initialize the app project.
+        """Constructor.
 
         Args:
             app_project(project.Project): The project that this analysis is used.
+            
+        Raises:
+            exception.IllegalArgumentError: If app_project is None.
         """
+        # <editor-fold desc="Checks">
+        if app_project is None:
+            logger.error("app_project is None.")
+            raise exception.IllegalArgumentError("app_project is None.")
+        
+        # </editor-fold>
+        
         self.app_project: "project.Project" = app_project
 
-    def _fetch_pdb_atoms_for_all_proteins(self):
+    def _fetch_pdb_atoms_for_all_proteins(self) -> None:
+        """Fetches PDB atom data for all proteins in the analysis list from the database and sets the retrieved data to the respective proteins' pdb_data attribute."""
         with database_manager.DatabaseManager(str(self.app_project.get_database_filepath())) as db_manager:
             for tmp_protein_pair in self.analysis_list:
                 tmp_pdb_atom_db_data_1 = db_manager.get_pdb_atoms_of_protein(tmp_protein_pair.protein_1.get_id())
@@ -70,27 +90,41 @@ class Analysis:
                 tmp_protein_pair.protein_2.set_pdb_data(pdb_atom_dict_2)
 
     def _get_last_id_of_protein_pairs(self) -> int:
+        """Get the last ID of protein pairs.
+
+        Returns:
+            The last ID of protein pairs.
+        """
         if len(self.app_project.protein_pairs) == 0:
             return 1
-        else:
-            return max(self.app_project.protein_pairs, key=lambda obj: obj.get_id()).get_id()
+        return max(self.app_project.protein_pairs, key=lambda obj: obj.get_id()).get_id()
 
-    def run_distance_analysis(self, the_image_creation_option: bool, the_main_socket, a_socket) -> None:
+    def run_distance_analysis(self, the_image_creation_option: bool, the_main_socket: zmq.Socket, a_socket: zmq.Socket) -> None:
         """Runs the distance analysis for all protein pairs of the analysis job.
 
         Args:
-            the_image_creation_option: Is a boolean, indicating to take images or not.
+            the_image_creation_option (bool): A flag indicating whether to create images.
+            the_main_socket (zmq.Socket): The main socket for communication.
+            a_socket (zmq.Socket): A secondary socket for communication.
 
         Raises:
-            UnableToReinitializePymolSessionError: If pymol session could not be reinitialized.
-            UnableToTakeImageError: If no image was taken.
+            exception.IllegalArgumentError: If any of the arguments are None.
             UnableToSetImageError: If no image was setting.
-            UnableToSafeSessionError: If session could not be saved.
             UnableToOpenFileError: If file could not be opened.
-            FileNotFoundError: If file could not be founded.
-            DirectoryNotFoundError: If directory could not be founded.
-            IllegalArgumentError: If an invalid argument was used.
         """
+        # <editor-fold desc="Checks">
+        if the_image_creation_option is None:
+            logger.error("the_image_creation_option is None.")
+            raise exception.IllegalArgumentError("the_image_creation_option is None.")
+        if the_main_socket is None:
+            logger.error("the_main_socket is None.")
+            raise exception.IllegalArgumentError("the_main_socket is None.")
+        if a_socket is None:
+            logger.error("a_socket is None.")
+            raise exception.IllegalArgumentError("a_socket is None.")
+        
+        # </editor-fold>
+        
         logger.debug(
             f"The function argument of the value for the image_creation_option is: {the_image_creation_option}",
         )
@@ -98,18 +132,9 @@ class Analysis:
         tmp_latest_protein_pair_id = self._get_last_id_of_protein_pairs()
         # create scratch dirs
         filesystem_helpers.create_directory(constants.SCRATCH_DIR_ANALYSIS)
-        # filesystem_helpers.create_directory(constants.SCRATCH_DIR_IMAGES)
-        # filesystem_helpers.create_directory(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR)
-        # filesystem_helpers.create_directory(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
 
         for tmp_protein_pair in self.analysis_list:
             logger.info(f"The protein pair: {tmp_protein_pair.name} gets analyzed.")
-            # try:
-            #     cmd.reinitialize()
-            # except pymol.CmdException:
-            #     tmp_msg: str = "Unable to reinitialize the pymol session."
-            #     logger.error(tmp_msg)
-            #     raise exception.UnableToReinitializePymolSessionError(tmp_msg)
             try:
                 # do distance analysis in PyMOL
                 if tmp_protein_pair is None:
@@ -118,20 +143,20 @@ class Analysis:
 
                 tmp_protein_1_name = tmp_protein_pair.protein_1.get_molecule_object()
                 tmp_protein_1_pdb_cache_filepath = pathlib.Path(
-                    f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein_1_name}.pdb"
+                    f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein_1_name}.pdb",
                 )
                 tmp_protein_2_name = tmp_protein_pair.protein_2.get_molecule_object()
                 tmp_protein_2_pdb_cache_filepath = pathlib.Path(
-                    f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein_2_name}.pdb"
+                    f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein_2_name}.pdb",
                 )
                 try:
                     bio_data.build_pdb_file(
                         tmp_protein_pair.protein_1.get_pdb_data(),
-                        tmp_protein_1_pdb_cache_filepath
+                        tmp_protein_1_pdb_cache_filepath,
                     )
                     bio_data.build_pdb_file(
                         tmp_protein_pair.protein_2.get_pdb_data(),
-                        tmp_protein_2_pdb_cache_filepath
+                        tmp_protein_2_pdb_cache_filepath,
                     )
                 except Exception as e:
                     logger.error(f"PDB file could not be built. Error: {e}")
@@ -147,28 +172,8 @@ class Analysis:
                         tmp_protein_pair.protein_2.pymol_selection.selection_string,
                         tmp_protein_pair.distance_analysis.cutoff,
                         tmp_protein_pair.distance_analysis.cycles,
-                    )
+                    ),
                 )
-
-                # the_main_socket.send_string("Distance Analysis")
-                # response = the_main_socket.recv_string()
-                # print(f"Received response: {response}")
-                # message = {
-                #     "job_type": "Distance Analysis",
-                #     "the_protein_pair_name": tmp_protein_pair.name,
-                #     "a_protein_1_pdb_cache_filepath": str(tmp_protein_1_pdb_cache_filepath),
-                #     "a_protein_2_pdb_cache_filepath":str(tmp_protein_2_pdb_cache_filepath),
-                #     "a_protein_1_pymol_selection_string": tmp_protein_pair.protein_1.pymol_selection.selection_string,
-                #     "a_protein_2_pymol_selection_string": tmp_protein_pair.protein_2.pymol_selection.selection_string,
-                #     "a_cutoff": tmp_protein_pair.distance_analysis.cutoff,
-                #     "the_cycles": tmp_protein_pair.distance_analysis.cycles,
-                # }
-                # the_main_socket.send_json(message)
-                # response = the_main_socket.recv_string()
-                # print(f"Received response: {response}")
-                # # Wait for the response from the server
-                # a_socket.send_json({"job_type": "Distance Analysis"})
-
                 result = tmp_reply["result"]
                 if tmp_reply["data"] is not None:
                     distance_analysis_results_object_values, base64_string = tmp_reply["data"]
@@ -186,70 +191,11 @@ class Analysis:
                     print(result_hashtable)
 
                     tmp_protein_pair.distance_analysis.analysis_results = results.DistanceAnalysisResults(
-                        result_hashtable, base64_string, rmsd, aligned_residues
+                        result_hashtable, base64_string, rmsd, aligned_residues,
                     )
                     tmp_protein_pair.pymol_session = base64_string
                 else:
                     logger.warning("Returning data was None!")
-
-                # tmp_protein_pair.distance_analysis.analysis_results, tmp_protein_pair.pymol_session = auxiliary_pymol.AuxiliaryPyMOL.do_distance_analysis(
-                #     tmp_protein_pair
-                # )
-                # tmp_protein_pair.distance_analysis.analysis_results = (
-                #     distance_analysis_util.do_distance_analysis_in_pymol(
-                #         tmp_protein_pair,
-                #     )
-                # )
-
-                # create scene for structure alignment // take images of structure alignment if necessary
-                # distance_analysis_util.create_scene_of_protein_pair(
-                #     a_protein_pair=tmp_protein_pair,
-                #     filename=f"structure_aln_{tmp_protein_pair.name}",
-                #     take_images=the_image_creation_option,
-                # )
-                # create scenes for interesting regions // take image of interesting regions if necessary
-                # distance_analysis_util.create_scenes_of_interesting_regions(
-                #     tmp_protein_pair.distance_analysis.analysis_results.distance_data,
-                #     tmp_protein_pair.protein_1.get_molecule_object(),
-                #     tmp_protein_pair.protein_2.get_molecule_object(),
-                #     tmp_protein_pair.distance_analysis.cutoff,
-                #     take_images=the_image_creation_option,
-                #     filename=f"interesting_reg_{tmp_protein_pair.name}",
-                # )
-                # if the_image_creation_option is True:
-                #     logger.info("Setting the structure alignment image into the results object ...")
-                #     tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
-                #         path_util.FilePath(
-                #             pathlib.Path(
-                #                 f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/"
-                #                 f"structure_aln_{tmp_protein_pair.name}.png",
-                #             ),
-                #         ),
-                #     )
-                #     logger.info("Setting all image of the interesting regions into the results object ...")
-                #     interesting_region_filepaths = []
-                #     for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
-                #         interesting_region_filepaths.append(
-                #             path_util.FilePath(
-                #                 pathlib.Path(
-                #                     f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/"
-                #                     f"{tmp_filename}",
-                #                 ),
-                #             ),
-                #         )
-                #     (
-                #         tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(
-                #             interesting_region_filepaths,
-                #         )
-                #     )
-            # except FileNotFoundError:
-            #     tmp_path: str = str(
-            #         pathlib.Path(
-            #             f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png",
-            #         ),
-            #     )
-            #     logger.error(f"Image file could not be found! {tmp_path}")
-            #     raise exception.UnableToOpenFileError(f"Image file: {tmp_path}")
             except exception.IllegalArgumentError:
                 logger.error("The argument filename is illegal.")
                 raise exception.UnableToOpenFileError(f"filename: {tmp_protein_pair.name}")
@@ -257,25 +203,35 @@ class Analysis:
                 logger.error(f"Unknown error: {e}")
                 raise exception.UnableToSetImageError("")
             filesystem_helpers.delete_directory(constants.SCRATCH_DIR_ANALYSIS)
-            # cmd.scene(
-            #     f"{tmp_protein_pair.protein_1.get_molecule_object()}-"
-            #     f"{tmp_protein_pair.protein_2.get_molecule_object()}",
-            #     action="recall",
-            # )
-            # save pymol session of distance analysis
-            # tmp_protein_pair.save_session_of_protein_pair()
-
-    def run_analysis(self, the_analysis_type: str, the_image_option: bool, the_main_socket, a_socket) -> None:
-        """This function is used to run the analysis.
+            
+    def run_analysis(self, the_analysis_type: str, the_image_option: bool, the_main_socket: zmq.Socket, a_socket: zmq.Socket) -> None:
+        """Starts the distance analysis.
 
         Args:
-            the_analysis_type: Defines which type of analysis should be performed.
-            the_image_option: Is a boolean, indicating to take images or not.
-
+            the_analysis_type (str): The type of analysis to run. Possible values are "distance".
+            the_image_option (bool): Option for image analysis.
+            the_main_socket (zmq.Socket): The main socket for communication.
+            a_socket (zmq.Socket): A socket for communication.
+        
         Raises:
-            ValueError: If analysis list is empty.
+            exception.IllegalArgumentError: If any of the arguments are None.
+            ValueError: If `self.analysis_list` is empty.
+            ValueError: If analysis type is unknown.
         """
         # <editor-fold desc="Checks">
+        if the_analysis_type is None:
+            logger.error("the_analysis_type is None.")
+            raise exception.IllegalArgumentError("the_analysis_type is None.")
+        if the_image_option is None:
+            logger.error("the_image_option is None.")
+            raise exception.IllegalArgumentError("the_image_option is None.")
+        if the_main_socket is None:
+            logger.error("the_main_socket is None.")
+            raise exception.IllegalArgumentError("the_main_socket is None.")
+        if a_socket is None:
+            logger.error("a_socket is None.")
+            raise exception.IllegalArgumentError("a_socket is None.")
+        
         if len(self.analysis_list) == 0:
             logger.error("Analysis list is empty.")
             logger.debug(f"self.analysis_list: {self.analysis_list}")
@@ -294,34 +250,49 @@ class Analysis:
 class DistanceAnalysis:
     """Contains all information about the distance analysis of a certain protein pair."""
 
-    """
-    The name of the distance analysis.
-    """
+    # <editor-fold desc="Checks">
     name: str
+    """The name of the distance analysis."""
 
-    """
-    The cutoff value for the align command from PyMOL
-    """
     cutoff: float
+    """The cutoff value for the align command from PyMOL."""
 
-    """
-    The number of refinement cycles for the align command from PyMOL
-    """
     cycles: int
+    """The number of refinement cycles for the align command from PyMOL."""
 
-    """
-    The size of the figures.
-    """
     figure_size: tuple[float, float]
+    """The size of the figures."""
 
-    """
-    The object which contains all results from the distance analysis done in PyMOL.
-    """
     analysis_results: "results.DistanceAnalysisResults" = None
+    """The object which contains all results from the distance analysis done in PyMOL."""
+    
+    # </editor-fold>
 
     def __init__(self, the_app_settings: "settings.Settings", protein_pair_name: str = "",
                  distance_analysis_name: str = "") -> None:
-        """Constructor."""
+        """Constructor.
+
+        Args:
+            the_app_settings (settings.Settings): The settings object that contains the cutoff and cycles values.
+            protein_pair_name (str, optional): The name of the protein pair. Defaults to an empty string.
+            distance_analysis_name (str, optional): The name of the distance analysis. Defaults to an empty string.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if the_app_settings is None:
+            logger.error("the_app_settings is None.")
+            raise exception.IllegalArgumentError("the_app_settings is None.")
+        if protein_pair_name is None:
+            logger.error("protein_pair_name is None.")
+            raise exception.IllegalArgumentError("protein_pair_name is None.")
+        if distance_analysis_name is None:
+            logger.error("distance_analysis_name is None.")
+            raise exception.IllegalArgumentError("distance_analysis_name is None.")
+        
+        # </editor-fold>
+        
         self.name: str = f"dist_analysis_{protein_pair_name}"
         self.cutoff: float = the_app_settings.cutoff
         self.cycles: int = the_app_settings.cycles

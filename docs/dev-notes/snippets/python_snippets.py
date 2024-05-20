@@ -19,34 +19,36 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module contains the CurrentSession dataclass."""
-from dataclasses import dataclass
+"""Module contains snippets that can be copy and pasted into differnt locations."""
 
-from pyssa_pymol import pymol_enums
-
+# Logging
+from pyssa.util import exception
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
+# Basic argument check for None
+if a_value_to_check is None:
+  logger.error("a_value_to_check is None.")
+  raise exception.IllegalArgumentError("a_value_to_check is None.")
 
-@dataclass
-class PyMOLCommand:
-    """Holds information about a pymol command."""
+if a_value_to_check is None or a_value_to_check == "":
+  logger.error("a_value_to_check is either None or an empty string.")
+  raise exception.IllegalArgumentError("a_value_to_check is either None or an empty string.")
 
-    # <editor-fold desc="Class attributes">
-    command: "pymol_enums.CommandEnum"
-    """The pymol command."""
-    
-    arguments: tuple
-    """The command arguments."""
-    
-    # </editor-fold>
+# messages
+"""
 
-    def get_command(self) -> dict:
-        """Returns a dictionary with the command and its arguments.
+exception.IllegalArgumentError: If any of the arguments are None or if `a_filepath` is an empty string.
 
-        Returns:
-            dict: A dictionary containing the command and its arguments.
-        """
-        return {
-            "command": self.command.value,
-            "arguments": self.arguments,
-        }
+exception.IllegalArgumentError: If any of the arguments are None.
+
+True: Operation successful, False: Otherwise
+
+"""
+
+
+
+# Scratch
+
+"Executes the database operations in the queue."

@@ -21,14 +21,19 @@
 #
 """Module for all asynchronous functions that are related to the protein object."""
 import logging
+from typing import Optional
+
+import zmq
+
 from pyssa.controller import database_manager
+from pyssa.internal.data_structures import protein
 from pyssa.io_pyssa import bio_data
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import constants, enums, exit_codes
+from pyssa.util import constants, enums, exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
-
+__docformat__ = "google"
 
 # def clean_protein_new(
 #     a_protein_name: str,
@@ -55,20 +60,35 @@ logger.addHandler(log_handlers.log_file_handler)
 
 def clean_protein_update(a_protein: "protein.Protein",
                          the_database_filepath: str,
-                         the_main_socket,
-                         the_general_purpose_socket) -> tuple:
+                         the_main_socket: zmq.Socket,
+                         the_general_purpose_socket: zmq.Socket) -> tuple[str, Optional[protein.Protein]]:
     """Cleans a protein by removing all solvent and sugar molecules in the current molecule object.
 
     Args:
-        a_protein: the protein object to clean.
-        the_database_filepath: the filepath to the database file of the project.
-        the_main_socket: the main socket of the auxiliary pymol.
-        the_general_purpose_socket: the general purpose socket of the auxiliary pymol.
+        a_protein (protein.Protein): The protein object to clean.
+        the_database_filepath (str): The filepath to the database file of the project.
+        the_main_socket (zmq.Socket): The main socket of the auxiliary pymol.
+        the_general_purpose_socket (zmq.Socket): The general purpose socket of the auxiliary pymol.
 
     Returns:
-        a tuple with ("result", a_updates_project_object)
+        A tuple with ("result", a_protein or None).
     """
-    # TODO: needs checks
+    # <editor-fold desc="Checks">
+    if a_protein is None:
+        logger.error("a_protein is None.")
+        return "", None
+    if the_database_filepath is None or the_database_filepath == "":
+        logger.error("the_database_filepath is either None or an empty string.")
+        return "", None
+    if the_main_socket is None:
+        logger.error("the_main_socket is None.")
+        return "", None
+    if the_general_purpose_socket is None:
+        logger.error("the_general_purpose_socket is None.")
+        return "", None
+    
+    # </editor-fold>
+    
     try:
         a_protein.clean_protein(the_main_socket, the_general_purpose_socket)
         if len(a_protein.get_pdb_data()) == 0:
@@ -90,8 +110,31 @@ def save_selected_protein_structure_as_pdb_file(
     a_protein: "protein.Protein",
     a_filepath: str,
     the_database_filepath: str,
-) -> tuple:
-    """Saves a given protein structure to a pdb file."""
+) -> tuple[str]:
+    """Saves the selected protein structure as a PDB file.
+
+    Args:
+        a_protein (protein.Protein): The selected protein object.
+        a_filepath (str): The file path where the PDB file should be saved.
+        the_database_filepath (str): The file path of the database.
+
+    Returns:
+        A tuple containing the result of the operation. 
+        If successful, the tuple will contain a single string with the value "result". Otherwise, an empty string will be returned.
+    """
+    # <editor-fold desc="Checks">
+    if a_protein is None:
+        logger.error("a_protein is None.")
+        return ("",)
+    if a_filepath is None or a_filepath == "":
+        logger.error("a_filepath is either None or an empty string.")
+        return ("",)
+    if the_database_filepath is None or the_database_filepath == "":
+        logger.error("the_database_filepath is either None or an empty string.")
+        return ("",)
+    
+    # </editor-fold>
+    
     try:
         with database_manager.DatabaseManager(the_database_filepath) as db_manager:
             tmp_pdb_atom_data = db_manager.get_pdb_atoms_of_protein(a_protein.get_id())
@@ -102,9 +145,10 @@ def save_selected_protein_structure_as_pdb_file(
             a_protein.set_pdb_data([])
     except Exception as e:
         logger.error(e)
-        return "",
+        return ("",)
     else:
-        return "result",
+        return ("result",)
+
 
 def rename_selected_protein_structure(
     a_protein: "protein.Protein",
@@ -114,13 +158,26 @@ def rename_selected_protein_structure(
     """Renames a certain protein from a project.
 
     Args:
-        a_protein: the protein object to rename.
-        the_new_protein_name: the new name for the given protein.
-        the_database_filepath: the filepath of the project database.
+        a_protein (protein.Protein): The protein object to rename.
+        the_new_protein_name (str): The new name for the given protein.
+        the_database_filepath (str): The filepath of the project database.
 
     Returns:
-        a tuple with ("result", an_existing_protein_object)
+        a tuple with ("result" or "", an_existing_protein_object or None)
     """
+    # <editor-fold desc="Checks">
+    if a_protein is None:
+        logger.error("a_protein is None.")
+        return "", None
+    if the_new_protein_name is None or the_new_protein_name == "":
+        logger.error("the_new_protein_name is either None or an empty string.")
+        return "", None
+    if the_database_filepath is None or the_database_filepath == "":
+        logger.error("the_database_filepath is either None or an empty string.")
+        return "", None
+
+    # </editor-fold>
+    
     tmp_old_protein_name = a_protein.get_molecule_object()
 
     # Update in memory
@@ -136,6 +193,6 @@ def rename_selected_protein_structure(
     # Update in database
     with database_manager.DatabaseManager(the_database_filepath) as db_manager:
         db_manager.update_protein_name(
-            the_new_protein_name, tmp_old_protein_name, a_protein.get_id()
+            the_new_protein_name, tmp_old_protein_name, a_protein.get_id(),
         )
-    return ("result", a_protein)
+    return "result", a_protein

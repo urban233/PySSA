@@ -25,29 +25,28 @@ from pyssa.io_pyssa import safeguard
 from pyssa.logging_pyssa import log_handlers
 from typing import TYPE_CHECKING
 
+from pyssa.util import exception
+
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import chain
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class Selection:
-    """This class contains information about a selection."""
+    """Contains information about a selection."""
 
     # <editor-fold desc="Class attribute">
-    """
-    a pymol conform selection string
-    """
     selection_string: str
-    """
-    the name of the protein which is also used within pymol
-    """
+    """A pymol conform selection string."""
+    
     molecule_object: str
-    """
-    a list of all current chains from the selection
-    """
+    """The name of the protein which is also used within pymol."""
+    
     selection_chain_letters: list[str]
+    """A list of all current chains from the selection."""
 
     # </editor-fold>
 
@@ -56,24 +55,35 @@ class Selection:
 
         Args:
             molecule_object: the name of the protein which is also used within pymol
+        
+        Raises:
+            exception.IllegalArgumentError: If `molecule_object` is either None or an empty string.
         """
         # <editor-fold desc="Checks">
-        safeguard.Safeguard.check_if_value_is_not_none(molecule_object, logger)
-        if molecule_object == "":
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
-
+        if molecule_object is None or molecule_object == "":
+            logger.error("molecule_object is either None or an empty string.")
+            raise exception.IllegalArgumentError("molecule_object is either None or an empty string.")
+        
         # </editor-fold>
 
         self.molecule_object = molecule_object
 
     def set_selections_from_chains_ca(self, chains: list["chain.Chain"]) -> None:
-        """This function sets a selection based on the chains of the protein. The selection selects only the alpha-C's.
+        """Sets a selection based on the chains of the protein. The selection selects only the alpha-C's.
 
         Args:
-            chains:
-                a list of chains
+            chains: A list of chains.
+        
+        Raises:
+            exception.IllegalArgumentError: If `chains` is None.
         """
+        # <editor-fold desc="Checks">
+        if chains is None:
+            logger.error("chains is None.")
+            raise exception.IllegalArgumentError("chains is None.")
+        
+        # </editor-fold>
+        
         seperator = ", "
         tmp_list = []
         self.selection_chain_letters = []
@@ -95,22 +105,66 @@ class Selection:
         """Creates a single pymol selection with only one chain and one resi.
 
         Args:
-            segi:
-                a segment identifier
-            chain:
-                a chain identifier
-            resi:
-                a residue name or position
-            atom_name:
-                a type of atom
+            segi: A segment identifier.
+            chain: A chain identifier.
+            resi: A residue name or position.
+            atom_name: A type of atom.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
         """
+        # <editor-fold desc="Checks">
+        if segi is None:
+            logger.error("segi is None.")
+            raise exception.IllegalArgumentError("segi is None.")
+        if chain is None:
+            logger.error("chain is None.")
+            raise exception.IllegalArgumentError("chain is None.")
+        if resi is None:
+            logger.error("resi is None.")
+            raise exception.IllegalArgumentError("resi is None.")
+        if atom_name is None:
+            logger.error("atom_name is None.")
+            raise exception.IllegalArgumentError("atom_name is None.")
+        
+        # </editor-fold>
+        
         self.selection_string = f"/{self.molecule_object}/{segi}/{chain}/{resi}/{atom_name}"
 
-    def set_selection_for_a_single_chain(self, a_chain_letter: str):
-        """Sets a selection for a single chain."""
+    def set_selection_for_a_single_chain(self, a_chain_letter: str) -> None:
+        """Sets a selection for a single chain.
+        
+        Args:
+            a_chain_letter: A letter of a chain.
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_chain_letter` is None.
+        """
+        # <editor-fold desc="Checks">
+        if a_chain_letter is None:
+            logger.error("a_chain_letter is None.")
+            raise exception.IllegalArgumentError("a_chain_letter is None.")
+        
+        # </editor-fold>
+        
         self.selection_string = f"/{self.molecule_object}//{a_chain_letter}"
 
-    def set_selection_for_first_ca_atom_in_a_given_chain(self, a_chain_letter: str):
+    def set_selection_for_first_ca_atom_in_a_given_chain(self, a_chain_letter: str) -> None:
+        """Sets a selection for alpha C atoms of a single chain.
+
+        Args:
+            a_chain_letter (str): The letter identifier for the chain.
+
+        Raises:
+            exception.IllegalArgumentError: If `a_chain_letter` is None.
+        """
+        # <editor-fold desc="Checks">
+        if a_chain_letter is None:
+            logger.error("a_chain_letter is None.")
+            raise exception.IllegalArgumentError("a_chain_letter is None.")
+
+        # </editor-fold>
+        
         self.selection_string = f"first chain {a_chain_letter} and name CA"
 
     def set_custom_selection(self, a_sele_string: str) -> None:
@@ -118,17 +172,15 @@ class Selection:
 
         Args:
             a_sele_string: a custom pymol selection string.
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_sele_string` is None.
         """
+        # <editor-fold desc="Checks">
+        if a_sele_string is None:
+            logger.error("a_sele_string is None.")
+            raise exception.IllegalArgumentError("a_sele_string is None.")
+        
+        # </editor-fold>
+        
         self.selection_string = a_sele_string
-
-    # def color_selection(self, a_color: str) -> None:
-    #     """Sets a custom color to the active selection."""
-    #     graphic_operations.color_protein(a_color, self.selection_string)
-
-    # def show_selection_in_a_specific_representation(self, a_representation: str):
-    #     """Sets a custom representation to the active selection."""
-    #     cmd.show(a_representation, self.selection_string)
-
-    # def hide_selection_in_a_specific_representation(self, a_representation: str):
-    #     """Sets a custom representation to the active selection."""
-    #     cmd.hide(a_representation, self.selection_string)

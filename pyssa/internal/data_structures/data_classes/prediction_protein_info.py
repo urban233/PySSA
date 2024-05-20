@@ -25,7 +25,13 @@ from dataclasses import dataclass
 
 @dataclass
 class PredictionProteinInfo:
-    """Class which contains the name and sequences of a protein to predict."""
+    """Contains the name and sequences of a protein to predict."""
 
+    # <editor-fold desc="Class attributes">
     name: str
+    """The name of the protein to predict."""
+    
     sequences: list
+    """The sequences of the protein to predict."""
+    
+    # </editor-fold>

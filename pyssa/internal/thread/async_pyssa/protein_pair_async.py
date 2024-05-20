@@ -20,23 +20,47 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for all asynchronous functions that are related to the protein pair object."""
+import logging
+from typing import TYPE_CHECKING, Optional
 from pyssa.controller import pymol_session_manager
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import protein_pair
 
 
 def color_protein_pair_by_rmsd_value(a_protein_pair: "protein_pair.ProteinPair",
-                                     the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> tuple:
-    """Colors a given protein pair by their rmsd value.
+                                     the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> tuple[str, Optional["protein_pair.ProteinPair"]]:
+    """Colors protein pair by RMSD value.
 
     Args:
-        a_project: a project object containing the protein pair.
-        a_results_name: the name of the protein pair.
+        a_protein_pair (protein_pair.ProteinPair): The protein pair to be colored.
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The Pymol session manager object.
 
     Returns:
-        a tuple with ("result", an_existing_protein_pair_object)
+        A tuple containing the result and the protein pair.
+        If an exception occurs during coloring, an empty string and None will be returned.
+        Otherwise, the string "result" and the protein pair will be returned.
     """
+    # <editor-fold desc="Checks">
+    if a_protein_pair is None:
+        logger.error("a_protein_pair is None.")
+        return "", None
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return "", None
+    
+    # </editor-fold>
+    
     try:
         the_pymol_session_manager.color_protein_pair_by_rmsd(a_protein_pair)
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         return "", None
     else:
         return "result", a_protein_pair

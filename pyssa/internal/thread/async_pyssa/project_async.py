@@ -26,38 +26,58 @@ import pathlib
 import platform
 import time
 import shutil
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
+from typing import Optional
 
-from pyssa.controller import database_manager
+from pyssa.controller import database_manager, watcher, interface_manager, pymol_session_manager
 from pyssa.internal.data_structures import project, protein
 from pyssa.internal.data_structures.data_classes import database_operation
 from pyssa.internal.thread import database_thread
+from pyssa.internal.thread.async_pyssa import custom_signals
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import constants, enums
+from pyssa.util import constants, enums, exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 def create_new_project(
     the_project_name: str,
     the_workspace_path: pathlib.Path,
-    the_watcher,
-    the_interface_manager,
-) -> tuple:
+    the_watcher: "watcher.Watcher",
+    the_interface_manager: "interface_manager.InterfaceManager",
+) -> tuple[str, Optional["project.Project"], Optional["watcher.Watcher"], Optional["interface_manager.InterfaceManager"]]:
     """Creates a new project object.
 
     Args:
-        the_project_name: the project name to use for the new project.
-        the_workspace_path: the current workspace path.
-        an_add_protein_flag: a boolean value if a protein should be added or not.
-        protein_source_information: either a filepath or a pdb id
+        the_project_name (str): The name of the new project.
+        the_workspace_path (pathlib.Path): The path of the workspace where the project will be created.
+        the_watcher (watcher.Watcher): An instance of the "watcher.Watcher" class used for setting up blacklists.
+        the_interface_manager (interface_manager.InterfaceManager): The instance of the "interface_manager.InterfaceManager" class used in the application.
 
     Returns:
-        a tuple with ("results", a_new_project_obj)
+        A tuple containing:
+        - A string denoting the result of creating the new project.
+        - An optional instance of the "project.Project" class representing the newly created project.
+        - An optional instance of the "watcher.Watcher" class.
+        - An optional instance of the "interface_manager.InterfaceManager" class.
     """
-    # TODO: checks are needed
+    # <editor-fold desc="Checks">
+    if the_project_name is None or the_project_name == "":
+        logger.error("the_project_name is either None or an empty string.")
+        return "", None, None, None
+    if the_workspace_path is None:
+        logger.error("the_workspace_path is None.")
+        return "", None, None, None
+    if the_watcher is None:
+        logger.error("the_watcher is None.")
+        return "", None, None, None
+    if the_interface_manager is None:
+        logger.error("the_interface_manager is None.")
+        return "", None, None, None
+    
+    # </editor-fold>
+
     try:
         tmp_project = project.Project(the_project_name, the_workspace_path)
 
@@ -83,20 +103,40 @@ def create_use_project(
     the_project_name: str,
     the_workspace_path: pathlib.Path,
     the_proteins_to_add: list,
-    the_watcher,
-    the_interface_manager
-) -> tuple:
+    the_watcher: "watcher.Watcher",
+    the_interface_manager: "interface_manager.InterfaceManager",
+) -> tuple[str, Optional["project.Project"], Optional["watcher.Watcher"], Optional["interface_manager.InterfaceManager"]]:
     """Creates a new project object.
 
     Args:
-        the_project_name: the project name to use for the new project.
-        the_workspace_path: the current workspace path.
-        the_proteins_to_add: a list of protein objects for the new project.
+        the_project_name (str): The name of the project.
+        the_workspace_path (pathlib.Path): The path to the workspace.
+        the_proteins_to_add (list): The list of proteins to add.
+        the_watcher (watcher.Watcher): The watcher object.
+        the_interface_manager (interface_manager.InterfaceManager): The interface manager object.
 
     Returns:
-        a tuple with ("results", a_new_project_obj)
+        A tuple containing the result, the project object, the watcher object, and the interface manager object.
     """
-    # TODO: checks are needed
+    # <editor-fold desc="Checks">
+    if the_project_name is None or the_project_name == "":
+        logger.error("the_project_name is either None or an empty string.")
+        return "", None, None, None
+    if the_workspace_path is None:
+        logger.error("the_workspace_path is None.")
+        return "", None, None, None
+    if the_proteins_to_add is None:
+        logger.error("the_proteins_to_add is None.")
+        return "", None, None, None
+    if the_watcher is None:
+        logger.error("the_watcher is None.")
+        return "", None, None, None
+    if the_interface_manager is None:
+        logger.error("the_interface_manager is None.")
+        return "", None, None, None
+    
+    # </editor-fold>
+
     try:
         tmp_project = project.Project(the_project_name, the_workspace_path)
 
@@ -124,12 +164,37 @@ def create_use_project(
         return "result", tmp_project, the_watcher, the_interface_manager
 
 
-def import_project(a_project_name, a_filepath, the_interface_manager):
+def import_project(a_project_name: str, a_filepath: str, the_interface_manager: "interface_manager.InterfaceManager") -> tuple[str, Optional[str]]:
+    """Imports a project from a file.
+
+    Args:
+        a_project_name (str): The name of the project being imported.
+        a_filepath (str): The filepath of the project database file being imported.
+        the_interface_manager (interface_manager.InterfaceManager): The instance of the InterfaceManager class.
+
+    Returns:
+        A tuple containing a result string and the temporary project database file path. 
+        The result string represents the success or failure of the import process. 
+        The temporary project database file path is the path of the imported project database file, or None if an error occurred.
+    """
+    # <editor-fold desc="Checks">
+    if a_project_name is None or a_project_name == "":
+        logger.error("a_project_name is either None or an empty string.")
+        return "", None
+    if a_filepath is None or a_filepath == "":
+        logger.error("a_filepath is either None or an empty string.")
+        return "", None
+    if the_interface_manager is None:
+        logger.error("the_interface_manager is None.")
+        return "", None
+    
+    # </editor-fold>
+    
     try:
         tmp_project_database_filepath = str(
             pathlib.Path(
-                f"{the_interface_manager.get_application_settings().workspace_path}/{a_project_name}.db"
-            )
+                f"{the_interface_manager.get_application_settings().workspace_path}/{a_project_name}.db",
+            ),
         )
         shutil.copyfile(a_filepath, tmp_project_database_filepath)
         with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
@@ -137,7 +202,7 @@ def import_project(a_project_name, a_filepath, the_interface_manager):
             tmp_project = db_manager.get_project_as_object(
                 a_project_name,
                 the_interface_manager.get_application_settings().workspace_path,
-                the_interface_manager.get_application_settings()
+                the_interface_manager.get_application_settings(),
             )
         the_interface_manager.set_new_project(tmp_project)
         the_interface_manager.refresh_workspace_model()
@@ -154,8 +219,44 @@ def open_project(
         the_interface_manager: "interface_manager.InterfaceManager",
         the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
         the_custom_progress_signal: "custom_signals.ProgressSignal",
-        the_watcher: "watcher.Watcher"
-) -> tuple:
+        the_watcher: "watcher.Watcher",
+) -> tuple[str, Optional["project.Project"], Optional["interface_manager.InterfaceManager"], Optional["watcher.Watcher"]]:
+    """Opens a project.
+
+    Args:
+        tmp_project_name (str): The name of the temporary project.
+        tmp_project_database_filepath (str): The filepath of the temporary project database.
+        the_interface_manager (interface_manager.InterfaceManager): The interface manager object.
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PyMOL session manager object.
+        the_custom_progress_signal (custom_signals.ProgressSignal): The custom progress signal object.
+        the_watcher (watcher.Watcher): The watcher object.
+
+    Returns:
+        A tuple containing the result as a string, the temporary project object, the interface manager object, and the watcher object. 
+        If an exception occurs during the execution of the method, an empty string and None values will be returned.
+    """
+    # <editor-fold desc="Checks">
+    if tmp_project_name is None or tmp_project_name == "":
+        logger.error("tmp_project_name is either None or an empty string.")
+        return "", None, None, None
+    if tmp_project_database_filepath is None or tmp_project_database_filepath == "":
+        logger.error("tmp_project_database_filepath is either None or an empty string.")
+        return "", None, None, None
+    if the_interface_manager is None:
+        logger.error("the_interface_manager is None.")
+        return "", None, None, None
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return "", None, None, None
+    if the_custom_progress_signal is None:
+        logger.error("the_custom_progress_signal is None.")
+        return "", None, None, None
+    if the_watcher is None:
+        logger.error("the_watcher is None.")
+        return "", None, None, None
+    
+    # </editor-fold>
+    
     try:
         the_custom_progress_signal.emit_signal("Opening database ...", 10)
         with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
@@ -164,7 +265,7 @@ def open_project(
                 tmp_project_name,
                 the_interface_manager.get_application_settings().workspace_path,
                 the_interface_manager.get_application_settings(),
-                the_custom_progress_signal
+                the_custom_progress_signal,
             )
         the_interface_manager.set_new_project(tmp_project)
         the_custom_progress_signal.emit_signal("Reinitializing PyMOL session ...", 96)
@@ -183,10 +284,35 @@ def open_project(
         return "result", tmp_project, the_interface_manager, the_watcher
 
 
-def close_project(the_database_thread: "database_thread.DatabaseThread", the_pymol_session_manager) -> tuple:
+def close_project(
+        the_database_thread: "database_thread.DatabaseThread", 
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
+) -> tuple[str, str]:
+    """Closes a project by putting a close project operation into the database thread's queue and waiting for it to finish.
+
+    Args:
+        the_database_thread (database_thread.DatabaseThread): The database thread which will execute the close project operation.
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The Pymol session manager used to reinitialize the session.
+
+    Returns:
+        A tuple containing the result and status message of the operation.
+    
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if the_database_thread is None:
+        logger.error("the_database_thread is None.")
+        raise exception.IllegalArgumentError("the_database_thread is None.")
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        raise exception.IllegalArgumentError("the_pymol_session_manager is None.")
+    
+    # </editor-fold>
+    
     try:
         the_database_thread.put_database_operation_into_queue(database_operation.DatabaseOperation(
-            enums.SQLQueryType.CLOSE_PROJECT, (0, ""))
+            enums.SQLQueryType.CLOSE_PROJECT, (0, "")),
         )
         print(the_database_thread.queue_is_running())
         while the_database_thread.queue_is_running():
@@ -200,16 +326,31 @@ def close_project(the_database_thread: "database_thread.DatabaseThread", the_pym
         return "result", "Waiting for database thread queue finished."
 
 
-def search_for_not_matching_proteins(the_main_view_state, the_proteins) -> tuple:
-    tmp_proteins = the_main_view_state.get_not_matching_proteins(the_proteins)
-    return "result", tmp_proteins
+def add_protein_from_pdb_to_project(tmp_protein_name: str,
+                                    the_interface_manager: "interface_manager.InterfaceManager") -> tuple[str, Optional["protein.Protein"]]:
+    """Adds a protein from a pdb file to the protein model.
 
+    Args:
+        tmp_protein_name (str): The name of the protein to be added from the PDB.
+        the_interface_manager (interface_manager.InterfaceManager): An instance of the "interface_manager.InterfaceManager" class that manages the user interface.
 
-def add_protein_from_pdb_to_project(tmp_protein_name,
-                                    the_interface_manager: "interface_manager.InterfaceManager") -> tuple:
+    Returns:
+        A tuple of a string and an optional instance of the "protein.Protein" class. The string represents the result of the method call,
+        and the optional protein object represents the added protein if successful, or None if not successful.
+    """
+    # <editor-fold desc="Checks">
+    if tmp_protein_name is None or tmp_protein_name == "":
+        logger.error("tmp_protein_name is either None or an empty string.")
+        return "", None
+    if the_interface_manager is None:
+        logger.error("the_interface_manager is None.")
+        return "", None
+    
+    # </editor-fold>
+    
     try:
         the_main_socket, the_general_purpose_socket = the_interface_manager.job_manager.get_general_purpose_socket_pair()
-        with database_manager.DatabaseManager(the_interface_manager.get_current_project().get_database_filepath()) as db_manager:
+        with database_manager.DatabaseManager(str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
             tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
             tmp_ref_protein.set_id(db_manager.get_next_id_of_protein_table())
             tmp_ref_protein.db_project_id = the_interface_manager.get_current_project().get_id()
@@ -224,14 +365,33 @@ def add_protein_from_pdb_to_project(tmp_protein_name,
         return "result", tmp_ref_protein
 
 
-def add_protein_from_local_filesystem_to_project(tmp_protein_name,
-                                                 the_interface_manager):
+def add_protein_from_local_filesystem_to_project(tmp_protein_name: str,
+                                                 the_interface_manager: "interface_manager.InterfaceManager") -> tuple[str, Optional["protein.Protein"]]:
+    """Adds a protein from the local filesystem to the protein model.
+
+    Args:
+        tmp_protein_name (str): The name of the temporary protein file.
+        the_interface_manager (interface_manager.InterfaceManager): The interface manager object.
+
+    Returns:
+        A tuple containing the result message and the protein object if it was successfully added, or None if there was an error.
+    """
+    # <editor-fold desc="Checks">
+    if tmp_protein_name is None or tmp_protein_name == "":
+        logger.error("tmp_protein_name is either None or an empty string.")
+        return "", None
+    if the_interface_manager is None:
+        logger.error("the_interface_manager is None.")
+        return "", None
+    
+    # </editor-fold>
+    
     try:
         pdb_filepath = pathlib.Path(tmp_protein_name)
         tmp_ref_protein = protein.Protein(
-            pdb_filepath.name.replace(".pdb", "")
+            pdb_filepath.name.replace(".pdb", ""),
         )
-        with database_manager.DatabaseManager(the_interface_manager.get_current_project().get_database_filepath()) as db_manager:
+        with database_manager.DatabaseManager(str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
             tmp_ref_protein.set_id(db_manager.get_next_id_of_protein_table())
             tmp_ref_protein.db_project_id = the_interface_manager.get_current_project().get_id()
             the_main_socket, the_general_purpose_socket = the_interface_manager.job_manager.get_general_purpose_socket_pair()

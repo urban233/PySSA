@@ -26,33 +26,47 @@ import pathlib
 import shutil
 import subprocess
 from io import BytesIO
+from typing import Optional
 
 import requests
 import zmq
 import pygetwindow
 
-from pyssa.controller import database_manager
+from pyssa.controller import database_manager, interface_manager, pymol_session_manager
 from pyssa.internal.data_structures.data_classes import database_operation
+from pyssa.internal.thread import database_thread
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import constants, enums
+from pyssa.util import constants, enums, exception
 from pyssa.util import globals
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 def open_documentation_on_certain_page(
     a_page_name: str,
-    the_docs_window
+    the_docs_window,
 ) -> tuple:
     """Opens the pyssa documentation on the given page name.
 
     Args:
-        a_page_name: a name of a page from the documentation.
+        a_page_name (str): The name of the page to open in the documentation.
+        the_docs_window: The window of the documentation.
 
     Returns:
-        a tuple with ("result", response)
+        A tuple containing the result, response, and temporary documentation window.
     """
+    # <editor-fold desc="Checks">
+    if a_page_name is None or a_page_name == "":
+        logger.error("a_page_name is either None or an empty string.")
+        return "", None, None
+    if the_docs_window is None:
+        logger.error("the_docs_window is None.")
+        return "", None, None
+    
+    # </editor-fold>
+    
     try:
         if the_docs_window is not None:
             tmp_is_docs_open_flag = True
@@ -115,16 +129,16 @@ def open_documentation_on_certain_page(
 
 def start_documentation_server(
     placeholder_1: int,
-    placeholder_2: int
+    placeholder_2: int,
 ) -> tuple:
     """Opens the pyssa documentation on the given page name.
 
     Args:
-        placeholder_1: just a placeholder for the first argument
-        placeholder_2: just a placeholder for the second argument
+        placeholder_1: just a placeholder to be able to use LegacyTask.
+        placeholder_2: just a placeholder to be able to use LegacyTask.
 
     Returns:
-        a tuple with ("result", response)
+        A tuple with ("result", response or None).
     """
     try:
         logger.info("Trying to run the mkdocs serve command ...")
@@ -162,7 +176,29 @@ def start_documentation_server(
         return "result", tmp_docs_window
 
 
-def add_proteins_to_project_and_model(the_interface_manager, tmp_protein_names):
+def add_proteins_to_project_and_model(
+        the_interface_manager: "interface_manager.InterfaceManager", 
+        tmp_protein_names: list,
+) -> tuple[str, Optional["interface_manager.InterfaceManager"]]:
+    """Adds proteins to the current project and model.
+
+    Args:
+        the_interface_manager (interface_manager.InterfaceManager): The interface manager object.
+        tmp_protein_names (list): A list of temporary protein names to add.
+
+    Returns:
+        A tuple containing the result status and the updated interface manager object, or None if an exception occurred.
+    """
+    # <editor-fold desc="Checks">
+    if the_interface_manager is None:
+        logger.error("the_interface_manager is None.")
+        return "", None
+    if tmp_protein_names is None:
+        logger.error("tmp_protein_names is None.")
+        return "", None
+    
+    # </editor-fold>
+    
     try:
         the_interface_manager.project_lock.lock()
         with database_manager.DatabaseManager(
@@ -187,7 +223,29 @@ def add_proteins_to_project_and_model(the_interface_manager, tmp_protein_names):
         return "result", the_interface_manager
 
 
-def add_protein_pairs_to_project_and_model(the_interface_manager, tmp_protein_pair_names):
+def add_protein_pairs_to_project_and_model(
+        the_interface_manager: "interface_manager.InterfaceManager",
+        tmp_protein_pair_names: list,
+) -> tuple[str, Optional["interface_manager.InterfaceManager"]]:
+    """Adds protein pairs to the current project and model.
+
+    Args:
+        the_interface_manager (interface_manager.InterfaceManager): The instance of InterfaceManager.
+        tmp_protein_pair_names (list): The list of protein pair names.
+
+    Returns:
+        A tuple containing the result message and the updated instance of InterfaceManager.
+    """
+    # <editor-fold desc="Checks">
+    if the_interface_manager is None:
+        logger.error("the_interface_manager is None.")
+        return "", None
+    if tmp_protein_pair_names is None:
+        logger.error("tmp_protein_pair_names is None.")
+        return "", None
+    
+    # </editor-fold>
+    
     try:
         the_interface_manager.project_lock.lock()
         with database_manager.DatabaseManager(
@@ -197,7 +255,7 @@ def add_protein_pairs_to_project_and_model(the_interface_manager, tmp_protein_pa
                 tmp_protein_pair = db_manager.get_protein_pair_as_object(
                     tmp_protein_pair_name,
                     the_interface_manager.get_current_project(),
-                    the_interface_manager.get_settings_manager().settings
+                    the_interface_manager.get_settings_manager().settings,
                 )
                 print(tmp_protein_pair)
                 the_interface_manager.add_protein_pair_to_current_project(tmp_protein_pair)
@@ -219,10 +277,35 @@ def add_protein_pairs_to_project_and_model(the_interface_manager, tmp_protein_pa
 
 
 def add_proteins_and_protein_pairs_to_project_and_model(
-        the_interface_manager,
-        tmp_protein_names,
-        tmp_protein_pair_names
-):
+        the_interface_manager:  "interface_manager.InterfaceManager",
+        tmp_protein_names: list,
+        tmp_protein_pair_names: list,
+) -> tuple[str, Optional["interface_manager.InterfaceManager"]]:
+    """Adds proteins and protein pairs to a project and model.
+
+    Args:
+        the_interface_manager (interface_manager.InterfaceManager): The instance of InterfaceManager.
+        tmp_protein_names (list): A list of temporary protein names to add.
+        tmp_protein_pair_names (list): The list of protein pair names.
+
+    Returns:
+        A tuple containing a result string and an optional instance of the interface_manager.InterfaceManager class.
+        The result string indicates the outcome of the method execution.
+        The optional InterfaceManager instance is returned only if the method execution is successful.
+    """
+    # <editor-fold desc="Checks">
+    if the_interface_manager is None:
+        logger.error("the_interface_manager is None.")
+        return "", None
+    if tmp_protein_names is None:
+        logger.error("tmp_protein_names is None.")
+        return "", None
+    if tmp_protein_pair_names is None:
+        logger.error("tmp_protein_pair_names is None.")
+        return "", None
+
+    # </editor-fold>
+    
     try:
         add_proteins_to_project_and_model(the_interface_manager, tmp_protein_names)
         add_protein_pairs_to_project_and_model(the_interface_manager, tmp_protein_pair_names)
@@ -234,14 +317,41 @@ def add_proteins_and_protein_pairs_to_project_and_model(
 
 def close_project_automatically(
         a_project_is_open: bool,
-        the_database_thread,
-        the_pymol_session_manager,
-        a_project_name
-):
+        the_database_thread: "database_thread.DatabaseThread",
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
+        a_project_name: str,
+) -> tuple[str, int]:
+    """Closes a project automatically.
+
+    Args:
+        a_project_is_open (bool): Whether a project is currently open.
+        the_database_thread (database_thread.DatabaseThread): The database thread responsible for executing database operations.
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PyMOL session manager.
+        a_project_name (str): The name of the project.
+
+    Returns:
+        A tuple containing the project name and a status code indicating whether the project was closed successfully (0) or encountered an error (non-zero).
+    """
+    # <editor-fold desc="Checks">
+    if a_project_is_open is None:
+        logger.error("a_project_is_open is None.")
+        return a_project_name, 1
+    if the_database_thread is None:
+        logger.error("the_database_thread is None.")
+        return a_project_name, 1
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return a_project_name, 1
+    if a_project_name is None or a_project_name == "":
+        logger.error("a_project_name is either None or an empty string.")
+        return "", 1
+    
+    # </editor-fold>
+    
     if a_project_is_open:
         try:
             the_database_thread.put_database_operation_into_queue(database_operation.DatabaseOperation(
-                enums.SQLQueryType.CLOSE_PROJECT, (0, ""))
+                enums.SQLQueryType.CLOSE_PROJECT, (0, "")),
             )
             the_pymol_session_manager.reinitialize_session()
         except Exception as e:
@@ -255,6 +365,15 @@ def close_project_automatically(
 
 
 def download_demo_projects(the_workspace_path: str, a_placeholder: int) -> tuple[bool]:
+    """Downloads demo projects to the current workspace.
+
+    Args:
+        the_workspace_path: The path of the workspace where the demo projects will be downloaded and extracted.
+        a_placeholder: A placeholder parameter that serves as an example.
+
+    Returns:
+        A tuple containing a boolean value indicating the success of the download process.
+    """
     if the_workspace_path is None or the_workspace_path == "":
         logger.error("the_workspace_path is either None or an empty string.")
         return (False,)
@@ -267,7 +386,7 @@ def download_demo_projects(the_workspace_path: str, a_placeholder: int) -> tuple
             os.remove(download_dest)
 
         # download demo projects
-        url = f'https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download'
+        url = 'https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download'
         try:
             response = requests.get(url)
             response.raise_for_status()  # Check for errors
@@ -286,15 +405,15 @@ def download_demo_projects(the_workspace_path: str, a_placeholder: int) -> tuple
             constants.PYSSA_LOGGER.error(f"Error: {err}")
             return (False,)
         else:
-            constants.PYSSA_LOGGER.info(f"Demo projects downloaded and extracted successfully.")
+            constants.PYSSA_LOGGER.info("Demo projects downloaded and extracted successfully.")
         try:
             path_of_demo_projects = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
             for tmp_filename in os.listdir(path_of_demo_projects):
                 # Copy db file into new workspace
                 tmp_project_database_filepath = str(
                     pathlib.Path(
-                        f"{the_workspace_path}/{tmp_filename}"
-                    )
+                        f"{the_workspace_path}/{tmp_filename}",
+                    ),
                 )
                 tmp_src_filepath = str(pathlib.Path(f"{path_of_demo_projects}/{tmp_filename}"))
                 shutil.copyfile(tmp_src_filepath, tmp_project_database_filepath)

@@ -49,7 +49,7 @@ from pyssa.controller import results_view_controller, rename_protein_view_contro
     add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, settings_view_controller, \
     predict_protein_view_controller, import_sequence_view_controller, rename_sequence_view_controller, watcher
 from pyssa.internal.data_structures import chain
-from pyssa.internal.data_structures.data_classes import main_view_state, residue_color_config
+from pyssa.internal.data_structures.data_classes import residue_color_config
 from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_tutorial_videos, dialog_about
 from pyssa.internal.data_structures import project, settings, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import database_operation
@@ -128,17 +128,16 @@ class MainViewController:
         self._database_thread: "database_thread.DatabaseThread" = database_thread.DatabaseThread("")
         self._external_view = None
         self.active_custom_message_box: "custom_message_box.CustomMessageBoxOk" = None
-        self._main_view_state = main_view_state.MainViewState(
-            self._view.ui.seqs_list_view,
-            self.__slot_show_sequence_information,
-            self._view.ui.proteins_tree_view,
-            self.__slot_get_information_about_selected_object_in_protein_branch,
-            self._view.ui.protein_pairs_tree_view,
-            self.__slot_get_information_about_selected_object_in_protein_pair_branch,
-        )
+        # self._main_view_state = main_view_state.MainViewState(
+        #     self._view.ui.seqs_list_view,
+        #     self.__slot_show_sequence_information,
+        #     self._view.ui.proteins_tree_view,
+        #     self.__slot_get_information_about_selected_object_in_protein_branch,
+        #     self._view.ui.protein_pairs_tree_view,
+        #     self.__slot_get_information_about_selected_object_in_protein_pair_branch,
+        # )
         self.custom_progress_signal = custom_signals.ProgressSignal()
         self.abort_signal = custom_signals.AbortSignal()
-        self.disable_pymol_signal = custom_signals.DisablePyMOLSignal()
         self._sequence_list_context_menu = sequence_list_context_menu.SequenceListContextMenu()
         self._protein_tree_context_menu = protein_tree_context_menu.ProteinTreeContextMenu()
         self._protein_pair_tree_context_menu = protein_pair_tree_context_menu.ProteinPairTreeContextMenu()
@@ -1434,13 +1433,13 @@ class MainViewController:
         # self._main_view_state.set_protein_pairs_list(self._interface_manager.get_current_project().protein_pairs)
         # self._interface_manager.refresh_main_view()
 
-    def _add_new_protein_pairs_to_protein_pair_model(self):
-        """Adds the new protein pairs to the interface manager's protein pair model."""
-        tmp_protein_pairs_to_add = self._main_view_state.get_not_matching_protein_pairs(
-            self._interface_manager.get_current_project().protein_pairs,
-        )
-        for tmp_protein_pair in tmp_protein_pairs_to_add:
-            self._interface_manager.add_protein_pair_to_protein_pairs_model(tmp_protein_pair)
+    # def _add_new_protein_pairs_to_protein_pair_model(self):
+    #     """Adds the new protein pairs to the interface manager's protein pair model."""
+    #     tmp_protein_pairs_to_add = self._main_view_state.get_not_matching_protein_pairs(
+    #         self._interface_manager.get_current_project().protein_pairs,
+    #     )
+    #     for tmp_protein_pair in tmp_protein_pairs_to_add:
+    #         self._interface_manager.add_protein_pair_to_protein_pairs_model(tmp_protein_pair)
 
     # def __await_unfreeze_pymol_session_after_analysis(self):
     #     self._interface_manager.main_tasks_manager.distance_analysis_task = None
@@ -2215,7 +2214,6 @@ class MainViewController:
                     args=(
                         tmp_seq_record,
                         file_path,
-                        self._interface_manager.get_current_project().get_database_filepath(),
                     ),
                     post_func=self.__await_save_selected_sequence_as_fasta_file,
                 )

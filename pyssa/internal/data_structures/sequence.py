@@ -25,23 +25,22 @@ import logging
 from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import filesystem_io
 from pyssa.logging_pyssa import log_handlers
+from pyssa.util import exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class Sequence:
-    """This class contains information about a protein sequence."""
+    """Contains information about a protein sequence."""
 
     # <editor-fold desc="Class attributes">
-    """
-    name of the protein
-    """
     name: str
-    """
-    sequence of the protein
-    """
+    """The name of the protein."""
+    
     sequence: str
+    """The sequence of the protein."""
 
     # </editor-fold>
 
@@ -49,23 +48,19 @@ class Sequence:
         """Constructor.
 
         Args:
-            protein_name: the name of the protein
-            single_sequence: a sequence as string of the protein
+            protein_name (str): the name of the protein
+            single_sequence (str): a sequence as string of the protein
+        
         Raises:
-            ValueError: raised if an argument is illegal
+            exception.IllegalArgumentError: If any of the arguments are None.
         """
         # <editor-fold desc="Checks">
-        # if len(protein_sequence[0]) == 1:
-        #     if not safeguard.Safeguard.check_if_protein_sequence_is_valid_one_letter(protein_sequence):
-        #         logger.error("An argument is illegal.")
-        #         raise ValueError("An argument is illegal.")
-        # elif len(protein_sequence[0]) == 3:
-        #     if not safeguard.Safeguard.check_if_protein_sequence_is_valid_three_letter(protein_sequence):
-        #         logger.error("An argument is illegal.")
-        #         raise ValueError("An argument is illegal.")
-        # else:
-        #     logger.error("An argument is illegal.")
-        #     raise ValueError("An argument is illegal.")
+        if protein_name is None:
+            logger.error("protein_name is None.")
+            raise exception.IllegalArgumentError("protein_name is None.")
+        if single_sequence is None:
+            logger.error("single_sequence is None.")
+            raise exception.IllegalArgumentError("single_sequence is None.")
 
         # </editor-fold>
 

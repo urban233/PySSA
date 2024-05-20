@@ -21,19 +21,17 @@
 #
 """Module for all asynchronous functions that are related to the pymol session."""
 import logging
-import threading
 import time
 from typing import Optional
 
-from pyssa.controller import database_manager, pymol_session_manager
-from pyssa.internal.data_structures import protein
+from pyssa.controller import database_manager, pymol_session_manager, interface_manager
+from pyssa.internal.data_structures import protein, protein_pair
 from pyssa.internal.data_structures.data_classes import residue_color_config
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants, enums
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
-
 __docformat__ = "google"
 
 
@@ -93,9 +91,6 @@ def load_protein_pymol_session(
 
     Returns:
         A tuple containing the updated PyMOL session manager object and a boolean indicating whether the loading of the session was successful.
-
-    Raises:
-        RuntimeError: If loading the session fails with a RuntimeError.
     """
     # <editor-fold desc="Checks">
     if a_protein is None:
@@ -131,7 +126,35 @@ def load_protein_pymol_session(
         return the_pymol_session_manager, True
 
 
-def load_protein_pair_pymol_session(a_protein_pair, the_pymol_session_manager, needs_to_be_reinitialized_flag: bool = False) -> tuple:
+def load_protein_pair_pymol_session(
+        a_protein_pair: "protein_pair.ProteinPair", 
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager", 
+        needs_to_be_reinitialized_flag: bool = False) -> tuple[int, bool]:
+    """Loads protein pair PyMOL session.
+
+    Args:
+        a_protein_pair (protein_pair.ProteinPair): The protein pair object.
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PyMOL session manager object.
+        needs_to_be_reinitialized_flag (bool, optional): Flag to indicate whether the session needs to be reinitialized. Defaults to False.
+
+    Returns:
+        A tuple containing the status and a boolean flag indicating 
+        whether the session was loaded successfully. The status value is 0 if 
+        the session loading failed, and 1 if it succeeded.
+    """
+    # <editor-fold desc="Checks">
+    if a_protein_pair is None:
+        logger.error("a_protein_pair is None.")
+        return 0, False
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return 0, False
+    if needs_to_be_reinitialized_flag is None:
+        logger.error("needs_to_be_reinitialized_flag is None.")
+        return 0, False
+    
+    # </editor-fold>
+    
     try:
         if needs_to_be_reinitialized_flag:
             logger.info("The current session is not empty. Reinitialize session now ...")
@@ -149,7 +172,25 @@ def load_protein_pair_pymol_session(a_protein_pair, the_pymol_session_manager, n
 
 def save_protein_pymol_session_to_database(
         the_interface_manager: "interface_manager.InterfaceManager",
-        placeholder: int) -> tuple:
+        placeholder: int) -> tuple[int, bool]:
+    """Saves the current PyMOL session of the active protein to a database.
+
+    Args:
+        the_interface_manager (interface_manager.InterfaceManager): An instance of the class interface_manager.InterfaceManager. Used to access the current project and get the active protein object.
+        placeholder (int): An integer value used as a placeholder parameter.
+
+    Returns:
+        A tuple containing two elements:
+            - The first element is an integer value of 0.
+            - The second element is a boolean value indicating the success of the method.
+    """
+    # <editor-fold desc="Checks">
+    if the_interface_manager is None:
+        logger.error("the_interface_manager is None.")
+        return 0, False
+    
+    # </editor-fold>
+    
     try:
         with database_manager.DatabaseManager(
                 str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
@@ -168,7 +209,25 @@ def save_protein_pymol_session_to_database(
 
 def save_protein_pair_pymol_session_to_database(
         the_interface_manager: "interface_manager.InterfaceManager",
-        placeholder: int) -> tuple:
+        placeholder: int) -> tuple[int, bool]:
+    """Saves the current PyMOL session of the active protein pair to a database.
+
+    Args:
+        the_interface_manager (interface_manager.InterfaceManager): An instance of the class interface_manager.InterfaceManager. Used to access the current project and get the active protein object.
+        placeholder (int): An integer value used as a placeholder parameter.
+    
+    Returns:
+        A tuple containing two elements:
+            - The first element is an integer value of 0.
+            - The second element is a boolean value indicating the success of the method.
+    """
+    # <editor-fold desc="Checks">
+    if the_interface_manager is None:
+        logger.error("the_interface_manager is None.")
+        return 0, False
+
+    # </editor-fold>
+    
     try:
         with database_manager.DatabaseManager(
                 str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
@@ -196,8 +255,7 @@ def create_new_scene(
 
     Args:
         a_scene_name (str): The name of the new scene.
-        the_pymol_session_manager (pymol_session_manager.PymolSessionManager):
-            An instance of PymolSessionManager used to create the new scene.
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): An instance of PymolSessionManager used to create the new scene.
 
     Returns:
         A tuple with two elements:
@@ -257,13 +315,13 @@ def load_scene(the_pymol_session_manager: "pymol_session_manager.PymolSessionMan
 
 def update_scene(
         the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
-        a_placeholder_1,
+        a_placeholder_1: int,
 ) -> tuple[bool, str]:
-    """Updates the current pymol scene. Creates a `_scratch_` scene if the current scene is `base`
+    """Updates the current pymol scene. Creates a `_scratch_` scene if the current scene is `base`.
 
     Args:
-        the_pymol_session_manager: The PymolSessionManager object responsible for managing the PyMOL session.
-        a_placeholder_1: A placeholder parameter.
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PymolSessionManager object responsible for managing the PyMOL session.
+        a_placeholder_1 (int): A placeholder parameter.
 
     Returns:
         A tuple with two elements:
@@ -296,13 +354,13 @@ def update_scene(
 
 def delete_scene(
         the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
-        a_placeholder_1,
+        a_placeholder_1: int,
 ) -> tuple[bool]:
     """Deletes the current scene in the current PyMOL session.
 
     Args:
         the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PyMOL session manager instance.
-        a_placeholder_1: A placeholder parameter.
+        a_placeholder_1 (int): A placeholder parameter.
 
     Returns:
         A tuple containing a single boolean value indicating the success of the operation.

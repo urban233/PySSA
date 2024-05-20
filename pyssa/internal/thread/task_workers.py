@@ -32,6 +32,11 @@ from pyssa.internal.prediction_engines import esmfold
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
+"""
+This module is currently not in use!
+It is an experimental module for using and integrating ESMFold with PySSA. 
+"""
+
 
 class EsmFoldWorker(QObject):
     """Class for a worker which runs the ESM fold prediction."""

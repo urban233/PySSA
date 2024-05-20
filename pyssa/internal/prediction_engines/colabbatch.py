@@ -31,52 +31,50 @@ from pyssa.util import exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class Colabbatch:
-    """This class contains information about the colabbatch prediction engine."""
+    """Contains information about the colabbatch prediction engine."""
 
     # <editor-fold desc="Class attributes">
-    """
-    name of the user who has opened the pyssa
-    """
     user_name: str = os.getlogin()
-    """
-    path where the fasta files will be stored, in unix path format
-    """
+    """The name of the user who has opened the PySSA."""
+    
     fasta_path: str = "/home/rhel_user/scratch/local_predictions/fasta"
-    """
-    path where the pdb files will be stored, in unix path format
-    """
+    """The path where the fasta files will be stored, in unix path format."""
+    
     pdb_path: str = "/home/rhel_user/scratch/local_predictions/pdb"
-    """
-    the configuration settings for the prediction
-    """
+    """The path where the pdb files will be stored, in unix path format."""
+    
     prediction_config: prediction_configuration.PredictionConfiguration
+    """The configuration settings for the prediction."""
 
     # </editor-fold>
 
-    def __init__(self, prediction_configuration: prediction_configuration.PredictionConfiguration) -> None:
+    def __init__(self, a_prediction_configuration: prediction_configuration.PredictionConfiguration) -> None:
         """Constructor.
 
         Args:
-            prediction_configuration:
-                the configuration settings for the prediction
+            a_prediction_configuration: The configuration settings for the prediction.
 
         Raises:
-            ValueError: raised if an argument is illegal
+            exception.IllegalArgumentError: If an argument is illegal.
         """
         # <editor-fold desc="Checks">
-        if prediction_configuration.amber_force_field is None:
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
-        if prediction_configuration.templates == "":
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
-
+        if a_prediction_configuration is None:
+            logger.error("a_prediction_configuration is None.")
+            raise exception.IllegalArgumentError("a_prediction_configuration is None.")
+        if a_prediction_configuration.amber_force_field is None:
+            logger.error("a_prediction_configuration.amber_force_field is None.")
+            raise exception.IllegalArgumentError("a_prediction_configuration.amber_force_field is None.")
+        if a_prediction_configuration.templates is None or a_prediction_configuration.templates == "":
+            logger.error("a_prediction_configuration.templates is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_prediction_configuration.templates is either None or an empty string.")
+    
         # </editor-fold>
 
-        self.prediction_configuration = prediction_configuration
+        self.prediction_configuration = a_prediction_configuration
 
         str_conversion_1 = constants.SETTINGS_DIR.replace("\\", "/")
         str_conversion_2 = str_conversion_1.replace(":", "")
@@ -87,7 +85,7 @@ class Colabbatch:
         """Sets up the structure prediction service in WSL2 almaColabfold9 distro.
 
         Raises:
-            Wsl2PreparationFailedError: If an error occurs during prediction service setup
+            Wsl2PreparationFailedError: If an error occurs during prediction service setup.
         """
         try:
             if prediction_util.delete_pyssa_colabfold_directory_in_wsl2():
@@ -107,9 +105,12 @@ class Colabbatch:
 
     def send_prediction_request(self) -> bool:
         """Sends structure prediction request based on custom arguments.
-
+        
+        Returns:
+            A boolean indicating if the prediction request was successful or not.
+        
         Raises:
-            PredictionEndedWithError: if prediction ended with any kind of error
+            PredictionEndedWithError: If prediction ended with any kind of error.
         """
         # Start service process in WSL2
         service_process = subprocess.Popen(
@@ -121,7 +122,7 @@ class Colabbatch:
                 "rhel_user",
                 "/home/rhel_user/localcolabfold/colabfold-conda/bin/python3",
                 "/home/rhel_user/pyssa_colabfold/service.py",
-            ], creationflags=subprocess.CREATE_NO_WINDOW
+            ], creationflags=subprocess.CREATE_NO_WINDOW,
         )
 
         context = zmq.Context()
@@ -149,10 +150,10 @@ class Colabbatch:
         return tmp_output
 
     def run_prediction(self) -> None:
-        """This function starts the wsl2, podman machine, podman container and runs a prediction.
+        """Starts the WSL2 and runs a prediction.
 
         Raises:
-            PredictionEndedWithError: if prediction ended with any kind of error
+            PredictionEndedWithError: If prediction ended with any kind of error.
         """
         logger.info("Setup of prediction service.")
         try:

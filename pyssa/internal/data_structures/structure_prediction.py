@@ -24,7 +24,9 @@ import os
 import pathlib
 import shutil
 import logging
+from typing import Optional
 
+import zmq
 from PyQt5 import QtCore
 
 from auxiliary_pymol import auxiliary_pymol_client
@@ -43,48 +45,54 @@ from pyssa.logging_pyssa import log_handlers
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class StructurePrediction:
     """This class is used to organize the structure prediction process."""
 
     # <editor-fold desc="Class attributes">
-    """
-    a list of tuples of protein name and sequence
-    """
     predictions: list["prediction_protein_info.PredictionProteinInfo"]
-    """
-    the configuration settings for the prediction
-    """
+    """A list of tuples of protein name and sequence."""
+    
     prediction_config: "prediction_configuration.PredictionConfiguration"
-    """
-    the current project in use
-    """
+    """The configuration settings for the prediction."""
+    
     current_project: "project.Project"
+    """The current project in use."""
 
     # </editor-fold>
 
     def __init__(
         self,
-        predictions: list[prediction_protein_info.PredictionProteinInfo],
-        prediction_config: prediction_configuration.PredictionConfiguration,
-        current_project: "project.Project",
+        predictions: list["prediction_protein_info.PredictionProteinInfo"],
+        prediction_config: "prediction_configuration.PredictionConfiguration",
     ) -> None:
         """Constructor.
 
         Args:
-            predictions: a list of prediction protein infos.
-            prediction_config: the configuration settings for the prediction.
-            current_project: the current project in use.
+            predictions (prediction_protein_info.PredictionProteinInfo): A list of prediction protein infos.
+            prediction_config (prediction_configuration.PredictionConfiguration): The configuration settings for the prediction.
+            
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
         """
+        # <editor-fold desc="Checks">
+        if predictions is None:
+            logger.error("predictions is None.")
+            raise exception.IllegalArgumentError("predictions is None.")
+        if prediction_config is None:
+            logger.error("prediction_config is None.")
+            raise exception.IllegalArgumentError("prediction_config is None.")
+        
+        # </editor-fold>
+        
         self.predictions: list[prediction_protein_info.PredictionProteinInfo] = predictions
         self.prediction_configuration = prediction_config
-        #self.project = current_project
 
     @staticmethod
     def create_tmp_directories() -> None:
-        """This function creates tmp directories in a scratch folder to organize prediction inputs and outputs."""
-        # TODO: is there a more elegant way to do it?
+        """Creates tmp directories in a scratch folder to organize prediction inputs and outputs."""
         if os.path.exists(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions")):
             shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
             os.mkdir(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
@@ -102,7 +110,7 @@ class StructurePrediction:
             os.mkdir(constants.PREDICTION_PDB_DIR)
 
     def create_fasta_files_for_prediction(self) -> None:
-        """This function creates fasta file based on the predictions in the object.
+        """Creates fasta file based on the predictions in the object.
 
         Raises:
             FastaFilesCouldNotBeCreatedError: If a fasta file could not be created.
@@ -141,7 +149,7 @@ class StructurePrediction:
             raise exception.FastaFilesNotFoundError("")
 
     def run_prediction(self) -> None:
-        """This function runs a structure prediction.
+        """Runs a structure prediction.
 
         Raises:
             PredictionEndedWithError: If the prediction ended with an error.
@@ -158,8 +166,8 @@ class StructurePrediction:
             logger.error("Prediction ended with errors!")
             raise exception.PredictionEndedWithError("")
 
-    def move_best_prediction_models(self) -> list[tuple[prediction_protein_info.PredictionProteinInfo, str]]:
-        """This function moves the best prediction model(s) to the project directory.
+    def move_best_prediction_models(self) -> Optional[list[tuple[prediction_protein_info.PredictionProteinInfo, str]]]:
+        """Moves the best prediction model(s) to the project directory.
 
         Raises:
             UnableToFindColabfoldModelError: If the prediction rank 1 model could not be found.
@@ -190,20 +198,56 @@ class StructurePrediction:
             os.rename(src.get_filepath(), dest)
             logger.debug(tmp_prediction[0].name)
             return best_prediction_models
+        return None
 
     def add_proteins_to_project(self,
-                                the_main_socket,
-                                a_socket,
-                                the_general_purpose_socket,
-                                best_prediction_models,
-                                a_project,
-                                the_project_lock: QtCore.QMutex):
+                                the_main_socket: zmq.Socket,
+                                a_socket: zmq.Socket,
+                                the_general_purpose_socket: zmq.Socket,
+                                best_prediction_models: list,
+                                a_project: "project.Project",
+                                the_project_lock: QtCore.QMutex) -> None:
+        """Add proteins to a project.
+
+        Args:
+            the_main_socket (zmq.Socket): The main socket.
+            a_socket (zmq.Socket): A socket.
+            the_general_purpose_socket (zmq.Socket): The general purpose socket.
+            best_prediction_models (list): The best prediction models.
+            a_project (project.Project): A project.
+            the_project_lock (QtCore.QMutex): The project lock.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if the_main_socket is None:
+            logger.error("the_main_socket is None.")
+            raise exception.IllegalArgumentError("the_main_socket is None.")
+        if a_socket is None:
+            logger.error("a_socket is None.")
+            raise exception.IllegalArgumentError("a_socket is None.")
+        if the_general_purpose_socket is None:
+            logger.error("the_general_purpose_socket is None.")
+            raise exception.IllegalArgumentError("the_general_purpose_socket is None.")
+        if best_prediction_models is None:
+            logger.error("best_prediction_models is None.")
+            raise exception.IllegalArgumentError("best_prediction_models is None.")
+        if a_project is None:
+            logger.error("a_project is None.")
+            raise exception.IllegalArgumentError("a_project is None.")
+        if the_project_lock is None:
+            logger.error("the_project_lock is None.")
+            raise exception.IllegalArgumentError("the_project_lock is None.")
+        
+        # </editor-fold>
+        
         the_project_lock.lock()
         for tmp_prediction in best_prediction_models:
             tmp_protein = protein.Protein(tmp_prediction[0].name)
             tmp_protein.add_protein_structure_data_from_local_pdb_file(
                 pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb"),
-                the_main_socket, the_general_purpose_socket
+                the_main_socket, the_general_purpose_socket,
             )
             pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein.get_molecule_object()}.pdb")
             try:
@@ -224,23 +268,8 @@ class StructurePrediction:
             tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
                 the_main_socket,
                 a_socket,
-                job.PredictionJobDescription(pdb_filepath)
+                job.PredictionJobDescription(pdb_filepath),
             )
-
-            # the_main_socket.send_string("Structure Prediction")
-            # response = the_main_socket.recv_string()
-            # print(f"Received response: {response}")
-            # message = {
-            #     "job_type": "Structure Prediction",
-            #     "a_pdb_filepath": str(pdb_filepath),
-            # }
-            # the_main_socket.send_json(message)
-            # response = the_main_socket.recv_string()
-            # print(f"Received response: {response}")
-            # # Wait for the response from the server
-            # a_socket.send_json({"job_type": "Structure Prediction"})
-            # response = a_socket.recv_json()
-            # result = response["result"]
             tmp_protein.pymol_session = tmp_reply["data"][0]
 
             with database_manager.DatabaseManager(str(a_project.get_database_filepath())) as db_manager:
@@ -249,7 +278,7 @@ class StructurePrediction:
                 tmp_protein.add_id_to_all_chains(db_manager.get_next_id_of_chain_table())
                 tmp_protein.set_id(db_manager.insert_new_protein(tmp_protein))
             a_project.add_existing_protein(
-                tmp_protein
+                tmp_protein,
             )
         the_project_lock.unlock()
         try:

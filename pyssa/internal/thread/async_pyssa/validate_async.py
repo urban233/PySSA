@@ -20,14 +20,51 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for validation functions that are used by async functions."""
+import logging
 import os
 import pathlib
+from typing import Optional
 
 from pyssa.io_pyssa import bio_data
+from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants
+from pyssa.util import exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
-def validate_add_protein_view_input(the_entered_text: str, placeholder: int):
+def validate_add_protein_view_input(the_entered_text: str, placeholder: int) -> tuple[int, bool, Optional[str]]:
+    """Validates the input for the add_protein_view.
+
+    Args:
+        the_entered_text: The text entered by the user.
+        placeholder: The placeholder parameter so that the function can be used with LegacyTask.
+
+    Returns:
+        A tuple containing an integer, a boolean, and a string.
+
+        The first value in the tuple represents the validation status:
+            - 1: Validated as a PDB ID.
+            - 2: Validated as a file path.
+            - -1: Validation failed due to an exception.
+
+        The second value in the tuple represents the validation result:
+            - True: Valid.
+            - False: Invalid.
+
+        The third value in the tuple depends on the validation status:
+            - If the validation status is 1 or 2, this value is the corresponding ID (PDB ID or file name without extension).
+            - If the validation status is -1, this value is None.
+    """
+    # <editor-fold desc="Checks">
+    if the_entered_text is None:
+        logger.error("the_entered_text is None.")
+        return -1, False, None
+    
+    # </editor-fold>
+    
     try:
         # checks if a pdb id was entered
         if len(the_entered_text) == 4:
@@ -46,5 +83,5 @@ def validate_add_protein_view_input(the_entered_text: str, placeholder: int):
             else:
                 return 2, False, pathlib.Path(the_entered_text).name.replace(".pdb", "")
     except Exception as e:
-        print(e)
+        logger.error(e)
         return -1, False, None
