@@ -20,18 +20,40 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the status bar manager."""
+import logging
+
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
-from pyssa.controller import main_tasks_manager
-from pyssa.gui.ui.custom_widgets import custom_label, job_entry
-from pyssa.util import enums, constants
+from pyssa.gui.ui.custom_widgets import custom_label
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import constants
+from pyssa.util import exception
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class StatusBarManager:
     """A class to manage the statusbar style and messages."""
-    def __init__(self, the_main_view, the_main_task_manager: "main_tasks_manager.MainTasksManager"):
+    
+    def __init__(self, the_main_view: QtWidgets.QMainWindow) -> None:
+        """Constructor.
+
+        Args:
+            the_main_view (QMainWindow): The main view of the application.
+        
+        Raises:
+            exception.IllegalArgumentError: If `the_main_view` is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_main_view is None:
+            logger.error("the_main_view is None.")
+            raise exception.IllegalArgumentError("the_main_view is None.")
+        
+        # </editor-fold>
+        
         self._view = the_main_view
-        self._main_task_manager = the_main_task_manager
         self._update_signal = None
 
         self._progress_bar = QtWidgets.QProgressBar()
@@ -56,7 +78,8 @@ class StatusBarManager:
     # <editor-fold desc="Util methods">
 
     # <editor-fold desc="Methods for styling the status bar">
-    def _style_status_bar_for_normal_message(self):
+    def _style_status_bar_for_normal_message(self) -> None:
+        """Sets custom style sheet for a normal message."""
         self._view.status_bar.setStyleSheet("""
             QStatusBar {
                 background-color: #F2F2F2;
@@ -67,7 +90,8 @@ class StatusBarManager:
             }
         """)
 
-    def _style_status_bar_for_long_running_task_message(self):
+    def _style_status_bar_for_long_running_task_message(self) -> None:
+        """Sets custom style sheet for a long-running message."""
         self._view.status_bar.setStyleSheet("""
             QStatusBar {
                 background-color: #ff9000;
@@ -78,7 +102,8 @@ class StatusBarManager:
             }
         """)
 
-    def _style_status_bar_for_error_message(self):
+    def _style_status_bar_for_error_message(self) -> None:
+        """Sets custom style sheet for an error message."""
         self._view.status_bar.setStyleSheet("""
             QStatusBar {
                 background-color: #ff9000;
@@ -90,8 +115,26 @@ class StatusBarManager:
         """)
     # </editor-fold>
 
-    def _setup_status_bar_message_timer(self, running_task=False, the_long_running_task_message=""):
-        """Connects the timer to reset the status bar to the long-runnnig task message."""
+    def _setup_status_bar_message_timer(self, running_task: bool = False, the_long_running_task_message: str = "") -> None:
+        """Connects the timer to reset the status bar to the long-running task message.
+        
+        Args:
+            running_task (bool): Flag for indicating if a long-running task is currently running.
+            the_long_running_task_message (str): Message to be displayed when a long-running task is running.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if running_task is None:
+            logger.error("running_task is None.")
+            raise exception.IllegalArgumentError("running_task is None.")
+        if the_long_running_task_message is None:
+            logger.error("the_long_running_task_message is None.")
+            raise exception.IllegalArgumentError("the_long_running_task_message is None.")
+        
+        # </editor-fold>
+        
         if self.temp_message_timer:
             self.temp_message_timer.stop()  # Stop previous timer if exists
         self.temp_message_timer.setSingleShot(True)
@@ -103,36 +146,61 @@ class StatusBarManager:
             self.temp_message_timer.timeout.connect(self._restore_status_bar)
         self.temp_message_timer.start(5000)  # Display temporary message for 5 seconds
 
-    def _switch_to_long_running_task_message(self, a_long_running_task_message):
+    def _switch_to_long_running_task_message(self, a_long_running_task_message: str) -> None:
+        """Shows a long-running task message as a permanent message."""
         self.show_permanent_message(a_long_running_task_message)
 
-    def _restore_status_bar(self):
+    def _restore_status_bar(self) -> None:
+        """Restores the statusbar."""
         self._style_status_bar_for_normal_message()
         self._view.status_bar.showMessage("")
 
     # </editor-fold>
 
-    def _connect_ui_elements(self):
-        self._permanent_message.textChanged.connect(self._manage_status_bar_ui)
-
-    def _manage_status_bar_ui(self, the_current_text):
-        if self._main_task_manager.prediction_task is None:
-            #self._btn_task.setEnabled(False)
-            return
-        if not self._main_task_manager.prediction_task.is_finished():
-            #self._btn_task.setEnabled(True)
-            pass
-        else:
-            #self._btn_task.setEnabled(False)
-            pass
+    def _connect_ui_elements(self) -> None:
+        """Connects all UI elements to their corresponding slot functions in the class."""
+        #self._permanent_message.textChanged.connect(self._manage_status_bar_ui)
+        raise NotImplementedError()
 
     # <editor-fold desc="Public methods">
-    def show_permanent_message(self, a_message):
-        #self._style_status_bar_for_long_running_task_message()
-        #self._view.status_bar.showMessage(a_message)
+    def show_permanent_message(self, a_message: str) -> None:
+        """Shows a permanent message in the statusbar.
+
+        Args:
+            a_message: A string representing the message that will be displayed as a permanent message.
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_message` is None.
+        """
+        # <editor-fold desc="Checks">
+        if a_message is None:
+            logger.error("a_message is None.")
+            raise exception.IllegalArgumentError("a_message is None.")
+        
+        # </editor-fold>
+        
         self._permanent_message.setText(a_message)
 
-    def show_error_message(self, a_message, overwrite_permanent_message: bool = True):
+    def show_error_message(self, a_message: str, overwrite_permanent_message: bool = True) -> None:
+        """Shows an error message in the statusbar.
+
+        Args:
+            a_message (str): The error message to be displayed.
+            overwrite_permanent_message (bool, optional): Flag indicating whether to overwrite the permanent message. Defaults to True.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if a_message is None:
+            logger.error("a_message is None.")
+            raise exception.IllegalArgumentError("a_message is None.")
+        if overwrite_permanent_message is None:
+            logger.error("overwrite_permanent_message is None.")
+            raise exception.IllegalArgumentError("overwrite_permanent_message is None.")
+        
+        # </editor-fold>
+        
         self._style_status_bar_for_error_message()
         self._view.status_bar.showMessage("")
         if overwrite_permanent_message is True:
@@ -141,7 +209,30 @@ class StatusBarManager:
         else:
             self._view.status_bar.showMessage(a_message, 999999)
 
-    def show_temporary_message(self, a_temporary_message, a_with_timeout_flag: bool = True, a_timeout: int = constants.STATUS_MESSAGE_TIMEOUT):
+    def show_temporary_message(self, a_temporary_message: str, a_with_timeout_flag: bool = True, a_timeout: int = constants.STATUS_MESSAGE_TIMEOUT) -> None:
+        """Shows a temporary message in the statusbar.
+
+        Args:
+            a_temporary_message (str): The message to be displayed temporarily in the status bar.
+            a_with_timeout_flag (bool): Optional parameter that specifies whether the message should be displayed for a limited time. Defaults to True.
+            a_timeout (int): Optional parameter that specifies the amount of time (in milliseconds) the message should be displayed if a_with_timeout_flag is set to True. Defaults to the value of constants.STATUS_MESSAGE_TIMEOUT.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if a_temporary_message is None:
+            logger.error("a_temporary_message is None.")
+            raise exception.IllegalArgumentError("a_temporary_message is None.")
+        if a_with_timeout_flag is None:
+            logger.error("a_with_timeout_flag is None.")
+            raise exception.IllegalArgumentError("a_with_timeout_flag is None.")
+        if a_timeout is None:
+            logger.error("a_timeout is None.")
+            raise exception.IllegalArgumentError("a_timeout is None.")
+        
+        # </editor-fold>
+        
         self._style_status_bar_for_normal_message()
         self._permanent_message.setText("")
         if a_with_timeout_flag:
@@ -149,24 +240,25 @@ class StatusBarManager:
         else:
             self._view.status_bar.showMessage(a_temporary_message, 999999)
 
-        # if the_main_tasks_manager.prediction_task is not None:
-        #     # A prediction task might be running
-        #     if the_main_tasks_manager.check_if_prediction_task_is_finished() is False:
-        #         # Revert back to long-running tasks message
-        #         self._setup_status_bar_message_timer(
-        #             running_task=True,
-        #             the_long_running_task_message=enums.StatusMessages.PREDICTION_IS_RUNNING.value
-        #         )
-        # elif the_main_tasks_manager.distance_analysis_task is not None:
-        #     # A distance analysis task might be running
-        #     pass
-        # else:
-        #     self._setup_status_bar_message_timer(running_task=False)
+    def update_progress_bar(self, a_message_value_tuple: tuple) -> None:
+        """Updates the progress bar with the given message and value.
 
-    def update_progress_bar(self, a_message_value_tuple: tuple):
+        Args:
+            a_message_value_tuple (tuple): A tuple containing the message and value to be displayed on the progress bar. The message should be a string, and the value should be an integer between 0 and 100 (inclusive).
+
+        Raises:
+            exception.IllegalArgumentError: If `a_message_value_tuple` is None.
+            ValueError: If the value is less than 0 or greater than 100.
+        """
+        # <editor-fold desc="Checks">
+        if a_message_value_tuple is None:
+            logger.error("a_message_value_tuple is None.")
+            raise exception.IllegalArgumentError("a_message_value_tuple is None.")
         tmp_message, tmp_value = a_message_value_tuple
         if tmp_value < 0 or tmp_value > 100:
             raise ValueError("Value for progress bar must be between 0 and 100!")
+        
+        # </editor-fold>
 
         self._progress_bar.show()
         self._progress_bar.setFormat(f"{tmp_value}%")
@@ -174,8 +266,10 @@ class StatusBarManager:
         self._permanent_message.show()
         self._permanent_message.setText(tmp_message)
 
-    def hide_progress_bar(self):
+    def hide_progress_bar(self) -> None:
+        """Hides the progress bar and reset the permanent message."""
         self._progress_bar.hide()
         self._permanent_message.hide()
         self._permanent_message.setText("")
+    
     # </editor-fold>

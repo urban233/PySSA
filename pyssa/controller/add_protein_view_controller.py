@@ -29,19 +29,36 @@ from pyssa.controller import interface_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import validate_async
-from pyssa.io_pyssa import bio_data
 from pyssa.logging_pyssa import log_levels, log_handlers
-from pyssa.util import constants, tools
+from pyssa.util import constants, tools, exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class AddProteinViewController(QtCore.QObject):
-    """Class for the RenameProteinViewController class"""
+    """Class for the AddProteinViewController."""
+    
     user_input = QtCore.pyqtSignal(tuple)
+    """Singal used to transfer data back to the previous window."""
+    
+    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
+        """Constructor.
 
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager"):
+        Args:
+            the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        
+        Raises:
+            exception.IllegalArgumentError: If `the_interface_manager` is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_interface_manager is None:
+            logger.error("the_interface_manager is None.")
+            raise exception.IllegalArgumentError("the_interface_manager is None.")
+        
+        # </editor-fold>
+    
         super().__init__()
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_add_protein_view()
@@ -54,44 +71,57 @@ class AddProteinViewController(QtCore.QObject):
                 "However you can add a protein structure from "
                 "your local filesystem.",
                 "Internet Connection",
-                custom_message_box.CustomMessageBoxIcons.ERROR.value
+                custom_message_box.CustomMessageBoxIcons.ERROR.value,
             )
             tmp_dialog.exec_()
             self._view.ui.txt_add_protein.setEnabled(False)
             self._view.ui.lbl_status.setText("You cannot enter a PDB ID (no working internet connection).")
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        """Connects all UI elements to their corresponding slot functions in the class."""
         self._view.ui.btn_choose_protein.clicked.connect(self.__slot_load_protein_from_filesystem)
         self._view.ui.btn_add_protein.clicked.connect(self.__slot_add_protein)
         self._view.ui.txt_add_protein.textChanged.connect(self.__slot_validate_input)
 
-    def restore_ui(self):
+    def restore_ui(self) -> None:
+        """Restores the UI."""
         self._view.ui.txt_add_protein.clear()
         self._view.ui.txt_add_protein.setStyleSheet(
-            """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+            """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
         )
         self._view.ui.lbl_status.setText("")
         self._view.ui.btn_add_protein.setEnabled(False)
         self._view.setMinimumWidth(500)
 
     # @SLOT
-    def __slot_validate_input(self, the_entered_text) -> None:
-        """Checks if the entered reference protein is valid or not."""
+    def __slot_validate_input(self, the_entered_text: str) -> None:
+        """Checks if the entered reference protein is valid or not.
+
+        Args:
+            the_entered_text (str): The text entered by the user.
+        
+        Raises:
+            exception.IllegalArgumentError: If `the_entered_text` is None.
+        """
+        if the_entered_text is None:
+            logger.error("the_entered_text is None.")
+            raise exception.IllegalArgumentError("the_entered_text is None.")
+        
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         self._view.ui.lbl_status.setStyleSheet(
-            """QLabel {color: #ba1a1a;}"""
+            """QLabel {color: #ba1a1a;}""",
         )
         if len(the_entered_text) == 0:
             # empty line edit
             self._view.ui.txt_add_protein.setStyleSheet(
-                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
             )
             self._view.ui.lbl_status.setText("Please enter a PDB id or choose an existing .pdb file from your filesystem!")
             self._view.ui.btn_add_protein.setEnabled(False)
         elif len(the_entered_text) < 4:
             # length of text is too small
             self._view.ui.txt_add_protein.setStyleSheet(
-                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
             )
             self._view.ui.btn_add_protein.setEnabled(False)
             self._view.ui.lbl_status.setText("Please enter more characters.")
@@ -102,50 +132,40 @@ class AddProteinViewController(QtCore.QObject):
             self._active_task = tasks.LegacyTask(
                 target=validate_async.validate_add_protein_view_input,
                 args=(
-                    the_entered_text, 0
+                    the_entered_text, 0,
                 ),
                 post_func=self.__await__slot_validate_input,
             )
             self._active_task.start()
             QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
             self._view.ui.txt_add_protein.setStyleSheet(
-                """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+                """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
             )
             self._view.ui.lbl_status.setStyleSheet(
-                """QLabel {color: #367AF6;}"""
+                """QLabel {color: #367AF6;}""",
             )
             self._view.ui.lbl_status.setText("Checking input ...")
 
-        #     # pdb id is used
-        #     pdb_id = self._view.ui.txt_add_protein.text().upper()
-        #     tmp_filepath: str = f"{constants.SCRATCH_DIR}/{pdb_id}.pdb"
-        #     bio_data.download_pdb_file(pdb_id, tmp_filepath)
-        #     if os.path.exists(tmp_filepath):
-        #         os.remove(tmp_filepath)
-        #         self._view.ui.txt_add_protein.setStyleSheet(
-        #             """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
-        #         )
-        #         self._view.ui.btn_add_protein.setEnabled(True)
-        #     else:
-        #         self._view.ui.txt_add_protein.setStyleSheet(
-        #             """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
-        #         )
-        #         self._view.ui.lbl_status.setText("Invalid PDB id!")
-        # else:
-        #     if os.path.exists(the_entered_text):
-        #         self._view.ui.txt_add_protein.setStyleSheet(
-        #             """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
-        #         )
-        #         self._view.ui.lbl_status.setText("")
-        #         self._view.ui.btn_add_protein.setEnabled(True)
-        #     else:
-        #         self._view.ui.txt_add_protein.setStyleSheet(
-        #             """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
-        #         )
-        #         self._view.ui.lbl_status.setText("Invalid filepath!")
-        #         self._view.ui.btn_add_protein.setEnabled(False)
+    def __await__slot_validate_input(self, return_value: tuple) -> None:
+        """Validates the input entered by the user.
 
-    def __await__slot_validate_input(self, return_value: tuple):
+        Args:
+            return_value (tuple): A tuple containing information about the validation result.
+                The tuple should have the following structure:
+                    - return_value[0] (int): The type of input (1 for pdb id entered, 2 for filepath entered).
+                    - return_value[1] (bool): Flag indicating whether the input is valid or not.
+                    - return_value[2] (str): The name entered by the user.
+        
+        Raises:
+            exception.IllegalArgumentError: If `return_value` is None.
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None:
+            logger.error("return_value is None.")
+            raise exception.IllegalArgumentError("return_value is None.")
+        
+        # </editor-fold>
+        
         if return_value[0] == -1:
             QtWidgets.QApplication.restoreOverrideCursor()
             return
@@ -154,23 +174,23 @@ class AddProteinViewController(QtCore.QObject):
         tmp_is_valid: bool = return_value[1]
         tmp_name: str = return_value[2]
         self._view.ui.lbl_status.setStyleSheet(
-            """QLabel {color: #ba1a1a;}"""
+            """QLabel {color: #ba1a1a;}""",
         )
         if tmp_is_valid:
             self._view.ui.txt_add_protein.setStyleSheet(
-                """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+                """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
             )
             self._view.ui.lbl_status.setText("")
             self._view.ui.btn_add_protein.setEnabled(True)
         elif not tmp_is_valid and tmp_type == 1:  # pdb id entered
             self._view.ui.txt_add_protein.setStyleSheet(
-                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
             )
             self._view.ui.lbl_status.setText("Invalid PDB id!")
             self._view.ui.btn_add_protein.setEnabled(False)
         elif not tmp_is_valid and tmp_type == 2:  # filepath entered
             self._view.ui.txt_add_protein.setStyleSheet(
-                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
             )
             self._view.ui.lbl_status.setText("Invalid filepath!")
             self._view.ui.btn_add_protein.setEnabled(False)
@@ -178,13 +198,13 @@ class AddProteinViewController(QtCore.QObject):
             constants.PYSSA_LOGGER.error("There is an unknown case, while validating the add protein view user input!")
         if tmp_name in self._interface_manager.watcher.protein_names_blacklist:
             self._view.ui.txt_add_protein.setStyleSheet(
-                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
             )
             self._view.ui.lbl_status.setText("Protein already exists in current project!")
             self._view.ui.btn_add_protein.setEnabled(False)
         else:
             self._view.ui.txt_add_protein.setStyleSheet(
-                """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+                """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
             )
             self._view.ui.lbl_status.setText("")
             self._view.ui.btn_add_protein.setEnabled(True)
@@ -217,18 +237,33 @@ class AddProteinViewController(QtCore.QObject):
         self._view.close()
         self.user_input.emit((self._view.ui.txt_add_protein.text(), len(self._view.ui.txt_add_protein.text())))
     
-    def _validate_scene_name(self, text):
+    def _validate_scene_name(self, text: str) -> None:
+        """Validates the given scene name and updates the UI elements accordingly.
+
+        Args:
+            text (str): The scene name to be validated.
+        
+        Raises:
+            exception.IllegalArgumentError: If `text` is None.
+        """
+        # <editor-fold desc="Checks">
+        if text is None:
+            logger.error("text is None.")
+            raise exception.IllegalArgumentError("text is None.")
+        
+        # </editor-fold>
+        
         new_text = ''.join(char for char in text)
         self._view.line_edit_scene_name.setText(new_text)
         if new_text in self._all_current_scenes:
             self._view.btn_add_scene.setEnabled(False)
             self._view.line_edit_scene_name.setToolTip("This scene name already exists. Please enter another name.")
             self._view.line_edit_scene_name.setStyleSheet(
-                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
             )
         else:
             self._view.btn_add_scene.setEnabled(True)
             self._view.line_edit_scene_name.setToolTip("")
             self._view.line_edit_scene_name.setStyleSheet(
-                """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+                """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
             )

@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the delete project view controller."""
-
 import logging
 import os
 import subprocess
@@ -31,20 +30,34 @@ from PyQt5.QtCore import Qt
 
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
-from pyssa.gui.ui.styles import styles
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
-from pyssa.util import input_validator, gui_utils, constants, enums, ui_util
+from pyssa.util import constants, enums, ui_util, exception
 from pyssa.logging_pyssa import log_levels, log_handlers
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class DeleteProjectViewController(QtCore.QObject):
-    """Class for the Delete Project View Controller."""
+    """Class for the DeleteProjectViewController."""
 
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
+        """Constructor.
+
+        Args:
+            the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+
+        Raises:
+            exception.IllegalArgumentError: If `the_interface_manager` is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_interface_manager is None:
+            logger.error("the_interface_manager is None.")
+            raise exception.IllegalArgumentError("the_interface_manager is None.")
+
+        # </editor-fold>
         super().__init__()
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_delete_view()
@@ -52,12 +65,22 @@ class DeleteProjectViewController(QtCore.QObject):
         self._connect_all_ui_elements_to_slot_functions()
         self.restore_default_view()
 
-    def open_help(self, a_page_name: str):
+    def open_help(self, a_page_name: str) -> None:
         """Opens the pyssa documentation window if it's not already open.
 
         Args:
             a_page_name (str): a name of a documentation page to display
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_page_name` is None.
         """
+        # <editor-fold desc="Checks">
+        if a_page_name is None:
+            logger.error("a_page_name is None.")
+            raise exception.IllegalArgumentError("a_page_name is None.")
+        
+        # </editor-fold>
+        
         try:
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center ...")
             if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
@@ -72,17 +95,25 @@ class DeleteProjectViewController(QtCore.QObject):
         else:
             self._active_task.start()
 
-    def __await_open_help(self, return_value):
+    def __await_open_help(self, return_value: tuple) -> None:
+        """Opens the help center and performs necessary actions based on the return value.
+
+        Args:
+            return_value (tuple): The return value from opening the help center.
+        """
+        # <editor-fold desc="Checks">
         if return_value[0] == "":
             self._interface_manager.status_bar_manager.show_error_message("Opening help center failed!")
             return
+        
+        # </editor-fold>
 
         try:
             self._interface_manager.documentation_window = return_value[2]
             if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
                 tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "The script for bringing the documentation window in front could not be found!", "Documentation",
-                    custom_message_box.CustomMessageBoxIcons.ERROR.value
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value,
                 )
                 tmp_dialog.exec_()
             else:
@@ -93,11 +124,13 @@ class DeleteProjectViewController(QtCore.QObject):
             logger.error(f"Error while opening help center: {e}")
             self._interface_manager.status_bar_manager.show_error_message("Opening help center failed!")
 
-    def _open_help_for_dialog(self):
+    def _open_help_for_dialog(self) -> None:
+        """Opens help dialog."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/project/delete_project/")
 
-    def restore_default_view(self):
+    def restore_default_view(self) -> None:
+        """Restores the default UI."""
         self._view.ui.label_31.hide()
         self._view.ui.txt_delete_search.setPlaceholderText("Search")
         self._view.ui.txt_delete_search.clear()
@@ -109,6 +142,7 @@ class DeleteProjectViewController(QtCore.QObject):
         self._view.ui.list_delete_projects_view.setModel(self._interface_manager.get_workspace_model())
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        """Connects all UI elements to their corresponding slot functions in the class."""
         self._view.ui.txt_delete_search.textChanged.connect(self.validate_delete_search)
         self._view.ui.list_delete_projects_view.clicked.connect(self.select_project_from_delete_list)
         self._view.ui.txt_delete_selected_projects.textChanged.connect(self.activate_delete_button)
@@ -119,28 +153,11 @@ class DeleteProjectViewController(QtCore.QObject):
         """Validates the input of the project name in real-time."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         projects_list_view = self._view.ui.list_delete_projects_view
-
         ui_util.select_matching_string_in_q_list_view(
             self._view.ui.txt_delete_search.text(),
             projects_list_view,
-            self._view.ui.txt_delete_selected_projects
+            self._view.ui.txt_delete_selected_projects,
         )
-
-        # # Deselect any current item in the list view
-        # if projects_list_view.currentIndex().isValid():
-        #     projects_list_view.selectionModel().clearCurrentIndex()
-        #
-        # tmp_match_item = input_validator.find_match_in_model(projects_list_view.model(), self._view.ui.txt_delete_search.text())
-        # projects_list_view.selectionModel().setCurrentIndex(tmp_match_item[0].index(), QtCore.QItemSelectionModel.Clear | QtCore.QItemSelectionModel.Select)
-        # self._view.ui.txt_delete_selected_projects.setText(tmp_match_item[0].data(Qt.DisplayRole))
-        # # Assuming validate_search_input is a static method
-        #
-        # input_validator.InputValidator.validate_project_name_delete_project(
-        #     projects_list_view.model(),
-        #     self._view.ui.txt_delete_search,
-        #     self._view.ui.lbl_delete_status_search,
-        #     self._view.ui.txt_delete_selected_projects,
-        # )
 
     def select_project_from_delete_list(self) -> None:
         """Selects a project from the project list on the delete page."""
@@ -172,7 +189,7 @@ class DeleteProjectViewController(QtCore.QObject):
             tmp_dialog = custom_message_box.CustomMessageBoxDelete(
                 "Are you sure you want to delete these projects?",
                 "Delete Projects",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
             )
             tmp_dialog.exec_()
             tmp_indexes = self._view.ui.list_delete_projects_view.selectionModel().selectedIndexes()
@@ -180,22 +197,22 @@ class DeleteProjectViewController(QtCore.QObject):
             for tmp_index in tmp_indexes:
                 tmp_filepaths_with_row_numbers.append(
                     (self._view.ui.list_delete_projects_view.model().data(tmp_index, enums.ModelEnum.FILEPATH_ROLE),
-                     tmp_index.row())
+                     tmp_index.row()),
                 )
             tmp_filepaths_with_row_numbers.sort(reverse=True)
         elif len(self._view.ui.list_delete_projects_view.selectionModel().selectedIndexes()) == 1:
             tmp_dialog = custom_message_box.CustomMessageBoxDelete(
                 "Are you sure you want to delete this project?",
                 "Delete Project",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
             )
             tmp_dialog.exec_()
             tmp_filepaths_with_row_numbers = [
                 (
                     self._view.ui.list_delete_projects_view.model().data(
                     self._view.ui.list_delete_projects_view.currentIndex(), enums.ModelEnum.FILEPATH_ROLE),
-                    self._view.ui.list_delete_projects_view.currentIndex().row()
-                )
+                    self._view.ui.list_delete_projects_view.currentIndex().row(),
+                ),
             ]
         else:
             return
@@ -209,13 +226,10 @@ class DeleteProjectViewController(QtCore.QObject):
                     tmp_dialog = custom_message_box.CustomMessageBoxOk(
                         "The project cannot be deleted, due to a permission error. Restart the application and try again.",
                         "Delete Project",
-                        custom_message_box.CustomMessageBoxIcons.ERROR.value
+                        custom_message_box.CustomMessageBoxIcons.ERROR.value,
                     )
                     tmp_dialog.exec_()
                 self._view.ui.list_delete_projects_view.model().removeRow(tmp_row)  # removes item from model
             self.restore_default_view()
         else:
             constants.PYSSA_LOGGER.info("No project has been deleted. No changes were made.")
-
-    def _close(self):
-        self._view.close()

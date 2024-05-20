@@ -32,30 +32,58 @@ from PyQt5.QtCore import Qt
 from pyssa.controller import interface_manager, add_protein_pair_view_controller, \
     advanced_prediction_configurations_view_controller, watcher
 from pyssa.gui.ui.custom_dialogs import custom_message_box
-from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
-from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_protein_view
 from pyssa.internal.data_structures import protein, chain
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
-from pyssa.io_pyssa import safeguard
 from pyssa.presenter import main_presenter_async
-from pyssa.util import gui_utils, tools, constants, exit_codes, prediction_util, enums, exception
+from pyssa.util import gui_utils, tools, constants, prediction_util, enums, exception
 from pyssa.logging_pyssa import log_levels, log_handlers
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class PredictProteinViewController(QtCore.QObject):
+    """Class for the PredictProteinViewController."""
+    
     job_input = pyqtSignal(tuple)
-
+    """Singal used to transfer data back to the previous window."""
+    
     def __init__(self,
                  the_interface_manager: "interface_manager.InterfaceManager",
                  the_watcher: "watcher.Watcher",
                  the_selected_indexes: list,
-                 a_prediction_type: str):
+                 a_prediction_type: str) -> None:
+        """Constructor.
+
+        Args:
+            the_interface_manager (interface_manager.InterfaceManager): An instance of the interface_manager.InterfaceManager class.
+            the_watcher (watcher.Watcher): An instance of the watcher.Watcher class.
+            the_selected_indexes (list): A list of selected indexes.
+            a_prediction_type (str): A string representing the prediction type.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None.
+        """
+        # <editor-fold desc="Checks">
+        if the_interface_manager is None:
+            logger.error("the_interface_manager is None.")
+            raise exception.IllegalArgumentError("the_interface_manager is None.")
+        if the_watcher is None:
+            logger.error("the_watcher is None.")
+            raise exception.IllegalArgumentError("the_watcher is None.")
+        if the_selected_indexes is None:
+            logger.error("the_selected_indexes is None.")
+            raise exception.IllegalArgumentError("the_selected_indexes is None.")
+        if a_prediction_type is None:
+            logger.error("a_prediction_type is None.")
+            raise exception.IllegalArgumentError("a_prediction_type is None.")
+        
+        # </editor-fold>
+        
         super().__init__()
         self._interface_manager = the_interface_manager
         self._watcher = the_watcher
@@ -72,12 +100,22 @@ class PredictProteinViewController(QtCore.QObject):
         self._connect_all_ui_elements_to_slot_functions()
 
     # <editor-fold desc="Util methods">
-    def open_help(self, a_page_name: str):
+    def open_help(self, a_page_name: str) -> None:
         """Opens the pyssa documentation window if it's not already open.
 
         Args:
             a_page_name (str): a name of a documentation page to display
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_page_name` is None.
         """
+        # <editor-fold desc="Checks">
+        if a_page_name is None:
+            logger.error("a_page_name is None.")
+            raise exception.IllegalArgumentError("a_page_name is None.")
+        
+        # </editor-fold>
+    
         try:
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center ...")
             if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
@@ -92,10 +130,18 @@ class PredictProteinViewController(QtCore.QObject):
         else:
             self._active_task.start()
 
-    def __await_open_help(self, return_value):
+    def __await_open_help(self, return_value: tuple) -> None:
+        """Opens the help center and performs necessary actions based on the return value.
+
+        Args:
+            return_value (tuple): The return value from opening the help center.
+        """
+        # <editor-fold desc="Checks">
         if return_value[0] == "":
             self._interface_manager.status_bar_manager.show_error_message("Opening help center failed!")
             return
+        
+        # </editor-fold>
 
         try:
             self._interface_manager.documentation_window = return_value[2]
@@ -113,7 +159,8 @@ class PredictProteinViewController(QtCore.QObject):
             logger.error(f"Error while opening help center: {e}")
             self._interface_manager.status_bar_manager.show_error_message("Opening help center failed!")
 
-    def _open_help_for_dialog(self):
+    def _open_help_for_dialog(self) -> None:
+        """Opens help dialog."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/protein_structure_prediction/colabfold/")
 
@@ -126,12 +173,28 @@ class PredictProteinViewController(QtCore.QObject):
         self._external_controller.user_input.connect(self._post_show_prediction_configuration)
         self._interface_manager.get_advanced_prediction_configurations_view().show()
 
-    def _post_show_prediction_configuration(self, user_input):
+    def _post_show_prediction_configuration(self, user_input: tuple) -> None:
+        """Updates the prediction configuration with the new values.
+
+        Args:
+            user_input (tuple): A tuple containing two elements. The first element is ignored. The second element is a temporary configuration object.
+        
+        Raises:
+            exception.IllegalArgumentError: If `user_input` is None.
+        """
+        # <editor-fold desc="Checks">
+        if user_input is None:
+            logger.error("user_input is None.")
+            raise exception.IllegalArgumentError("user_input is None.")
+        
+        # </editor-fold>
+        
         _, tmp_config = user_input
         self.prediction_configuration.amber_force_field = tmp_config.amber_force_field
         self.prediction_configuration.templates = tmp_config.templates
 
     def restore_ui_defaults(self) -> None:
+        """Restores the default UI."""
         self._view.ui.btn_go_to_analysis_setup.setText("Predict")
         self._view.ui.lbl_go_to_analysis_setup.setText("Protein Structure(s)")
         self._view.ui.checkbox_add_analysis.setChecked(False)
@@ -178,7 +241,8 @@ class PredictProteinViewController(QtCore.QObject):
         self._view.ui.btn_go_to_analysis_setup.setEnabled(True)
         self._view.resize(700, 800)
 
-    def _check_if_prediction_and_analysis_should_be_done(self):
+    def _check_if_prediction_and_analysis_should_be_done(self) -> None:
+        """Checks if the 'Add analysis' checkbox was clicked and updates the GUI accordingly."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add analysis' checkbox was clicked.")
         if self._view.ui.checkbox_add_analysis.isChecked():
             self._view.ui.btn_go_to_analysis_setup.setText("Go")
@@ -189,6 +253,7 @@ class PredictProteinViewController(QtCore.QObject):
     # </editor-fold>
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        """Connects all UI elements to their corresponding slot functions in the class."""
         self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
         self._view.ui.btn_help_2.clicked.connect(self._open_help_for_dialog)
         self._view.ui.checkbox_add_analysis.clicked.connect(self._check_if_prediction_and_analysis_should_be_done)
@@ -201,36 +266,38 @@ class PredictProteinViewController(QtCore.QObject):
 
         # Analysis tab
         self._view.ui.btn_analysis_add.clicked.connect(self._add_protein_pair)
-
         self._view.ui.btn_analysis_remove.clicked.connect(self._remove_analysis_run_from_list)
-        self._view.ui.btn_analysis_back.clicked.connect(self._disable_selection_of_proteins_for_analysis)
-        self._view.ui.btn_analysis_next.clicked.connect(self._show_chains_of_protein_structure_1)
-        self._view.ui.btn_analysis_back_2.clicked.connect(self._hide_chains_of_protein_structure_1)
-        self._view.ui.btn_analysis_next_2.clicked.connect(self._show_chains_of_protein_structure_2)
-        self._view.ui.btn_analysis_back_3.clicked.connect(self._hide_chains_of_protein_structure_2)
-        self._view.ui.btn_analysis_next_3.clicked.connect(self._add_analysis_run_to_list_widget)
-        self._view.ui.box_analysis_protein_struct_1.currentIndexChanged.connect(
-            self._check_if_protein_structs_are_filled,
-        )
-        self._view.ui.box_analysis_protein_struct_2.currentIndexChanged.connect(
-            self._check_if_protein_structs_are_filled,
-        )
-        self._view.ui.list_analysis_protein_1_chains.itemSelectionChanged.connect(
-            self._count_selected_chains_for_protein_struct_1,
-        )
-        self._view.ui.list_analysis_protein_2_chains.itemSelectionChanged.connect(
-            self._check_if_same_number_of_chains_selected,
-        )
         self._view.ui.btn_analysis_back_4.clicked.connect(self._switch_tab)
-        self._view.ui.list_analysis_overview.clicked.connect(
-            self._enable_remove_button_for_analysis_list,
-        )
         self._view.ui.btn_start_prediction_analysis.clicked.connect(self._start_prediction_analysis)
 
     # <editor-fold desc="Prediction + analysis">
 
     # <editor-fold desc="Prediction section">
-    def _fill_protein_to_predict_table_with_sequences(self, tmp_selected_indices, a_prediction_type, the_watcher: "watcher.Watcher"):
+    def _fill_protein_to_predict_table_with_sequences(self, tmp_selected_indices: list, a_prediction_type: str, the_watcher: "watcher.Watcher") -> None:
+        """Fills the prediction table with the selected sequences.
+
+        Args:
+            tmp_selected_indices (list): List of QModelIndex objects representing the selected indices in a table.
+            a_prediction_type (str): String representing the type of prediction ('monomer' or 'multimer').
+            the_watcher (watcher.Watcher): An instance of the `watcher.Watcher` class.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None or if `a_prediction_type` is an empty string.
+            ValueError: If prediction type is unknown.
+        """
+        # <editor-fold desc="Checks">
+        if tmp_selected_indices is None:
+            logger.error("tmp_selected_indices is None.")
+            raise exception.IllegalArgumentError("tmp_selected_indices is None.")
+        if a_prediction_type is None or a_prediction_type == "":
+            logger.error("a_prediction_type is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_prediction_type is either None or an empty string.")
+        if the_watcher is None:
+            logger.error("the_watcher is None.")
+            raise exception.IllegalArgumentError("the_watcher is None.")
+        
+        # </editor-fold>
+        
         tmp_sequences_to_predict_monomer: list = []
         tmp_sequences_to_predict_multimer: list = []
         for tmp_model_index in tmp_selected_indices:
@@ -450,19 +517,30 @@ class PredictProteinViewController(QtCore.QObject):
                 self._view.ui.tab_widget.setTabEnabled(1, False)
 
     # <editor-fold desc="Analysis section">
-    def _get_all_current_analysis_runs(self):
+    def _get_all_current_analysis_runs(self) -> list[str]:
+        """Retrieves a list of all current analysis runs.
+
+        Returns:
+            A list of strings representing the current analysis runs.
+        """
         tmp_analysis_runs = []
         for tmp_row in range(self._view.ui.list_analysis_overview.count()):
             tmp_analysis_runs.append(self._view.ui.list_analysis_overview.item(tmp_row).text())
         return tmp_analysis_runs
 
-    def _get_all_current_protein_pair_names(self):
+    def _get_all_current_protein_pair_names(self) -> list[str]:
+        """Retrieves the names of all current protein pairs.
+
+        Returns:
+            A list of strings representing the names of all current protein pairs.
+        """
         tmp_protein_pair_names = []
         for tmp_protein_pair in self._interface_manager.get_current_project().protein_pairs:
             tmp_protein_pair_names.append(tmp_protein_pair.name)
         return tmp_protein_pair_names
 
-    def _add_protein_pair(self):
+    def _add_protein_pair(self) -> None:
+        """Instantiates the AddProteinPairViewController class and shows the 'AddProteinPair' view."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked.")
         self._external_controller = add_protein_pair_view_controller.AddProteinPairViewController(
             self._interface_manager, self._watcher, self._get_all_current_analysis_runs(), self._get_all_current_protein_pair_names(),
@@ -472,7 +550,22 @@ class PredictProteinViewController(QtCore.QObject):
         self._external_controller.user_input.connect(self._post_add_protein_pair)
         self._interface_manager.get_add_protein_pair_view().show()
 
-    def _post_add_protein_pair(self, return_value: tuple):
+    def _post_add_protein_pair(self, return_value: tuple) -> None:
+        """Adds the protein pair to the list widget and updates the UI.
+
+        Args:
+            return_value (tuple): The return value from the method.
+
+        Raises:
+            exception.IllegalArgumentError: If `return_value` is None.
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None:
+            logger.error("return_value is None.")
+            raise exception.IllegalArgumentError("return_value is None.")
+
+        # </editor-fold>
+        
         tmp_item, _ = return_value
         self._view.ui.list_analysis_overview.addItem(tmp_item)
         self._view.ui.btn_analysis_remove.show()
@@ -480,387 +573,10 @@ class PredictProteinViewController(QtCore.QObject):
         self._view.ui.btn_start_prediction_analysis.show()
         self._view.ui.btn_start_prediction_analysis.setEnabled(True)
 
-
-    def _enable_selection_of_proteins_for_analysis(self) -> None:
-        """Shows the gui elements to choose the two proteins."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_analysis_overview,
-            self._view.ui.list_analysis_overview,
-            self._view.ui.lbl_analysis_protein_struct_1,
-            self._view.ui.box_analysis_protein_struct_1,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_analysis_protein_struct_2,
-            self._view.ui.box_analysis_protein_struct_2,
-            self._view.ui.btn_analysis_next,
-            self._view.ui.btn_analysis_back,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_analysis_remove,
-            self._view.ui.btn_analysis_add,
-            self._view.ui.lbl_analysis_protein_1_chains,
-            self._view.ui.list_analysis_protein_1_chains,
-            self._view.ui.btn_analysis_back_2,
-            self._view.ui.btn_analysis_next_2,
-            self._view.ui.lbl_analysis_protein_2_chains,
-            self._view.ui.list_analysis_protein_2_chains,
-            self._view.ui.btn_analysis_back_3,
-            self._view.ui.btn_analysis_next_3,
-            self._view.ui.btn_start_prediction_analysis,
-            self._view.ui.btn_analysis_back_4,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.lbl_analysis_protein_struct_1.clear()
-        self._view.ui.lbl_analysis_protein_struct_2.clear()
-        self._view.ui.lbl_analysis_protein_struct_1.setText("Protein structure 1")
-        self._view.ui.lbl_analysis_protein_struct_2.setText("Protein structure 2")
-        self._fill_protein_struct_combo_boxes()
-        if self._view.ui.list_analysis_overview.count() > 0:
-            try:
-                self._view.ui.list_analysis_overview.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
-
-    def _disable_selection_of_proteins_for_analysis(self) -> None:
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Back' button was clicked.")
-        """Hides the gui elements to choose the two proteins."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_analysis_overview,
-            self._view.ui.list_analysis_overview,
-            self._view.ui.btn_analysis_add,
-            self._view.ui.btn_analysis_back_4,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_analysis_remove,
-            self._view.ui.lbl_analysis_protein_struct_1,
-            self._view.ui.lbl_analysis_protein_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_analysis_protein_1_chains,
-            self._view.ui.list_analysis_protein_1_chains,
-            self._view.ui.btn_analysis_next,
-            self._view.ui.btn_analysis_back,
-            self._view.ui.btn_analysis_back_2,
-            self._view.ui.btn_analysis_next_2,
-            self._view.ui.box_analysis_protein_struct_1,
-            self._view.ui.box_analysis_protein_struct_2,
-            self._view.ui.lbl_analysis_protein_2_chains,
-            self._view.ui.list_analysis_protein_2_chains,
-            self._view.ui.btn_analysis_back_3,
-            self._view.ui.btn_analysis_next_3,
-            self._view.ui.btn_start_prediction_analysis,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        if self._view.ui.list_analysis_overview.count() > 0:
-            self._view.ui.btn_analysis_remove.show()
-            self._view.ui.btn_analysis_remove.setEnabled(False)
-            self._view.ui.btn_start_prediction_analysis.show()
-
-    def _show_chains_of_protein_structure_1(self) -> None:
-        """Shows the gui elements to select the chains in protein 1."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Next' button was clicked.")
-        tmp_proteins_to_predict: list[str] = []
-        for i in range(self._view.ui.table_proteins_to_predict.rowCount()):
-            tmp_proteins_to_predict.append(
-                self._view.ui.table_proteins_to_predict.verticalHeaderItem(i).text(),
-            )
-        self._active_task = tasks.LegacyTask(
-            target=main_presenter_async.check_chains_for_subsequent_analysis,
-            args=(
-                self._view.ui.box_analysis_protein_struct_1.currentText(),
-                self._view.ui.box_analysis_protein_struct_2.currentText(),
-                self._interface_manager.get_current_project(),
-                tmp_proteins_to_predict,
-            ),
-            post_func=self.__await_show_chains_of_protein_structure_1,
-        )
-        self._active_task.start()
-
-    def __await_show_chains_of_protein_structure_1(self, result: tuple) -> None:
-        # fixme: something is not quite right with the detection of the chains!
-        _, tmp_analysis_name = result
-        if tmp_analysis_name != "":
-            gui_elements_to_show = [
-                self._view.ui.btn_analysis_remove,
-                self._view.ui.btn_analysis_add,
-                self._view.ui.lbl_analysis_overview,
-                self._view.ui.list_analysis_overview,
-                self._view.ui.btn_start_prediction_analysis,
-                self._view.ui.btn_analysis_back_4,
-            ]
-            gui_elements_to_hide = [
-                self._view.ui.box_analysis_protein_struct_1,
-                self._view.ui.box_analysis_protein_struct_2,
-                self._view.ui.lbl_analysis_protein_struct_1,
-                self._view.ui.lbl_analysis_protein_struct_2,
-                self._view.ui.lbl_analysis_batch_vs_3,
-                self._view.ui.lbl_analysis_protein_1_chains,
-                self._view.ui.list_analysis_protein_1_chains,
-                self._view.ui.lbl_analysis_protein_2_chains,
-                self._view.ui.list_analysis_protein_2_chains,
-                self._view.ui.btn_analysis_back,
-                self._view.ui.btn_analysis_next,
-                self._view.ui.btn_analysis_back_2,
-                self._view.ui.btn_analysis_next_2,
-                self._view.ui.btn_analysis_back_3,
-                self._view.ui.btn_analysis_next_3,
-
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            item = QtWidgets.QListWidgetItem(tmp_analysis_name)
-            self._view.ui.list_analysis_overview.addItem(item)
-            self._view.ui.btn_analysis_remove.setEnabled(False)
-        else:
-            gui_elements_to_show = [
-                self._view.ui.lbl_analysis_overview,
-                self._view.ui.list_analysis_overview,
-                self._view.ui.lbl_analysis_protein_struct_1,
-                self._view.ui.lbl_analysis_protein_struct_2,
-                self._view.ui.lbl_analysis_batch_vs_3,
-                self._view.ui.lbl_analysis_protein_1_chains,
-                self._view.ui.list_analysis_protein_1_chains,
-                self._view.ui.btn_analysis_back_2,
-                self._view.ui.btn_analysis_next_2,
-            ]
-            gui_elements_to_hide = [
-                self._view.ui.btn_analysis_remove,
-                self._view.ui.btn_analysis_add,
-                self._view.ui.box_analysis_protein_struct_1,
-                self._view.ui.box_analysis_protein_struct_2,
-                self._view.ui.btn_analysis_back,
-                self._view.ui.btn_analysis_next,
-                self._view.ui.lbl_analysis_protein_2_chains,
-                self._view.ui.list_analysis_protein_2_chains,
-                self._view.ui.btn_analysis_back_3,
-                self._view.ui.btn_analysis_next_3,
-
-                self._view.ui.btn_start_prediction_analysis,
-                self._view.ui.btn_analysis_back_4,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self._view.ui.lbl_analysis_protein_struct_1.setText(
-                self._view.ui.box_analysis_protein_struct_1.currentText(),
-            )
-            self._view.ui.lbl_analysis_protein_struct_2.setText(
-                self._view.ui.box_analysis_protein_struct_2.currentText(),
-            )
-            self._view.ui.list_analysis_protein_1_chains.clear()
-            self._view.ui.btn_analysis_next_2.setEnabled(False)
-            self._view.ui.list_analysis_protein_1_chains.setEnabled(True)
-
-            for i in range(self._view.ui.table_proteins_to_predict.rowCount()):
-                if (
-                        self._view.ui.table_proteins_to_predict.verticalHeaderItem(i).text()
-                        == self._view.ui.box_analysis_protein_struct_1.currentText()
-                ):
-                    self._view.ui.list_analysis_protein_1_chains.addItem(
-                        self._view.ui.table_proteins_to_predict.item(i, 0).text(),
-                    )
-            if self._view.ui.list_analysis_protein_1_chains.count() == 0:
-                tmp_protein = self._interface_manager.get_current_project().search_protein(
-                    self._view.ui.box_analysis_protein_struct_1.currentText(),
-                )
-                for tmp_chain in tmp_protein.chains:
-                    if tmp_chain.chain_type == "protein_chain":
-                        self._view.ui.list_analysis_protein_1_chains.addItem(tmp_chain.chain_letter)
-            if self._view.ui.list_analysis_protein_1_chains.count() == 1:
-                self._view.ui.lbl_analysis_protein_1_chains.setText(
-                    f"Select chain in protein structure {self._view.ui.lbl_analysis_protein_struct_1.text()}.",
-                )
-            else:
-                self._view.ui.lbl_analysis_protein_1_chains.setText(
-                    f"Select chains in protein structure {self._view.ui.lbl_analysis_protein_struct_1.text()}.",
-                )
-
-    def _show_chains_of_protein_structure_2(self) -> None:
-        """Shows the gui elements to select the chains in protein 2."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_analysis_overview,
-            self._view.ui.list_analysis_overview,
-            self._view.ui.lbl_analysis_protein_struct_1,
-            self._view.ui.lbl_analysis_protein_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_analysis_protein_1_chains,
-            self._view.ui.list_analysis_protein_1_chains,
-            self._view.ui.lbl_analysis_protein_2_chains,
-            self._view.ui.list_analysis_protein_2_chains,
-            self._view.ui.btn_analysis_back_3,
-            self._view.ui.btn_analysis_next_3,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_analysis_remove,
-            self._view.ui.btn_analysis_add,
-            self._view.ui.box_analysis_protein_struct_1,
-            self._view.ui.box_analysis_protein_struct_2,
-            
-            self._view.ui.btn_analysis_back_2,
-            self._view.ui.btn_analysis_next_2,
-            
-            self._view.ui.btn_start_prediction_analysis,
-            self._view.ui.btn_analysis_back_4,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.list_analysis_protein_2_chains.clear()
-        self._view.ui.list_analysis_protein_1_chains.setEnabled(False)
-        self._view.ui.btn_analysis_next_3.setEnabled(False)
-
-        for i in range(self._view.ui.table_proteins_to_predict.rowCount()):
-            if (
-                    self._view.ui.table_proteins_to_predict.verticalHeaderItem(i).text()
-                    == self._view.ui.box_analysis_protein_struct_2.currentText()
-            ):
-                self._view.ui.list_analysis_protein_2_chains.addItem(
-                    self._view.ui.table_proteins_to_predict.item(i, 0).text(),
-                )
-        if self._view.ui.list_analysis_protein_2_chains.count() == 0:
-            tmp_protein = self._interface_manager.get_current_project().search_protein(
-                self._view.ui.box_analysis_protein_struct_2.currentText(),
-            )
-            for tmp_chain in tmp_protein.chains:
-                if tmp_chain.chain_type == "protein_chain":
-                    self._view.ui.list_analysis_protein_2_chains.addItem(tmp_chain.chain_letter)
-        if len(self._view.ui.list_analysis_protein_1_chains.selectedItems()) == 1:
-            self._view.ui.lbl_analysis_protein_2_chains.setText(
-                f"Select 1 chain in protein structure {self._view.ui.lbl_analysis_protein_struct_2.text()}.",
-            )
-        else:
-            self._view.ui.lbl_analysis_protein_2_chains.setText(
-                f"Select {len(self._view.ui.list_analysis_protein_1_chains.selectedItems())} chains in "
-                f"protein structure {self._view.ui.lbl_analysis_protein_struct_2.text()}.",
-            )
-
-    def _hide_chains_of_protein_structure_1(self) -> None:
-        """Hides the gui elements to select the chains in protein 1."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_analysis_overview,
-            self._view.ui.list_analysis_overview,
-            self._view.ui.lbl_analysis_protein_struct_1,
-            self._view.ui.box_analysis_protein_struct_1,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_analysis_protein_struct_2,
-            self._view.ui.box_analysis_protein_struct_2,
-            self._view.ui.btn_analysis_next,
-            self._view.ui.btn_analysis_back,
-            self._view.ui.btn_analysis_back_4,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_analysis_remove,
-            self._view.ui.btn_analysis_add,
-            self._view.ui.lbl_analysis_protein_1_chains,
-            self._view.ui.list_analysis_protein_1_chains,
-            self._view.ui.btn_analysis_back_2,
-            self._view.ui.btn_analysis_next_2,
-            self._view.ui.lbl_analysis_protein_2_chains,
-            self._view.ui.list_analysis_protein_2_chains,
-            self._view.ui.btn_analysis_back_3,
-            self._view.ui.btn_analysis_next_3,
-            self._view.ui.btn_start_prediction_analysis,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.lbl_analysis_protein_struct_1.setText("Protein structure 1")
-        self._view.ui.lbl_analysis_protein_struct_2.setText("Protein structure 2")
-
-    def _add_analysis_run_to_list_widget(self) -> None:
-        """Adds the protein pair to the list of protein pairs to analyze."""
-        gui_elements_to_show = [
-            self._view.ui.btn_analysis_remove,
-            self._view.ui.btn_analysis_add,
-            self._view.ui.lbl_analysis_overview,
-            self._view.ui.list_analysis_overview,
-            self._view.ui.btn_start_prediction_analysis,
-            self._view.ui.btn_analysis_back_4,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.box_analysis_protein_struct_1,
-            self._view.ui.box_analysis_protein_struct_2,
-            self._view.ui.lbl_analysis_protein_struct_1,
-            self._view.ui.lbl_analysis_protein_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_analysis_protein_1_chains,
-            self._view.ui.list_analysis_protein_1_chains,
-            self._view.ui.lbl_analysis_protein_2_chains,
-            self._view.ui.list_analysis_protein_2_chains,
-            self._view.ui.btn_analysis_back_2,
-            self._view.ui.btn_analysis_next_2,
-            self._view.ui.btn_analysis_back_3,
-            self._view.ui.btn_analysis_next_3,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        prot_1_name = self._view.ui.lbl_analysis_protein_struct_1.text()
-        prot_1_chains = []
-        for chain in self._view.ui.list_analysis_protein_1_chains.selectedItems():
-            prot_1_chains.append(chain.text())
-        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
-        prot_2_name = self._view.ui.lbl_analysis_protein_struct_2.text()
-        prot_2_chains = []
-        for chain in self._view.ui.list_analysis_protein_2_chains.selectedItems():
-            prot_2_chains.append(chain.text())
-        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
-        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-        item = QtWidgets.QListWidgetItem(analysis_name)
-        self._view.ui.list_analysis_overview.addItem(item)
-        self._view.ui.btn_analysis_remove.setEnabled(False)
-
-    def _hide_chains_of_protein_structure_2(self) -> None:
-        """Hides the gui elements to select the chains in protein 2."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_analysis_overview,
-            self._view.ui.list_analysis_overview,
-            self._view.ui.lbl_analysis_protein_struct_1,
-            self._view.ui.lbl_analysis_protein_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_analysis_protein_1_chains,
-            self._view.ui.list_analysis_protein_1_chains,
-            self._view.ui.btn_analysis_back_2,
-            self._view.ui.btn_analysis_next_2,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_analysis_remove,
-            self._view.ui.btn_analysis_add,
-            self._view.ui.box_analysis_protein_struct_1,
-            self._view.ui.box_analysis_protein_struct_2,
-            
-            self._view.ui.btn_analysis_back_3,
-            self._view.ui.btn_analysis_next_3,
-            
-            self._view.ui.btn_start_prediction_analysis,
-            self._view.ui.lbl_analysis_protein_2_chains,
-            self._view.ui.list_analysis_protein_2_chains,
-            self._view.ui.btn_analysis_back_4,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.list_analysis_protein_1_chains.setEnabled(True)
-
-        # tmp_protein = self._interface_manager.get_current_project().search_protein(self._view.ui.box_analysis_protein_struct_2.currentText())
-        # for tmp_chain in tmp_protein.chains:
-        #     if tmp_chain.chain_type == "protein_chain":
-        #         self._view.ui.list_analysis_protein_1_chains.addItem(tmp_chain.chain_letter)
-
     def _enable_remove_button_for_analysis_list(self) -> None:
         """Enables the remove button."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "An analysis run from the list was clicked.")
         self._view.ui.btn_analysis_remove.setEnabled(True)
-
-    def _fill_protein_struct_combo_boxes(self) -> None:
-        """Fills the combo boxes with the protein names."""
-        protein_names = []
-        for i in range(self._view.ui.table_proteins_to_predict.rowCount()):
-            protein_names.append(
-                self._view.ui.table_proteins_to_predict.verticalHeaderItem(i).text())
-        for tmp_protein in self._interface_manager.get_current_project().proteins:
-            protein_names.append(tmp_protein.get_molecule_object())
-        protein_names.insert(0, "")
-        protein_names = list(set(protein_names))
-        self._view.ui.box_analysis_protein_struct_1.clear()
-        self._view.ui.box_analysis_protein_struct_2.clear()
-        gui_utils.fill_combo_box(self._view.ui.box_analysis_protein_struct_1, protein_names)
-        gui_utils.fill_combo_box(self._view.ui.box_analysis_protein_struct_2, protein_names)
 
     def _remove_analysis_run_from_list(self) -> None:
         """Removes the selected protein pair from the list of protein pairs to analyze."""
@@ -898,50 +614,8 @@ class PredictProteinViewController(QtCore.QObject):
             self._view.ui.btn_analysis_remove.setEnabled(False)
             self._view.ui.btn_start_prediction_analysis.show()
 
-    def _check_if_same_number_of_chains_selected(self) -> None:
-        """Checks if the same number of chains were selected."""
-        self._view.ui.btn_analysis_next_3.setEnabled(False)
-        if self.no_of_selected_chains == len(self._view.ui.list_analysis_protein_2_chains.selectedItems()):
-            self._view.ui.btn_analysis_next_3.setEnabled(True)
-
-        prot_1_name = self._view.ui.lbl_analysis_protein_struct_1.text()
-        prot_1_chains = []
-        for chain in self._view.ui.list_analysis_protein_1_chains.selectedItems():
-            prot_1_chains.append(chain.text())
-        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
-        prot_2_name = self._view.ui.lbl_analysis_protein_struct_2.text()
-        prot_2_chains = []
-        for chain in self._view.ui.list_analysis_protein_2_chains.selectedItems():
-            prot_2_chains.append(chain.text())
-        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
-        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-        for tmp_row in range(self._view.ui.list_analysis_overview.count()):
-            if analysis_name == self._view.ui.list_analysis_overview.item(tmp_row).text():
-                self._view.ui.btn_analysis_next_3.setEnabled(False)
-                return
-
-    def _check_if_protein_structs_are_filled(self) -> None:
-        """Checks if two proteins were selected."""
-        prot_1 = self._view.ui.box_analysis_protein_struct_1.itemText(
-            self._view.ui.box_analysis_protein_struct_1.currentIndex(),
-        )
-        prot_2 = self._view.ui.box_analysis_protein_struct_2.itemText(
-            self._view.ui.box_analysis_protein_struct_2.currentIndex(),
-        )
-        if prot_1 != "" and prot_2 != "":
-            self._view.ui.btn_analysis_next.setEnabled(True)
-        else:
-            self._view.ui.btn_analysis_next.setEnabled(False)
-
-    def _count_selected_chains_for_protein_struct_1(self) -> None:
-        """Counts the number of chains in protein 1."""
-        self.no_of_selected_chains = len(self._view.ui.list_analysis_protein_1_chains.selectedItems())
-        if self.no_of_selected_chains > 0:
-            self._view.ui.btn_analysis_next_2.setEnabled(True)
-        else:
-            self._view.ui.btn_analysis_next_2.setEnabled(False)
-
-    def _start_prediction_analysis(self):
+    def _start_prediction_analysis(self) -> None:
+        """Starts the process batch based on selected items in the prediction and distance analysis overview."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Start' button was clicked.")
         tmp_prediction_runs: list[
             prediction_protein_info.PredictionProteinInfo

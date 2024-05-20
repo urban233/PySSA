@@ -35,7 +35,7 @@ from PyQt5.QtCore import Qt
 
 from application_process import application_process_manager
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
-from pyssa.controller import pymol_session_manager, settings_manager, main_tasks_manager, \
+from pyssa.controller import pymol_session_manager, settings_manager, \
     status_bar_manager, job_manager, watcher
 from pyssa.gui.ui.custom_widgets import job_entry
 from pyssa.gui.ui.dialogs import dialog_startup
@@ -126,12 +126,10 @@ class InterfaceManager:
         self._restart_user_pymol_view = restart_user_pymol_view.RestartUserPyMOLView()
         self._advanced_prediction_configurations = advanced_prediction_configurations.AdvancedPredictionConfigurationsView()
 
-        self.main_tasks_manager = main_tasks_manager.MainTasksManager()
         self.app_process_manager = application_process_manager.ApplicationProcessManager(self._reset_pymol_session)
         self.pymol_session_manager = pymol_session_manager.PymolSessionManager(self.app_process_manager)
         self.job_manager = job_manager.JobManager()
-        self.status_bar_manager = status_bar_manager.StatusBarManager(self._main_view,
-                                                                      self.main_tasks_manager)
+        self.status_bar_manager = status_bar_manager.StatusBarManager(self._main_view)
 
         self.watcher = watcher.Watcher()
 

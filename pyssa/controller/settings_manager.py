@@ -27,11 +27,15 @@ from pyssa.util import constants
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class SettingsManager:
-
+    """Manager class for the settings data structure."""
+    
     settings: "settings.Settings"
+    """The instance of the settings data structure."""
 
     def __init__(self) -> None:
+        """Constructor."""
         self.settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)

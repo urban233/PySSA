@@ -28,16 +28,35 @@ from PyQt5 import QtWidgets
 from pyssa.controller import interface_manager, fasta_file_import_preview_view_controller
 from pyssa.internal.data_structures.data_classes import basic_seq_info
 from pyssa.logging_pyssa import log_levels, log_handlers
+from pyssa.util import exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class ImportSequenceViewController(QtCore.QObject):
     """Class for the ImportSequenceViewController class."""
+    
     user_input = QtCore.pyqtSignal(tuple)
+    """Singal used to transfer data back to the previous window."""
 
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager"):
+        """Constructor.
+
+        Args:
+            the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        
+        Raises:
+            exception.IllegalArgumentError: If `the_interface_manager` is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_interface_manager is None:
+          logger.error("the_interface_manager is None.")
+          raise exception.IllegalArgumentError("the_interface_manager is None.")
+        
+        # </editor-fold>
+        
         super().__init__()
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_import_sequence_view()
@@ -47,18 +66,21 @@ class ImportSequenceViewController(QtCore.QObject):
         self._connect_all_ui_elements_to_slot_functions()
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        """Connects all UI elements to their corresponding slot functions in the class."""
         self._view.ui.btn_choose_fasta_file.clicked.connect(self.load_model)
         self._view.ui.btn_preview.clicked.connect(self._open_preview)
         self._view.ui.btn_import_sequence.clicked.connect(self.import_sequence)
 
-    def restore_ui(self):
+    def restore_ui(self) -> None:
+        """Restores the UI."""
         self._view.ui.txt_import_sequence.setText("")
         self._view.ui.lbl_status.setText("")
         self._view.ui.btn_preview.setEnabled(False)
         self._view.ui.btn_import_sequence.setEnabled(False)
 
     # @SLOT
-    def _open_preview(self):
+    def _open_preview(self) -> None:
+        """Opens FASTA file import preview."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Preview' button was clicked.")
         self._external_controller = fasta_file_import_preview_view_controller.FastaFileImportPreviewViewController(
             self._interface_manager, self._parsed_sequences)
@@ -67,7 +89,22 @@ class ImportSequenceViewController(QtCore.QObject):
         self._external_controller.fill_sequence_table()
         self._interface_manager.get_fasta_file_import_preview_view().show()
 
-    def _post_open_preview(self, return_value: tuple):
+    def _post_open_preview(self, return_value: tuple) -> None:
+        """Processes the return values from the 'open_preview' method.
+
+        Args:
+            return_value: A tuple containing the return values from the 'open_preview' method.
+        
+        Raises:
+            exception.IllegalArgumentError: If `return_value` is None.
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None:
+            logger.error("return_value is None.")
+            raise exception.IllegalArgumentError("return_value is None.")
+        
+        # </editor-fold>
+        
         _, self._parsed_sequences = return_value
         self._parsed_seq_records = self._convert_seqs_to_seq_records()
         print(self._parsed_seq_records)
@@ -97,7 +134,24 @@ class ImportSequenceViewController(QtCore.QObject):
             self._view.ui.btn_preview.setEnabled(False)
             self._view.ui.btn_import_sequence.setEnabled(False)
 
-    def parse_fasta(self, file_path):
+    def parse_fasta(self, file_path: str) -> list["basic_seq_info.BasicSeqInfo"]:
+        """Parses a FASTA file and returns a list of BasicSeqInfo objects.
+
+        Args:
+            file_path (str): The path to the FASTA file.
+
+        Returns:
+            A list of BasicSeqInfo objects, each representing a sequence entry in the FASTA file.
+        
+        Raises:
+            exception.IllegalArgumentError: If `file_path` is either None or an empty string.
+        """
+        # <editor-fold desc="Checks">
+        if file_path is None or file_path == "":
+            logger.error("file_path is either None or an empty string.")
+            raise exception.IllegalArgumentError("file_path is either None or an empty string.")
+        # </editor-fold>
+        
         sequences = []
         with open(file_path, 'r') as file:
             tmp_chains = []
@@ -129,7 +183,25 @@ class ImportSequenceViewController(QtCore.QObject):
                 sequences.append(tmp_seq_info)
         return sequences
 
-    def merge_sequences(self, seq_infos):
+    def merge_sequences(self, seq_infos: list) -> list:
+        """Merges sequences from multiple sequence info objects.
+
+        Args:
+            seq_infos (list): A list of sequence info objects.
+
+        Returns:
+            A list of merged sequence info objects.
+        
+        Raises:
+            exception.IllegalArgumentError: If `seq_infos` is None.
+        """
+        # <editor-fold desc="Checks">
+        if seq_infos is None:
+            logger.error("seq_infos is None.")
+            raise exception.IllegalArgumentError("seq_infos is None.")
+        
+        # </editor-fold>
+        
         merged_seqs = defaultdict(lambda: {'name': '', 'chain': '', 'seq': ''})
 
         for seq_info in seq_infos:
@@ -150,10 +222,14 @@ class ImportSequenceViewController(QtCore.QObject):
 
         merged_seq_infos = [basic_seq_info.BasicSeqInfo(name=val['name'], chain=val['chain'], seq=val['seq']) for val in
                             merged_seqs.values()]
-
         return merged_seq_infos
 
     def _convert_seqs_to_seq_records(self) -> list:
+        """Converts parsed sequences into sequence records.
+
+        Returns:
+            list: A list of SeqRecord objects representing the parsed sequences.
+        """
         merged_seq_infos = self.merge_sequences(self._parsed_sequences)
 
         tmp_seq_records = []
@@ -163,7 +239,7 @@ class ImportSequenceViewController(QtCore.QObject):
         return tmp_seq_records
 
     def import_sequence(self) -> None:
-        """Adds a protein to the global variable and closes the dialog."""
+        """Imports a sequence by emitting a user_input signal with the sequence data."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Import' button was clicked.")
         self._view.close()
         self.user_input.emit((0, self._parsed_seq_records))

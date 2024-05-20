@@ -28,18 +28,41 @@ from pyssa.controller import interface_manager
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures.data_classes import basic_seq_info
 from pyssa.logging_pyssa import log_levels, log_handlers
+from pyssa.util import exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class FastaFileImportPreviewViewController(QtCore.QObject):
     """Class for the FastaFileImportPreviewViewController."""
+    
     user_input = QtCore.pyqtSignal(tuple)
-
+    """Singal used to transfer data back to the previous window."""
+    
     def __init__(self,
                  the_interface_manager: "interface_manager.InterfaceManager",
-                 the_parsed_sequences: list[basic_seq_info.BasicSeqInfo]):
+                 the_parsed_sequences: list["basic_seq_info.BasicSeqInfo"]) -> None:
+        """Constructor.
+
+        Args:
+            the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+            the_parsed_sequences (list[basic_seq_info.BasicSeqInfo]): A list of BasicSeqInfo objects representing parsed sequences.
+            
+        Raises:
+            exception.IllegalArgumentError: If `the_interface_manager` is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_interface_manager is None:
+            logger.error("the_interface_manager is None.")
+            raise exception.IllegalArgumentError("the_interface_manager is None.")
+        if the_parsed_sequences is None:
+            logger.error("the_parsed_sequences is None.")
+            raise exception.IllegalArgumentError("the_parsed_sequences is None.")
+
+        # </editor-fold>
+        
         super().__init__()
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_fasta_file_import_preview_view()
@@ -47,6 +70,7 @@ class FastaFileImportPreviewViewController(QtCore.QObject):
         self._connect_all_ui_elements_to_slot_functions()
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        """Connects all UI elements to their corresponding slot functions in the class."""
         self._view.ui.btn_save.clicked.connect(self.__slot_save_sequence_changes)
         self._view.ui.table.itemSelectionChanged.connect(self.__slot_enable_table_edit_buttons)
         self._view.ui.table.cellChanged.connect(self._check_if_sequences_can_be_saved)
@@ -54,7 +78,8 @@ class FastaFileImportPreviewViewController(QtCore.QObject):
         self._view.ui.btn_duplicate.clicked.connect(self.__slot_duplicate_selected_sequence)
         self._view.ui.btn_restore.clicked.connect(self._restore_default_table_values)
 
-    def restore_ui(self):
+    def restore_ui(self) -> None:
+        """Restores the UI."""
         self._view.ui.lbl_description.setText("Sequences Overview")
         self._view.ui.lbl_description_2.setText("The chain letter will be lost, if you do the import! (The chain letter is important to store the sequences in a specific order.)")
         self._view.ui.btn_delete.setEnabled(False)
@@ -68,17 +93,20 @@ class FastaFileImportPreviewViewController(QtCore.QObject):
         # restore table
         self._restore_table()
 
-    def _restore_table(self):
+    def _restore_table(self) -> None:
+        """Restores the table."""
         self._view.ui.table.clear()
         self._view.ui.table.setColumnCount(3)
         self._view.ui.table.setHorizontalHeaderLabels(["Name", "Chain", "Sequence"])
 
-    def _restore_default_table_values(self):
+    def _restore_default_table_values(self) -> None:
+        """Restores the default table values."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Restore' button was clicked.")
         self._restore_table()
         self.fill_sequence_table()
 
-    def fill_sequence_table(self):
+    def fill_sequence_table(self) -> None:
+        """Fill the sequence table with the parsed sequences."""
         self._view.ui.table.setRowCount(len(self._parsed_sequences))
         i = 0
         for tmp_seq_info in self._parsed_sequences:
@@ -92,7 +120,8 @@ class FastaFileImportPreviewViewController(QtCore.QObject):
             i += 1
         self._view.ui.table.resizeColumnsToContents()
 
-    def _check_if_sequences_can_be_saved(self):
+    def _check_if_sequences_can_be_saved(self) -> None:
+        """Checks if sequences can be saved based on the data in a table view."""
         if self._view.ui.table.rowCount() == 0:
             self._view.ui.btn_save.setEnabled(False)
             return
@@ -115,6 +144,7 @@ class FastaFileImportPreviewViewController(QtCore.QObject):
 
     # @SLOT
     def __slot_save_sequence_changes(self) -> None:
+        """Save the changes made to the sequences by sending the `user_input` signal."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Save' button was clicked.")
         self._parsed_sequences = []
         for tmp_row_no in range(self._view.ui.table.rowCount()):
@@ -127,7 +157,8 @@ class FastaFileImportPreviewViewController(QtCore.QObject):
         self._view.close()
         self.user_input.emit((0, self._parsed_sequences))
 
-    def __slot_delete_sequence_from_table(self):
+    def __slot_delete_sequence_from_table(self) -> None:
+        """Delete selected rows from the table."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete' button was clicked.")
         selected_rows = sorted(set(index.row() for index in self._view.ui.table.selectedIndexes()))
         # Reverse the selected rows list to ensure correct removal when removing rows
@@ -137,6 +168,7 @@ class FastaFileImportPreviewViewController(QtCore.QObject):
         self._check_if_sequences_can_be_saved()
 
     def __slot_enable_table_edit_buttons(self) -> None:
+        """Enable or disable the edit buttons in the table view based on the selected items."""
         if len(self._view.ui.table.selectedItems()) == 0:
             self._view.ui.btn_delete.setEnabled(False)
             self._view.ui.btn_duplicate.setEnabled(False)
@@ -145,7 +177,8 @@ class FastaFileImportPreviewViewController(QtCore.QObject):
             self._view.ui.btn_duplicate.setEnabled(True)
         self._check_if_sequences_can_be_saved()
 
-    def __slot_duplicate_selected_sequence(self):
+    def __slot_duplicate_selected_sequence(self) -> None:
+        """Duplicates the selected sequence in the table."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Duplicate' button was clicked.")
         tmp_name_item = QtWidgets.QTableWidgetItem(self._view.ui.table.item(self._view.ui.table.currentRow(), 0).text())
         tmp_chain_item = QtWidgets.QTableWidgetItem("Enter a valid chain letter!")

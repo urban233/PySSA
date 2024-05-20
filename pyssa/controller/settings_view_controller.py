@@ -30,19 +30,37 @@ from pyssa.controller import interface_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
-from pyssa.util import gui_utils
+from pyssa.util import gui_utils, exception
 from pyssa.logging_pyssa import log_handlers, log_levels
 from pyssa.util import constants
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class SettingsViewController(QtCore.QObject):
-    """Class for the Create Project View Controller."""
+    """Class for the SettingsViewController."""
+    
     user_input = QtCore.pyqtSignal(tuple)
-
+    """Singal used to transfer data back to the previous window."""
+    
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
+        """Constructor.
+
+        Args:
+            the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+
+        Raises:
+            exception.IllegalArgumentError: If `the_interface_manager` is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_interface_manager is None:
+            logger.error("the_interface_manager is None.")
+            raise exception.IllegalArgumentError("the_interface_manager is None.")
+
+        # </editor-fold>
+        
         super().__init__()
         self._interface_manager = the_interface_manager
         self._settings_manager = the_interface_manager.get_settings_manager()
@@ -52,12 +70,22 @@ class SettingsViewController(QtCore.QObject):
         self._connect_all_ui_elements_to_slot_functions()
 
     # <editor-fold desc="Util methods">
-    def open_help(self, a_page_name: str):
+    def open_help(self, a_page_name: str) -> None:
         """Opens the pyssa documentation window if it's not already open.
 
         Args:
             a_page_name (str): a name of a documentation page to display
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_page_name` is None.
         """
+        # <editor-fold desc="Checks">
+        if a_page_name is None:
+            logger.error("a_page_name is None.")
+            raise exception.IllegalArgumentError("a_page_name is None.")
+        
+        # </editor-fold>
+    
         try:
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center ...")
             if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
@@ -72,17 +100,25 @@ class SettingsViewController(QtCore.QObject):
         else:
             self._active_task.start()
 
-    def __await_open_help(self, return_value):
+    def __await_open_help(self, return_value: tuple) -> None:
+        """Opens the help center and performs necessary actions based on the return value.
+
+        Args:
+            return_value (tuple): The return value from opening the help center.
+        """
+        # <editor-fold desc="Checks">
         if return_value[0] == "":
             self._interface_manager.status_bar_manager.show_error_message("Opening help center failed!")
             return
+        
+        # </editor-fold>
 
         try:
             self._interface_manager.documentation_window = return_value[2]
             if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
                 tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "The script for bringing the documentation window in front could not be found!", "Documentation",
-                    custom_message_box.CustomMessageBoxIcons.ERROR.value
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value,
                 )
                 tmp_dialog.exec_()
             else:
@@ -93,17 +129,19 @@ class SettingsViewController(QtCore.QObject):
             logger.error(f"Error while opening help center: {e}")
             self._interface_manager.status_bar_manager.show_error_message("Opening help center failed!")
 
-    def _open_help_for_dialog(self):
+    def _open_help_for_dialog(self) -> None:
+        """Opens the help dialog."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/settings/pyssa_settings/")
 
-    def restore_ui(self):
-        """Restores the ui."""
+    def restore_ui(self) -> None:
+        """Restores the UI."""
         self._view.ui.tabWidget.setCurrentIndex(0)
 
     # </editor-fold>
     
-    def _initialize_ui(self):
+    def _initialize_ui(self) -> None:
+        """Initializes the user interface by setting values and configuring options."""
         # combo box BgColor
         item_list_bg_color = [
             "black",
@@ -133,22 +171,7 @@ class SettingsViewController(QtCore.QObject):
             "Fiber",
         ]
         gui_utils.fill_combo_box(self._view.ui.box_ray_texture, item_list_ray_texture)
-        item_list_proteins_tab_representation_gui_elements = [
-            "Toggle Buttons",
-            "Checkboxes",
-        ]
-        # gui_utils.fill_combo_box(self._view.ui.box_proteins_tab_toggle_checkbox,
-        #                          item_list_proteins_tab_representation_gui_elements)
-        # gui_utils.fill_combo_box(self._view.ui.box_protein_pairs_tab_toggle_checkbox,
-        #                          item_list_proteins_tab_representation_gui_elements)
-        # item_list_proteins_tab_color_gui_elements = [
-        #     "Color Grid",
-        #     "Combobox",
-        # ]
-        # gui_utils.fill_combo_box(self._view.ui.box_proteins_tab_box_color,
-        #                          item_list_proteins_tab_color_gui_elements)
-        # gui_utils.fill_combo_box(self._view.ui.box_protein_pairs_tab_box_color,
-        #                          item_list_proteins_tab_color_gui_elements)
+        
         # item_list = [
         #     "normal",
         #     "Red-green (green weak, deuteranopia)",
@@ -174,7 +197,7 @@ class SettingsViewController(QtCore.QObject):
         #     self._view.ui.cb_color_vision_mode.findText(self._settings_manager.settings.color_vision_mode)
         # )
         self._view.ui.box_bg_color.setCurrentIndex(
-            self._view.ui.box_bg_color.findText(self._settings_manager.settings.image_background_color)
+            self._view.ui.box_bg_color.findText(self._settings_manager.settings.image_background_color),
         )
         if self._settings_manager.settings.start_help_at_startup == 1:
             self._view.ui.check_box_start_help.setChecked(True)
@@ -186,25 +209,9 @@ class SettingsViewController(QtCore.QObject):
             self._view.ui.box_renderer.setCurrentIndex(1)
         self._view.ui.box_ray_trace_mode.setCurrentIndex(self._settings_manager.settings.image_ray_trace_mode)
         self._view.ui.box_ray_texture.setCurrentIndex(self._settings_manager.settings.image_ray_texture)
-
-        # if self._settings_manager.settings.proteins_tab_use_toggle == 1:
-        #     self._view.ui.box_proteins_tab_toggle_checkbox.setCurrentIndex(0)
-        # else:
-        #     self._view.ui.box_proteins_tab_toggle_checkbox.setCurrentIndex(1)
-        # if self._settings_manager.settings.proteins_tab_use_combobox_for_colors == 1:
-        #     self._view.ui.box_proteins_tab_box_color.setCurrentIndex(1)
-        # else:
-        #     self._view.ui.box_proteins_tab_box_color.setCurrentIndex(0)
-        # if self._settings_manager.settings.protein_pairs_tab_use_toggle == 1:
-        #     self._view.ui.box_protein_pairs_tab_toggle_checkbox.setCurrentIndex(0)
-        # else:
-        #     self._view.ui.box_protein_pairs_tab_toggle_checkbox.setCurrentIndex(1)
-        # if self._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors == 1:
-        #     self._view.ui.box_protein_pairs_tab_box_color.setCurrentIndex(1)
-        # else:
-        #     self._view.ui.box_protein_pairs_tab_box_color.setCurrentIndex(0)
     
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        """Connects all UI elements to their corresponding slot functions in the class."""
         self._view.ui.btn_workspace_dir.clicked.connect(self.choose_workspace_dir)
         self._view.ui.btn_ok.clicked.connect(self.ok_dialog)
         self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
@@ -232,23 +239,6 @@ class SettingsViewController(QtCore.QObject):
             self._settings_manager.settings.image_renderer = "-1"
         self._settings_manager.settings.image_ray_trace_mode = self._view.ui.box_ray_trace_mode.currentIndex()
         self._settings_manager.settings.image_ray_texture = self._view.ui.box_ray_texture.currentIndex()
-
-        # if self._view.ui.box_proteins_tab_box_color.currentIndex() == 0:
-        #     self._settings_manager.settings.proteins_tab_use_combobox_for_colors = 0
-        # else:
-        #     self._settings_manager.settings.proteins_tab_use_combobox_for_colors = 1
-        # if self._view.ui.box_proteins_tab_toggle_checkbox.currentIndex() == 0:
-        #     self._settings_manager.settings.proteins_tab_use_toggle = 1
-        # else:
-        #     self._settings_manager.settings.proteins_tab_use_toggle = 0
-        # if self._view.ui.box_protein_pairs_tab_box_color.currentIndex() == 0:
-        #     self._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors = 0
-        # else:
-        #     self._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors = 1
-        # if self._view.ui.box_protein_pairs_tab_toggle_checkbox.currentIndex() == 0:
-        #     self._settings_manager.settings.protein_pairs_tab_use_toggle = 1
-        # else:
-        #     self._settings_manager.settings.protein_pairs_tab_use_toggle = 0
 
         self._settings_manager.settings.serialize_settings()
         logging.info("Settings were successfully saved.")

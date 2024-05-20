@@ -38,17 +38,52 @@ if a_value_to_check is None or a_value_to_check == "":
 
 # messages
 """
-
 exception.IllegalArgumentError: If any of the arguments are None or if `a_filepath` is an empty string.
-
 exception.IllegalArgumentError: If any of the arguments are None.
-
 True: Operation successful, False: Otherwise
+"""
+
+"""Singal used to transfer data back to the previous window."""
+"""Connects all UI elements to their corresponding slot functions in the class."""
+"""Restores the UI."""
+
+"""Constructor.
+
+Args:
+    the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+
+Raises:
+    exception.IllegalArgumentError: If `the_interface_manager` is None.
+"""
+# <editor-fold desc="Checks">
+if the_interface_manager is None:
+  logger.error("the_interface_manager is None.")
+  raise exception.IllegalArgumentError("the_interface_manager is None.")
+
+# </editor-fold>
+
 
 """
 
 
+Raises:
+    exception.IllegalArgumentError: If `a_page_name` is None.
+"""
+# <editor-fold desc="Checks">
+if a_page_name is None:
+    logger.error("a_page_name is None.")
+    raise exception.IllegalArgumentError("a_page_name is None.")
+
+# </editor-fold>
+
+"""Opens the help center and performs necessary actions based on the return value.
+
+Args:
+    return_value (tuple): The return value from opening the help center.
+"""
+
 
 # Scratch
 
-"Executes the database operations in the queue."
+"""Checks if a selection is empty."""
+

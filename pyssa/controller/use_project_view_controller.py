@@ -20,8 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the use project view controller."""
-import copy
-import glob
 import logging
 import os
 import pathlib
@@ -33,21 +31,38 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets
 from pyssa.controller import interface_manager, database_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
-from pyssa.gui.ui.styles import styles
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
-from pyssa.util import input_validator, constants, gui_utils, enums
+from pyssa.util import input_validator, constants, gui_utils, enums, exception
 from pyssa.logging_pyssa import log_levels, log_handlers
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class UseProjectViewController(QtCore.QObject):
-    """Class for the Open Project View Controller."""
+    """Class for the UseProjectViewController."""
+    
     user_input = QtCore.pyqtSignal(tuple)
-
+    """Singal used to transfer data back to the previous window."""
+    
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
+        """Constructor.
+
+        Args:
+            the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+
+        Raises:
+            exception.IllegalArgumentError: If `the_interface_manager` is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_interface_manager is None:
+            logger.error("the_interface_manager is None.")
+            raise exception.IllegalArgumentError("the_interface_manager is None.")
+
+        # </editor-fold>
+        
         super().__init__()
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_use_project_view()
@@ -57,12 +72,22 @@ class UseProjectViewController(QtCore.QObject):
         self._project_names: set = self._convert_model_into_set()
         self._connect_all_ui_elements_to_slot_functions()
 
-    def open_help(self, a_page_name: str):
+    def open_help(self, a_page_name: str) -> None:
         """Opens the pyssa documentation window if it's not already open.
 
         Args:
             a_page_name (str): a name of a documentation page to display
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_page_name` is None.
         """
+        # <editor-fold desc="Checks">
+        if a_page_name is None:
+            logger.error("a_page_name is None.")
+            raise exception.IllegalArgumentError("a_page_name is None.")
+        
+        # </editor-fold>
+        
         try:
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center ...")
             if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
@@ -77,17 +102,25 @@ class UseProjectViewController(QtCore.QObject):
         else:
             self._active_task.start()
 
-    def __await_open_help(self, return_value):
+    def __await_open_help(self, return_value: tuple) -> None:
+        """Opens the help center and performs necessary actions based on the return value.
+
+        Args:
+            return_value (tuple): The return value from opening the help center.
+        """
+        # <editor-fold desc="Checks">
         if return_value[0] == "":
             self._interface_manager.status_bar_manager.show_error_message("Opening help center failed!")
             return
+        
+        # </editor-fold>
 
         try:
             self._interface_manager.documentation_window = return_value[2]
             if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
                 tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "The script for bringing the documentation window in front could not be found!", "Documentation",
-                    custom_message_box.CustomMessageBoxIcons.ERROR.value
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value,
                 )
                 tmp_dialog.exec_()
             else:
@@ -98,19 +131,26 @@ class UseProjectViewController(QtCore.QObject):
             logger.error(f"Error while opening help center: {e}")
             self._interface_manager.status_bar_manager.show_error_message("Opening help center failed!")
 
-    def _open_help_for_dialog(self):
+    def _open_help_for_dialog(self) -> None:
+        """Opens the help dialog."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/project/use_project/")
 
     def _convert_model_into_set(self) -> set:
+        """Converts the model data into a set of project names.
+
+        Returns:
+            set: A set containing the project names from the model.
+        """
         tmp_project_names = []
         for tmp_row in range(self._view.ui.list_use_existing_projects.model().rowCount()):
             tmp_project_names.append(
-                self._view.ui.list_use_existing_projects.model().index(tmp_row, 0).data(Qt.DisplayRole)
+                self._view.ui.list_use_existing_projects.model().index(tmp_row, 0).data(Qt.DisplayRole),
             )
         return set(tmp_project_names)
 
     def _initialize_ui(self) -> None:
+        """Initializes the user interface for the application."""
         gui_elements_to_show = [
             self._view.ui.btn_use_next,
             self._view.ui.list_use_existing_projects,
@@ -139,7 +179,7 @@ class UseProjectViewController(QtCore.QObject):
         gui_utils.enable_text_box(self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name)
         self._view.ui.txt_use_project_name.clear()
         self._view.ui.txt_use_project_name.setStyleSheet(
-            """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+            """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
         )
         self._view.ui.lbl_use_status_project_name.setText("")
         self._view.ui.lbl_use_status_project_name.setStyleSheet("color: #ba1a1a; font-size: 11px;")
@@ -149,7 +189,8 @@ class UseProjectViewController(QtCore.QObject):
         self._view.ui.btn_use_next.setEnabled(False)
         self._temporary_redesign()
 
-    def _temporary_redesign(self):
+    def _temporary_redesign(self) -> None:
+        """Changes some parts of the UI temporarily."""
         self._view.ui.lbl_use_search.hide()
         self._view.ui.lbl_use_status_search.hide()
         self._view.ui.txt_use_search.hide()
@@ -159,6 +200,7 @@ class UseProjectViewController(QtCore.QObject):
         self._view.ui.list_use_existing_projects.setModel(self._interface_manager.get_workspace_projects())
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        """Connects all UI elements to their corresponding slot functions in the class."""
         self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
         self._view.ui.txt_use_project_name.textChanged.connect(self.validate_use_project_name)
         self._view.ui.btn_use_next.clicked.connect(self.show_protein_selection_for_use)
@@ -174,8 +216,22 @@ class UseProjectViewController(QtCore.QObject):
         self._view.ui.btn_use_back.clicked.connect(self.hide_protein_selection_for_use)
         self._view.ui.btn_use_create_new_project.clicked.connect(self.create_use_project)
 
-    def validate_use_project_name(self, the_entered_text) -> None:
-        """Validates the input of the project name in real-time."""
+    def validate_use_project_name(self, the_entered_text: str) -> None:
+        """Validates the entered text for project name.
+
+        Args:
+            the_entered_text (str): The text entered for project name.
+        
+        Raises:
+            exception.IllegalArgumentError: If `the_entered_text` is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_entered_text is None:
+            logger.error("the_entered_text is None.")
+            raise exception.IllegalArgumentError("the_entered_text is None.")
+        
+        # </editor-fold>
+        
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         projects_list_view = self._view.ui.list_use_existing_projects
         # Deselect any current item in the list view
@@ -183,7 +239,7 @@ class UseProjectViewController(QtCore.QObject):
             projects_list_view.selectionModel().clearSelection()
 
         tmp_validate_flag, tmp_stylesheet_string, tmp_message = input_validator.validate_input_for_project_name(
-            the_entered_text, self._project_names
+            the_entered_text, self._project_names,
         )
         self._view.ui.txt_use_project_name.setStyleSheet(tmp_stylesheet_string)
 
@@ -196,7 +252,6 @@ class UseProjectViewController(QtCore.QObject):
 
     def validate_use_search(self) -> None:
         """Validates the input of the protein name in real-time."""
-
         message = "Protein structure does not exists."
         input_validator.InputValidator.validate_search_input(
             self._view.ui.list_use_available_protein_structures,
@@ -211,7 +266,7 @@ class UseProjectViewController(QtCore.QObject):
         prot_to_add = QtWidgets.QListWidgetItem(self._view.ui.list_use_available_protein_structures.currentItem().text())
         prot_to_add.setData(
             enums.ModelEnum.OBJECT_ROLE,
-            self._view.ui.list_use_available_protein_structures.currentItem().data(enums.ModelEnum.OBJECT_ROLE)
+            self._view.ui.list_use_available_protein_structures.currentItem().data(enums.ModelEnum.OBJECT_ROLE),
         )
         self._view.ui.list_use_selected_protein_structures.addItem(prot_to_add)
         self._view.ui.list_use_available_protein_structures.takeItem(
@@ -247,6 +302,11 @@ class UseProjectViewController(QtCore.QObject):
             self._view.ui.btn_use_create_new_project.setEnabled(True)
 
     def _are_duplicate_proteins_in_selected_protein_list(self) -> bool:
+        """Checks if there are duplicate proteins in the selected protein list.
+
+        Returns:
+            True if there are duplicate proteins, False otherwise.
+        """
         try:
             target_string = self._view.ui.list_use_available_protein_structures.currentItem().text()
         except AttributeError:
@@ -330,26 +390,28 @@ class UseProjectViewController(QtCore.QObject):
         gui_utils.enable_text_box(self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name)
         self._temporary_redesign()
 
-    def _fill_projects_combobox(self):
+    def _fill_projects_combobox(self) -> None:
+        """Fills the combo box with the available projects from the workspace."""
         gui_utils.fill_combo_box(self._view.ui.cb_choose_project,
                                  self._interface_manager.get_workspace_projects_as_list())
         self._view.ui.cb_choose_project.setCurrentIndex(
-            self._view.ui.cb_choose_project.findText(self._interface_manager.get_current_project().get_project_name())
+            self._view.ui.cb_choose_project.findText(self._interface_manager.get_current_project().get_project_name()),
         )
 
-    def _list_all_proteins_of_selected_project(self):
+    def _list_all_proteins_of_selected_project(self) -> None:
+        """Lists all proteins of the selected project."""
         if self._view.ui.cb_choose_project.currentText() == "":
             return
         tmp_database_filepath: str = str(
             pathlib.Path(
-                f"{self._interface_manager.get_application_settings().get_workspace_path()}/{self._view.ui.cb_choose_project.currentText()}.db"
-            )
+                f"{self._interface_manager.get_application_settings().get_workspace_path()}/{self._view.ui.cb_choose_project.currentText()}.db",
+            ),
         )
         with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
             tmp_project = db_manager.get_project_as_object(
                 self._view.ui.cb_choose_project.currentText(),
                 self._interface_manager.get_application_settings().get_workspace_path(),
-                self._interface_manager.get_application_settings()
+                self._interface_manager.get_application_settings(),
             )
             for tmp_protein in tmp_project.proteins:
                 tmp_pdb_atom_db_data = db_manager.get_pdb_atoms_of_protein(tmp_protein.get_id())
@@ -380,7 +442,8 @@ class UseProjectViewController(QtCore.QObject):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein from the list of proteins to add to the new project was clicked.")
         self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
 
-    def create_use_project(self):
+    def create_use_project(self) -> None:
+        """Uses the project by sending the `user_input` signal and closing the dialog."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create' button was clicked.")
         tmp_proteins: list = []
         for tmp_row in range(self._view.ui.list_use_selected_protein_structures.count()):
