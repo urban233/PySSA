@@ -47,12 +47,12 @@ class DatabaseThread(QtCore.QObject):
             the_database_filepath: The filepath of the database used by this database thread.
         
         Raises:
-            exception.IllegalArgumentError: If `the_database_filepath` is either None or an empty string.
+            exception.IllegalArgumentError: If `the_database_filepath` is None.
         """
         # <editor-fold desc="Checks">
-        if the_database_filepath is None or the_database_filepath == "":
-            logger.error("the_database_filepath is either None or an empty string.")
-            raise exception.IllegalArgumentError("the_database_filepath is either None or an empty string.")
+        if the_database_filepath is None:
+            logger.error("the_database_filepath is None")
+            raise exception.IllegalArgumentError("the_database_filepath is None.")
         
         # </editor-fold>
         

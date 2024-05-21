@@ -73,7 +73,7 @@ class StatusBarManager:
         self._view.btn_open_job_notification.show()
         self.temp_message_timer = QtCore.QTimer()
 
-        self._connect_ui_elements()
+        #self._connect_ui_elements()
 
     # <editor-fold desc="Util methods">
 
