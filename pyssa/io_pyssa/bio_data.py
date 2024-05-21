@@ -42,7 +42,6 @@ def download_pdb_file(pdb_id: str, save_path: str) -> None:
     
     Raises:
         exception.IllegalArgumentError: If either `pdb_id` or `save_path` is None.")
-        exception.DirectoryNotFoundError: If save_path does not exist.
     """
     # <editor-fold desc="Checks">
     if pdb_id is None:
@@ -51,9 +50,6 @@ def download_pdb_file(pdb_id: str, save_path: str) -> None:
     if save_path is None:
         logger.error("save_path is None.")
         raise exception.IllegalArgumentError("save_path is None.")
-    if not os.path.exists(save_path):
-        logger.error("save_path does not exist.")
-        raise exception.DirectoryNotFoundError("save_path does not exist.")
     
     # </editor-fold>
     
