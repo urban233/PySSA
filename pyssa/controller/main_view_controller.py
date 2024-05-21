@@ -2769,7 +2769,7 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    def post_rename_selected_sequence_structure(self, return_value: tuple):
+    def post_rename_selected_sequence_structure(self, return_value: tuple) -> None:
         """Finishes the rename sequence process.
 
         Args:
@@ -4310,7 +4310,7 @@ class MainViewController:
             self._interface_manager.block_gui(with_wait_cursor=True)
             self._active_task.start()
 
-    def __await_post_import_protein_structure(self, return_value: tuple):
+    def __await_post_import_protein_structure(self, return_value: tuple) -> None:
         """Finishes the import protein process.
 
         Args:

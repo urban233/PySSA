@@ -22,6 +22,7 @@
 """Module for the watcher class."""
 import logging
 import queue
+from typing import Optional
 
 from pyssa.internal.data_structures import job, project
 from pyssa.internal.data_structures.data_classes import job_summary
@@ -60,27 +61,24 @@ class Watcher:
     def _retrieve_all_prediction_names_of_the_current_project(
             self,
             a_prediction_queue: queue.Queue,
-            the_current_prediction_job: "job_summary.PredictionJobSummary",
+            the_current_prediction_job: Optional["job_summary.PredictionJobSummary"],
     ) -> list[str]:
         """Retrieves all prediction names from the prediction queue that belong to the current project.
 
         Args:
             a_prediction_queue (queue.Queue): A queue containing prediction jobs.
-            the_current_prediction_job (job_summary.PredictionJobSummary): The current prediction job summary.
+            the_current_prediction_job (Optional[job_summary.PredictionJobSummary]): The current prediction job summary.
 
         Returns:
             A list of prediction names of the current project.
         
         Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
+            exception.IllegalArgumentError: If `a_prediction_queue` is None.
         """
         # <editor-fold desc="Checks">
         if a_prediction_queue is None:
             logger.error("a_prediction_queue is None.")
             raise exception.IllegalArgumentError("a_prediction_queue is None.")
-        if the_current_prediction_job is None:
-            logger.error("the_current_prediction_job is None.")
-            raise exception.IllegalArgumentError("the_current_prediction_job is None.")
         
         # </editor-fold>
         
@@ -98,27 +96,24 @@ class Watcher:
     def _retrieve_all_distance_analysis_names_of_the_current_project(
             self,
             a_distance_analysis_queue: queue.Queue,
-            the_current_distance_analysis_job: "job_summary.DistanceAnalysisJobSummary",
+            the_current_distance_analysis_job: Optional["job_summary.DistanceAnalysisJobSummary"],
     ) -> list[str]:
         """Retrieves all analysis names from the distance analysis queue that belong to the current project.
 
         Args:
             a_distance_analysis_queue (queue.Queue): A queue containing distance analysis jobs.
-            the_current_distance_analysis_job (job_summary.DistanceAnalysisJobSummary): The current distance job.
+            the_current_distance_analysis_job (Optional[job_summary.DistanceAnalysisJobSummary]): The current distance job.
 
         Returns:
             A list of analysis names of the current project.
 
         Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
+            exception.IllegalArgumentError: If `a_distance_analysis_queue` is None.
         """
         # <editor-fold desc="Checks">
         if a_distance_analysis_queue is None:
             logger.error("a_distance_analysis_queue is None.")
             raise exception.IllegalArgumentError("a_distance_analysis_queue is None.")
-        if the_current_distance_analysis_job is None:
-            logger.error("the_current_distance_analysis_job is None.")
-            raise exception.IllegalArgumentError("the_current_distance_analysis_job is None.")
 
         # </editor-fold>
         
@@ -138,8 +133,8 @@ class Watcher:
                          a_project: "project.Project",
                          a_prediction_queue: queue.Queue,
                          a_distance_analysis_queue: queue.Queue,
-                         the_current_prediction_job: "job_summary.PredictionJobSummary",
-                         the_current_distance_analysis_job: "job_summary.DistanceAnalysisJobSummary",
+                         the_current_prediction_job: Optional["job_summary.PredictionJobSummary"],
+                         the_current_distance_analysis_job: Optional["job_summary.DistanceAnalysisJobSummary"],
                          ) -> None:
         """Sets up the blacklists for proteins and protein pairs.
 
@@ -147,11 +142,11 @@ class Watcher:
             a_project (project.Project): The project object.
             a_prediction_queue (queue.Queue): The prediction job queue.
             a_distance_analysis_queue (queue.Queue): The distance analysis job queue.
-            the_current_prediction_job (job_summary.PredictionJobSummary): The current prediction job summary.
-            the_current_distance_analysis_job (job_summary.DistanceAnalysisJobSummary): The current distance analysis job summary.
+            the_current_prediction_job (Optional[job_summary.PredictionJobSummary]): The current prediction job summary.
+            the_current_distance_analysis_job (Optional[job_summary.DistanceAnalysisJobSummary]): The current distance analysis job summary.
         
         Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
+            exception.IllegalArgumentError: If any of the arguments except `the_current_prediction_job` and `the_current_distance_analysis_job` are None.
         """
         # <editor-fold desc="Checks">
         if a_project is None:
@@ -163,12 +158,6 @@ class Watcher:
         if a_distance_analysis_queue is None:
             logger.error("a_distance_analysis_queue is None.")
             raise exception.IllegalArgumentError("a_distance_analysis_queue is None.")
-        if the_current_prediction_job is None:
-            logger.error("the_current_prediction_job is None.")
-            raise exception.IllegalArgumentError("the_current_prediction_job is None.")
-        if the_current_distance_analysis_job is None:
-            logger.error("the_current_distance_analysis_job is None.")
-            raise exception.IllegalArgumentError("the_current_distance_analysis_job is None.")
         
         # </editor-fold>
         
