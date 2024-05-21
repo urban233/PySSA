@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module contains snippets that can be copy and pasted into differnt locations."""
+"""Module contains snippets that can be copy and pasted into different locations."""
 
 # Logging
 from pyssa.util import exception
@@ -82,6 +82,28 @@ Args:
     return_value (tuple): The return value from opening the help center.
 """
 
+# <editor-fold desc="Checks">
+if user_input is None:
+  logger.error("user_input is None.")
+  self._interface_manager.status_bar_manager.show_error_message("No data received!")
+  return
+
+# </editor-fold>
+
+
+
+"""Finishes the use project process.
+
+Args:
+    return_value (tuple): The result data from the async method.
+"""
+# <editor-fold desc="Checks">
+if return_value is None:
+  logger.error("return_value is None.")
+  self._interface_manager.status_bar_manager.show_error_message("No data received!")
+  return
+
+# </editor-fold>
 
 # Scratch
 

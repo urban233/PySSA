@@ -29,12 +29,13 @@ import subprocess
 import sys
 import time
 
+from Bio import SeqRecord
 from PyQt5 import QtGui, QtCore
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from application_process import application_process_manager
-from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
+from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS  # noqa: F401
 from pyssa.controller import pymol_session_manager, settings_manager, \
     status_bar_manager, job_manager, watcher
 from pyssa.gui.ui.custom_widgets import job_entry
@@ -66,42 +67,93 @@ __docformat__ = "google"
 
 class InterfaceManager:
     """A manager for all views."""
-    string_model = QtCore.QStringListModel()
+
+    # <editor-fold desc="Class attributes">
+    string_model = QtCore.QStringListModel()  # TODO: this should be removed!
 
     _main_view: "main_view.MainView"
+    """The main view window."""
+    
     _settings_view: "settings_view.SettingsView"
-    #_predict_monomer_view: "predict_monomer_view.PredictMonomerView"
+    """The settings view window."""
+    
     _predict_protein_view: "predict_protein_view.PredictProteinView"
+    """The predict protein view window."""
+    
     _distance_analysis_view: "distance_analysis_view.DistanceAnalysisView"
+    """The distance analysis view window."""
+    
     _create_project_view: "create_project_view.CreateProjectView"
+    """The create project view window."""
+    
     _open_project_view: "open_project_view.OpenProjectView"
+    """The open project view window."""
+    
     _delete_project_view: "delete_project_view.DeleteProjectView"
+    """The delete project view window."""
+    
     _results_view: "results_view.ResultsView"
+    """The results view window."""
+    
     _add_protein_view: "add_protein_view.AddProteinView"
+    """The add protein view window."""
+    
     _import_sequence_view: "import_sequence_view.ImportSequenceView"
+    """The import sequence view window."""
+    
     _fasta_file_import_preview_view: "fasta_file_import_preview_view.FastaFileImportPreviewView"
+    """The fasta file import preview view window."""
+    
     _add_sequence_view: "add_sequence_view.AddSequenceView"
+    """The add sequence view window."""
+    
     _rename_protein_view: "rename_protein_view.RenameProteinView"
+    """The rename protein view window."""
+    
     _use_project_view: "use_project_view.UseProjectView"
+    """The use project view window."""
+    
     _hotspots_protein_regions_view: "hotspots_protein_regions_view.HotspotsProteinRegionsView"
+    """The hotspots protein regions view window."""
+    
     _add_scene_view: "add_scene_view.AddSceneView"
+    """The add scene view window."""
+    
     _add_protein_pair_view: "add_protein_pair_view.AddProteinPairView"
+    """The add protein pair view window."""
 
     _current_workspace: pathlib.Path
+    """The current workspace path."""
+    
     _current_project: "project.Project"
+    """The current opened project."""
+    
     _current_pymol_session: "current_session.CurrentPymolSession"
+    """The current active pymol session."""
 
     project_lock: QtCore.QMutex
+    """A QMutex to lock the current project."""
     #pymol_lock: "locks.PyMOL_LOCK"
     # _application_settings: "settings.Settings"
     current_tab_index: int = 0
+    """The current tab index."""
 
     _workspace_model: QtGui.QStandardItemModel
+    """The model for the workspace."""
+    
     _sequence_model: QtGui.QStandardItemModel
+    """The model for the sequences."""
+    
     _protein_model: QtGui.QStandardItemModel
+    """The model for the proteins."""
+    
     _protein_pair_model: QtGui.QStandardItemModel
+    """The model for the protein pairs."""
+    
+    # </editor-fold>
 
     def __init__(self) -> None:
+        """Constructor."""
         # View definitions
         self._main_view = main_view.MainView()
         self._settings_view = settings_view.SettingsView()
@@ -208,7 +260,8 @@ class InterfaceManager:
         self._build_workspace_model()
 
     # <editor-fold desc="Application process manager related methods">
-    def start_app_process_manager(self):
+    def start_app_process_manager(self) -> None:
+        """Starts a LegacyTasks for the application process manager."""
         self._app_process_manager_thread = tasks.LegacyTask(
             target=self.app_process_manager.check_process,
             args=(0, 0),
@@ -216,7 +269,8 @@ class InterfaceManager:
         )
         self._app_process_manager_thread.start()
 
-    def _closed_app_process_manager(self):
+    def _closed_app_process_manager(self) -> None:
+        """Await method after the app process manager closed."""
         if self.app_process_manager.pymol_closed():
             logger.info("PyMOL did not crash. The user requested to close PySSA.")
             return
@@ -230,7 +284,8 @@ class InterfaceManager:
         )
         self._app_process_manager_thread.start()
 
-    def _recover_user_pymol(self, a_placeholder_1, a_placeholder_2):
+    def _recover_user_pymol(self, a_placeholder_1: int, a_placeholder_2: int) -> tuple[str, str]:
+        """Starts recover process of User PyMOL."""
         try:
             logger.info("Starting recovery process ...")
             self.app_process_manager.start_pymol()
@@ -243,7 +298,8 @@ class InterfaceManager:
             logger.error(e)
         return "", ""  # These two empty strings are needed for the task class
 
-    def __await_recover_user_pymol(self):
+    def __await_recover_user_pymol(self) -> None:
+        """Await method that runs after the recovery process."""
         try:
             logger.info("Finished recovery process.")
             logger.info("Restarting check process routine of application process manager.")
@@ -254,7 +310,7 @@ class InterfaceManager:
         finally:
             self._restart_user_pymol_view.close()
 
-    def _reset_pymol_session(self):
+    def _reset_pymol_session(self) -> None:
         """Resets the pymol session like it was before the User PyMOL crash.
 
         Notes:
@@ -272,23 +328,46 @@ class InterfaceManager:
     
     # <editor-fold desc="Getter Methods">
     # <editor-fold desc="Settings">
-    def get_settings_manager(self):
+    def get_settings_manager(self) -> "settings_manager.SettingsManager":
+        """Gets the settings manager instance.
+
+        Returns:
+            The settings manager instance.
+        """
         return self._settings_manager
 
     def get_application_settings(self) -> "settings.Settings":
+        """Gets the application settings.
+
+        Returns:
+            The current application settings.
+        """
         return self._settings_manager.settings
     # </editor-fold>
 
     # <editor-fold desc="Workspace">
-    def get_workspace_path(self):
+    def get_workspace_path(self) -> pathlib.Path:
+        """Returns the workspace path from the settings manager.
+
+        Returns:
+            The workspace path.
+        """
         return self._settings_manager.settings.workspace_path
 
     def get_workspace_model(self) -> QtGui.QStandardItemModel:
-        """Returns the current workspace model"""
+        """Gets the workspace model.
+
+        Returns:
+            The workspace model.
+        """
         return self._workspace_model
 
-    def get_workspace_projects(self):
-        """Returns the workspace projects."""
+    def get_workspace_projects(self) -> QtCore.QStringListModel:
+        """Returns the workspace projects.
+
+        Returns:
+            A QStringListModel containing the names of all the project files in the workspace.
+        """
         db_pattern = os.path.join(self._settings_manager.settings.get_workspace_path(), '*.db')
         self.string_model.setStringList(
             # Filters the workspace for all project files based on the xml extension
@@ -297,100 +376,213 @@ class InterfaceManager:
         return self.string_model
 
     def get_workspace_projects_as_list(self) -> list:
+        """Returns a list of project names present in the workspace.
+
+        Returns:
+            A list of project names without the '.db' extension.
+        """
         db_pattern = os.path.join(self._settings_manager.settings.get_workspace_path(), '*.db')
         return [os.path.basename(file).replace(".db", "") for file in glob.glob(db_pattern)]
     # </editor-fold>
 
     # <editor-fold desc="Getter Methods for view">
     def get_main_view(self) -> "main_view.MainView":
+        """Gets the main view of the application.
+
+        Returns:
+            The main view of the application.
+        """
         return self._main_view
 
-    def get_restart_pymol_view(self):
+    def get_restart_pymol_view(self) -> "restart_user_pymol_view.RestartUserPyMOLView":
+        """Gets the restart pymol view.
+
+        Returns:
+            The restart pymol view.
+        """
         return self._restart_user_pymol_view
 
-    def get_settings_view(self):
+    def get_settings_view(self) -> "settings_view.SettingsView":
+        """Gets the settings view.
+
+        Returns:
+            The settings view.
+        """
         return self._settings_view
 
     def get_open_view(self) -> "open_project_view.OpenProjectView":
+        """Gets the open project view.
+
+        Returns:
+            The open project view.
+        """
         return self._open_project_view
 
     def get_create_view(self) -> "create_project_view.CreateProjectView":
+        """Gets the create project view.
+
+        Returns:
+            The create project view.
+        """
         return self._create_project_view
 
     def get_delete_view(self) -> "delete_project_view.DeleteProjectView":
+        """Gets the delete project view.
+
+        Returns:
+            The delete project view.
+        """
         return self._delete_project_view
 
-    def get_use_project_view(self):
+    def get_use_project_view(self) -> "use_project_view.UseProjectView":
+        """Gets the use project view.
+
+        Returns:
+            The use project view.
+        """
         return self._use_project_view
 
-    def get_fasta_file_import_preview_view(self):
+    def get_fasta_file_import_preview_view(self) -> "fasta_file_import_preview_view.FastaFileImportPreviewView":
+        """Gets the fasta file import preview view.
+
+        Returns:
+            The fasta file import preview view.
+        """
         return self._fasta_file_import_preview_view
 
-    def get_add_sequence_view(self):
+    def get_add_sequence_view(self) -> "add_sequence_view.AddSequenceView":
+        """Gets the add sequence view.
+
+        Returns:
+            The add sequence view.
+        """
         return self._add_sequence_view
 
-    def get_rename_sequence_view(self):
+    def get_rename_sequence_view(self) -> "rename_sequence_view.RenameSequenceView":
+        """Gets the rename sequence view.
+
+        Returns:
+            The rename sequence view.
+        """
         return self._rename_sequence_view
 
-    # <editor-fold desc="Prediction">
-    # def get_predict_monomer_view(self) -> "predict_monomer_view.PredictMonomerView":
-    #     return self._predict_monomer_view
+    def get_predict_protein_view(self) -> "predict_protein_view.PredictProteinView":
+        """Gets the predict protein view.
 
-    # def get_predict_multimer_view(self) -> "predict_multimer_view.PredictMultimerView":
-    #     return self._predict_multimer_view
-
-    def get_predict_protein_view(self):
+        Returns:
+            The predict protein view.
+        """
         return self._predict_protein_view
 
-    # </editor-fold>
-
     def get_distance_analysis_view(self) -> "distance_analysis_view.DistanceAnalysisView":
+        """Gets the distance analysis view.
+
+        Returns:
+            The distance analysis view.
+        """
         return self._distance_analysis_view
 
-    def get_results_view(self):
+    def get_results_view(self) -> "results_view.ResultsView":
+        """Gets the results view.
+
+        Returns:
+            The results view.
+        """
         return self._results_view
 
-    def get_add_scene_view(self):
+    def get_add_scene_view(self) -> "add_scene_view.AddSceneView":
+        """Gets the add scene view.
+
+        Returns:
+            The add scene view.
+        """
         return self._add_scene_view
 
-    def get_add_protein_pair_view(self):
+    def get_add_protein_pair_view(self) -> "add_protein_pair_view.AddProteinPairView":
+        """Gets the add protein pair view.
+
+        Returns:
+            The add protein pair view.
+        """
         return self._add_protein_pair_view
 
-    def get_advanced_prediction_configurations_view(self):
+    def get_advanced_prediction_configurations_view(self) -> "advanced_prediction_configurations.AdvancedPredictionConfigurationsView":
+        """Gets the advanced configurations view.
+
+        Returns:
+            The advanced configurations view.
+        """
         return self._advanced_prediction_configurations
 
     # <editor-fold desc="Getter methods for Sequence Tab in main view">
-    def get_current_sequence_list_index(self):
+    def get_current_sequence_list_index(self) -> QtCore.QModelIndex:
+        """Gets the current index of the sequence list view.
+
+        Returns:
+            The current index of the sequence list view.
+        """
         return self._main_view.ui.seqs_list_view.currentIndex()
 
-    def get_current_sequence_list_index_object(self):
-        """Returns the selected seq record object from the list view."""
+    def get_current_sequence_list_index_object(self) -> SeqRecord.SeqRecord:
+        """Retrieves the SeqRecord object associated with the current index in the sequence list.
+
+        Returns:
+            The SeqRecord object from the current index in the sequence list.
+        """
         return self.get_current_sequence_list_index().data(enums.ModelEnum.OBJECT_ROLE)
 
-    def get_import_sequence_view(self):
-        return self._import_sequence_view
+    def get_import_sequence_view(self) -> "import_sequence_view.ImportSequenceView":
+        """Gets the import sequence view.
 
-    def get_add_sequence_view(self):
-        return self._add_sequence_view
+        Returns:
+            The import sequence view.
+        """
+        return self._import_sequence_view
 
     # </editor-fold>
 
     # <editor-fold desc="Getter methods for Protein Tab in main view">
-    def get_current_protein_tree_index(self):
+    
+    def get_current_protein_tree_index(self) -> QtCore.QModelIndex:
+        """Gets the index of the current protein tree item in the proteins_tree_view.
+
+        Returns:
+            The index of the current protein tree item.
+        """
         return self._main_view.ui.proteins_tree_view.currentIndex()
 
-    def get_child_index_of_get_current_protein_tree_index(self):
+    def get_child_index_of_get_current_protein_tree_index(self) -> QtCore.QModelIndex:
+        """Get the child index of the current protein tree index.
+
+        Returns:
+            The child index of the current protein tree index.
+        """
         return self._main_view.ui.proteins_tree_view.currentIndex().child(0, 0)
 
-    def get_current_protein_tree_index_type(self):
+    def get_current_protein_tree_index_type(self) -> enums.ModelEnum.TYPE_ROLE:
+        """Get the current protein tree index type.
+
+        Returns:
+            The protein tree index type.
+        """
         return self._main_view.ui.proteins_tree_view.model().data(
             self.get_current_protein_tree_index(), enums.ModelEnum.TYPE_ROLE,
         )
 
-    def get_current_protein_tree_index_object(self):
+    def get_current_protein_tree_index_object(self) -> "protein.Protein":
+        """Retrieve the current protein tree index object.
+
+        Returns:
+            The protein object of the current tree index.
+        """
         return self.get_current_protein_tree_index().data(enums.ModelEnum.OBJECT_ROLE)
 
-    def get_parent_index_object_of_current_protein_tree_index(self):
+    def get_parent_index_object_of_current_protein_tree_index(self) -> "protein.Protein":
+        """Gets the parent object of the current protein tree index.
+
+        Returns:
+            The parent object of the current protein tree index.
+        """
         return self.get_current_protein_tree_index().parent().data(enums.ModelEnum.OBJECT_ROLE)
 
     def get_current_active_protein_object(self) -> "protein.Protein":
@@ -439,7 +631,7 @@ class InterfaceManager:
         """Returns the scene name of the current active branch.
 
         Returns:
-            a scene name
+            A scene name.
         """
         tmp_type = self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
         if tmp_type == "protein":
@@ -457,7 +649,7 @@ class InterfaceManager:
         """Returns the chain object of the current active branch.
 
         Returns:
-            a chain object
+            A chain object.
         """
         tmp_type = self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
         if tmp_type == "protein":
@@ -475,7 +667,7 @@ class InterfaceManager:
         """Returns the chain color of the current active branch.
 
         Returns:
-            a chain color
+            A chain color.
         """
         tmp_type = self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
         if tmp_type == "protein":
@@ -489,7 +681,23 @@ class InterfaceManager:
         else:
             raise ValueError("Unknown type!")
 
-    def set_current_active_chain_color_of_protein(self, a_color) -> None:
+    def set_current_active_chain_color_of_protein(self, a_color: str) -> None:
+        """Sets the color for the current active chain.
+
+        Args:
+            a_color (str): The color to set as the current active chain color of the protein.
+
+        Raises:
+            exception.IllegalArgumentError: If `a_color` is either None or an empty string.
+            ValueError: If the type of the current index in the proteins tree view is "protein", "header", "scene", or if it is an unknown type.
+        """
+        # <editor-fold desc="Checks">
+        if a_color is None or a_color == "":
+            logger.error("a_color is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_color is either None or an empty string.")
+        
+        # </editor-fold>
+        
         tmp_type = self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
         if tmp_type == "protein":
             raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
@@ -505,38 +713,88 @@ class InterfaceManager:
             raise ValueError("Unknown type!")
 
     def get_protein_repr_toggle_flag(self) -> int:
+        """Gets the toggle flag value for protein representation.
+
+        Returns:
+            The toggle flag value for protein representation.
+        """
         return self._settings_manager.settings.proteins_tab_use_toggle
 
-    def get_add_protein_view(self):
+    def get_add_protein_view(self) -> "add_protein_view.AddProteinView":
+        """Gets the instance of the AddProteinView class.
+
+        Returns:
+            An instance of the AddProteinView class.
+        """
         return self._add_protein_view
 
-    def get_rename_protein_view(self):
+    def get_rename_protein_view(self) -> "rename_protein_view.RenameProteinView":
+        """Gets the RenameProteinView instance associated with this object.
+        
+        Returns:
+            The RenameProteinView instance.
+        """
         return self._rename_protein_view
 
     def get_hotspots_protein_regions_view(self) -> "hotspots_protein_regions_view.HotspotsProteinRegionsView":
+        """Get the hotspots protein regions view.
+
+        Returns:
+            The hotspots protein regions view.
+        """
         return self._hotspots_protein_regions_view
 
     # </editor-fold>
 
     # <editor-fold desc="Getter methods for Protein Pairs Tab in main view">
-    def get_current_protein_pair_tree_index(self):
+    def get_current_protein_pair_tree_index(self) -> QtCore.QModelIndex:
+        """Returns the current index of the protein pair tree view.
+
+        Returns:
+            The current index of the protein pair tree view.
+        """
         return self._main_view.ui.protein_pairs_tree_view.currentIndex()
 
-    def get_child_index_of_get_current_protein_pair_tree_index(self):
+    def get_child_index_of_get_current_protein_pair_tree_index(self) -> QtCore.QModelIndex:
+        """Gets the child index of the current protein pair tree index.
+
+        Returns:
+            The child index of the current protein pair tree index.
+        """
         return self._main_view.ui.protein_pairs_tree_view.currentIndex().child(0, 0)
 
-    def get_current_protein_pair_tree_index_type(self):
+    def get_current_protein_pair_tree_index_type(self) -> enums.ModelEnum.TYPE_ROLE:
+        """Gets the protein pair tree index type for the current protein pair in the UI.
+        
+        Returns:
+            enums.ModelEnum.TYPE_ROLE value representing the protein pair tree index type.
+        """
         return self._main_view.ui.protein_pairs_tree_view.model().data(
             self.get_current_protein_pair_tree_index(), enums.ModelEnum.TYPE_ROLE,
         )
 
-    def get_current_protein_pair_tree_index_object(self):
+    def get_current_protein_pair_tree_index_object(self) -> "protein_pair.ProteinPair":
+        """Gets the ProteinPair object associated with the current protein pair tree index.
+
+        Returns:
+            The ProteinPair object associated with the current protein pair tree index.
+        """
         return self.get_current_protein_pair_tree_index().data(enums.ModelEnum.OBJECT_ROLE)
 
-    def get_parent_index_object_of_current_protein_pair_tree_index(self):
+    def get_parent_index_object_of_current_protein_pair_tree_index(self) -> "protein_pair.ProteinPair":
+        """Gets the parent object of the current protein pair tree index.
+
+        Returns:
+            protein_pair.ProteinPair: The parent object of the current protein pair tree index.
+        """
         return self.get_current_protein_pair_tree_index().parent().data(enums.ModelEnum.OBJECT_ROLE)
 
-    def get_grand_parent_index_object_of_current_protein_pair_tree_index(self):
+    def get_grand_parent_index_object_of_current_protein_pair_tree_index(self) -> "protein_pair.ProteinPair":
+        """Gets the grand-parent index object of the current protein pair tree index.
+
+        Returns:
+            The grand-parent index object of the current protein pair tree index.
+        """
         return self.get_current_protein_pair_tree_index().parent().parent().data(enums.ModelEnum.OBJECT_ROLE)
 
     def get_current_active_protein_pair_object(self) -> "protein_pair.ProteinPair":
@@ -549,7 +807,7 @@ class InterfaceManager:
             ValueError: if the type is unknown
 
         Returns:
-            a protein pair object
+            A protein pair object.
         """
         tmp_type = self._main_view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
         tmp_display_role = self._main_view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)
@@ -588,7 +846,7 @@ class InterfaceManager:
             ValueError: if the type is unknown
 
         Returns:
-            a protein object
+            A protein object.
         """
         tmp_type = self._main_view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
         tmp_display_role = self._main_view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)
@@ -649,7 +907,7 @@ class InterfaceManager:
             ValueError: if the type is unknown
 
         Returns:
-            a chain object
+            A chain object.
         """
         tmp_type = self._main_view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
         tmp_display_role = self._main_view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)
@@ -669,6 +927,11 @@ class InterfaceManager:
             raise ValueError("Unknown type!")
 
     def get_protein_pair_repr_toggle_flag(self) -> int:
+        """Gets the toggle flag for displaying protein pair representations in the protein pairs tab.
+
+        Returns:
+            The toggle flag value.
+        """
         return self._settings_manager.settings.protein_pairs_tab_use_toggle
 
     # </editor-fold>
@@ -676,25 +939,51 @@ class InterfaceManager:
     # </editor-fold>
 
     def get_current_project(self) -> "project.Project":
-        """Returns the current project."""
+        """Retrieve the current project.
+
+        Returns:
+            A project object.
+        """
         return self._current_project
 
-    def get_information_about_current_session(self):
+    def get_information_about_current_session(self) -> tuple:
+        """Returns information about the current session.
+
+        Returns a tuple containing the session name and object type of the current session.
+
+        Returns:
+            A tuple of two elements - the session name (str) and object type (str) of the current session.
+        """
         return self._current_pymol_session.session_name, self._current_pymol_session.object_type
 
-    def get_protein_model(self):
+    def get_protein_model(self) -> QtGui.QStandardItemModel:
+        """Gets the protein model.
+
+        Returns:
+            The protein model used for displaying protein data.
+        """
         return self._protein_model
 
     # </editor-fold>
 
     def add_protein_to_current_project(self, a_protein: "protein.Protein") -> None:
-        """This method adds a given Protein object to the current project.
+        """Adds a given Protein object to the current project.
         
         The Protein object must already exist.
         
         Args:
             a_protein (protein.Protein): A Protein object that will be added to the current project.    
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_protein` is None.
         """
+        # <editor-fold desc="Checks">
+        if a_protein is None:
+            logger.error("a_protein is None.")
+            raise exception.IllegalArgumentError("a_protein is None.")
+        
+        # </editor-fold>
+        
         self._current_project.add_existing_protein(a_protein)
 
     def add_protein_pair_to_current_project(self, a_protein_pair: "protein_pair.ProteinPair") -> None:
@@ -702,12 +991,36 @@ class InterfaceManager:
 
         Args:
             a_protein_pair (protein_pair.ProteinPair): A ProteinPair object that will be added to the current project.   
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_protein_pair` is None.
         """
+        # <editor-fold desc="Checks">
+        if a_protein_pair is None:
+            logger.error("a_protein_pair is None.")
+            raise exception.IllegalArgumentError("a_protein_pair is None.")
+        
+        # </editor-fold>
+        
         self._current_project.add_protein_pair(a_protein_pair)
 
     # <editor-fold desc="Setter Methods">
     def set_new_project(self, the_current_project: "project.Project") -> None:
-        """Sets the new current project into the interface manager."""
+        """Sets the new current project into the interface manager.
+
+        Args:
+            the_current_project (project.Project): The new project to be set as the current project.
+        
+        Raises:
+            exception.IllegalArgumentError: If `the_current_project` is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_current_project is None:
+            logger.error("the_current_project is None.")
+            raise exception.IllegalArgumentError("the_current_project is None.")
+        
+        # </editor-fold>
+        
         self._current_project = the_current_project
         self._sequence_model.clear()
         self._build_sequences_model()
@@ -716,13 +1029,46 @@ class InterfaceManager:
         self._protein_pair_model.clear()
         self._build_protein_pairs_model()
 
-    def set_new_workspace(self, the_current_workspace) -> None:
-        """Sets the new current workspace into the interface manager."""
+    def set_new_workspace(self, the_current_workspace: str) -> None:
+        """Sets the new current workspace into the interface manager.
+
+        Args:
+            the_current_workspace (str): The path to the new workspace.
+        
+        Raises:
+            exception.IllegalArgumentError: If `the_current_workspace` is either None or an empty string.
+        """
+        # <editor-fold desc="Checks">
+        if the_current_workspace is None or the_current_workspace == "":
+            logger.error("the_current_workspace is either None or an empty string.")
+            raise exception.IllegalArgumentError("the_current_workspace is either None or an empty string.")
+        
+        # </editor-fold>
+        
         self._settings_manager.settings.workspace_path = the_current_workspace
         self._workspace_model.clear()
         self._build_workspace_model()
 
     def set_new_session_information(self, a_session_name: str, an_object_name: str) -> None:
+        """Sets the new session information for the current session.
+
+        Args:
+            a_session_name (str): The name of the session to be set. Cannot be None or an empty string.
+            an_object_name (str): The name of the object to be set. Cannot be None or an empty string.
+
+        Raises:
+            exception.IllegalArgumentError: If either `a_session_name` or `an_object_name` is None or an empty string.
+        """
+        # <editor-fold desc="Checks">
+        if a_session_name is None or a_session_name == "":
+            logger.error("a_session_name is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_session_name is either None or an empty string.")
+        if an_object_name is None or an_object_name == "":
+            logger.error("an_object_name is either None or an empty string.")
+            raise exception.IllegalArgumentError("an_object_name is either None or an empty string.")
+        
+        # </editor-fold>
+        
         self._current_pymol_session.session_name = a_session_name
         self._current_pymol_session.object_type = an_object_name
 
@@ -731,7 +1077,18 @@ class InterfaceManager:
             self,
             the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
     ) -> None:
-        """Checks which color the protein chain has and sets the index of the combobox accordingly."""
+        """Checks which color the protein chain has and sets the index of the combobox accordingly.
+
+        Args:
+            the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PymolSessionManager object.
+        """
+        # <editor-fold desc="Checks">
+        if the_pymol_session_manager is None:
+            logger.error("the_pymol_session_manager is None.")
+            raise exception.IllegalArgumentError("the_pymol_session_manager is None.")
+        
+        # </editor-fold>
+        
         tmp_protein = self.get_current_active_protein_object()
         tmp_chain = self.get_current_active_chain_object()
         if the_pymol_session_manager.is_the_current_protein_in_session(self.get_current_active_protein_object().get_molecule_object()):
@@ -749,7 +1106,22 @@ class InterfaceManager:
                 self._main_view.ui.lbl_protein_current_color.setText(f"{tmp_chain.pymol_parameters['chain_color']}    ")
                 self._main_view.tg_protein_color_atoms.toggle_button.setChecked(False)
 
-    def set_repr_state_in_ui_for_protein_chain(self, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"):
+    def set_repr_state_in_ui_for_protein_chain(self, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> None:
+        """Sets the representation state in the user interface for a protein chain.
+
+        Args:
+            the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PymolSessionManager object.
+        
+        Raises:
+            exception.IllegalArgumentError: If `the_pymol_session_manager` is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_pymol_session_manager is None:
+            logger.error("the_pymol_session_manager is None.")
+            raise exception.IllegalArgumentError("the_pymol_session_manager is None.")
+        
+        # </editor-fold>
+        
         tmp_protein = self.get_current_active_protein_object()
         tmp_chain = self.get_current_active_chain_object()
         if the_pymol_session_manager.is_the_current_protein_in_session(self.get_current_active_protein_object().get_molecule_object()):
@@ -778,7 +1150,26 @@ class InterfaceManager:
 
     def set_repr_state_in_ui_for_protein_pair_chain(self,
                                                     a_protein_name: str,
-                                                    the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"):
+                                                    the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> None:
+        """Updates the representation state in the user interface for a protein pair chain.
+
+        Args:
+            a_protein_name (str): The name of the protein.
+            the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The instance of the PymolSessionManager class.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None or if `a_protein_name` is an empty string.
+        """
+        # <editor-fold desc="Checks">
+        if a_protein_name is None or a_protein_name == "":
+            logger.error("a_protein_name is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_protein_name is either None or an empty string.")
+        if the_pymol_session_manager is None:
+            logger.error("the_pymol_session_manager is None.")
+            raise exception.IllegalArgumentError("the_pymol_session_manager is None.")
+        
+        # </editor-fold>
+        
         tmp_protein = self.get_current_active_protein_object_of_protein_pair()
         tmp_chain = self.get_current_active_chain_object_of_protein_pair()
         if the_pymol_session_manager.is_the_current_protein_pair_in_session(self.get_current_active_protein_pair_object().name):
@@ -803,7 +1194,22 @@ class InterfaceManager:
                 self._main_view.tg_protein_pair_mesh.toggle_button.setChecked(False)
                 self._main_view.tg_protein_pair_surface.toggle_button.setChecked(False)
 
-    def manage_check_state_of_protein_pair(self, tmp_repr_state):
+    def manage_check_state_of_protein_pair(self, tmp_repr_state: dict) -> None:
+        """Updates the state of the checkboxes for protein pair representations in the user interface based on the values in the given `tmp_repr_state` dictionary.
+
+        Args:
+            tmp_repr_state (dict): A dictionary representing the state of protein pair representations. 
+        
+        Raises:
+            exception.IllegalArgumentError: If `tmp_repr_state` is None.
+        """
+        # <editor-fold desc="Checks">
+        if tmp_repr_state is None:
+            logger.error("tmp_repr_state is None.")
+            raise exception.IllegalArgumentError("tmp_repr_state is None.")
+        
+        # </editor-fold>
+        
         if tmp_repr_state[enums.PyMOLRepresentation.CARTOON.value] == 0:
             self._main_view.ui.cb_protein_pair_cartoon.setChecked(False)
         else:
@@ -837,7 +1243,22 @@ class InterfaceManager:
         else:
             self._main_view.ui.cb_protein_pair_surface.setChecked(True)
 
-    def manage_toggle_state_of_protein_pair_repr(self, tmp_repr_state):
+    def manage_toggle_state_of_protein_pair_repr(self, tmp_repr_state: dict) -> None:
+        """Updates the state of the toggles for protein pair representations in the user interface based on the values in the given `tmp_repr_state` dictionary.
+
+        Args:
+            tmp_repr_state (dict): A dictionary representing the state of protein pair representations. 
+
+        Raises:
+            exception.IllegalArgumentError: If `tmp_repr_state` is None.
+        """
+        # <editor-fold desc="Checks">
+        if tmp_repr_state is None:
+            logger.error("tmp_repr_state is None.")
+            raise exception.IllegalArgumentError("tmp_repr_state is None.")
+
+        # </editor-fold>
+        
         if tmp_repr_state[enums.PyMOLRepresentation.CARTOON.value] == 0:
             self._main_view.tg_protein_pair_cartoon.toggle_button.setChecked(False)
         else:
@@ -874,7 +1295,8 @@ class InterfaceManager:
     # </editor-fold>
 
     # <editor-fold desc="Build Methods">
-    def _build_sequences_model(self):
+    def _build_sequences_model(self) -> None:
+        """Builds the sequences model for the current project."""
         if len(self._current_project.sequences) > 0:
             tmp_root_item = self._sequence_model.invisibleRootItem()
             for tmp_sequence in self._current_project.sequences:
@@ -887,6 +1309,7 @@ class InterfaceManager:
                 tmp_root_item.appendRow(tmp_sequence_item)
 
     def _build_proteins_model(self) -> None:
+        """Builds the proteins model for the current project."""
         if len(self._current_project.proteins) > 0:
             tmp_main_socket, tmp_general_purpose_socket = self.job_manager.get_general_purpose_socket_pair()
             self._protein_model.build_model_from_scratch(self._current_project.proteins,
@@ -916,6 +1339,7 @@ class InterfaceManager:
             #         tmp_chains_item.appendRow(tmp_chain_item)
 
     def _build_protein_pairs_model(self) -> None:
+        """Builds the protein pairs model for the current project."""
         if len(self._current_project.protein_pairs) > 0:
             tmp_main_socket, tmp_general_purpose_socket = self.job_manager.get_general_purpose_socket_pair()
             self._protein_pair_model.build_model_from_scratch(self._current_project.protein_pairs,
@@ -1272,23 +1696,44 @@ class InterfaceManager:
         # else:
         #     self._main_view.ui.action_abort_prediction.setEnabled(False)
 
-    def refresh_workspace_model(self):
+    def refresh_workspace_model(self) -> None:
+        """Clears the workspace model and rebuilds it.
+
+        This method is responsible for refreshing the workspace model by clearing it and then rebuilding it using the
+        _build_workspace_model method.
+        """
         self._workspace_model.clear()
         self._build_workspace_model()
 
-    def refresh_sequence_model(self):
+    def refresh_sequence_model(self) -> None:
+        """Refreshes the sequence model.
+
+        This method clears the sequence model and then builds it again.
+        """
         self._sequence_model.clear()
         self._build_sequences_model()
 
-    def refresh_protein_model(self):
+    def refresh_protein_model(self) -> None:
+        """Refreshes the protein model.
+
+        This method clears the protein pair model and then builds it again.
+        """
         self._protein_model.clear()
         self._build_proteins_model()
 
-    def refresh_protein_pair_model(self):
+    def refresh_protein_pair_model(self) -> None:
+        """Refreshes the protein pair model.
+
+        This method clears the protein pair model and then builds it again.
+        """
         self._protein_pair_model.clear()
         self._build_protein_pairs_model()
 
     def _build_workspace_model(self) -> None:
+        """Builds the workspace model.
+
+        This method populates the workspace model with project items based on the database files found in the workspace directory.
+        """
         tmp_workspace = self._settings_manager.settings.workspace_path
         db_pattern = os.path.join(tmp_workspace, '*.db')
         tmp_root_item = self._workspace_model.invisibleRootItem()
@@ -1298,7 +1743,22 @@ class InterfaceManager:
             tmp_project_item.setData(tmp_filepath, enums.ModelEnum.FILEPATH_ROLE)
             tmp_root_item.appendRow(tmp_project_item)
 
-    def add_project_to_workspace_model(self, a_filename):
+    def add_project_to_workspace_model(self, a_filename: str) -> None:
+        """Adds a project to the workspace model.
+
+        Args:
+            a_filename (str): The filename of the project to be added.
+
+        Raises:
+            IllegalArgumentError: If `a_filename` is None or an empty string.
+        """
+        # <editor-fold desc="Checks">
+        if a_filename is None or a_filename == "":
+            logger.error("a_filename is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_filename is either None or an empty string.")
+        
+        # </editor-fold>
+        
         tmp_root_item = self._workspace_model.invisibleRootItem()
         tmp_project_item = QtGui.QStandardItem(a_filename)
         tmp_filepath = pathlib.Path(f"{self._settings_manager.settings.workspace_path}/{a_filename}.db")
@@ -1306,6 +1766,11 @@ class InterfaceManager:
         tmp_root_item.appendRow(tmp_project_item)
 
     def disable_proteins_tab_buttons(self) -> None:
+        """Disable Proteins Tab buttons.
+
+        Raises:
+            NotMainThreadError: If the method is called from a separate thread instead of the main thread.
+        """
         # <editor-fold desc="Thread check">
         if thread_util.is_main_thread() is False:
             logger.warning(
@@ -1324,6 +1789,11 @@ class InterfaceManager:
         self._main_view.ui.btn_delete_protein_scene.setEnabled(False)
 
     def disable_protein_pairs_tab_buttons(self) -> None:
+        """Disable Protein Pairs Tab buttons.
+
+        Raises:
+            NotMainThreadError: If the method is called from a separate thread instead of the main thread.
+        """
         # <editor-fold desc="Thread check">
         if thread_util.is_main_thread() is False:
             logger.warning(
@@ -1344,20 +1814,57 @@ class InterfaceManager:
     # </editor-fold>
 
     # <editor-fold desc="Progress bar methods">
-    def update_progress_bar(self, value: int, message: str):
+    def update_progress_bar(self, value: int, message: str) -> None:
+        """Updates the progress bar with the given value and message.
+
+        Args:
+            value (int): The value to update the progress bar with. Must be between 0 and 100.
+            message (str): The message to display on the progress bar.
+
+        Raises:
+            exception.IllegalArgumentError: If `value` is None.
+            exception.IllegalArgumentError: If `message` is either None or an empty string.
+            ValueError: If the value is not between 0 and 100.
+        """
+        # <editor-fold desc="Checks">
+        if value is None:
+            logger.error("value is None.")
+            raise exception.IllegalArgumentError("value is None.")
+        if message is None or message == "":
+            logger.error("message is either None or an empty string.")
+            raise exception.IllegalArgumentError("message is either None or an empty string.")
         if value < 0 or value > 100:
             raise ValueError("Value for progress bar must be between 0 and 100!")
+        
+        # </editor-fold>
+        
         self._main_view.progress_bar.show()
         self._main_view.progress_bar.setFormat(message)
         self._main_view.progress_bar.setValue(value)
 
-    def hide_progress_bar(self):
+    def hide_progress_bar(self) -> None:
+        """Hide the progress bar."""
         self._main_view.progress_bar.hide()
 
     # </editor-fold>
 
     # <editor-fold desc="Sequences">
-    def show_sequence_parameters(self, a_sequence_item: QtGui.QStandardItem):
+    def show_sequence_parameters(self, a_sequence_item: QtGui.QStandardItem) -> None:
+        """Sets up the sequences table in the main view with the provided sequence item.
+        
+        Args:
+            a_sequence_item (QtGui.QStandardItem): The QStandardItem representing a sequence.
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_sequence_item` is None.
+        """
+        # <editor-fold desc="Checks">
+        if a_sequence_item is None:
+            logger.error("a_sequence_item is None.")
+            raise exception.IllegalArgumentError("a_sequence_item is None.")
+        
+        # </editor-fold>
+        
         self._main_view.setup_sequences_table(2)
         tmp_sequence = a_sequence_item.data(enums.ModelEnum.OBJECT_ROLE)
         # Table label items
@@ -1380,13 +1887,15 @@ class InterfaceManager:
         tmp_sequence_label_item.setFlags(tmp_sequence_label_item.flags() & ~Qt.ItemIsEditable)
         self._main_view.ui.seqs_table_widget.resizeColumnsToContents()
 
-    def show_menu_options_with_seq(self):
+    def show_menu_options_with_seq(self) -> None:
+        """Disables specific menu options in the UI."""
         self._main_view.ui.menuAnalysis.setEnabled(False)
         self._main_view.ui.menuResults.setEnabled(False)
         self._main_view.ui.menuImage.setEnabled(False)
         self._main_view.ui.menuHotspots.setEnabled(False)
 
-    def show_menu_options_without_seq(self):
+    def show_menu_options_without_seq(self) -> None:
+        """Show menu options without a sequence in a project."""
         self._main_view.ui.btn_save_sequence.setEnabled(False)
         self._main_view.ui.btn_delete_sequence.setEnabled(False)
 
@@ -1435,7 +1944,7 @@ class InterfaceManager:
         """Checks if sequences are already predicted or not.
 
         Returns:
-            a tuple of booleans where True means all sequences of the type are already predicted.
+            A tuple of booleans where True means all sequences of the type are already predicted.
         """
         tmp_number_of_monomer_sequences = 0
         tmp_number_of_multimer_sequences = 0
@@ -1469,19 +1978,42 @@ class InterfaceManager:
 
     # <editor-fold desc="Proteins">
     def check_if_scratch_scene_exists_in_protein_model(self) -> bool:
+        """Checks if a scratch scene exists in the protein model.
+
+        Returns:
+            True if a scratch scene exists, False otherwise.
+        """
         return self._protein_model.check_if_scratch_scene_exists(self.get_current_protein_tree_index())
 
-    def add_scratch_scene_to_protein_model(self):
+    def add_scratch_scene_to_protein_model(self) -> None:
+        """Adds a scratch scene to the protein model."""
         self.add_scene_to_proteins_model("_scratch_")
 
-    def add_protein_to_proteins_model(self, a_protein):
+    def add_protein_to_proteins_model(self, a_protein: "protein.Protein") -> None:
+        """Add a protein to the proteins model.
+
+        Args:
+            a_protein (protein.Protein): An instance of the Protein class representing the protein to be added.
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_protein` is None.
+        """
+        # <editor-fold desc="Checks">
+        if a_protein is None:
+            logger.error("a_protein is None.")
+            raise exception.IllegalArgumentError("a_protein is None.")
+        
+        # </editor-fold>
+        
         self._protein_model.add_protein(a_protein)
 
-    def remove_protein_from_proteins_model(self):
+    def remove_protein_from_proteins_model(self) -> None:
+        """Removes the current protein from the protein model."""
         self._protein_model.remove_protein(self.get_current_protein_tree_index())
 
     # <editor-fold desc="Menu Options">
-    def show_menu_options_with_protein(self):
+    def show_menu_options_with_protein(self) -> None:
+        """Enable menu options related to protein analysis, results, image, and hotspots."""
         self._main_view.ui.menuAnalysis.setEnabled(True)
         self._main_view.ui.menuResults.setEnabled(True)
         self._main_view.ui.menuImage.setEnabled(True)
@@ -1490,7 +2022,8 @@ class InterfaceManager:
         self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
         self._main_view.ui.proteins_tree_view.setHeaderHidden(True)
 
-    def show_menu_options_without_protein(self):
+    def show_menu_options_without_protein(self) -> None:
+        """Disables menu options related to protein tasks."""
         self._main_view.ui.btn_save_protein.setEnabled(False)
         self._main_view.ui.btn_delete_protein.setEnabled(False)
         self._main_view.ui.btn_open_protein_session.setEnabled(False)
@@ -1510,6 +2043,13 @@ class InterfaceManager:
             is_protein_in_pair: bool,
             the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
     ) -> None:
+        """Manages the ui protein tab.
+        
+        Args:
+            an_object_type (str): A string indicating the type of object ("protein", "scene", "chain", "header").
+            is_protein_in_pair (bool): A boolean indicating whether the protein is in a pair.
+            the_pymol_session_manager (pymol_session_manager.PymolSessionManager): An instance of the PymolSessionManager class.
+        """
         self._main_view.ui.lbl_info_2.hide()
 
         tmp_is_protein_in_session_flag: bool = the_pymol_session_manager.is_the_current_protein_in_session(self.get_current_active_protein_object().get_molecule_object())
@@ -1580,7 +2120,8 @@ class InterfaceManager:
             self._main_view.ui.btn_update_protein_scene.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
 
-    def manage_coloring_by_element_option_for_protein_chain(self):
+    def manage_coloring_by_element_option_for_protein_chain(self) -> None:
+        """Manages coloring options for protein chain based on element selection."""
         if self.get_protein_repr_toggle_flag() == 1:
             if (self._main_view.tg_protein_sticks.toggle_button.isChecked()
                     or self._main_view.tg_protein_lines.toggle_button.isChecked()
@@ -1608,7 +2149,12 @@ class InterfaceManager:
                 self._main_view.ui.btn_protein_color_atoms.setEnabled(False)
                 self._main_view.ui.btn_protein_reset_atoms.setEnabled(False)
 
-    def manage_hydrogen_representation_for_protein_chain(self):
+    def manage_hydrogen_representation_for_protein_chain(self) -> None:
+        """Manages hydrogen representation for a protein chain.
+
+        This method is responsible for managing the hydrogen representation for a protein chain in the user interface. It checks the state of the toggle buttons for protein sticks, lines, and spheres. If any of these toggle buttons are checked, the method enables certain buttons and elements in the user interface. 
+        Otherwise, it disables them.
+        """
         if (self._main_view.tg_protein_sticks.toggle_button.isChecked()
                     or self._main_view.tg_protein_lines.toggle_button.isChecked()
                     or self._main_view.tg_protein_spheres.toggle_button.isChecked()):
@@ -1622,7 +2168,22 @@ class InterfaceManager:
             #self._main_view.tg_protein_hydrogen_atoms.setEnabled(False)
             pass
 
-    def manage_toggle_state_of_protein_repr(self, tmp_repr_state):
+    def manage_toggle_state_of_protein_repr(self, tmp_repr_state: dict) -> None:
+        """Manages the toggle state of protein representations.
+
+        Args:
+            tmp_repr_state (dict): A dictionary representing the state of protein representations.
+        
+        Raises:
+            exception.IllegalArgumentError: If `tmp_repr_state` is None.
+        """
+        # <editor-fold desc="Checks">
+        if tmp_repr_state is None:
+            logger.error("tmp_repr_state is None.")
+            raise exception.IllegalArgumentError("tmp_repr_state is None.")
+        
+        # </editor-fold>
+        
         if tmp_repr_state[enums.PyMOLRepresentation.CARTOON.value] == 0:
             ui_util.set_checked_async(self._main_view.tg_protein_cartoon.toggle_button, False)
             #self._main_view.tg_protein_cartoon.toggle_button.setChecked(False)
@@ -1672,7 +2233,22 @@ class InterfaceManager:
             ui_util.set_checked_async(self._main_view.tg_protein_surface.toggle_button, True)
             #self._main_view.tg_protein_surface.toggle_button.setChecked(True)
 
-    def manage_check_state_of_protein_repr(self, tmp_repr_state):
+    def manage_check_state_of_protein_repr(self, tmp_repr_state: dict) -> None:
+        """Manages the check state of the protein representations in the user interface.
+
+        Args:
+            tmp_repr_state: A dictionary containing the state of protein representations.
+        
+        Raises:
+            exception.IllegalArgumentError: If `tmp_repr_state` is None.
+        """
+        # <editor-fold desc="Checks">
+        if tmp_repr_state is None:
+            logger.error("tmp_repr_state is None.")
+            raise exception.IllegalArgumentError("tmp_repr_state is None.")
+        
+        # </editor-fold>
+        
         if tmp_repr_state[enums.PyMOLRepresentation.CARTOON.value] == 0:
             self._main_view.ui.cb_protein_cartoon.setChecked(False)
         else:
@@ -1745,10 +2321,22 @@ class InterfaceManager:
 
 
     # <editor-fold desc="Scene">
-    def add_scene_to_proteins_model(
-            self,
-            a_scene_name,
-    ):
+    def add_scene_to_proteins_model(self, a_scene_name: str)  -> None:
+        """Adds a scene to the proteins model.
+
+        Args:
+            a_scene_name (str): The name of the scene to be added to the proteins model.
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_scene_name` is either None or an empty string.
+        """
+        # <editor-fold desc="Checks">
+        if a_scene_name is None or a_scene_name == "":
+            logger.error("a_scene_name is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_scene_name is either None or an empty string.")
+        
+        # </editor-fold>
+        
         tmp_scene_item = QtGui.QStandardItem(a_scene_name)
         tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
         self._protein_model.add_scene(
@@ -1756,7 +2344,8 @@ class InterfaceManager:
             tmp_scene_item,
         )
 
-    def show_protein_pymol_scene_configuration(self):
+    def show_protein_pymol_scene_configuration(self) -> None:
+        """Shows the protein scene configuration in PyMOL."""
         self._main_view.ui.frame_protein_color.show()
         self._main_view.ui.frame_protein_repr.show()
         if self._settings_manager.settings.proteins_tab_use_combobox_for_colors == 1:
@@ -1880,7 +2469,8 @@ class InterfaceManager:
         # self._main_view.ui.lbl_info.hide()
         # self._main_view.ui.lbl_info_2.hide()
 
-    def hide_protein_pymol_scene_configuration(self):
+    def hide_protein_pymol_scene_configuration(self) -> None:
+        """Hides the protein scene configuration in PyMOL."""
         self._main_view.ui.frame_protein_color.hide()
         self._main_view.ui.frame_protein_repr.hide()
         if self._settings_manager.settings.proteins_tab_use_toggle == 1:
@@ -1926,7 +2516,22 @@ class InterfaceManager:
         self._main_view.ui.btn_protein_reset_atoms.hide()
         self._main_view.ui.lbl_info.show()
 
-    def remove_scene_from_proteins_model(self, the_model_index_of_the_scene: QtCore.QModelIndex):
+    def remove_scene_from_proteins_model(self, the_model_index_of_the_scene: QtCore.QModelIndex) -> None:
+        """Removes a scene from the proteins model.
+
+        Args:
+            the_model_index_of_the_scene (QtCore.QModelIndex): The index of the scene to be removed.
+        
+        Raises:
+            exception.IllegalArgumentError: If `the_model_index_of_the_scene` is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_model_index_of_the_scene is None:
+            logger.error("the_model_index_of_the_scene is None.")
+            raise exception.IllegalArgumentError("the_model_index_of_the_scene is None.")
+        
+        # </editor-fold>
+        
         self._protein_model.remove_scene(the_model_index_of_the_scene)
     # </editor-fold>
 
@@ -1934,24 +2539,48 @@ class InterfaceManager:
 
     # <editor-fold desc="Protein Pairs">
     def check_if_scratch_scene_exists_in_protein_pair_model(self) -> bool:
+        """Checks if a scratch scene exists in the protein pair model.
+
+        Returns:
+            True if a scratch scene exists, False otherwise.
+        """
         return self._protein_pair_model.check_if_scratch_scene_exists(self.get_current_protein_pair_tree_index())
 
-    def add_scratch_scene_to_protein_pair_model(self):
+    def add_scratch_scene_to_protein_pair_model(self) -> None:
+        """Adds a scratch scene to the protein pair model."""
         self.add_scene_to_protein_pairs_model("_scratch_")
 
-    def add_protein_pair_to_protein_pairs_model(self, a_protein_pair: "protein_pair.ProteinPair"):
+    def add_protein_pair_to_protein_pairs_model(self, a_protein_pair: "protein_pair.ProteinPair") -> None:
+        """Adds a protein pair to the protein pair model.
+
+        Args:
+            a_protein_pair: The protein pair object to be added to the protein pairs model.
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_protein_pair` is None.
+        """
+        # <editor-fold desc="Checks">
+        if a_protein_pair is None:
+            logger.error("a_protein_pair is None.")
+            raise exception.IllegalArgumentError("a_protein_pair is None.")
+        
+        # </editor-fold>
+        
         tmp_main_socket, the_general_purpose_socket = self.job_manager.get_general_purpose_socket_pair()
         self._protein_pair_model.add_protein_pair(a_protein_pair, tmp_main_socket, the_general_purpose_socket)
 
-    def remove_protein_pair_from_protein_pairs_model(self):
+    def remove_protein_pair_from_protein_pairs_model(self) -> None:
+        """Removes the current protein pair from the protein pairs model."""
         self._protein_pair_model.remove_protein_pair(self.get_current_protein_pair_tree_index())
 
     # <editor-fold desc="Menu Options">
-    def show_menu_options_with_protein_pair(self):
+    def show_menu_options_with_protein_pair(self) -> None:
+        """Sets the model for the protein pairs tree view in the main UI to display the menu options."""
         self._main_view.ui.protein_pairs_tree_view.setModel(self._protein_pair_model)
         self._main_view.ui.protein_pairs_tree_view.setHeaderHidden(True)
 
-    def show_menu_options_without_protein_pair(self):
+    def show_menu_options_without_protein_pair(self) -> None:
+        """Disables the button options related to protein pairs."""
         self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
         self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
         self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)
@@ -1960,7 +2589,26 @@ class InterfaceManager:
 
     def manage_ui_of_protein_pairs_tab(self,
                                        an_object_type: str,
-                                       the_pymol_session_manager: pymol_session_manager.PymolSessionManager):
+                                       the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> None:
+        """Manages the user interface of the protein pairs tab.
+
+        Args:
+            an_object_type (str): A string representing the type of object.
+            the_pymol_session_manager (pymol_session_manager.PymolSessionManager): An instance of pymol_session_manager.PymolSessionManager.
+
+        Raises:
+            exception.IllegalArgumentError: If an_object_type is either None or an empty string or if the_pymol_session_manager is None.
+        """
+        # <editor-fold desc="Checks">
+        if an_object_type is None or an_object_type == "":
+            logger.error("an_object_type is either None or an empty string.")
+            raise exception.IllegalArgumentError("an_object_type is either None or an empty string.")
+        if the_pymol_session_manager is None:
+            logger.error("the_pymol_session_manager is None.")
+            raise exception.IllegalArgumentError("the_pymol_session_manager is None.")
+        
+        # </editor-fold>
+        
         self._main_view.ui.lbl_info_4.hide()
 
         tmp_is_protein_pair_in_session_flag: bool = the_pymol_session_manager.is_the_current_protein_pair_in_session(self.get_current_active_protein_pair_object().name)
@@ -2050,7 +2698,8 @@ class InterfaceManager:
             self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
 
-    def manage_coloring_by_element_option_for_protein_pair_chain(self):
+    def manage_coloring_by_element_option_for_protein_pair_chain(self) -> None:
+        """Manages coloring by element option for protein pair chain."""
         if self.get_protein_pair_repr_toggle_flag() == 1:
             if (self._main_view.tg_protein_pair_sticks.toggle_button.isChecked()
                     or self._main_view.tg_protein_pair_lines.toggle_button.isChecked()
@@ -2078,7 +2727,8 @@ class InterfaceManager:
                 self._main_view.ui.btn_protein_pair_color_atoms.setEnabled(False)
                 self._main_view.ui.btn_protein_pair_reset_atoms.setEnabled(False)
 
-    def manage_hydrogen_representation_for_protein_pair_chain(self):
+    def manage_hydrogen_representation_for_protein_pair_chain(self) -> None:
+        """Manages the representation of hydrogen atoms for a protein pair chain."""
         if (self._main_view.tg_protein_pair_sticks.toggle_button.isChecked()
                     or self._main_view.tg_protein_pair_lines.toggle_button.isChecked()
                     or self._main_view.tg_protein_pair_spheres.toggle_button.isChecked()):
@@ -2092,7 +2742,23 @@ class InterfaceManager:
             #self._main_view.tg_protein_pair_hydrogen_atoms.setEnabled(False)
             pass
 
-    def set_current_active_chain_color_of_protein_pair(self, a_color) -> None:
+    def set_current_active_chain_color_of_protein_pair(self, a_color: str) -> None:
+        """Sets the current active chain color for a protein pair.
+
+        Args:
+            a_color: The color to set as the current active chain color.
+
+        Raises:
+            exception.IllegalArgumentError: If `a_color` is None or an empty string.
+            ValueError: If the type of the current index in the protein_pairs_tree_view is not one of the expected types.
+        """
+        # <editor-fold desc="Checks">
+        if a_color is None or a_color == "":
+            logger.error("a_color is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_color is either None or an empty string.")
+        
+        # </editor-fold>
+        
         tmp_type = self._main_view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
         if tmp_type == "protein_pair":
             raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
@@ -2113,7 +2779,7 @@ class InterfaceManager:
         """Returns the chain color of the current active branch.
 
         Returns:
-            a chain color
+            A chain color.
         """
         tmp_type = self._main_view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
         if tmp_type == "protein_pair":
@@ -2129,38 +2795,14 @@ class InterfaceManager:
         else:
             raise ValueError("Unknown type!")
 
-    def get_current_chain_color_of_current_protein_pair_pymol_session(
-            self,
-            a_protein_name: str,
-            the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
-    ):
-        """This method should not be used anymore!"""
-        tmp_protein = self.get_current_active_protein_object_of_protein_pair()
-        tmp_chain = self.get_current_active_chain_object_of_protein_pair()
-        if the_pymol_session_manager.is_the_current_protein_pair_in_session(self.get_current_active_protein_pair_object().name):
-            if tmp_chain.chain_type == "protein_chain":
-                tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and name CA and {a_protein_name}"
-            else:
-                tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
-            if self.pymol_session_manager.get_residue_color_config_of_a_given_selection(f"(first elem N, first elem C, first elem O) and chain {tmp_chain.chain_letter} and {a_protein_name}",
-                                                                                        tmp_chain.chain_letter).atoms_are_colored_by_elements():
-                self._main_view.ui.lbl_protein_pair_current_color.setText("By Element    ")
-                self._main_view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
-            else:
-                rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string, self.pymol_session_manager))
-                self._main_view.ui.lbl_protein_pair_current_color.setText(f"{tmp_chain.pymol_parameters['chain_color']}    ")
-                self._main_view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
-
-        #     # fixme: This can easily be bypassed by a power user if the first residue color is changed
-        #     if tmp_chain.chain_type == "protein_chain":
-        #         tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {a_protein_name} and name CA"
-        #     else:
-        #         tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {a_protein_name}"
-        #     rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string, self.pymol_session_manager))
-        # self._main_view.ui.lbl_protein_pair_current_color.setText(tmp_chain.pymol_parameters["chain_color"])
-
     def get_current_protein_pair_representation_states(self) -> list[tuple[enums.PyMOLRepresentation, bool]]:
-        """Gets the representation toggle states of a protein chain on the Protein Pairs tab."""
+        """Gets the representation toggle states of a protein chain on the Protein Pairs tab.
+
+        Returns:
+            A list of tuples representing the current representation states of the protein pair. Each tuple
+            contains a PyMOLRepresentation enum value and a boolean indicating whether the representation
+            is enabled or disabled.
+        """
         tmp_representation_states: list[tuple[enums.PyMOLRepresentation, bool]] = []
         if self._main_view.tg_protein_pair_cartoon.toggle_button.isChecked():
             tmp_representation_states.append((enums.PyMOLRepresentation.CARTOON, True))
@@ -2197,10 +2839,22 @@ class InterfaceManager:
         return tmp_representation_states
 
     # <editor-fold desc="Scene">
-    def add_scene_to_protein_pairs_model(
-            self,
-            a_scene_name,
-    ):
+    def add_scene_to_protein_pairs_model(self, a_scene_name: str) -> None:
+        """Adds a scene to the protein pairs model.
+
+        Args:
+            a_scene_name (str): The name of the scene to be added.
+
+        Raises:
+            exception.IllegalArgumentError: if a_scene_name is either None or an empty string.
+        """
+        # <editor-fold desc="Checks">
+        if a_scene_name is None or a_scene_name == "":
+            logger.error("a_scene_name is either None or an empty string.")
+            raise exception.IllegalArgumentError("a_scene_name is either None or an empty string.")
+        
+        # </editor-fold>
+        
         tmp_scene_item = QtGui.QStandardItem(a_scene_name)
         tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
         self._protein_pair_model.add_scene(
@@ -2208,7 +2862,8 @@ class InterfaceManager:
             tmp_scene_item,
         )
 
-    def show_protein_pair_pymol_scene_configuration(self):
+    def show_protein_pair_pymol_scene_configuration(self) -> None:
+        """Shows the configuration of the protein pair scene in PyMOL."""
         self._main_view.ui.frame_protein_pair_color.show()
         self._main_view.ui.frame_protein_pair_repr.show()
         if self._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors == 1:
@@ -2292,7 +2947,8 @@ class InterfaceManager:
         self._main_view.ui.lbl_info_3.hide()
         self._main_view.ui.lbl_info_4.hide()
 
-    def hide_protein_pair_pymol_scene_configuration(self):
+    def hide_protein_pair_pymol_scene_configuration(self) -> None:
+        """Hides Protein Pair PyMOL Scene Configuration."""
         self._main_view.ui.frame_protein_pair_color.hide()
         self._main_view.ui.frame_protein_pair_repr.hide()
         self._main_view.ui.lbl_info_3.show()
@@ -2333,17 +2989,33 @@ class InterfaceManager:
         #
         # self._main_view.ui.lbl_info_3.show()
 
-    def remove_scene_from_protein_pairs_model(self, the_model_index_of_the_scene: QtCore.QModelIndex):
+    def remove_scene_from_protein_pairs_model(self, the_model_index_of_the_scene: QtCore.QModelIndex) -> None:
+        """Removes the scene from the protein pairs model.
+
+        Args:
+            the_model_index_of_the_scene (QtCore.QModelIndex): The index of the scene to be removed from the protein pairs model.
+        
+        Raises:
+            exception.IllegalArgumentError: If `the_model_index_of_the_scene` is None.
+        """
+        # <editor-fold desc="Checks">
+        if the_model_index_of_the_scene is None:
+            logger.error("the_model_index_of_the_scene is None.")
+            raise exception.IllegalArgumentError("the_model_index_of_the_scene is None.")
+        
+        # </editor-fold>
+        
         self._protein_pair_model.remove_scene(the_model_index_of_the_scene)
     # </editor-fold>
 
     # </editor-fold>
 
-    def update_settings(self):
+    def update_settings(self) -> None:
         """Deserializes the settings json file."""
         self._settings_manager.settings = self._settings_manager.settings.deserialize_settings()
 
-    def restore_default_main_view(self):
+    def restore_default_main_view(self) -> None:
+        """Restores the default main view by clearing the sequences table and setting its row count to 0."""
         # Restore sequences table
         logger.info("Restoring default main view at seq table")
         self._main_view.ui.seqs_table_widget.clear()
@@ -2366,7 +3038,21 @@ class InterfaceManager:
         self._main_view.initialize_ui()
 
     def block_gui(self, with_wait_cursor: bool = False) -> None:
-        """Starts the wait cursor."""
+        """Starts the wait cursor.
+        
+        Args:
+            with_wait_cursor (bool): A boolean indicating whether to display a wait cursor.
+        
+        Raises:
+            exception.IllegalArgumentError: If `with_wait_cursor` is None.
+        """
+        # <editor-fold desc="Checks">
+        if with_wait_cursor is None:
+            logger.error("with_wait_cursor is None.")
+            raise exception.IllegalArgumentError("with_wait_cursor is None.")
+        
+        # </editor-fold>
+        
         if with_wait_cursor is True:
             QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         self._main_view.disable_menu_bar_without_exit_application()
@@ -2374,23 +3060,53 @@ class InterfaceManager:
         self._main_view.disable_job_panels()
 
     def stop_wait_cursor(self) -> None:
-        """Stops the spinner."""
+        """Stops the cursor."""
         QtWidgets.QApplication.restoreOverrideCursor()
         self._main_view.enable_job_panels()
 
     # <editor-fold desc="Job related methods">
-    def add_job_entry_to_job_overview_layout(self, a_job_entry_widget):
+    def add_job_entry_to_job_overview_layout(self, a_job_entry_widget: "job_entry.JobEntryWidget") -> None:
+        """Adds a job entry widget to the job overview layout.
+
+        Args:
+            a_job_entry_widget (job_entry.JobEntryWidget): The job entry widget to add.
+
+        Raises:
+            exception.IllegalArgumentError: If `a_job_entry_widget` is None.
+        """
+        # <editor-fold desc="Checks">
+        if a_job_entry_widget is None:
+            logger.error("a_job_entry_widget is None.")
+            raise exception.IllegalArgumentError("a_job_entry_widget is None.")
+        
+        # </editor-fold>
+        
         self.job_entry_widgets.append(a_job_entry_widget)
         self._main_view.ui.job_overview_layout.insertWidget(self._main_view.ui.job_overview_layout.count() - 1,
                                                             a_job_entry_widget)
         self._main_view.lbl_job_overview.hide()
         self._main_view.btn_open_job_overview.setIcon(self._main_view.icon_jobs_running)
 
-    def update_job_entry(self, update_job_entry_signal_values):
-        """Notes:
-        Gets signal from the classes of job.py with the signal "update_job_entry_signal"
+    def update_job_entry(self, update_job_entry_signal_values: tuple) -> None:
+        """Updates a job entry with the given signal values.
 
+        Args:
+            update_job_entry_signal_values (tuple): A tuple containing information about the job entry update. 
+                The tuple should have the format (a_job_entry_widget, a_description, a_value), where:
+                    - a_job_entry_widget: A reference to the job entry widget to update.
+                    - a_description: The description of the job entry update.
+                    - a_value: The value of the job entry update.
+
+        Notes:
+            Gets signal from the classes of job.py with the signal "update_job_entry_signal"
         """
+        # <editor-fold desc="Checks">
+        if update_job_entry_signal_values is None:
+            logger.error("update_job_entry_signal_values is None.")
+            raise exception.IllegalArgumentError("update_job_entry_signal_values is None.")
+        
+        # </editor-fold>
+        
         _, a_description, a_value = update_job_entry_signal_values
         a_job_entry_widget: "job_entry.JobEntryWidget" = update_job_entry_signal_values[0]  # Unpack of 0 because of type annotation need
         a_job_entry_widget.ui.progress_bar_job.setValue(a_value)
@@ -2405,8 +3121,26 @@ class InterfaceManager:
         else:
             a_job_entry_widget.ui.btn_cancel_job.setEnabled(False)
 
-    def _create_job_notification(self, a_job_entry_widget: "job_entry.JobEntryWidget", a_description):
-        """Helper function for setting up a job notification after a job finished."""
+    def _create_job_notification(self, a_job_entry_widget: "job_entry.JobEntryWidget", a_description: str) -> None:
+        """Creates job notification widget after a job finished.
+
+        Args:
+            a_job_entry_widget (job_entry.JobEntryWidget): The job entry widget that triggered the job notification creation.
+            a_description (str): The description of the job notification.
+        
+        Raises:
+            exception.IllegalArgumentError: If any of the arguments are None or if `a_description` is an empty string.
+        """
+        # <editor-fold desc="Checks">
+        if a_job_entry_widget is None:
+            logger.error("a_job_entry_widget is None.")
+            raise exception.IllegalArgumentError("a_job_entry_widget is None.")
+        if a_description is None:
+            logger.error("a_description is None.")
+            raise exception.IllegalArgumentError("a_description is None.")
+        
+        # </editor-fold>
+        
         if a_job_entry_widget.job_base_information.project_name == self._current_project.get_project_name():
             tmp_job_is_from_current_project = True
         else:
@@ -2429,19 +3163,32 @@ class InterfaceManager:
             self._main_view.lbl_job_overview.show()
             self._main_view.btn_open_job_overview.setIcon(self._main_view.icon_jobs)
 
-    def remove_job_notification_widget(self, a_job_notification_widget):
+    def remove_job_notification_widget(self, a_job_notification_widget: "job_entry.JobNotificationWidget") -> None:
         """Removes a job notification after pressing open or refresh.
 
+        Args:
+            a_job_notification_widget (job_entry.JobNotificationWidget): The job notification widget to be removed.
+        
+        Raises:
+            exception.IllegalArgumentError: If `a_job_notification_widget` is None.
+        
         Notes:
             This function is called from the main_view_controller.
         """
-        print(a_job_notification_widget)
+        # <editor-fold desc="Checks">
+        if a_job_notification_widget is None:
+            logger.error("a_job_notification_widget is None.")
+            raise exception.IllegalArgumentError("a_job_notification_widget is None.")
+        
+        # </editor-fold>
+        
+        logger.debug(a_job_notification_widget)
         self._main_view.ui.job_notification_layout.removeWidget(a_job_notification_widget)
         if self._main_view.ui.job_notification_layout.count() == 2:
             self._main_view.lbl_job_notification.show()
             self._main_view.btn_open_job_notification.setIcon(self._main_view.icon_notify)
 
-    def close_job_notification_panel(self):
+    def close_job_notification_panel(self) -> None:
         """Closes the job notification panel after pressing open or refresh.
 
         Notes:
@@ -2449,10 +3196,27 @@ class InterfaceManager:
         """
         self._main_view.ui.frame_job_notification.hide()
 
-    def close_job_overview_panel(self):
+    def close_job_overview_panel(self) -> None:
+        """Closes the job overview panel."""
         self._main_view.ui.frame_job_overview.hide()
 
-    def cancel_job(self, signal_tuple):
+    def cancel_job(self, signal_tuple: tuple) -> None:
+        """Cancels a job.
+
+        Args:
+            signal_tuple (tuple): A tuple that contains information about the job.
+                signal_tuple[0] (enums.JobType): The type of job.
+                signal_tuple[1] (QWidget): The widget where the job entry is displayed.
+                signal_tuple[2] (Job): The job object.
+                signal_tuple[3] (list): A list of protein prediction info objects.
+        """
+        # <editor-fold desc="Checks">
+        if signal_tuple is None:
+            logger.error("signal_tuple is None.")
+            raise exception.IllegalArgumentError("signal_tuple is None.")
+        
+        # </editor-fold>
+        
         if signal_tuple[0] == enums.JobType.PREDICTION:
             # signal_tuple = (job_type, job_entry_widget, job object, protein_prediction_infos)
             for tmp_protein_info in signal_tuple[3]:
