@@ -34,41 +34,47 @@ from pyssa.util import constants, input_validator
 
 
 class OpenProjectView(QtWidgets.QDialog):
-    """Class representing an Open dialog."""
-    
-    dialogClosed = QtCore.pyqtSignal()
-    """A signal indicating that the dialog is closed."""
+  """Class representing an Open dialog."""
 
-    def __init__(self) -> None:
-        """Constructor."""
-        QtWidgets.QDialog.__init__(self)
-        # build ui object
-        self.ui = auto_open_project_view.Ui_Dialog()
-        self.ui.setupUi(self)
-        self._initialize_ui()
-        self.resize(450, 600)
-        self.ui.btn_cancel.clicked.connect(self.close)
-        self.setModal(True)
+  dialogClosed = QtCore.pyqtSignal()
+  """A signal indicating that the dialog is closed."""
 
-    def _initialize_ui(self) -> None:
-        """Initialize the UI elements."""
-        self.ui.lbl_open_status_search.setText("")
-        self.ui.projects_list_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
-        self.ui.btn_help.setText("")
-        styles.set_stylesheet(self)
-        styles.color_bottom_frame_button(self.ui.btn_open_project)
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Open Project")
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+  def __init__(self) -> None:
+    """Constructor."""
+    QtWidgets.QDialog.__init__(self)
+    # build ui object
+    self.ui = auto_open_project_view.Ui_Dialog()
+    self.ui.setupUi(self)
+    self._initialize_ui()
+    self.resize(450, 600)
+    self.ui.btn_cancel.clicked.connect(self.close)
+    self.setModal(True)
 
-    def closeEvent(self, event) -> None:
-        """Closes the dialog (with the closeEvent) and emits the 'dialogClosed' signal."""
-        event.accept()
-        self.dialogClosed.emit()
+  def _initialize_ui(self) -> None:
+    """Initialize the UI elements."""
+    self.ui.lbl_open_status_search.setText("")
+    self.ui.projects_list_view.setEditTriggers(
+        QtWidgets.QAbstractItemView.NoEditTriggers
+    )
+    self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
+    self.ui.btn_help.setIconSize(
+        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
+    )
+    self.ui.btn_help.setText("")
+    styles.set_stylesheet(self)
+    styles.color_bottom_frame_button(self.ui.btn_open_project)
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    self.setWindowTitle("Open Project")
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )
 
-    def _close_dialog(self) -> None:
-        """Closes the dialog and emits the 'dialogClosed' signal."""
-        self.close()
-        self.dialogClosed.emit()
+  def closeEvent(self, event) -> None:
+    """Closes the dialog (with the closeEvent) and emits the 'dialogClosed' signal."""
+    event.accept()
+    self.dialogClosed.emit()
+
+  def _close_dialog(self) -> None:
+    """Closes the dialog and emits the 'dialogClosed' signal."""
+    self.close()
+    self.dialogClosed.emit()

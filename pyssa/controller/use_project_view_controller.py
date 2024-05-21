@@ -42,411 +42,518 @@ __docformat__ = "google"
 
 
 class UseProjectViewController(QtCore.QObject):
-    """Class for the UseProjectViewController."""
-    
-    user_input = QtCore.pyqtSignal(tuple)
-    """Singal used to transfer data back to the previous window."""
-    
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
-        """Constructor.
+  """Class for the UseProjectViewController."""
 
-        Args:
-            the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+  user_input = QtCore.pyqtSignal(tuple)
+  """Singal used to transfer data back to the previous window."""
 
-        Raises:
-            exception.IllegalArgumentError: If `the_interface_manager` is None.
-        """
-        # <editor-fold desc="Checks">
-        if the_interface_manager is None:
-            logger.error("the_interface_manager is None.")
-            raise exception.IllegalArgumentError("the_interface_manager is None.")
+  def __init__(
+      self, the_interface_manager: "interface_manager.InterfaceManager"
+  ) -> None:
+    """Constructor.
 
-        # </editor-fold>
-        
-        super().__init__()
-        self._interface_manager = the_interface_manager
-        self._view = the_interface_manager.get_use_project_view()
-        self._initialize_ui()
-        self._fill_projects_list_view()
-        self._fill_projects_combobox()
-        self._project_names: set = self._convert_model_into_set()
-        self._connect_all_ui_elements_to_slot_functions()
+    Args:
+        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
 
-    def open_help(self, a_page_name: str) -> None:
-        """Opens the pyssa documentation window if it's not already open.
+    Raises:
+        exception.IllegalArgumentError: If `the_interface_manager` is None.
+    """
+    # <editor-fold desc="Checks">
+    if the_interface_manager is None:
+      logger.error("the_interface_manager is None.")
+      raise exception.IllegalArgumentError("the_interface_manager is None.")
 
-        Args:
-            a_page_name (str): a name of a documentation page to display
-        
-        Raises:
-            exception.IllegalArgumentError: If `a_page_name` is None.
-        """
-        # <editor-fold desc="Checks">
-        if a_page_name is None:
-            logger.error("a_page_name is None.")
-            raise exception.IllegalArgumentError("a_page_name is None.")
-        
-        # </editor-fold>
-        
-        try:
-            self._interface_manager.status_bar_manager.show_temporary_message("Opening help center ...")
-            if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
-                self._interface_manager.documentation_window = None
-            self._active_task = tasks.LegacyTask(
-                target=util_async.open_documentation_on_certain_page,
-                args=(a_page_name, self._interface_manager.documentation_window),
-                post_func=self.__await_open_help,
-            )
-        except Exception as e:
-            logger.error(f"Error while opening help center: {e}")
-        else:
-            self._active_task.start()
+    # </editor-fold>
 
-    def __await_open_help(self, return_value: tuple) -> None:
-        """Opens the help center and performs necessary actions based on the return value.
+    super().__init__()
+    self._interface_manager = the_interface_manager
+    self._view = the_interface_manager.get_use_project_view()
+    self._initialize_ui()
+    self._fill_projects_list_view()
+    self._fill_projects_combobox()
+    self._project_names: set = self._convert_model_into_set()
+    self._connect_all_ui_elements_to_slot_functions()
 
-        Args:
-            return_value (tuple): The return value from opening the help center.
-        """
-        # <editor-fold desc="Checks">
-        if return_value[0] == "":
-            self._interface_manager.status_bar_manager.show_error_message("Opening help center failed!")
-            return
-        
-        # </editor-fold>
+  def open_help(self, a_page_name: str) -> None:
+    """Opens the pyssa documentation window if it's not already open.
 
-        try:
-            self._interface_manager.documentation_window = return_value[2]
-            if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
-                tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                    "The script for bringing the documentation window in front could not be found!", "Documentation",
-                    custom_message_box.CustomMessageBoxIcons.ERROR.value,
-                )
-                tmp_dialog.exec_()
-            else:
-                self._interface_manager.documentation_window.restore()
-                subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
-                self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
-        except Exception as e:
-            logger.error(f"Error while opening help center: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("Opening help center failed!")
+    Args:
+        a_page_name (str): a name of a documentation page to display
 
-    def _open_help_for_dialog(self) -> None:
-        """Opens the help dialog."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
-        self.open_help("help/project/use_project/")
+    Raises:
+        exception.IllegalArgumentError: If `a_page_name` is None.
+    """
+    # <editor-fold desc="Checks">
+    if a_page_name is None:
+      logger.error("a_page_name is None.")
+      raise exception.IllegalArgumentError("a_page_name is None.")
 
-    def _convert_model_into_set(self) -> set:
-        """Converts the model data into a set of project names.
+    # </editor-fold>
 
-        Returns:
-            set: A set containing the project names from the model.
-        """
-        tmp_project_names = []
-        for tmp_row in range(self._view.ui.list_use_existing_projects.model().rowCount()):
-            tmp_project_names.append(
-                self._view.ui.list_use_existing_projects.model().index(tmp_row, 0).data(Qt.DisplayRole),
-            )
-        return set(tmp_project_names)
+    try:
+      self._interface_manager.status_bar_manager.show_temporary_message(
+          "Opening help center ..."
+      )
+      if (
+          len(
+              pygetwindow.getWindowsWithTitle(
+                  constants.WINDOW_TITLE_OF_HELP_CENTER
+              )
+          )
+          != 1
+      ):
+        self._interface_manager.documentation_window = None
+      self._active_task = tasks.LegacyTask(
+          target=util_async.open_documentation_on_certain_page,
+          args=(a_page_name, self._interface_manager.documentation_window),
+          post_func=self.__await_open_help,
+      )
+    except Exception as e:
+      logger.error(f"Error while opening help center: {e}")
+    else:
+      self._active_task.start()
 
-    def _initialize_ui(self) -> None:
-        """Initializes the user interface for the application."""
-        gui_elements_to_show = [
-            self._view.ui.btn_use_next,
-            self._view.ui.list_use_existing_projects,
-            self._view.ui.label,
-            self._view.ui.lbl_use_project_name,
+  def __await_open_help(self, return_value: tuple) -> None:
+    """Opens the help center and performs necessary actions based on the return value.
+
+    Args:
+        return_value (tuple): The return value from opening the help center.
+    """
+    # <editor-fold desc="Checks">
+    if return_value[0] == "":
+      self._interface_manager.status_bar_manager.show_error_message(
+          "Opening help center failed!"
+      )
+      return
+
+    # </editor-fold>
+
+    try:
+      self._interface_manager.documentation_window = return_value[2]
+      if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
+        tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            "The script for bringing the documentation window in front could not be found!",
+            "Documentation",
+            custom_message_box.CustomMessageBoxIcons.ERROR.value,
+        )
+        tmp_dialog.exec_()
+      else:
+        self._interface_manager.documentation_window.restore()
+        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
+        self._interface_manager.status_bar_manager.show_temporary_message(
+            "Opening help center finished."
+        )
+    except Exception as e:
+      logger.error(f"Error while opening help center: {e}")
+      self._interface_manager.status_bar_manager.show_error_message(
+          "Opening help center failed!"
+      )
+
+  def _open_help_for_dialog(self) -> None:
+    """Opens the help dialog."""
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
+    )
+    self.open_help("help/project/use_project/")
+
+  def _convert_model_into_set(self) -> set:
+    """Converts the model data into a set of project names.
+
+    Returns:
+        set: A set containing the project names from the model.
+    """
+    tmp_project_names = []
+    for tmp_row in range(
+        self._view.ui.list_use_existing_projects.model().rowCount()
+    ):
+      tmp_project_names.append(
+          self._view.ui.list_use_existing_projects.model()
+          .index(tmp_row, 0)
+          .data(Qt.DisplayRole),
+      )
+    return set(tmp_project_names)
+
+  def _initialize_ui(self) -> None:
+    """Initializes the user interface for the application."""
+    gui_elements_to_show = [
+        self._view.ui.btn_use_next,
+        self._view.ui.list_use_existing_projects,
+        self._view.ui.label,
+        self._view.ui.lbl_use_project_name,
+    ]
+    gui_utils.show_gui_elements(gui_elements_to_show)
+    self._view.ui.txt_use_project_name.setEnabled(True)
+
+    gui_elements_to_hide = [
+        self._view.ui.lbl_use_search,
+        self._view.ui.lbl_use_status_search,
+        self._view.ui.txt_use_search,
+        self._view.ui.lbl_choose_project,
+        self._view.ui.cb_choose_project,
+        self._view.ui.btn_use_add_available_protein_structures,
+        self._view.ui.lbl_use_available_protein_structures,
+        self._view.ui.list_use_available_protein_structures,
+        self._view.ui.btn_use_remove_selected_protein_structures,
+        self._view.ui.lbl_use_selected_protein_structures,
+        self._view.ui.list_use_selected_protein_structures,
+        self._view.ui.btn_use_back,
+        self._view.ui.btn_use_create_new_project,
+    ]
+    gui_utils.hide_gui_elements(gui_elements_to_hide)
+    gui_utils.enable_text_box(
+        self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name
+    )
+    self._view.ui.txt_use_project_name.clear()
+    self._view.ui.txt_use_project_name.setStyleSheet(
+        """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
+    )
+    self._view.ui.lbl_use_status_project_name.setText("")
+    self._view.ui.lbl_use_status_project_name.setStyleSheet(
+        "color: #ba1a1a; font-size: 11px;"
+    )
+    self._view.ui.txt_use_search.clear()
+    self._view.ui.list_use_selected_protein_structures.clear()
+    self._view.ui.lbl_use_status_search.setText("")
+    self._view.ui.btn_use_next.setEnabled(False)
+    self._temporary_redesign()
+
+  def _temporary_redesign(self) -> None:
+    """Changes some parts of the UI temporarily."""
+    self._view.ui.lbl_use_search.hide()
+    self._view.ui.lbl_use_status_search.hide()
+    self._view.ui.txt_use_search.hide()
+
+  def _fill_projects_list_view(self) -> None:
+    """Lists all projects."""
+    self._view.ui.list_use_existing_projects.setModel(
+        self._interface_manager.get_workspace_projects()
+    )
+
+  def _connect_all_ui_elements_to_slot_functions(self) -> None:
+    """Connects all UI elements to their corresponding slot functions in the class."""
+    self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
+    self._view.ui.txt_use_project_name.textChanged.connect(
+        self.validate_use_project_name
+    )
+    self._view.ui.btn_use_next.clicked.connect(
+        self.show_protein_selection_for_use
+    )
+    self._view.ui.btn_use_add_available_protein_structures.clicked.connect(
+        self.add_protein_structure_to_new_project,
+    )
+    self._view.ui.cb_choose_project.currentIndexChanged.connect(
+        self._list_all_proteins_of_selected_project
+    )
+    self._view.ui.list_use_available_protein_structures.itemClicked.connect(
+        self.use_enable_add
+    )
+    self._view.ui.btn_use_remove_selected_protein_structures.clicked.connect(
+        self.remove_protein_structure_to_new_project,
+    )
+    self._view.ui.list_use_selected_protein_structures.itemClicked.connect(
+        self.use_enable_remove
+    )
+    self._view.ui.btn_use_back.clicked.connect(
+        self.hide_protein_selection_for_use
+    )
+    self._view.ui.btn_use_create_new_project.clicked.connect(
+        self.create_use_project
+    )
+
+  def validate_use_project_name(self, the_entered_text: str) -> None:
+    """Validates the entered text for project name.
+
+    Args:
+        the_entered_text (str): The text entered for project name.
+
+    Raises:
+        exception.IllegalArgumentError: If `the_entered_text` is None.
+    """
+    # <editor-fold desc="Checks">
+    if the_entered_text is None:
+      logger.error("the_entered_text is None.")
+      raise exception.IllegalArgumentError("the_entered_text is None.")
+
+    # </editor-fold>
+
+    logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
+    projects_list_view = self._view.ui.list_use_existing_projects
+    # Deselect any current item in the list view
+    if projects_list_view.currentIndex().isValid():
+      projects_list_view.selectionModel().clearSelection()
+
+    tmp_validate_flag, tmp_stylesheet_string, tmp_message = (
+        input_validator.validate_input_for_project_name(
+            the_entered_text,
+            self._project_names,
+        )
+    )
+    self._view.ui.txt_use_project_name.setStyleSheet(tmp_stylesheet_string)
+
+    if tmp_validate_flag:
+      self._view.ui.lbl_use_status_project_name.setText("")
+      self._view.ui.btn_use_next.setEnabled(True)
+    else:
+      self._view.ui.lbl_use_status_project_name.setText(tmp_message)
+      self._view.ui.btn_use_next.setEnabled(False)
+
+  def validate_use_search(self) -> None:
+    """Validates the input of the protein name in real-time."""
+    message = "Protein structure does not exists."
+    input_validator.InputValidator.validate_search_input(
+        self._view.ui.list_use_available_protein_structures,
+        self._view.ui.txt_use_search,
+        self._view.ui.lbl_use_status_search,
+        status_message=message,
+    )
+
+  def add_protein_structure_to_new_project(self) -> None:
+    """Adds the selected protein to the list which is used to create the new project."""
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        "'Add' protein to new project button was clicked.",
+    )
+    prot_to_add = QtWidgets.QListWidgetItem(
+        self._view.ui.list_use_available_protein_structures.currentItem().text()
+    )
+    prot_to_add.setData(
+        enums.ModelEnum.OBJECT_ROLE,
+        self._view.ui.list_use_available_protein_structures.currentItem().data(
+            enums.ModelEnum.OBJECT_ROLE
+        ),
+    )
+    self._view.ui.list_use_selected_protein_structures.addItem(prot_to_add)
+    self._view.ui.list_use_available_protein_structures.takeItem(
+        self._view.ui.list_use_available_protein_structures.currentRow(),
+    )
+    self._view.ui.btn_use_add_available_protein_structures.setEnabled(False)
+    if self._view.ui.list_use_available_protein_structures.count() > 0:
+      try:
+        self._view.ui.list_use_available_protein_structures.currentItem().setSelected(
+            False
+        )
+      except AttributeError:
+        constants.PYSSA_LOGGER.debug(
+            "No selection in use available proteins list on Use page."
+        )
+
+    self._view.ui.btn_use_create_new_project.setEnabled(True)
+
+  def remove_protein_structure_to_new_project(self) -> None:
+    """Removes the selected protein from the list which is used to create the new project."""
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Remove' button was clicked."
+    )
+    prot_to_remove = (
+        self._view.ui.list_use_selected_protein_structures.currentItem()
+    )
+    self._view.ui.list_use_selected_protein_structures.takeItem(
+        self._view.ui.list_use_selected_protein_structures.currentRow(),
+    )
+    self._view.ui.list_use_available_protein_structures.addItem(prot_to_remove)
+    self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(False)
+    if self._view.ui.list_use_selected_protein_structures.count() > 0:
+      try:
+        self._view.ui.list_use_selected_protein_structures.currentItem().setSelected(
+            False
+        )
+      except AttributeError:
+        constants.PYSSA_LOGGER.debug(
+            "No selection in use selected proteins list on Use page."
+        )
+
+    if self._view.ui.list_use_selected_protein_structures.count() == 0:
+      self._view.ui.btn_use_create_new_project.setEnabled(False)
+    else:
+      self._view.ui.btn_use_create_new_project.setEnabled(True)
+
+  def _are_duplicate_proteins_in_selected_protein_list(self) -> bool:
+    """Checks if there are duplicate proteins in the selected protein list.
+
+    Returns:
+        True if there are duplicate proteins, False otherwise.
+    """
+    try:
+      target_string = (
+          self._view.ui.list_use_available_protein_structures.currentItem().text()
+      )
+    except AttributeError:
+      return False
+
+    tmp_occurrences = 0
+    for tmp_row in range(
+        self._view.ui.list_use_selected_protein_structures.count()
+    ):
+      if (
+          self._view.ui.list_use_selected_protein_structures.item(
+              tmp_row
+          ).text()
+          == target_string
+      ):
+        tmp_occurrences += 1
+    if tmp_occurrences > 0:
+      return True
+    return False
+
+  def show_protein_selection_for_use(self) -> None:
+    """Shows the two lists for the protein selection."""
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Next' button was clicked."
+    )
+    gui_elements_to_show = [
+        self._view.ui.lbl_use_search,
+        self._view.ui.lbl_use_status_search,
+        self._view.ui.txt_use_search,
+        self._view.ui.lbl_choose_project,
+        self._view.ui.cb_choose_project,
+        self._view.ui.btn_use_add_available_protein_structures,
+        self._view.ui.lbl_use_available_protein_structures,
+        self._view.ui.list_use_available_protein_structures,
+        self._view.ui.btn_use_remove_selected_protein_structures,
+        self._view.ui.lbl_use_selected_protein_structures,
+        self._view.ui.list_use_selected_protein_structures,
+        self._view.ui.btn_use_back,
+        self._view.ui.btn_use_create_new_project,
+        self._view.ui.lbl_use_project_name,
+    ]
+    gui_utils.show_gui_elements(gui_elements_to_show)
+    self._view.ui.txt_use_project_name.setEnabled(False)
+    gui_elements_to_hide = [
+        self._view.ui.btn_use_next,
+        self._view.ui.list_use_existing_projects,
+        self._view.ui.label,
+    ]
+    gui_utils.hide_gui_elements(gui_elements_to_hide)
+    gui_utils.disable_text_box(
+        self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name
+    )
+    self._view.ui.btn_use_add_available_protein_structures.setEnabled(False)
+    self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(False)
+    self._view.ui.btn_use_create_new_project.setEnabled(False)
+    self._temporary_redesign()
+    self._list_all_proteins_of_selected_project()
+
+    if self._are_duplicate_proteins_in_selected_protein_list():
+      self._view.ui.btn_use_create_new_project.setEnabled(False)
+    else:
+      self._view.ui.btn_use_create_new_project.setEnabled(True)
+
+  def hide_protein_selection_for_use(self) -> None:
+    """Hides the two lists for the protein selection."""
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Back' button was clicked."
+    )
+    gui_elements_to_show = [
+        self._view.ui.btn_use_next,
+        self._view.ui.list_use_existing_projects,
+        self._view.ui.label,
+        self._view.ui.lbl_use_project_name,
+    ]
+    gui_utils.show_gui_elements(gui_elements_to_show)
+    self._view.ui.txt_use_project_name.setEnabled(True)
+
+    gui_elements_to_hide = [
+        self._view.ui.lbl_use_search,
+        self._view.ui.lbl_use_status_search,
+        self._view.ui.txt_use_search,
+        self._view.ui.lbl_choose_project,
+        self._view.ui.cb_choose_project,
+        self._view.ui.btn_use_add_available_protein_structures,
+        self._view.ui.lbl_use_available_protein_structures,
+        self._view.ui.list_use_available_protein_structures,
+        self._view.ui.btn_use_remove_selected_protein_structures,
+        self._view.ui.lbl_use_selected_protein_structures,
+        self._view.ui.list_use_selected_protein_structures,
+        self._view.ui.btn_use_back,
+        self._view.ui.btn_use_create_new_project,
+    ]
+    gui_utils.hide_gui_elements(gui_elements_to_hide)
+    gui_utils.enable_text_box(
+        self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name
+    )
+    self._temporary_redesign()
+
+  def _fill_projects_combobox(self) -> None:
+    """Fills the combo box with the available projects from the workspace."""
+    gui_utils.fill_combo_box(
+        self._view.ui.cb_choose_project,
+        self._interface_manager.get_workspace_projects_as_list(),
+    )
+    self._view.ui.cb_choose_project.setCurrentIndex(
+        self._view.ui.cb_choose_project.findText(
+            self._interface_manager.get_current_project().get_project_name()
+        ),
+    )
+
+  def _list_all_proteins_of_selected_project(self) -> None:
+    """Lists all proteins of the selected project."""
+    if self._view.ui.cb_choose_project.currentText() == "":
+      return
+    tmp_database_filepath: str = str(
+        pathlib.Path(
+            f"{self._interface_manager.get_application_settings().get_workspace_path()}/{self._view.ui.cb_choose_project.currentText()}.db",
+        ),
+    )
+    with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
+      tmp_project = db_manager.get_project_as_object(
+          self._view.ui.cb_choose_project.currentText(),
+          self._interface_manager.get_application_settings().get_workspace_path(),
+          self._interface_manager.get_application_settings(),
+      )
+      for tmp_protein in tmp_project.proteins:
+        tmp_pdb_atom_db_data = db_manager.get_pdb_atoms_of_protein(
+            tmp_protein.get_id()
+        )
+        pdb_atom_dict = [
+            {key.value: value for key, value in zip(enums.PdbAtomEnum, t)}
+            for t in tmp_pdb_atom_db_data
         ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        self._view.ui.txt_use_project_name.setEnabled(True)
+        tmp_protein.set_pdb_data(pdb_atom_dict)
+    self._view.ui.list_use_available_protein_structures.clear()
+    for tmp_protein in tmp_project.proteins:
+      item = QtWidgets.QListWidgetItem(tmp_protein.get_molecule_object())
+      item.setData(enums.ModelEnum.OBJECT_ROLE, tmp_protein)
+      self._view.ui.list_use_available_protein_structures.addItem(item)
 
-        gui_elements_to_hide = [
-            self._view.ui.lbl_use_search,
-            self._view.ui.lbl_use_status_search,
-            self._view.ui.txt_use_search,
-            self._view.ui.lbl_choose_project,
-            self._view.ui.cb_choose_project,
-            self._view.ui.btn_use_add_available_protein_structures,
-            self._view.ui.lbl_use_available_protein_structures,
-            self._view.ui.list_use_available_protein_structures,
-            self._view.ui.btn_use_remove_selected_protein_structures,
-            self._view.ui.lbl_use_selected_protein_structures,
-            self._view.ui.list_use_selected_protein_structures,
-            self._view.ui.btn_use_back,
-            self._view.ui.btn_use_create_new_project,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.enable_text_box(self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name)
-        self._view.ui.txt_use_project_name.clear()
-        self._view.ui.txt_use_project_name.setStyleSheet(
-            """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
-        )
-        self._view.ui.lbl_use_status_project_name.setText("")
-        self._view.ui.lbl_use_status_project_name.setStyleSheet("color: #ba1a1a; font-size: 11px;")
-        self._view.ui.txt_use_search.clear()
-        self._view.ui.list_use_selected_protein_structures.clear()
-        self._view.ui.lbl_use_status_search.setText("")
-        self._view.ui.btn_use_next.setEnabled(False)
-        self._temporary_redesign()
+    if self._are_duplicate_proteins_in_selected_protein_list():
+      self._view.ui.btn_use_create_new_project.setEnabled(False)
+    else:
+      self._view.ui.btn_use_create_new_project.setEnabled(True)
 
-    def _temporary_redesign(self) -> None:
-        """Changes some parts of the UI temporarily."""
-        self._view.ui.lbl_use_search.hide()
-        self._view.ui.lbl_use_status_search.hide()
-        self._view.ui.txt_use_search.hide()
+  def use_enable_add(self) -> None:
+    """Enables the add button."""
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        "A protein from the list of available proteins was clicked.",
+    )
+    if self._are_duplicate_proteins_in_selected_protein_list():
+      self._view.ui.btn_use_add_available_protein_structures.setEnabled(False)
+    else:
+      self._view.ui.btn_use_add_available_protein_structures.setEnabled(True)
 
-    def _fill_projects_list_view(self) -> None:
-        """Lists all projects."""
-        self._view.ui.list_use_existing_projects.setModel(self._interface_manager.get_workspace_projects())
+  def use_enable_remove(self) -> None:
+    """Enables the remove button."""
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        "A protein from the list of proteins to add to the new project was clicked.",
+    )
+    self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
 
-    def _connect_all_ui_elements_to_slot_functions(self) -> None:
-        """Connects all UI elements to their corresponding slot functions in the class."""
-        self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
-        self._view.ui.txt_use_project_name.textChanged.connect(self.validate_use_project_name)
-        self._view.ui.btn_use_next.clicked.connect(self.show_protein_selection_for_use)
-        self._view.ui.btn_use_add_available_protein_structures.clicked.connect(
-            self.add_protein_structure_to_new_project,
-        )
-        self._view.ui.cb_choose_project.currentIndexChanged.connect(self._list_all_proteins_of_selected_project)
-        self._view.ui.list_use_available_protein_structures.itemClicked.connect(self.use_enable_add)
-        self._view.ui.btn_use_remove_selected_protein_structures.clicked.connect(
-            self.remove_protein_structure_to_new_project,
-        )
-        self._view.ui.list_use_selected_protein_structures.itemClicked.connect(self.use_enable_remove)
-        self._view.ui.btn_use_back.clicked.connect(self.hide_protein_selection_for_use)
-        self._view.ui.btn_use_create_new_project.clicked.connect(self.create_use_project)
-
-    def validate_use_project_name(self, the_entered_text: str) -> None:
-        """Validates the entered text for project name.
-
-        Args:
-            the_entered_text (str): The text entered for project name.
-        
-        Raises:
-            exception.IllegalArgumentError: If `the_entered_text` is None.
-        """
-        # <editor-fold desc="Checks">
-        if the_entered_text is None:
-            logger.error("the_entered_text is None.")
-            raise exception.IllegalArgumentError("the_entered_text is None.")
-        
-        # </editor-fold>
-        
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
-        projects_list_view = self._view.ui.list_use_existing_projects
-        # Deselect any current item in the list view
-        if projects_list_view.currentIndex().isValid():
-            projects_list_view.selectionModel().clearSelection()
-
-        tmp_validate_flag, tmp_stylesheet_string, tmp_message = input_validator.validate_input_for_project_name(
-            the_entered_text, self._project_names,
-        )
-        self._view.ui.txt_use_project_name.setStyleSheet(tmp_stylesheet_string)
-
-        if tmp_validate_flag:
-            self._view.ui.lbl_use_status_project_name.setText("")
-            self._view.ui.btn_use_next.setEnabled(True)
-        else:
-            self._view.ui.lbl_use_status_project_name.setText(tmp_message)
-            self._view.ui.btn_use_next.setEnabled(False)
-
-    def validate_use_search(self) -> None:
-        """Validates the input of the protein name in real-time."""
-        message = "Protein structure does not exists."
-        input_validator.InputValidator.validate_search_input(
-            self._view.ui.list_use_available_protein_structures,
-            self._view.ui.txt_use_search,
-            self._view.ui.lbl_use_status_search,
-            status_message=message,
-        )
-
-    def add_protein_structure_to_new_project(self) -> None:
-        """Adds the selected protein to the list which is used to create the new project."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' protein to new project button was clicked.")
-        prot_to_add = QtWidgets.QListWidgetItem(self._view.ui.list_use_available_protein_structures.currentItem().text())
-        prot_to_add.setData(
-            enums.ModelEnum.OBJECT_ROLE,
-            self._view.ui.list_use_available_protein_structures.currentItem().data(enums.ModelEnum.OBJECT_ROLE),
-        )
-        self._view.ui.list_use_selected_protein_structures.addItem(prot_to_add)
-        self._view.ui.list_use_available_protein_structures.takeItem(
-            self._view.ui.list_use_available_protein_structures.currentRow(),
-        )
-        self._view.ui.btn_use_add_available_protein_structures.setEnabled(False)
-        if self._view.ui.list_use_available_protein_structures.count() > 0:
-            try:
-                self._view.ui.list_use_available_protein_structures.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection in use available proteins list on Use page.")
-
-        self._view.ui.btn_use_create_new_project.setEnabled(True)
-
-    def remove_protein_structure_to_new_project(self) -> None:
-        """Removes the selected protein from the list which is used to create the new project."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Remove' button was clicked.")
-        prot_to_remove = self._view.ui.list_use_selected_protein_structures.currentItem()
-        self._view.ui.list_use_selected_protein_structures.takeItem(
-            self._view.ui.list_use_selected_protein_structures.currentRow(),
-        )
-        self._view.ui.list_use_available_protein_structures.addItem(prot_to_remove)
-        self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(False)
-        if self._view.ui.list_use_selected_protein_structures.count() > 0:
-            try:
-                self._view.ui.list_use_selected_protein_structures.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection in use selected proteins list on Use page.")
-
-        if self._view.ui.list_use_selected_protein_structures.count() == 0:
-            self._view.ui.btn_use_create_new_project.setEnabled(False)
-        else:
-            self._view.ui.btn_use_create_new_project.setEnabled(True)
-
-    def _are_duplicate_proteins_in_selected_protein_list(self) -> bool:
-        """Checks if there are duplicate proteins in the selected protein list.
-
-        Returns:
-            True if there are duplicate proteins, False otherwise.
-        """
-        try:
-            target_string = self._view.ui.list_use_available_protein_structures.currentItem().text()
-        except AttributeError:
-            return False
-
-        tmp_occurrences = 0
-        for tmp_row in range(self._view.ui.list_use_selected_protein_structures.count()):
-            if self._view.ui.list_use_selected_protein_structures.item(tmp_row).text() == target_string:
-                tmp_occurrences += 1
-        if tmp_occurrences > 0:
-            return True
-        return False
-
-    def show_protein_selection_for_use(self) -> None:
-        """Shows the two lists for the protein selection."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Next' button was clicked.")
-        gui_elements_to_show = [
-            self._view.ui.lbl_use_search,
-            self._view.ui.lbl_use_status_search,
-            self._view.ui.txt_use_search,
-            self._view.ui.lbl_choose_project,
-            self._view.ui.cb_choose_project,
-            self._view.ui.btn_use_add_available_protein_structures,
-            self._view.ui.lbl_use_available_protein_structures,
-            self._view.ui.list_use_available_protein_structures,
-            self._view.ui.btn_use_remove_selected_protein_structures,
-            self._view.ui.lbl_use_selected_protein_structures,
-            self._view.ui.list_use_selected_protein_structures,
-            self._view.ui.btn_use_back,
-            self._view.ui.btn_use_create_new_project,
-            self._view.ui.lbl_use_project_name,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        self._view.ui.txt_use_project_name.setEnabled(False)
-        gui_elements_to_hide = [
-            self._view.ui.btn_use_next,
-            self._view.ui.list_use_existing_projects,
-            self._view.ui.label,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.disable_text_box(self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name)
-        self._view.ui.btn_use_add_available_protein_structures.setEnabled(False)
-        self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(False)
-        self._view.ui.btn_use_create_new_project.setEnabled(False)
-        self._temporary_redesign()
-        self._list_all_proteins_of_selected_project()
-
-        if self._are_duplicate_proteins_in_selected_protein_list():
-            self._view.ui.btn_use_create_new_project.setEnabled(False)
-        else:
-            self._view.ui.btn_use_create_new_project.setEnabled(True)
-
-    def hide_protein_selection_for_use(self) -> None:
-        """Hides the two lists for the protein selection."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Back' button was clicked.")
-        gui_elements_to_show = [
-            self._view.ui.btn_use_next,
-            self._view.ui.list_use_existing_projects,
-            self._view.ui.label,
-            self._view.ui.lbl_use_project_name,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        self._view.ui.txt_use_project_name.setEnabled(True)
-
-        gui_elements_to_hide = [
-            self._view.ui.lbl_use_search,
-            self._view.ui.lbl_use_status_search,
-            self._view.ui.txt_use_search,
-            self._view.ui.lbl_choose_project,
-            self._view.ui.cb_choose_project,
-            self._view.ui.btn_use_add_available_protein_structures,
-            self._view.ui.lbl_use_available_protein_structures,
-            self._view.ui.list_use_available_protein_structures,
-            self._view.ui.btn_use_remove_selected_protein_structures,
-            self._view.ui.lbl_use_selected_protein_structures,
-            self._view.ui.list_use_selected_protein_structures,
-            self._view.ui.btn_use_back,
-            self._view.ui.btn_use_create_new_project,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.enable_text_box(self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name)
-        self._temporary_redesign()
-
-    def _fill_projects_combobox(self) -> None:
-        """Fills the combo box with the available projects from the workspace."""
-        gui_utils.fill_combo_box(self._view.ui.cb_choose_project,
-                                 self._interface_manager.get_workspace_projects_as_list())
-        self._view.ui.cb_choose_project.setCurrentIndex(
-            self._view.ui.cb_choose_project.findText(self._interface_manager.get_current_project().get_project_name()),
-        )
-
-    def _list_all_proteins_of_selected_project(self) -> None:
-        """Lists all proteins of the selected project."""
-        if self._view.ui.cb_choose_project.currentText() == "":
-            return
-        tmp_database_filepath: str = str(
-            pathlib.Path(
-                f"{self._interface_manager.get_application_settings().get_workspace_path()}/{self._view.ui.cb_choose_project.currentText()}.db",
-            ),
-        )
-        with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
-            tmp_project = db_manager.get_project_as_object(
-                self._view.ui.cb_choose_project.currentText(),
-                self._interface_manager.get_application_settings().get_workspace_path(),
-                self._interface_manager.get_application_settings(),
-            )
-            for tmp_protein in tmp_project.proteins:
-                tmp_pdb_atom_db_data = db_manager.get_pdb_atoms_of_protein(tmp_protein.get_id())
-                pdb_atom_dict = [{key.value: value for key, value in zip(enums.PdbAtomEnum, t)} for t in
-                                   tmp_pdb_atom_db_data]
-                tmp_protein.set_pdb_data(pdb_atom_dict)
-        self._view.ui.list_use_available_protein_structures.clear()
-        for tmp_protein in tmp_project.proteins:
-            item = QtWidgets.QListWidgetItem(tmp_protein.get_molecule_object())
-            item.setData(enums.ModelEnum.OBJECT_ROLE, tmp_protein)
-            self._view.ui.list_use_available_protein_structures.addItem(item)
-
-        if self._are_duplicate_proteins_in_selected_protein_list():
-            self._view.ui.btn_use_create_new_project.setEnabled(False)
-        else:
-            self._view.ui.btn_use_create_new_project.setEnabled(True)
-
-    def use_enable_add(self) -> None:
-        """Enables the add button."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein from the list of available proteins was clicked.")
-        if self._are_duplicate_proteins_in_selected_protein_list():
-            self._view.ui.btn_use_add_available_protein_structures.setEnabled(False)
-        else:
-            self._view.ui.btn_use_add_available_protein_structures.setEnabled(True)
-
-    def use_enable_remove(self) -> None:
-        """Enables the remove button."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein from the list of proteins to add to the new project was clicked.")
-        self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
-
-    def create_use_project(self) -> None:
-        """Uses the project by sending the `user_input` signal and closing the dialog."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create' button was clicked.")
-        tmp_proteins: list = []
-        for tmp_row in range(self._view.ui.list_use_selected_protein_structures.count()):
-            tmp_proteins.append(self._view.ui.list_use_selected_protein_structures.item(tmp_row).data(enums.ModelEnum.OBJECT_ROLE))
-        self.user_input.emit((self._view.ui.txt_use_project_name.text(), tmp_proteins))
-        self._view.close()
+  def create_use_project(self) -> None:
+    """Uses the project by sending the `user_input` signal and closing the dialog."""
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create' button was clicked."
+    )
+    tmp_proteins: list = []
+    for tmp_row in range(
+        self._view.ui.list_use_selected_protein_structures.count()
+    ):
+      tmp_proteins.append(
+          self._view.ui.list_use_selected_protein_structures.item(tmp_row).data(
+              enums.ModelEnum.OBJECT_ROLE
+          )
+      )
+    self.user_input.emit(
+        (self._view.ui.txt_use_project_name.text(), tmp_proteins)
+    )
+    self._view.close()

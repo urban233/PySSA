@@ -29,7 +29,7 @@ from pyssa.util import exception
 from pyssa.internal.data_structures import results
 
 if TYPE_CHECKING:
-    from pyssa.internal.data_structures import protein_pair
+  from pyssa.internal.data_structures import protein_pair
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)

@@ -31,11 +31,13 @@ __docformat__ = "google"
 
 
 class SettingsManager:
-    """Manager class for the settings data structure."""
-    
-    settings: "settings.Settings"
-    """The instance of the settings data structure."""
+  """Manager class for the settings data structure."""
 
-    def __init__(self) -> None:
-        """Constructor."""
-        self.settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
+  settings: "settings.Settings"
+  """The instance of the settings data structure."""
+
+  def __init__(self) -> None:
+    """Constructor."""
+    self.settings = settings.Settings(
+        constants.SETTINGS_DIR, constants.SETTINGS_FILENAME
+    )

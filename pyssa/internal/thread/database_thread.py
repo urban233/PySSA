@@ -35,388 +35,445 @@ __docformat__ = "google"
 
 
 class DatabaseThread(QtCore.QObject):
-    """Custom class that can handle the database from a different thread."""
-    
-    _database_filepath: str
-    """The filepath of the database file."""
-    
-    def __init__(self, the_database_filepath: str) -> None:
-        """Constructor.
+  """Custom class that can handle the database from a different thread."""
 
-        Args:
-            the_database_filepath: The filepath of the database used by this database thread.
-        
-        Raises:
-            exception.IllegalArgumentError: If `the_database_filepath` is None.
-        """
-        # <editor-fold desc="Checks">
-        if the_database_filepath is None:
-            logger.error("the_database_filepath is None")
-            raise exception.IllegalArgumentError("the_database_filepath is None.")
-        
-        # </editor-fold>
-        
-        super(DatabaseThread, self).__init__()
-        self._database_filepath = the_database_filepath
-        self._queue: "queue.Queue" = queue.Queue()
-        self._is_queue_running = False
-        self._stop_thread = False
-        self._setup_operations_mapping()
-        self._thread = None
+  _database_filepath: str
+  """The filepath of the database file."""
 
-    def _setup_operations_mapping(self) -> None:
-        """Sets up the operations mapping for the class."""
-        self._operations_mapping = {
-            enums.SQLQueryType.INSERT_NEW_PROTEIN: self.__wrapper_insert_new_protein,
-            enums.SQLQueryType.DELETE_EXISTING_PROTEIN: self.__wrapper_delete_existing_protein,
-            enums.SQLQueryType.INSERT_NEW_PROTEIN_PAIR: self.__wrapper_insert_new_protein_pair,
-            enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR: self.__wrapper_delete_existing_protein_pair,
-            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN: self.__wrapper_update_pymol_session_of_protein,
-            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR: self.__wrapper_update_pymol_session_of_protein_pair,
-            enums.SQLQueryType.INSERT_NEW_SEQUENCE: self.__wrapper_insert_new_sequence,
-            enums.SQLQueryType.DELETE_EXISTING_SEQUENCE: self.__wrapper_delete_existing_sequence,
-            enums.SQLQueryType.UPDATE_SEQUENCE_NAME: self.__wrapper_update_sequence_name,
-        }
+  def __init__(self, the_database_filepath: str) -> None:
+    """Constructor.
 
-    def set_database_filepath(self, a_filepath: str) -> None:
-        """Sets the filepath of the database.
+    Args:
+        the_database_filepath: The filepath of the database used by this database thread.
 
-        Args:
-            a_filepath (str): The filepath of the database.
-        
-        Raises:
-            exception.IllegalArgumentError: If `a_filepath` is either None or an empty string.
-        """
-        # <editor-fold desc="Checks">
-        if a_filepath is None or a_filepath == "":
-            logger.error("a_filepath is either None or an empty string.")
-            raise exception.IllegalArgumentError("a_filepath is either None or an empty string.")
-        
-        # </editor-fold>
-        
-        self._database_filepath = a_filepath
+    Raises:
+        exception.IllegalArgumentError: If `the_database_filepath` is None.
+    """
+    # <editor-fold desc="Checks">
+    if the_database_filepath is None:
+      logger.error("the_database_filepath is None")
+      raise exception.IllegalArgumentError("the_database_filepath is None.")
 
-    def put_database_operation_into_queue(self, a_database_operation: "database_operation.DatabaseOperation") -> None:
-        """Puts a database operation object into the queue for execution.
+    # </editor-fold>
 
-        Args:
-            a_database_operation (database_operation.DatabaseOperation): The database operation object to be put into the queue.
+    super(DatabaseThread, self).__init__()
+    self._database_filepath = the_database_filepath
+    self._queue: "queue.Queue" = queue.Queue()
+    self._is_queue_running = False
+    self._stop_thread = False
+    self._setup_operations_mapping()
+    self._thread = None
 
-        Raises:
-            exception.IllegalArgumentError: If `a_database_operation` is None.
-        """
-        # <editor-fold desc="Checks">
-        if a_database_operation is None:
-            logger.error("a_database_operation is None.")
-            raise exception.IllegalArgumentError("a_database_operation is None.")
-        
-        # </editor-fold>
-        
-        if self._is_queue_running:
-            self._queue.put(a_database_operation)
-        else:
-            self._queue.put(a_database_operation)
-            self._thread = tasks.LegacyTask(
-                target=self._execute_queue,
-                args=(0, 0),
-                post_func=self._queue_finished,
-            )
-            self._thread.start()
+  def _setup_operations_mapping(self) -> None:
+    """Sets up the operations mapping for the class."""
+    self._operations_mapping = {
+        enums.SQLQueryType.INSERT_NEW_PROTEIN: self.__wrapper_insert_new_protein,
+        enums.SQLQueryType.DELETE_EXISTING_PROTEIN: self.__wrapper_delete_existing_protein,
+        enums.SQLQueryType.INSERT_NEW_PROTEIN_PAIR: self.__wrapper_insert_new_protein_pair,
+        enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR: self.__wrapper_delete_existing_protein_pair,
+        enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN: self.__wrapper_update_pymol_session_of_protein,
+        enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR: self.__wrapper_update_pymol_session_of_protein_pair,
+        enums.SQLQueryType.INSERT_NEW_SEQUENCE: self.__wrapper_insert_new_sequence,
+        enums.SQLQueryType.DELETE_EXISTING_SEQUENCE: self.__wrapper_delete_existing_sequence,
+        enums.SQLQueryType.UPDATE_SEQUENCE_NAME: self.__wrapper_update_sequence_name,
+    }
 
-    def queue_is_running(self) -> bool:
-        """Check if the queue is currently running.
+  def set_database_filepath(self, a_filepath: str) -> None:
+    """Sets the filepath of the database.
 
-        Returns:
-            True if the queue is running, False otherwise.
-        """
-        return self._is_queue_running
+    Args:
+        a_filepath (str): The filepath of the database.
 
-    def _execute_queue(self, placeholder_1: int, placeholder_2: int) -> tuple[str, int]:
-        """Executes the operations in the queue.
+    Raises:
+        exception.IllegalArgumentError: If `a_filepath` is either None or an empty string.
+    """
+    # <editor-fold desc="Checks">
+    if a_filepath is None or a_filepath == "":
+      logger.error("a_filepath is either None or an empty string.")
+      raise exception.IllegalArgumentError(
+          "a_filepath is either None or an empty string."
+      )
 
-        Args:
-            placeholder_1 (int): The first placeholder.
-            placeholder_2 (int): The second placeholder.
+    # </editor-fold>
 
-        Returns:
-            tuple[str, int]: A tuple with the message "Finished." and the integer 0.
-        """
-        try:
-            with database_manager.DatabaseManager(self._database_filepath, "database_thread") as tmp_database_manager:
-                while self._stop_thread is False:
-                    self._is_queue_running = True
-                    tmp_database_operation: "database_operation.DatabaseOperation" = self._queue.get()
-                    if tmp_database_operation.sql_query_type is enums.SQLQueryType.CLOSE_PROJECT:
-                        logger.info("Received request to close the project.")
-                        self._stop_thread = True
-                        break
-                    logger.info(f"Running {tmp_database_operation.sql_query_type} database operation.")
-                    self._process_work(tmp_database_manager, tmp_database_operation)
-                    logger.info(f"Finished {tmp_database_operation.sql_query_type} database operation.")
-                    self._queue.task_done()
-                    if self._queue.empty():
-                        logger.info("The queue is empty and will now end execution.")
-            self._is_queue_running = False
-            self._stop_thread = False
-        except Exception as e:
-            logger.error(e)
-            return "", 1
-        else:
-            return "Finished.", 0
+    self._database_filepath = a_filepath
 
-    def _queue_finished(self) -> None:
-        """Check if the queue is empty and the thread is no longer running."""
-        logger.info("Queue is empty and thread is no longer running.")
+  def put_database_operation_into_queue(
+      self, a_database_operation: "database_operation.DatabaseOperation"
+  ) -> None:
+    """Puts a database operation object into the queue for execution.
 
-    def _process_work(self, the_db_manager: "database_manager.DatabaseManager", a_database_operation: "database_operation.DatabaseOperation") -> None:
-        """Processes the operations in the queue.
+    Args:
+        a_database_operation (database_operation.DatabaseOperation): The database operation object to be put into the queue.
 
-        Args:
-            the_db_manager (database_manager.DatabaseManager): The database manager that will be used to perform the database operation.
-            a_database_operation (database_operation.DatabaseOperation): The database operation that needs to be processed.
-        
-        Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
-        """
-        # <editor-fold desc="Checks">
-        if the_db_manager is None:
-            logger.error("the_db_manager is None.")
-            raise exception.IllegalArgumentError("the_db_manager is None.")
-        if a_database_operation is None:
-            logger.error("a_database_operation is None.")
-            raise exception.IllegalArgumentError("a_database_operation is None.")
-        
-        # </editor-fold>
-        
-        # Get the function based on the operation, defaulting to a generic function
-        operation_function = self._operations_mapping.get(a_database_operation.sql_query_type, self._default_operation)
-        # Call the selected function with the provided data
-        operation_function(the_db_manager, a_database_operation.buffered_data)
+    Raises:
+        exception.IllegalArgumentError: If `a_database_operation` is None.
+    """
+    # <editor-fold desc="Checks">
+    if a_database_operation is None:
+      logger.error("a_database_operation is None.")
+      raise exception.IllegalArgumentError("a_database_operation is None.")
 
-    @staticmethod
-    def _default_operation(placeholder_1: int, placeholder_2: int) -> None:
-        """Performs a default operation and logs a warning message.
+    # </editor-fold>
 
-        Args:
-            placeholder_1 (int): The first placeholder value.
-            placeholder_2 (int): The second placeholder value.
-        """
-        constants.PYSSA_LOGGER.warning("This operation does not exists!")
+    if self._is_queue_running:
+      self._queue.put(a_database_operation)
+    else:
+      self._queue.put(a_database_operation)
+      self._thread = tasks.LegacyTask(
+          target=self._execute_queue,
+          args=(0, 0),
+          post_func=self._queue_finished,
+      )
+      self._thread.start()
 
-    @staticmethod
-    def __wrapper_insert_new_protein(the_db_manager: "database_manager.DatabaseManager", the_buffered_data: tuple) -> None:
-        """Wrapper function for inserting a new protein into the database.
+  def queue_is_running(self) -> bool:
+    """Check if the queue is currently running.
 
-        Args:
-            the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
-            the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
-        
-        Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
-        """
-        # <editor-fold desc="Checks">
-        if the_db_manager is None:
-            logger.error("the_db_manager is None.")
-            raise exception.IllegalArgumentError("the_db_manager is None.")
-        if the_buffered_data is None:
-            logger.error("the_buffered_data is None.")
-            raise exception.IllegalArgumentError("the_buffered_data is None.")
-        # </editor-fold>
-        
-        _, tmp_protein = the_buffered_data
-        the_db_manager.insert_new_protein(tmp_protein)
+    Returns:
+        True if the queue is running, False otherwise.
+    """
+    return self._is_queue_running
 
-    @staticmethod
-    def __wrapper_delete_existing_protein(the_db_manager: "database_manager.DatabaseManager", the_buffered_data: tuple) -> None:
-        """Wrapper function for deleting an existing protein.
+  def _execute_queue(
+      self, placeholder_1: int, placeholder_2: int
+  ) -> tuple[str, int]:
+    """Executes the operations in the queue.
 
-        Args:
-            the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
-            the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+    Args:
+        placeholder_1 (int): The first placeholder.
+        placeholder_2 (int): The second placeholder.
 
-        Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
-        """
-        # <editor-fold desc="Checks">
-        if the_db_manager is None:
-            logger.error("the_db_manager is None.")
-            raise exception.IllegalArgumentError("the_db_manager is None.")
-        if the_buffered_data is None:
-            logger.error("the_buffered_data is None.")
-            raise exception.IllegalArgumentError("the_buffered_data is None.")
-        # </editor-fold>
-        
-        _, tmp_protein_id = the_buffered_data
-        the_db_manager.delete_existing_protein(tmp_protein_id)
+    Returns:
+        tuple[str, int]: A tuple with the message "Finished." and the integer 0.
+    """
+    try:
+      with database_manager.DatabaseManager(
+          self._database_filepath, "database_thread"
+      ) as tmp_database_manager:
+        while self._stop_thread is False:
+          self._is_queue_running = True
+          tmp_database_operation: "database_operation.DatabaseOperation" = (
+              self._queue.get()
+          )
+          if (
+              tmp_database_operation.sql_query_type
+              is enums.SQLQueryType.CLOSE_PROJECT
+          ):
+            logger.info("Received request to close the project.")
+            self._stop_thread = True
+            break
+          logger.info(
+              f"Running {tmp_database_operation.sql_query_type} database operation."
+          )
+          self._process_work(tmp_database_manager, tmp_database_operation)
+          logger.info(
+              f"Finished {tmp_database_operation.sql_query_type} database operation."
+          )
+          self._queue.task_done()
+          if self._queue.empty():
+            logger.info("The queue is empty and will now end execution.")
+      self._is_queue_running = False
+      self._stop_thread = False
+    except Exception as e:
+      logger.error(e)
+      return "", 1
+    else:
+      return "Finished.", 0
 
-    @staticmethod
-    def __wrapper_insert_new_protein_pair(the_db_manager: "database_manager.DatabaseManager", the_buffered_data: tuple) -> None:
-        """Wrapper function for inserting a new protein pair into the database.
+  def _queue_finished(self) -> None:
+    """Check if the queue is empty and the thread is no longer running."""
+    logger.info("Queue is empty and thread is no longer running.")
 
-        Args:
-            the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
-            the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+  def _process_work(
+      self,
+      the_db_manager: "database_manager.DatabaseManager",
+      a_database_operation: "database_operation.DatabaseOperation",
+  ) -> None:
+    """Processes the operations in the queue.
 
-        Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
-        """
-        # <editor-fold desc="Checks">
-        if the_db_manager is None:
-            logger.error("the_db_manager is None.")
-            raise exception.IllegalArgumentError("the_db_manager is None.")
-        if the_buffered_data is None:
-            logger.error("the_buffered_data is None.")
-            raise exception.IllegalArgumentError("the_buffered_data is None.")
-        # </editor-fold>
-        
-        _, tmp_protein_pair = the_buffered_data
-        the_db_manager.insert_new_protein_pair(the_buffered_data[1])
+    Args:
+        the_db_manager (database_manager.DatabaseManager): The database manager that will be used to perform the database operation.
+        a_database_operation (database_operation.DatabaseOperation): The database operation that needs to be processed.
 
-    @staticmethod
-    def __wrapper_delete_existing_protein_pair(the_db_manager: "database_manager.DatabaseManager", the_buffered_data: tuple) -> None:
-        """Wrapper function for deleting an existing protein pair.
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if the_db_manager is None:
+      logger.error("the_db_manager is None.")
+      raise exception.IllegalArgumentError("the_db_manager is None.")
+    if a_database_operation is None:
+      logger.error("a_database_operation is None.")
+      raise exception.IllegalArgumentError("a_database_operation is None.")
 
-        Args:
-            the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
-            the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+    # </editor-fold>
 
-        Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
-        """
-        # <editor-fold desc="Checks">
-        if the_db_manager is None:
-            logger.error("the_db_manager is None.")
-            raise exception.IllegalArgumentError("the_db_manager is None.")
-        if the_buffered_data is None:
-            logger.error("the_buffered_data is None.")
-            raise exception.IllegalArgumentError("the_buffered_data is None.")
-        # </editor-fold>
-        
-        _, tmp_protein_pair_id = the_buffered_data
-        the_db_manager.delete_existing_protein_pair(tmp_protein_pair_id)
+    # Get the function based on the operation, defaulting to a generic function
+    operation_function = self._operations_mapping.get(
+        a_database_operation.sql_query_type, self._default_operation
+    )
+    # Call the selected function with the provided data
+    operation_function(the_db_manager, a_database_operation.buffered_data)
 
-    @staticmethod
-    def __wrapper_update_pymol_session_of_protein(the_db_manager: "database_manager.DatabaseManager", the_buffered_data: tuple) -> None:
-        """Wrapper function for updating a protein pymol session.
+  @staticmethod
+  def _default_operation(placeholder_1: int, placeholder_2: int) -> None:
+    """Performs a default operation and logs a warning message.
 
-        Args:
-            the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
-            the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+    Args:
+        placeholder_1 (int): The first placeholder value.
+        placeholder_2 (int): The second placeholder value.
+    """
+    constants.PYSSA_LOGGER.warning("This operation does not exists!")
 
-        Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
-        """
-        # <editor-fold desc="Checks">
-        if the_db_manager is None:
-            logger.error("the_db_manager is None.")
-            raise exception.IllegalArgumentError("the_db_manager is None.")
-        if the_buffered_data is None:
-            logger.error("the_buffered_data is None.")
-            raise exception.IllegalArgumentError("the_buffered_data is None.")
-        # </editor-fold>
-        
-        _, tmp_protein = the_buffered_data
-        the_db_manager.update_pymol_session_of_protein(tmp_protein.get_id(), tmp_protein.pymol_session)
+  @staticmethod
+  def __wrapper_insert_new_protein(
+      the_db_manager: "database_manager.DatabaseManager",
+      the_buffered_data: tuple,
+  ) -> None:
+    """Wrapper function for inserting a new protein into the database.
 
-    @staticmethod
-    def __wrapper_update_pymol_session_of_protein_pair(the_db_manager: "database_manager.DatabaseManager", the_buffered_data: tuple) -> None:
-        """Wrapper function for updating a protein pair pymol session.
+    Args:
+        the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
+        the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
 
-        Args:
-            the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
-            the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if the_db_manager is None:
+      logger.error("the_db_manager is None.")
+      raise exception.IllegalArgumentError("the_db_manager is None.")
+    if the_buffered_data is None:
+      logger.error("the_buffered_data is None.")
+      raise exception.IllegalArgumentError("the_buffered_data is None.")
+    # </editor-fold>
 
-        Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
-        """
-        # <editor-fold desc="Checks">
-        if the_db_manager is None:
-            logger.error("the_db_manager is None.")
-            raise exception.IllegalArgumentError("the_db_manager is None.")
-        if the_buffered_data is None:
-            logger.error("the_buffered_data is None.")
-            raise exception.IllegalArgumentError("the_buffered_data is None.")
-        # </editor-fold>
-        
-        _, tmp_new_pymol_session, tmp_protein_pair = the_buffered_data
-        the_db_manager.update_pymol_session_of_protein_pair(tmp_protein_pair.get_id(), tmp_protein_pair.pymol_session)
+    _, tmp_protein = the_buffered_data
+    the_db_manager.insert_new_protein(tmp_protein)
 
-    @staticmethod
-    def __wrapper_insert_new_sequence(the_db_manager: "database_manager.DatabaseManager", the_buffered_data: tuple) -> None:
-        """Wrapper function for inserting a new sequence into the database.
+  @staticmethod
+  def __wrapper_delete_existing_protein(
+      the_db_manager: "database_manager.DatabaseManager",
+      the_buffered_data: tuple,
+  ) -> None:
+    """Wrapper function for deleting an existing protein.
 
-        Args:
-            the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
-            the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+    Args:
+        the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
+        the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
 
-        Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
-        """
-        # <editor-fold desc="Checks">
-        if the_db_manager is None:
-            logger.error("the_db_manager is None.")
-            raise exception.IllegalArgumentError("the_db_manager is None.")
-        if the_buffered_data is None:
-            logger.error("the_buffered_data is None.")
-            raise exception.IllegalArgumentError("the_buffered_data is None.")
-        # </editor-fold>
-        
-        _, tmp_seq_record_obj = the_buffered_data
-        the_db_manager.insert_new_sequence(tmp_seq_record_obj)
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if the_db_manager is None:
+      logger.error("the_db_manager is None.")
+      raise exception.IllegalArgumentError("the_db_manager is None.")
+    if the_buffered_data is None:
+      logger.error("the_buffered_data is None.")
+      raise exception.IllegalArgumentError("the_buffered_data is None.")
+    # </editor-fold>
 
-    @staticmethod
-    def __wrapper_delete_existing_sequence(the_db_manager: "database_manager.DatabaseManager", the_buffered_data: tuple) -> None:
-        """Wrapper function for deleting an existing sequence.
+    _, tmp_protein_id = the_buffered_data
+    the_db_manager.delete_existing_protein(tmp_protein_id)
 
-        Args:
-            the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
-            the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+  @staticmethod
+  def __wrapper_insert_new_protein_pair(
+      the_db_manager: "database_manager.DatabaseManager",
+      the_buffered_data: tuple,
+  ) -> None:
+    """Wrapper function for inserting a new protein pair into the database.
 
-        Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
-        """
-        # <editor-fold desc="Checks">
-        if the_db_manager is None:
-            logger.error("the_db_manager is None.")
-            raise exception.IllegalArgumentError("the_db_manager is None.")
-        if the_buffered_data is None:
-            logger.error("the_buffered_data is None.")
-            raise exception.IllegalArgumentError("the_buffered_data is None.")
-        # </editor-fold>
-        
-        _, tmp_seq_record = the_buffered_data
-        the_db_manager.delete_existing_sequence(tmp_seq_record.name)
+    Args:
+        the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
+        the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
 
-    @staticmethod
-    def __wrapper_update_sequence_name(the_db_manager: "database_manager.DatabaseManager", the_buffered_data: tuple) -> None:
-        """Wrapper function for updating a sequence name.
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if the_db_manager is None:
+      logger.error("the_db_manager is None.")
+      raise exception.IllegalArgumentError("the_db_manager is None.")
+    if the_buffered_data is None:
+      logger.error("the_buffered_data is None.")
+      raise exception.IllegalArgumentError("the_buffered_data is None.")
+    # </editor-fold>
 
-        Args:
-            the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
-            the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+    _, tmp_protein_pair = the_buffered_data
+    the_db_manager.insert_new_protein_pair(the_buffered_data[1])
 
-        Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
-        """
-        # <editor-fold desc="Checks">
-        if the_db_manager is None:
-            logger.error("the_db_manager is None.")
-            raise exception.IllegalArgumentError("the_db_manager is None.")
-        if the_buffered_data is None:
-            logger.error("the_buffered_data is None.")
-            raise exception.IllegalArgumentError("the_buffered_data is None.")
-        # </editor-fold>
-        
-        _, tmp_new_seq_name, tmp_old_seq_name, tmp_seq = the_buffered_data
-        the_db_manager.update_sequence_name(tmp_new_seq_name, tmp_old_seq_name, tmp_seq)
+  @staticmethod
+  def __wrapper_delete_existing_protein_pair(
+      the_db_manager: "database_manager.DatabaseManager",
+      the_buffered_data: tuple,
+  ) -> None:
+    """Wrapper function for deleting an existing protein pair.
 
-    def stop(self) -> None:
-        """Stops the thread.
+    Args:
+        the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
+        the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
 
-        This method sets a stop event that can be used to gracefully stop the thread.
-        """
-        self._stop_thread = True
-        self._stop_event.set()
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if the_db_manager is None:
+      logger.error("the_db_manager is None.")
+      raise exception.IllegalArgumentError("the_db_manager is None.")
+    if the_buffered_data is None:
+      logger.error("the_buffered_data is None.")
+      raise exception.IllegalArgumentError("the_buffered_data is None.")
+    # </editor-fold>
+
+    _, tmp_protein_pair_id = the_buffered_data
+    the_db_manager.delete_existing_protein_pair(tmp_protein_pair_id)
+
+  @staticmethod
+  def __wrapper_update_pymol_session_of_protein(
+      the_db_manager: "database_manager.DatabaseManager",
+      the_buffered_data: tuple,
+  ) -> None:
+    """Wrapper function for updating a protein pymol session.
+
+    Args:
+        the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
+        the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if the_db_manager is None:
+      logger.error("the_db_manager is None.")
+      raise exception.IllegalArgumentError("the_db_manager is None.")
+    if the_buffered_data is None:
+      logger.error("the_buffered_data is None.")
+      raise exception.IllegalArgumentError("the_buffered_data is None.")
+    # </editor-fold>
+
+    _, tmp_protein = the_buffered_data
+    the_db_manager.update_pymol_session_of_protein(
+        tmp_protein.get_id(), tmp_protein.pymol_session
+    )
+
+  @staticmethod
+  def __wrapper_update_pymol_session_of_protein_pair(
+      the_db_manager: "database_manager.DatabaseManager",
+      the_buffered_data: tuple,
+  ) -> None:
+    """Wrapper function for updating a protein pair pymol session.
+
+    Args:
+        the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
+        the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if the_db_manager is None:
+      logger.error("the_db_manager is None.")
+      raise exception.IllegalArgumentError("the_db_manager is None.")
+    if the_buffered_data is None:
+      logger.error("the_buffered_data is None.")
+      raise exception.IllegalArgumentError("the_buffered_data is None.")
+    # </editor-fold>
+
+    _, tmp_new_pymol_session, tmp_protein_pair = the_buffered_data
+    the_db_manager.update_pymol_session_of_protein_pair(
+        tmp_protein_pair.get_id(), tmp_protein_pair.pymol_session
+    )
+
+  @staticmethod
+  def __wrapper_insert_new_sequence(
+      the_db_manager: "database_manager.DatabaseManager",
+      the_buffered_data: tuple,
+  ) -> None:
+    """Wrapper function for inserting a new sequence into the database.
+
+    Args:
+        the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
+        the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if the_db_manager is None:
+      logger.error("the_db_manager is None.")
+      raise exception.IllegalArgumentError("the_db_manager is None.")
+    if the_buffered_data is None:
+      logger.error("the_buffered_data is None.")
+      raise exception.IllegalArgumentError("the_buffered_data is None.")
+    # </editor-fold>
+
+    _, tmp_seq_record_obj = the_buffered_data
+    the_db_manager.insert_new_sequence(tmp_seq_record_obj)
+
+  @staticmethod
+  def __wrapper_delete_existing_sequence(
+      the_db_manager: "database_manager.DatabaseManager",
+      the_buffered_data: tuple,
+  ) -> None:
+    """Wrapper function for deleting an existing sequence.
+
+    Args:
+        the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
+        the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if the_db_manager is None:
+      logger.error("the_db_manager is None.")
+      raise exception.IllegalArgumentError("the_db_manager is None.")
+    if the_buffered_data is None:
+      logger.error("the_buffered_data is None.")
+      raise exception.IllegalArgumentError("the_buffered_data is None.")
+    # </editor-fold>
+
+    _, tmp_seq_record = the_buffered_data
+    the_db_manager.delete_existing_sequence(tmp_seq_record.name)
+
+  @staticmethod
+  def __wrapper_update_sequence_name(
+      the_db_manager: "database_manager.DatabaseManager",
+      the_buffered_data: tuple,
+  ) -> None:
+    """Wrapper function for updating a sequence name.
+
+    Args:
+        the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
+        the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if the_db_manager is None:
+      logger.error("the_db_manager is None.")
+      raise exception.IllegalArgumentError("the_db_manager is None.")
+    if the_buffered_data is None:
+      logger.error("the_buffered_data is None.")
+      raise exception.IllegalArgumentError("the_buffered_data is None.")
+    # </editor-fold>
+
+    _, tmp_new_seq_name, tmp_old_seq_name, tmp_seq = the_buffered_data
+    the_db_manager.update_sequence_name(
+        tmp_new_seq_name, tmp_old_seq_name, tmp_seq
+    )
+
+  def stop(self) -> None:
+    """Stops the thread.
+
+    This method sets a stop event that can be used to gracefully stop the thread.
+    """
+    self._stop_thread = True
+    self._stop_event.set()
+
 
 # class DatabaseThread(threading.Thread):
 #

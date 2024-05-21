@@ -26,25 +26,27 @@ from pyssa.util import enums
 
 @dataclass
 class DatabaseOperation:
-    """DatabaseOperation is a dataclass that represents an SQL database operation."""
+  """DatabaseOperation is a dataclass that represents an SQL database operation."""
 
-    # <editor-fold desc="Class attributes">
-    sql_query_type: enums.SQLQueryType
-    """The type of SQL query."""
-    
-    buffered_data: tuple
-    """The buffered data to be stored in the database."""
-    # </editor-fold>
+  # <editor-fold desc="Class attributes">
+  sql_query_type: enums.SQLQueryType
+  """The type of SQL query."""
 
-    def __init__(self, a_sql_query_type: "enums.SQLQueryType", the_buffered_data: tuple) -> None:
-        """Constructor.
+  buffered_data: tuple
+  """The buffered data to be stored in the database."""
+  # </editor-fold>
 
-        Args:
-            a_sql_query_type (enums.SQLQueryType): The type of SQL query to perform.
-            the_buffered_data (tuple): The data that is necessary for the query to be performed.
+  def __init__(
+      self, a_sql_query_type: "enums.SQLQueryType", the_buffered_data: tuple
+  ) -> None:
+    """Constructor.
 
-        Note:
-            The buffered_data is a tuple which always starts with a 0 -> (0, your_data)
-        """
-        self.sql_query_type: enums.SQLQueryType = a_sql_query_type
-        self.buffered_data: tuple = the_buffered_data
+    Args:
+        a_sql_query_type (enums.SQLQueryType): The type of SQL query to perform.
+        the_buffered_data (tuple): The data that is necessary for the query to be performed.
+
+    Note:
+        The buffered_data is a tuple which always starts with a 0 -> (0, your_data)
+    """
+    self.sql_query_type: enums.SQLQueryType = a_sql_query_type
+    self.buffered_data: tuple = the_buffered_data

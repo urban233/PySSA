@@ -26,36 +26,37 @@ __docformat__ = "google"
 
 
 class CommandEnum(enum.Enum):
-    """Contains enumeration for pymol commands."""
-    CLOSE_USER_PYMOL = "close_user_pymol"
+  """Contains enumeration for pymol commands."""
 
-    REINITIALIZE_SESSION = "reinitialize_session"
-    GET_ALL_OBJECT_NAMES = "get_all_object_names"
-    GET_MODEL = "get_model"
+  CLOSE_USER_PYMOL = "close_user_pymol"
 
-    LOAD_PYMOL_SESSION = "load_pymol_session"
-    SAVE_PYMOL_SESSION = "save_pymol_session"
+  REINITIALIZE_SESSION = "reinitialize_session"
+  GET_ALL_OBJECT_NAMES = "get_all_object_names"
+  GET_MODEL = "get_model"
 
-    SELECT = "select"
-    SCENE = "scene"
-    LOAD_SCENE = "load_scene"
-    GET_SCENE_LIST = "get_scene_list"
+  LOAD_PYMOL_SESSION = "load_pymol_session"
+  SAVE_PYMOL_SESSION = "save_pymol_session"
 
-    SHOW_CUSTOM_REPRESENTATION = "show_custom_representation"
-    HIDE_CUSTOM_REPRESENTATION = "hide_custom_representation"
-    ZOOM_WITH_CUSTOM_PARAMETERS = "zoom_with_custom_parameters"
-    SET_CUSTOM_SETTINGS = "set_custom_settings"
-    SET_BACKGROUND_COLOR = "set_background_color"
-    SET_DEFAULT_GRAPHIC_SETTINGS = "set_default_graphic_settings"
+  SELECT = "select"
+  SCENE = "scene"
+  LOAD_SCENE = "load_scene"
+  GET_SCENE_LIST = "get_scene_list"
 
-    GET_RESIDUE_COLORS = "get_residue_colors"
-    GET_CHAIN_COLOR = "get_chain_color"
-    GET_CHAIN_REPR_STATE = "get_chain_repr_state"
-    GET_RESIDUE_COLOR_CONFIG = "get_residue_color_config"
+  SHOW_CUSTOM_REPRESENTATION = "show_custom_representation"
+  HIDE_CUSTOM_REPRESENTATION = "hide_custom_representation"
+  ZOOM_WITH_CUSTOM_PARAMETERS = "zoom_with_custom_parameters"
+  SET_CUSTOM_SETTINGS = "set_custom_settings"
+  SET_BACKGROUND_COLOR = "set_background_color"
+  SET_DEFAULT_GRAPHIC_SETTINGS = "set_default_graphic_settings"
 
-    COLOR_SELECTION = "color_selection"
+  GET_RESIDUE_COLORS = "get_residue_colors"
+  GET_CHAIN_COLOR = "get_chain_color"
+  GET_CHAIN_REPR_STATE = "get_chain_repr_state"
+  GET_RESIDUE_COLOR_CONFIG = "get_residue_color_config"
 
-    # Image commands
-    RAY = "ray"
-    DRAW = "draw"
-    PNG = "png"
+  COLOR_SELECTION = "color_selection"
+
+  # Image commands
+  RAY = "ray"
+  DRAW = "draw"
+  PNG = "png"

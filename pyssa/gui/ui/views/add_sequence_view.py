@@ -33,39 +33,43 @@ global_var_add_model = ("", False)
 
 
 class AddSequenceView(QtWidgets.QDialog):
-    """Dialog for adding a sequence."""
+  """Dialog for adding a sequence."""
 
-    return_value = pyqtSignal(tuple)
-    """A pyqtsignal that is used to hand-over the sequence information."""
+  return_value = pyqtSignal(tuple)
+  """A pyqtsignal that is used to hand-over the sequence information."""
 
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
-        """Constructor.
+  def __init__(self, parent=None) -> None:  # noqa: ANN001
+    """Constructor.
 
-        Args:
-            parent: The parent.
-        """
-        QtWidgets.QDialog.__init__(self, parent)
-        # build ui object
-        self.ui = auto_add_sequence_view.Ui_Dialog()
-        self.ui.setupUi(self)
+    Args:
+        parent: The parent.
+    """
+    QtWidgets.QDialog.__init__(self, parent)
+    # build ui object
+    self.ui = auto_add_sequence_view.Ui_Dialog()
+    self.ui.setupUi(self)
 
-        self._initalize_ui()
+    self._initalize_ui()
 
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
-        self.ui.btn_help.setText("")
-        self.ui.btn_cancel.clicked.connect(self.close)
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        styles.set_stylesheet(self)
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        self.setWindowTitle("Add Protein Sequence")
-        self.setModal(True)
+    self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
+    self.ui.btn_help.setIconSize(
+        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
+    )
+    self.ui.btn_help.setText("")
+    self.ui.btn_cancel.clicked.connect(self.close)
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    styles.set_stylesheet(self)
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )
+    self.setWindowTitle("Add Protein Sequence")
+    self.setModal(True)
 
-    def _initalize_ui(self):
-        self.ui.btn_next.setEnabled(False)
-        self.ui.lbl_status.setText("")
-        self.ui.lbl_protein_seq.hide()
-        self.ui.le_protein_seq.hide()
-        self.ui.btn_back.hide()
-        self.ui.btn_add.setEnabled(False)
-        styles.color_bottom_frame_button(self.ui.btn_add)
+  def _initalize_ui(self):
+    self.ui.btn_next.setEnabled(False)
+    self.ui.lbl_status.setText("")
+    self.ui.lbl_protein_seq.hide()
+    self.ui.le_protein_seq.hide()
+    self.ui.btn_back.hide()
+    self.ui.btn_add.setEnabled(False)
+    styles.color_bottom_frame_button(self.ui.btn_add)

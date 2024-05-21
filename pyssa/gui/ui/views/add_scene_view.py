@@ -31,44 +31,50 @@ from pyssa.util import constants
 
 
 class AddSceneView(QtWidgets.QDialog):
-    """Dialog for adding a scene."""
-    
-    dialogClosed = QtCore.pyqtSignal(tuple)
-    """A signal indicating that the dialog is closed."""
+  """Dialog for adding a scene."""
 
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
-        """Constructor."""
-        QtWidgets.QDialog.__init__(self, parent)
+  dialogClosed = QtCore.pyqtSignal(tuple)
+  """A signal indicating that the dialog is closed."""
 
-        self.lbl_description = QtWidgets.QLabel("New PyMOL scene name")
-        self.line_edit_scene_name = custom_line_edit.CustomLineEdit()
-        self.lbl_status = QtWidgets.QLabel("")
-        self.btn_add_scene = QtWidgets.QPushButton("Add")
-        self.btn_cancel = QtWidgets.QPushButton("Cancel")
+  def __init__(self, parent=None) -> None:  # noqa: ANN001
+    """Constructor."""
+    QtWidgets.QDialog.__init__(self, parent)
 
-        self.layout_user_input = QtWidgets.QVBoxLayout()
-        self.layout_user_input.addWidget(self.lbl_description)
-        self.layout_user_input.addWidget(self.line_edit_scene_name)
+    self.lbl_description = QtWidgets.QLabel("New PyMOL scene name")
+    self.line_edit_scene_name = custom_line_edit.CustomLineEdit()
+    self.lbl_status = QtWidgets.QLabel("")
+    self.btn_add_scene = QtWidgets.QPushButton("Add")
+    self.btn_cancel = QtWidgets.QPushButton("Cancel")
 
-        self.layout_confirmation = QtWidgets.QHBoxLayout()  # Use QHBoxLayout for the button
-        self.layout_confirmation.addWidget(self.lbl_status)
-        self.layout_confirmation.addStretch(1)  # Add stretchable space before the button
-        self.layout_confirmation.addWidget(self.btn_add_scene)
-        self.layout_confirmation.addWidget(self.btn_cancel)
+    self.layout_user_input = QtWidgets.QVBoxLayout()
+    self.layout_user_input.addWidget(self.lbl_description)
+    self.layout_user_input.addWidget(self.line_edit_scene_name)
 
-        self.layout_complete = QtWidgets.QVBoxLayout()
-        self.layout_complete.addLayout(self.layout_user_input)
-        self.layout_complete.addLayout(self.layout_confirmation)
+    self.layout_confirmation = (
+        QtWidgets.QHBoxLayout()
+    )  # Use QHBoxLayout for the button
+    self.layout_confirmation.addWidget(self.lbl_status)
+    self.layout_confirmation.addStretch(
+        1
+    )  # Add stretchable space before the button
+    self.layout_confirmation.addWidget(self.btn_add_scene)
+    self.layout_confirmation.addWidget(self.btn_cancel)
 
-        self.setLayout(self.layout_complete)
+    self.layout_complete = QtWidgets.QVBoxLayout()
+    self.layout_complete.addLayout(self.layout_user_input)
+    self.layout_complete.addLayout(self.layout_confirmation)
 
-        self.setMaximumSize(600, 80)
-        self.setMinimumWidth(250)
-        self.resize(450, 80)
+    self.setLayout(self.layout_complete)
 
-        self.btn_cancel.clicked.connect(self.close)
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        styles.set_stylesheet(self)
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        self.setWindowTitle("Add New PyMOL Scene")
-        self.setModal(True)
+    self.setMaximumSize(600, 80)
+    self.setMinimumWidth(250)
+    self.resize(450, 80)
+
+    self.btn_cancel.clicked.connect(self.close)
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    styles.set_stylesheet(self)
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )
+    self.setWindowTitle("Add New PyMOL Scene")
+    self.setModal(True)

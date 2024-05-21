@@ -31,23 +31,25 @@ from pyssa.util import constants
 
 
 class AddProteinPairView(QtWidgets.QDialog):
-    """Dialog for adding protein pairs."""
-    
-    dialogClosed = QtCore.pyqtSignal(tuple)
-    """A signal indicating that the dialog is closed."""
-    
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
-        """Constructor."""
-        QtWidgets.QDialog.__init__(self, parent)
-        # build ui object
-        self.ui = auto_add_protein_pair_view.Ui_Dialog()
-        self.ui.setupUi(self)
-        styles.color_bottom_frame_button(self.ui.btn_add)
-        self.resize(550, 650)
+  """Dialog for adding protein pairs."""
 
-        self.ui.btn_cancel.clicked.connect(self.close)
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        styles.set_stylesheet(self)
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        self.setWindowTitle("Add Protein Pair")
-        self.setModal(True)
+  dialogClosed = QtCore.pyqtSignal(tuple)
+  """A signal indicating that the dialog is closed."""
+
+  def __init__(self, parent=None) -> None:  # noqa: ANN001
+    """Constructor."""
+    QtWidgets.QDialog.__init__(self, parent)
+    # build ui object
+    self.ui = auto_add_protein_pair_view.Ui_Dialog()
+    self.ui.setupUi(self)
+    styles.color_bottom_frame_button(self.ui.btn_add)
+    self.resize(550, 650)
+
+    self.ui.btn_cancel.clicked.connect(self.close)
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    styles.set_stylesheet(self)
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )
+    self.setWindowTitle("Add Protein Pair")
+    self.setModal(True)

@@ -27,23 +27,23 @@ __docformat__ = "google"
 
 @dataclass
 class PredictionConfiguration:
-    """Holds information about the prediction configuration."""
+  """Holds information about the prediction configuration."""
 
-    # <editor-fold desc="Class attributes">
-    amber_force_field: bool
-    """A boolean indicating if the amber force field should be used."""
-    
-    templates: str
-    """A string indicating which templates should be used."""
-    
-    # </editor-fold>
+  # <editor-fold desc="Class attributes">
+  amber_force_field: bool
+  """A boolean indicating if the amber force field should be used."""
 
-    def get_tuple_notation(self) -> tuple[bool, str]:
-        """Retrieves the tuple notation of the current instance.
+  templates: str
+  """A string indicating which templates should be used."""
 
-        Returns:
-            A tuple containing a boolean value indicating the status of the amber force field
-            and a string representing the templates.
-        """
-        tuple_notation: tuple[bool, str] = (self.amber_force_field, self.templates)
-        return tuple_notation
+  # </editor-fold>
+
+  def get_tuple_notation(self) -> tuple[bool, str]:
+    """Retrieves the tuple notation of the current instance.
+
+    Returns:
+        A tuple containing a boolean value indicating the status of the amber force field
+        and a string representing the templates.
+    """
+    tuple_notation: tuple[bool, str] = (self.amber_force_field, self.templates)
+    return tuple_notation

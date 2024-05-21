@@ -33,29 +33,35 @@ from pyssa.util import constants
 
 
 class UseProjectView(QtWidgets.QDialog):
-    """Class representing the use project dialog."""
+  """Class representing the use project dialog."""
 
-    def __init__(self) -> None:
-        """Constructor."""
-        QtWidgets.QDialog.__init__(self)
-        # build ui object
-        self.ui = auto_use_project_view.Ui_Dialog()
-        self.ui.setupUi(self)
-        self._initialize_ui()
-        self.resize(450, 600)
-        self.ui.btn_cancel.clicked.connect(self.close)
-        self.setModal(True)
+  def __init__(self) -> None:
+    """Constructor."""
+    QtWidgets.QDialog.__init__(self)
+    # build ui object
+    self.ui = auto_use_project_view.Ui_Dialog()
+    self.ui.setupUi(self)
+    self._initialize_ui()
+    self.resize(450, 600)
+    self.ui.btn_cancel.clicked.connect(self.close)
+    self.setModal(True)
 
-    def _initialize_ui(self) -> None:
-        """Initialize the UI elements."""
-        self.ui.lbl_use_status_search.setText("")
-        styles.color_bottom_frame_button(self.ui.btn_use_create_new_project)
-        self.ui.list_use_existing_projects.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
-        self.ui.btn_help.setText("")
-        styles.color_bottom_frame_button(self.ui.btn_use_create_new_project)
-        styles.set_stylesheet(self)
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Use Project")
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+  def _initialize_ui(self) -> None:
+    """Initialize the UI elements."""
+    self.ui.lbl_use_status_search.setText("")
+    styles.color_bottom_frame_button(self.ui.btn_use_create_new_project)
+    self.ui.list_use_existing_projects.setEditTriggers(
+        QtWidgets.QAbstractItemView.NoEditTriggers
+    )
+    self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
+    self.ui.btn_help.setIconSize(
+        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
+    )
+    self.ui.btn_help.setText("")
+    styles.color_bottom_frame_button(self.ui.btn_use_create_new_project)
+    styles.set_stylesheet(self)
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    self.setWindowTitle("Use Project")
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )

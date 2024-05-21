@@ -33,43 +33,47 @@ __docformat__ = "google"
 
 
 class RenameProteinViewController(QtCore.QObject):
-    """Class for the RenameProteinViewController."""
-    
-    user_input = QtCore.pyqtSignal(tuple)
-    """Singal used to transfer data back to the previous window."""
+  """Class for the RenameProteinViewController."""
 
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
-        """Constructor.
+  user_input = QtCore.pyqtSignal(tuple)
+  """Singal used to transfer data back to the previous window."""
 
-        Args:
-            the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+  def __init__(
+      self, the_interface_manager: "interface_manager.InterfaceManager"
+  ) -> None:
+    """Constructor.
 
-        Raises:
-            exception.IllegalArgumentError: If `the_interface_manager` is None.
-        """
-        # <editor-fold desc="Checks">
-        if the_interface_manager is None:
-            logger.error("the_interface_manager is None.")
-            raise exception.IllegalArgumentError("the_interface_manager is None.")
+    Args:
+        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
 
-        # </editor-fold>
-        
-        super().__init__()
-        self._interface_manager = the_interface_manager
-        self._view = the_interface_manager.get_rename_protein_view()
-        self._connect_all_ui_elements_to_slot_functions()
+    Raises:
+        exception.IllegalArgumentError: If `the_interface_manager` is None.
+    """
+    # <editor-fold desc="Checks">
+    if the_interface_manager is None:
+      logger.error("the_interface_manager is None.")
+      raise exception.IllegalArgumentError("the_interface_manager is None.")
 
-    def restore_ui(self) -> None:
-        """Restores the UI."""
-        self._view.ui.le_name.clear()
-        self._view.ui.lbl_status.setText("")
+    # </editor-fold>
 
-    def _connect_all_ui_elements_to_slot_functions(self) -> None:
-        """Connects all UI elements to their corresponding slot functions in the class."""
-        self._view.ui.btn_rename.clicked.connect(self._rename_protein)
+    super().__init__()
+    self._interface_manager = the_interface_manager
+    self._view = the_interface_manager.get_rename_protein_view()
+    self._connect_all_ui_elements_to_slot_functions()
 
-    def _rename_protein(self) -> None:
-        """Renames a protein by sending the `user_input` signal and closing the dialog."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Rename' button was clicked.")
-        self._view.close()
-        self.user_input.emit((self._view.ui.le_name.text(), True))
+  def restore_ui(self) -> None:
+    """Restores the UI."""
+    self._view.ui.le_name.clear()
+    self._view.ui.lbl_status.setText("")
+
+  def _connect_all_ui_elements_to_slot_functions(self) -> None:
+    """Connects all UI elements to their corresponding slot functions in the class."""
+    self._view.ui.btn_rename.clicked.connect(self._rename_protein)
+
+  def _rename_protein(self) -> None:
+    """Renames a protein by sending the `user_input` signal and closing the dialog."""
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Rename' button was clicked."
+    )
+    self._view.close()
+    self.user_input.emit((self._view.ui.le_name.text(), True))

@@ -25,48 +25,48 @@ from dataclasses import dataclass
 
 @dataclass
 class AnalysisRunInfo:
-    """Contains all information about an analysis run."""
+  """Contains all information about an analysis run."""
 
-    # <editor-fold desc="Class attributes">
-    _protein_name_1: str
-    """The first protein name."""
-    
-    protein_chains_1: list
-    """The chains of the first protein."""
-    
-    _protein_name_2: str
-    """The second protein name."""
-    
-    protein_chains_2: list
-    """The chains of the second protein."""
-    
-    analysis_name: str
-    """The name of the analysis run."""
-    
-    # </editor-fold>
+  # <editor-fold desc="Class attributes">
+  _protein_name_1: str
+  """The first protein name."""
 
-    def get_protein_name_1(self) -> str:
-        """Gets the name of the first protein.
-        
-        Returns:
-            The name of the first protein.
-        """
-        return self._protein_name_1.replace(".pdb", "")
+  protein_chains_1: list
+  """The chains of the first protein."""
 
-    def get_protein_name_2(self) -> str:
-        """Gets the name of the second protein.
-        
-        Returns:
-            The name of the first protein.
-        """
-        return self._protein_name_2.replace(".pdb", "")
+  _protein_name_2: str
+  """The second protein name."""
 
-    def are_protein_names_identical(self) -> bool:
-        """Checks if the two protein names are identical.
-        
-        Returns:
-            A boolean indicating if the two protein names are identical.
-        """
-        if self._protein_name_1 == self._protein_name_2:
-            return True
-        return False
+  protein_chains_2: list
+  """The chains of the second protein."""
+
+  analysis_name: str
+  """The name of the analysis run."""
+
+  # </editor-fold>
+
+  def get_protein_name_1(self) -> str:
+    """Gets the name of the first protein.
+
+    Returns:
+        The name of the first protein.
+    """
+    return self._protein_name_1.replace(".pdb", "")
+
+  def get_protein_name_2(self) -> str:
+    """Gets the name of the second protein.
+
+    Returns:
+        The name of the first protein.
+    """
+    return self._protein_name_2.replace(".pdb", "")
+
+  def are_protein_names_identical(self) -> bool:
+    """Checks if the two protein names are identical.
+
+    Returns:
+        A boolean indicating if the two protein names are identical.
+    """
+    if self._protein_name_1 == self._protein_name_2:
+      return True
+    return False

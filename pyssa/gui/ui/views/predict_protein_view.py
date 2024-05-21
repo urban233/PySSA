@@ -31,39 +31,45 @@ from pyssa.util import constants
 
 
 class PredictProteinView(QtWidgets.QDialog):
-    """Class for a dialog to predict protein structures."""
+  """Class for a dialog to predict protein structures."""
 
-    # """
-    # A pyqtsignal that is used to hand-over the protein structure information.
-    # """
-    # return_value = pyqtSignal(tuple)
+  # """
+  # A pyqtsignal that is used to hand-over the protein structure information.
+  # """
+  # return_value = pyqtSignal(tuple)
 
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
-        """Constructor.
+  def __init__(self, parent=None) -> None:  # noqa: ANN001
+    """Constructor.
 
-        Args:
-            parent: The parent.
-        """
-        QtWidgets.QDialog.__init__(self, parent)
-        # build ui object
-        self.ui = auto_predict_protein_view.Ui_Dialog()
-        self.ui.setupUi(self)
-        self.ui.tab_widget.setTabEnabled(1, False)
-        self._initialize_ui()
-        self.ui.btn_cancel.clicked.connect(self.close)
-        self.setModal(True)
+    Args:
+        parent: The parent.
+    """
+    QtWidgets.QDialog.__init__(self, parent)
+    # build ui object
+    self.ui = auto_predict_protein_view.Ui_Dialog()
+    self.ui.setupUi(self)
+    self.ui.tab_widget.setTabEnabled(1, False)
+    self._initialize_ui()
+    self.ui.btn_cancel.clicked.connect(self.close)
+    self.setModal(True)
 
-    def _initialize_ui(self) -> None:
-        """Initialize the UI elements."""
-        styles.color_bottom_frame_button(self.ui.btn_go_to_analysis_setup)
-        styles.color_bottom_frame_button(self.ui.btn_start_prediction_analysis)
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
-        self.ui.btn_help.setText("")
-        self.ui.btn_help_2.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-        self.ui.btn_help_2.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
-        self.ui.btn_help_2.setText("")
-        styles.set_stylesheet(self)
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Protein Structure Prediction")
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+  def _initialize_ui(self) -> None:
+    """Initialize the UI elements."""
+    styles.color_bottom_frame_button(self.ui.btn_go_to_analysis_setup)
+    styles.color_bottom_frame_button(self.ui.btn_start_prediction_analysis)
+    self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
+    self.ui.btn_help.setIconSize(
+        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
+    )
+    self.ui.btn_help.setText("")
+    self.ui.btn_help_2.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
+    self.ui.btn_help_2.setIconSize(
+        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
+    )
+    self.ui.btn_help_2.setText("")
+    styles.set_stylesheet(self)
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    self.setWindowTitle("Protein Structure Prediction")
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )

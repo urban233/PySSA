@@ -34,103 +34,117 @@ __docformat__ = "google"
 
 
 class ToggleButton(QtWidgets.QCheckBox):
-    """A custom toggle button widget based on a QCheckBox."""
-    
-    def __init__(
-            self,
-            width: int = 40,
-            bg_color: str = "#d5d5d5",
-            circle_color: str = "#5a5a5a",
-            active_circle_color: str = "#fff",
-            active_color: str = "#367AF6",
-    ) -> None:
-        """Initializes the checkbox with the given parameters.
+  """A custom toggle button widget based on a QCheckBox."""
 
-        Args:
-            width (int): The width of the checkbox.
-            bg_color (str): The background color of the checkbox.
-            circle_color (str): The color of the empty circle.
-            active_circle_color (str): The color of the filled circle when checkbox is active.
-            active_color (str): The color of the checkbox when active.
-        """
-        QtWidgets.QCheckBox.__init__(self)
-        # default parameters
-        self.setFixedSize(width, 19)
-        self.setCursor(Qt.PointingHandCursor)
+  def __init__(
+      self,
+      width: int = 40,
+      bg_color: str = "#d5d5d5",
+      circle_color: str = "#5a5a5a",
+      active_circle_color: str = "#fff",
+      active_color: str = "#367AF6",
+  ) -> None:
+    """Initializes the checkbox with the given parameters.
 
-        # colors
-        self._bg_color = bg_color
-        self._circle_color = circle_color
-        self._active_circle_color = active_circle_color
-        self._active_color = active_color
+    Args:
+        width (int): The width of the checkbox.
+        bg_color (str): The background color of the checkbox.
+        circle_color (str): The color of the empty circle.
+        active_circle_color (str): The color of the filled circle when checkbox is active.
+        active_color (str): The color of the checkbox when active.
+    """
+    QtWidgets.QCheckBox.__init__(self)
+    # default parameters
+    self.setFixedSize(width, 19)
+    self.setCursor(Qt.PointingHandCursor)
 
-    def hitButton(self, pos) -> bool:
-        """Overrides the QCheckBox.hitButton method.
+    # colors
+    self._bg_color = bg_color
+    self._circle_color = circle_color
+    self._active_circle_color = active_circle_color
+    self._active_color = active_color
 
-        Args:
-            pos: QPoint object representing the position of the button press
+  def hitButton(self, pos) -> bool:
+    """Overrides the QCheckBox.hitButton method.
 
-        Returns:
-            True if the button was hit, False otherwise.
-        """
-        return self.contentsRect().contains(pos)
+    Args:
+        pos: QPoint object representing the position of the button press
 
-    def paintEvent(self, e) -> None:
-        """Overrides the QCheckBox.paintEvent method.
+    Returns:
+        True if the button was hit, False otherwise.
+    """
+    return self.contentsRect().contains(pos)
 
-        Args:
-            e: QPaintEvent object representing the event that triggered the painting
+  def paintEvent(self, e) -> None:
+    """Overrides the QCheckBox.paintEvent method.
 
-        This method is called automatically whenever the widget needs to be repainted. It is used to paint the custom appearance of the widget.
-        """
-        # set painter
-        painter = QtGui.QPainter(self)
-        painter.setRenderHint(QtGui.QPainter.Antialiasing)
-        painter.setPen(Qt.NoPen)
-        rectangle = QtCore.QRect(0, 0, self.width(), self.height())
+    Args:
+        e: QPaintEvent object representing the event that triggered the painting
 
-        if not self.isChecked():
-            painter.setBrush(QtGui.QColor(self._bg_color))
-            painter.drawRoundedRect(0, 0, rectangle.width(), self.height(), self.height() / 2, self.height() / 2)
-            painter.setBrush(QtGui.QColor(self._circle_color))
-            painter.drawEllipse(3, 2, 15, 15)
-        else:
-            painter.setBrush(QtGui.QColor(self._active_color))
-            painter.drawRoundedRect(0, 0, rectangle.width(), self.height(), self.height() / 2, self.height() / 2)
-            painter.setBrush(QtGui.QColor(self._active_circle_color))
-            painter.drawEllipse(self.width() - 18, 2, 15, 15)
-        painter.end()
+    This method is called automatically whenever the widget needs to be repainted. It is used to paint the custom appearance of the widget.
+    """
+    # set painter
+    painter = QtGui.QPainter(self)
+    painter.setRenderHint(QtGui.QPainter.Antialiasing)
+    painter.setPen(Qt.NoPen)
+    rectangle = QtCore.QRect(0, 0, self.width(), self.height())
+
+    if not self.isChecked():
+      painter.setBrush(QtGui.QColor(self._bg_color))
+      painter.drawRoundedRect(
+          0,
+          0,
+          rectangle.width(),
+          self.height(),
+          self.height() / 2,
+          self.height() / 2,
+      )
+      painter.setBrush(QtGui.QColor(self._circle_color))
+      painter.drawEllipse(3, 2, 15, 15)
+    else:
+      painter.setBrush(QtGui.QColor(self._active_color))
+      painter.drawRoundedRect(
+          0,
+          0,
+          rectangle.width(),
+          self.height(),
+          self.height() / 2,
+          self.height() / 2,
+      )
+      painter.setBrush(QtGui.QColor(self._active_circle_color))
+      painter.drawEllipse(self.width() - 18, 2, 15, 15)
+    painter.end()
 
 
 class ToggleWidget(QtWidgets.QWidget):
-    """A widget that combines the toggle button with an on/off label."""
+  """A widget that combines the toggle button with an on/off label."""
 
-    toggleChanged = pyqtSignal(bool)
-    """A custom signal that should be used instead of the stateChanged signal."""
+  toggleChanged = pyqtSignal(bool)
+  """A custom signal that should be used instead of the stateChanged signal."""
 
-    def __init__(self) -> None:
-        """Constructor."""
-        super().__init__()
-        self.toggle_button = ToggleButton()
-        self.toggle_label = QtWidgets.QLabel("Off  ")
+  def __init__(self) -> None:
+    """Constructor."""
+    super().__init__()
+    self.toggle_button = ToggleButton()
+    self.toggle_label = QtWidgets.QLabel("Off  ")
 
-        self._layout = QtWidgets.QHBoxLayout()
-        self._layout.addWidget(self.toggle_label)
-        self._layout.addWidget(self.toggle_button)
-        self.setLayout(self._layout)
+    self._layout = QtWidgets.QHBoxLayout()
+    self._layout.addWidget(self.toggle_label)
+    self._layout.addWidget(self.toggle_button)
+    self.setLayout(self._layout)
 
-        self.toggle_button.stateChanged.connect(self.switch_toggle_label_text)
+    self.toggle_button.stateChanged.connect(self.switch_toggle_label_text)
 
-    def switch_toggle_label_text(self) -> None:
-        """Toggles the text of the label based on the state of the toggle button.
+  def switch_toggle_label_text(self) -> None:
+    """Toggles the text of the label based on the state of the toggle button.
 
-        If the toggle button is checked, the label text will be set to "On",
-        otherwise it will be set to "Off". It also emits the toggleChanged signal
-        with the appropriate state.
-        """
-        if self.toggle_button.isChecked():
-            self.toggle_label.setText("On  ")
-            self.toggleChanged.emit(True)
-        else:
-            self.toggle_label.setText("Off  ")
-            self.toggleChanged.emit(False)
+    If the toggle button is checked, the label text will be set to "On",
+    otherwise it will be set to "Off". It also emits the toggleChanged signal
+    with the appropriate state.
+    """
+    if self.toggle_button.isChecked():
+      self.toggle_label.setText("On  ")
+      self.toggleChanged.emit(True)
+    else:
+      self.toggle_label.setText("Off  ")
+      self.toggleChanged.emit(False)

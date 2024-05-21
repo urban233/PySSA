@@ -39,27 +39,27 @@ It is an experimental module for using and integrating ESMFold with PySSA.
 
 
 class EsmFoldWorker(QObject):
-    """Class for a worker which runs the ESM fold prediction."""
+  """Class for a worker which runs the ESM fold prediction."""
 
-    finished = pyqtSignal()
-    progress = pyqtSignal(int)
-    return_value = pyqtSignal(list)
-    table: QtWidgets.QTableWidget
+  finished = pyqtSignal()
+  progress = pyqtSignal(int)
+  return_value = pyqtSignal(list)
+  table: QtWidgets.QTableWidget
 
-    def __init__(self, table_prot_to_predict: QtWidgets.QTableWidget) -> None:
-        """Constructor.
+  def __init__(self, table_prot_to_predict: QtWidgets.QTableWidget) -> None:
+    """Constructor.
 
-        Args:
-            table_prot_to_predict: a QTableWidget containing the proteins to predict.
-        """
-        super().__init__()
-        self.table = table_prot_to_predict
+    Args:
+        table_prot_to_predict: a QTableWidget containing the proteins to predict.
+    """
+    super().__init__()
+    self.table = table_prot_to_predict
 
-    def run(self) -> None:
-        """This function is a reimplementation of the QObject run method."""
-        predictions: list[
-            prediction_protein_info.PredictionProteinInfo
-        ] = prediction_util.get_prediction_name_and_seq_from_table(self.table)
-        output = esmfold.EsmFold(predictions).run_prediction()
-        self.return_value.emit(output)
-        self.finished.emit()
+  def run(self) -> None:
+    """This function is a reimplementation of the QObject run method."""
+    predictions: list[prediction_protein_info.PredictionProteinInfo] = (
+        prediction_util.get_prediction_name_and_seq_from_table(self.table)
+    )
+    output = esmfold.EsmFold(predictions).run_prediction()
+    self.return_value.emit(output)
+    self.finished.emit()

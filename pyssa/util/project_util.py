@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING
 from pyssa.util import exception
 
 if TYPE_CHECKING:
-    from pyssa.internal.data_structures import project
+  from pyssa.internal.data_structures import project
 
 
 logger = logging.getLogger(__file__)
@@ -43,62 +43,82 @@ def get_all_filepaths_from_project(
     subfolder: str,
     extension: str,
 ) -> list["path_util.FilePath"]:
-    """Gets all filepaths from a given project.
+  """Gets all filepaths from a given project.
 
-    Args:
-        app_project (project.Project): The app project to get the filepaths from.
-        subfolder (str): The subfolder to search in.
-        extension (str): The extension to search for.
-    
-    Returns:
-        A list of the filepaths.
-    
-    Raises:
-        exception.IllegalArgumentError: If app_project is None or subfolder is either None or an empty string or extension is either None or an empty .
-    """
-    # <editor-fold desc="Checks">
-    if app_project is None:
-        logger.error("app_project is None.")
-        raise exception.IllegalArgumentError("app_project is None.")
-    if subfolder is None or subfolder == "":
-        logger.error("subfolder is either None or an empty string.")
-        raise exception.IllegalArgumentError("subfolder is either None or an empty string.")
-    if extension is None or extension == "":
-        logger.error("extension is either None or an empty string.")
-        raise exception.IllegalArgumentError("extension is either None or an empty string.")
-    
-    # </editor-fold>
-    
-    tmp_dirnames = []
-    folder = os.path.join(app_project.folder_paths["project"], subfolder)
-    if len(os.listdir(folder)) > 0:
-        for tmp_folder in os.listdir(folder):
-            tmp_dirnames.append(pathlib.Path(f"{folder}/{tmp_folder}"))
-    else:
-        logger.warning(f"The subfolder {subfolder} is empty. An empty list will be returned.")
-        return []
-    filepaths = []
-    for tmp_dirname in tmp_dirnames:
-        for basename in os.listdir(f"{tmp_dirname}/{extension}"):
-            filepaths.append(path_util.FilePath(f"{tmp_dirname}/{extension}/{basename}"))
-    return filepaths
+  Args:
+      app_project (project.Project): The app project to get the filepaths from.
+      subfolder (str): The subfolder to search in.
+      extension (str): The extension to search for.
 
+  Returns:
+      A list of the filepaths.
 
-def get_all_protein_json_filepaths_from_project(app_project: "project.Project") -> list["path_util.FilePath"]:
-    """Gets all protein json filepaths from a given project."""
-    return get_all_filepaths_from_project(app_project, "proteins", ".objects")
+  Raises:
+      exception.IllegalArgumentError: If app_project is None or subfolder is either None or an empty string or extension is either None or an empty .
+  """
+  # <editor-fold desc="Checks">
+  if app_project is None:
+    logger.error("app_project is None.")
+    raise exception.IllegalArgumentError("app_project is None.")
+  if subfolder is None or subfolder == "":
+    logger.error("subfolder is either None or an empty string.")
+    raise exception.IllegalArgumentError(
+        "subfolder is either None or an empty string."
+    )
+  if extension is None or extension == "":
+    logger.error("extension is either None or an empty string.")
+    raise exception.IllegalArgumentError(
+        "extension is either None or an empty string."
+    )
 
+  # </editor-fold>
 
-def get_all_pdb_filepaths_from_project(app_project: "project.Project") -> list["path_util.FilePath"]:
-    """Gets all protein pdb filepaths from a given project."""
-    return get_all_filepaths_from_project(app_project, "proteins", "pdb")
+  tmp_dirnames = []
+  folder = os.path.join(app_project.folder_paths["project"], subfolder)
+  if len(os.listdir(folder)) > 0:
+    for tmp_folder in os.listdir(folder):
+      tmp_dirnames.append(pathlib.Path(f"{folder}/{tmp_folder}"))
+  else:
+    logger.warning(
+        f"The subfolder {subfolder} is empty. An empty list will be returned."
+    )
+    return []
+  filepaths = []
+  for tmp_dirname in tmp_dirnames:
+    for basename in os.listdir(f"{tmp_dirname}/{extension}"):
+      filepaths.append(
+          path_util.FilePath(f"{tmp_dirname}/{extension}/{basename}")
+      )
+  return filepaths
 
 
-def get_all_protein_pair_json_filepaths_from_project(app_project: "project.Project") -> list["path_util.FilePath"]:
-    """Gets all protein pair json filepaths from a given project."""
-    return get_all_filepaths_from_project(app_project, "protein_pairs", ".objects")
+def get_all_protein_json_filepaths_from_project(
+    app_project: "project.Project",
+) -> list["path_util.FilePath"]:
+  """Gets all protein json filepaths from a given project."""
+  return get_all_filepaths_from_project(app_project, "proteins", ".objects")
 
 
-def get_all_distance_analysis_json_filepaths_from_project(app_project: "project.Project") -> list["path_util.FilePath"]:
-    """Gets all distance analysis json filepaths from a given project."""
-    return get_all_filepaths_from_project(app_project, str(pathlib.Path("analysis/distance_analysis")), ".objects")
+def get_all_pdb_filepaths_from_project(
+    app_project: "project.Project",
+) -> list["path_util.FilePath"]:
+  """Gets all protein pdb filepaths from a given project."""
+  return get_all_filepaths_from_project(app_project, "proteins", "pdb")
+
+
+def get_all_protein_pair_json_filepaths_from_project(
+    app_project: "project.Project",
+) -> list["path_util.FilePath"]:
+  """Gets all protein pair json filepaths from a given project."""
+  return get_all_filepaths_from_project(
+      app_project, "protein_pairs", ".objects"
+  )
+
+
+def get_all_distance_analysis_json_filepaths_from_project(
+    app_project: "project.Project",
+) -> list["path_util.FilePath"]:
+  """Gets all distance analysis json filepaths from a given project."""
+  return get_all_filepaths_from_project(
+      app_project, str(pathlib.Path("analysis/distance_analysis")), ".objects"
+  )

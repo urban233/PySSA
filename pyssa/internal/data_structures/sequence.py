@@ -33,36 +33,36 @@ __docformat__ = "google"
 
 
 class Sequence:
-    """Contains information about a protein sequence."""
+  """Contains information about a protein sequence."""
 
-    # <editor-fold desc="Class attributes">
-    name: str
-    """The name of the protein."""
-    
-    sequence: str
-    """The sequence of the protein."""
+  # <editor-fold desc="Class attributes">
+  name: str
+  """The name of the protein."""
+
+  sequence: str
+  """The sequence of the protein."""
+
+  # </editor-fold>
+
+  def __init__(self, protein_name: str, single_sequence: str) -> None:
+    """Constructor.
+
+    Args:
+        protein_name (str): the name of the protein
+        single_sequence (str): a sequence as string of the protein
+
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if protein_name is None:
+      logger.error("protein_name is None.")
+      raise exception.IllegalArgumentError("protein_name is None.")
+    if single_sequence is None:
+      logger.error("single_sequence is None.")
+      raise exception.IllegalArgumentError("single_sequence is None.")
 
     # </editor-fold>
 
-    def __init__(self, protein_name: str, single_sequence: str) -> None:
-        """Constructor.
-
-        Args:
-            protein_name (str): the name of the protein
-            single_sequence (str): a sequence as string of the protein
-        
-        Raises:
-            exception.IllegalArgumentError: If any of the arguments are None.
-        """
-        # <editor-fold desc="Checks">
-        if protein_name is None:
-            logger.error("protein_name is None.")
-            raise exception.IllegalArgumentError("protein_name is None.")
-        if single_sequence is None:
-            logger.error("single_sequence is None.")
-            raise exception.IllegalArgumentError("single_sequence is None.")
-
-        # </editor-fold>
-
-        self.name: str = protein_name
-        self.sequence: str = single_sequence
+    self.name: str = protein_name
+    self.sequence: str = single_sequence

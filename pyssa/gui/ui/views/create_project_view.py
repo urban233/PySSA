@@ -30,46 +30,52 @@ from pyssa.util import constants
 
 
 class CreateProjectView(QtWidgets.QDialog):
-    """Class for the Create dialog."""
-    
-    dialogClosed = QtCore.pyqtSignal()
-    """A signal indicating that the dialog is closed."""
-    
-    def __init__(self) -> None:
-        """Constructor."""
-        QtWidgets.QDialog.__init__(self)
-        # build ui object
-        self.ui = auto_create_project_view.Ui_Dialog()
-        self.ui.setupUi(self)
-        self._initialize_ui()
-        self.resize(450, 600)
-        self.ui.btn_cancel.clicked.connect(self.close)
-        self.setModal(True)
+  """Class for the Create dialog."""
 
-    def _initialize_ui(self) -> None:
-        """Initialize the UI elements."""
-        self.ui.lbl_new_choose_reference.hide()
-        self.ui.btn_new_choose_reference.hide()
-        self.ui.cb_new_add_reference.hide()
-        self.ui.txt_new_choose_reference.hide()
-        self.ui.lbl_new_status_project_name.setText("")
-        self.ui.list_create_projects_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
-        self.ui.btn_help.setText("")
-        self.ui.btn_new_create_project.setEnabled(False)
-        styles.color_bottom_frame_button(self.ui.btn_new_create_project)
-        styles.set_stylesheet(self)
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Create Project")
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+  dialogClosed = QtCore.pyqtSignal()
+  """A signal indicating that the dialog is closed."""
 
-    def closeEvent(self, event) -> None:
-        """Closes the dialog (with the closeEvent) and emits the 'dialogClosed' signal."""
-        event.accept()
-        self.dialogClosed.emit()
+  def __init__(self) -> None:
+    """Constructor."""
+    QtWidgets.QDialog.__init__(self)
+    # build ui object
+    self.ui = auto_create_project_view.Ui_Dialog()
+    self.ui.setupUi(self)
+    self._initialize_ui()
+    self.resize(450, 600)
+    self.ui.btn_cancel.clicked.connect(self.close)
+    self.setModal(True)
 
-    def _close_dialog(self) -> None:
-        """Closes the dialog and emits the 'dialogClosed' signal."""
-        self.close()
-        self.dialogClosed.emit()
+  def _initialize_ui(self) -> None:
+    """Initialize the UI elements."""
+    self.ui.lbl_new_choose_reference.hide()
+    self.ui.btn_new_choose_reference.hide()
+    self.ui.cb_new_add_reference.hide()
+    self.ui.txt_new_choose_reference.hide()
+    self.ui.lbl_new_status_project_name.setText("")
+    self.ui.list_create_projects_view.setEditTriggers(
+        QtWidgets.QAbstractItemView.NoEditTriggers
+    )
+    self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
+    self.ui.btn_help.setIconSize(
+        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
+    )
+    self.ui.btn_help.setText("")
+    self.ui.btn_new_create_project.setEnabled(False)
+    styles.color_bottom_frame_button(self.ui.btn_new_create_project)
+    styles.set_stylesheet(self)
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    self.setWindowTitle("Create Project")
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )
+
+  def closeEvent(self, event) -> None:
+    """Closes the dialog (with the closeEvent) and emits the 'dialogClosed' signal."""
+    event.accept()
+    self.dialogClosed.emit()
+
+  def _close_dialog(self) -> None:
+    """Closes the dialog and emits the 'dialogClosed' signal."""
+    self.close()
+    self.dialogClosed.emit()

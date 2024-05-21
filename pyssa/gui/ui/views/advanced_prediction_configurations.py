@@ -31,30 +31,33 @@ from pyssa.util import constants
 
 
 class AdvancedPredictionConfigurationsView(QtWidgets.QDialog):
-    """Class for the advanced prediction configurations dialog."""
+  """Class for the advanced prediction configurations dialog."""
 
-    return_value = pyqtSignal(tuple)
-    """A pyqtsignal that is used to hand-over the config information."""
+  return_value = pyqtSignal(tuple)
+  """A pyqtsignal that is used to hand-over the config information."""
 
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
-        """Constructor.
+  def __init__(self, parent=None) -> None:  # noqa: ANN001
+    """Constructor.
 
-        Args:
-            parent: The parent.
-        """
-        QtWidgets.QDialog.__init__(self, parent)
-        # build ui object
-        self.ui = Ui_Dialog()
-        self.ui.setupUi(self)
-        styles.color_bottom_frame_button(self.ui.btn_ok)
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
-        self.ui.btn_help.setText("")
-        self.ui.btn_cancel.clicked.connect(self.close)
-        self.setWindowTitle("Advanced Configuration")
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        styles.set_stylesheet(self)
-        # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        self.setModal(True)
-
+    Args:
+        parent: The parent.
+    """
+    QtWidgets.QDialog.__init__(self, parent)
+    # build ui object
+    self.ui = Ui_Dialog()
+    self.ui.setupUi(self)
+    styles.color_bottom_frame_button(self.ui.btn_ok)
+    self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
+    self.ui.btn_help.setIconSize(
+        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
+    )
+    self.ui.btn_help.setText("")
+    self.ui.btn_cancel.clicked.connect(self.close)
+    self.setWindowTitle("Advanced Configuration")
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    styles.set_stylesheet(self)
+    # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )
+    self.setModal(True)

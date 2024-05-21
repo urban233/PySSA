@@ -34,82 +34,92 @@ __docformat__ = "google"
 
 
 class AddSceneViewController(QtCore.QObject):
-    """Class for the AddSceneViewController."""
-    
-    user_input = QtCore.pyqtSignal(tuple)
-    """Singal used to transfer data back to the previous window."""
+  """Class for the AddSceneViewController."""
 
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
-        """Constructor.
+  user_input = QtCore.pyqtSignal(tuple)
+  """Singal used to transfer data back to the previous window."""
 
-        Args:
-            the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+  def __init__(
+      self, the_interface_manager: "interface_manager.InterfaceManager"
+  ) -> None:
+    """Constructor.
 
-        Raises:
-            exception.IllegalArgumentError: If `the_interface_manager` is None.
-        """
-        # <editor-fold desc="Checks">
-        if the_interface_manager is None:
-            logger.error("the_interface_manager is None.")
-            raise exception.IllegalArgumentError("the_interface_manager is None.")
+    Args:
+        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
 
-        # </editor-fold>
-        
-        super().__init__()
-        self._interface_manager = the_interface_manager
-        self._view = the_interface_manager.get_add_scene_view()
-        self._interface_manager.pymol_session_manager.get_all_scenes_in_current_session()
-        self._all_current_scenes = self._interface_manager.pymol_session_manager.all_scenes
-        self._view.lbl_status.setStyleSheet("color: #ba1a1a; font-size: 11px;")
-        self._connect_all_ui_elements_to_slot_functions()
+    Raises:
+        exception.IllegalArgumentError: If `the_interface_manager` is None.
+    """
+    # <editor-fold desc="Checks">
+    if the_interface_manager is None:
+      logger.error("the_interface_manager is None.")
+      raise exception.IllegalArgumentError("the_interface_manager is None.")
 
-    def restore_ui(self) -> None:
-        """Restores the UI."""
-        self._view.line_edit_scene_name.clear()
-        self._view.line_edit_scene_name.setStyleSheet(
-            """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
-        )
-        self._view.lbl_status.setText("")
+    # </editor-fold>
 
-    def _connect_all_ui_elements_to_slot_functions(self) -> None:
-        """Connects all UI elements to their corresponding slot functions in the class."""
-        self._view.line_edit_scene_name.textChanged.connect(self._validate_scene_name)
-        self._view.btn_add_scene.clicked.connect(self._add_scene)
+    super().__init__()
+    self._interface_manager = the_interface_manager
+    self._view = the_interface_manager.get_add_scene_view()
+    self._interface_manager.pymol_session_manager.get_all_scenes_in_current_session()
+    self._all_current_scenes = (
+        self._interface_manager.pymol_session_manager.all_scenes
+    )
+    self._view.lbl_status.setStyleSheet("color: #ba1a1a; font-size: 11px;")
+    self._connect_all_ui_elements_to_slot_functions()
 
-    def _add_scene(self) -> None:
-        """Adds a new scene based on the user input."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked.")
-        self._view.close()
-        self.user_input.emit((self._view.line_edit_scene_name.text(), True))
-    
-    def _validate_scene_name(self, text: str) -> None:
-        """Validates the scene name entered by the user.
+  def restore_ui(self) -> None:
+    """Restores the UI."""
+    self._view.line_edit_scene_name.clear()
+    self._view.line_edit_scene_name.setStyleSheet(
+        """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
+    )
+    self._view.lbl_status.setText("")
 
-        Args:
-            text (str): The input text to be validated.
-        
-        Raises:
-            exception.IllegalArgumentError: If `text` is None.
-        """
-        # <editor-fold desc="Checks">
-        if text is None:
-            logger.error("text is None.")
-            raise exception.IllegalArgumentError("text is None.")
-        
-        # </editor-fold>
-        
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
-        new_text = ''.join(char for char in text)
-        self._view.line_edit_scene_name.setText(new_text)
-        if new_text in self._all_current_scenes:
-            self._view.btn_add_scene.setEnabled(False)
-            self._view.lbl_status.setText("This scene name already exists. Please enter another name.")
-            self._view.line_edit_scene_name.setStyleSheet(
-                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
-            )
-        else:
-            self._view.btn_add_scene.setEnabled(True)
-            self._view.lbl_status.setText("")
-            self._view.line_edit_scene_name.setStyleSheet(
-                """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
-            )
+  def _connect_all_ui_elements_to_slot_functions(self) -> None:
+    """Connects all UI elements to their corresponding slot functions in the class."""
+    self._view.line_edit_scene_name.textChanged.connect(
+        self._validate_scene_name
+    )
+    self._view.btn_add_scene.clicked.connect(self._add_scene)
+
+  def _add_scene(self) -> None:
+    """Adds a new scene based on the user input."""
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked."
+    )
+    self._view.close()
+    self.user_input.emit((self._view.line_edit_scene_name.text(), True))
+
+  def _validate_scene_name(self, text: str) -> None:
+    """Validates the scene name entered by the user.
+
+    Args:
+        text (str): The input text to be validated.
+
+    Raises:
+        exception.IllegalArgumentError: If `text` is None.
+    """
+    # <editor-fold desc="Checks">
+    if text is None:
+      logger.error("text is None.")
+      raise exception.IllegalArgumentError("text is None.")
+
+    # </editor-fold>
+
+    logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
+    new_text = "".join(char for char in text)
+    self._view.line_edit_scene_name.setText(new_text)
+    if new_text in self._all_current_scenes:
+      self._view.btn_add_scene.setEnabled(False)
+      self._view.lbl_status.setText(
+          "This scene name already exists. Please enter another name."
+      )
+      self._view.line_edit_scene_name.setStyleSheet(
+          """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
+      )
+    else:
+      self._view.btn_add_scene.setEnabled(True)
+      self._view.lbl_status.setText("")
+      self._view.line_edit_scene_name.setStyleSheet(
+          """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
+      )

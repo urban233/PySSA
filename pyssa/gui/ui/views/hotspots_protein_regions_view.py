@@ -31,26 +31,31 @@ from pyssa.util import constants
 
 
 class HotspotsProteinRegionsView(QtWidgets.QDialog):
-    """Class representing a Hotspots dialog."""
-    # Define a custom signal
-    dialogClosed = QtCore.pyqtSignal(tuple)
+  """Class representing a Hotspots dialog."""
 
-    def __init__(self) -> None:
-        """Constructor."""
-        QtWidgets.QDialog.__init__(self)
-        # build ui object
-        self.ui = auto_hotspots_protein_regions_view.Ui_Dialog()
-        self.ui.setupUi(self)
-        self._initialize_ui()
-        self.ui.btn_cancel.clicked.connect(self.close)
-        self.setModal(False)
+  # Define a custom signal
+  dialogClosed = QtCore.pyqtSignal(tuple)
 
-    def _initialize_ui(self) -> None:
-        """Initialize the UI elements."""
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
-        self.ui.btn_help.setText("")
-        styles.set_stylesheet(self)
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Protein Regions")
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+  def __init__(self) -> None:
+    """Constructor."""
+    QtWidgets.QDialog.__init__(self)
+    # build ui object
+    self.ui = auto_hotspots_protein_regions_view.Ui_Dialog()
+    self.ui.setupUi(self)
+    self._initialize_ui()
+    self.ui.btn_cancel.clicked.connect(self.close)
+    self.setModal(False)
+
+  def _initialize_ui(self) -> None:
+    """Initialize the UI elements."""
+    self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
+    self.ui.btn_help.setIconSize(
+        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
+    )
+    self.ui.btn_help.setText("")
+    styles.set_stylesheet(self)
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    self.setWindowTitle("Protein Regions")
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )

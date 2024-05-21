@@ -27,6 +27,7 @@ from pyssa.logging_pyssa import log_handlers
 from pyssa.util import enums
 
 from pyssa.util import exception
+
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
@@ -34,85 +35,85 @@ __docformat__ = "google"
 
 @dataclass
 class JobBaseInformation:
-    """Contains all general information about a job."""
+  """Contains all general information about a job."""
 
-    # <editor-fold desc="Class attributes">
-    job_type: "enums.JobType"
-    """The type of job."""
-    
-    project_name: str
-    """The name of the project."""
-    
-    protein_names: list[str]
-    """The names of the proteins."""
-    
-    protein_pair_names: list[str]
-    """The names of the protein pairs."""
-    
-    job_progress: "enums.JobProgress"
-    """The progress of the job."""
-    
+  # <editor-fold desc="Class attributes">
+  job_type: "enums.JobType"
+  """The type of job."""
+
+  project_name: str
+  """The name of the project."""
+
+  protein_names: list[str]
+  """The names of the proteins."""
+
+  protein_pair_names: list[str]
+  """The names of the protein pairs."""
+
+  job_progress: "enums.JobProgress"
+  """The progress of the job."""
+
+  # </editor-fold>
+
+  def add_image_filepath(self, a_filepath: str) -> None:
+    """Adds the filepath where the image should be saved.
+
+    Args:
+        a_filepath: The filepath of the image to be added.
+
+    Raises:
+        exception.IllegalArgumentError: If a_filepath is None.
+    """
+    # <editor-fold desc="Checks">
+    if a_filepath is None:
+      logger.error("a_filepath is None.")
+      raise exception.IllegalArgumentError("a_filepath is None.")
+
     # </editor-fold>
 
-    def add_image_filepath(self, a_filepath: str) -> None:
-        """Adds the filepath where the image should be saved.
+    self._filepath = a_filepath
 
-        Args:
-            a_filepath: The filepath of the image to be added.
+  def get_image_filepath(self) -> str:
+    """Gets the filepath where the image should be saved.
 
-        Raises:
-            exception.IllegalArgumentError: If a_filepath is None.
-        """
-        # <editor-fold desc="Checks">
-        if a_filepath is None:
-            logger.error("a_filepath is None.")
-            raise exception.IllegalArgumentError("a_filepath is None.")
-        
-        # </editor-fold>
-        
-        self._filepath = a_filepath
-
-    def get_image_filepath(self) -> str:
-        """Gets the filepath where the image should be saved.
-        
-        Returns:
-            The filepath where the image should be saved or an empty string if the `_filepath` is None.
-        """
-        if self._filepath is None:
-            return ""
-        return self._filepath
+    Returns:
+        The filepath where the image should be saved or an empty string if the `_filepath` is None.
+    """
+    if self._filepath is None:
+      return ""
+    return self._filepath
 
 
 @dataclass
 class PredictionJobSummary:
-    """Contains all information about a prediction job."""
+  """Contains all information about a prediction job."""
 
-    # <editor-fold desc="Class attributes">
-    prediction_protein_infos: list[prediction_protein_info.PredictionProteinInfo]
-    """The list of prediction protein infos."""
-    
-    # </editor-fold>
-    
-    def get_protein_names(self) -> list[str]:
-        """Returns a list of protein names.
+  # <editor-fold desc="Class attributes">
+  prediction_protein_infos: list[prediction_protein_info.PredictionProteinInfo]
+  """The list of prediction protein infos."""
 
-        This method retrieves the protein names from the prediction protein infos stored in the class instance.
+  # </editor-fold>
 
-        Returns:
-            list[str]: A list of protein names.
-        """
-        tmp_protein_names = []
-        for tmp_prediction_info in self.prediction_protein_infos:
-            tmp_protein_names.append(tmp_prediction_info.name)
-        return tmp_protein_names
+  def get_protein_names(self) -> list[str]:
+    """Returns a list of protein names.
+
+    This method retrieves the protein names from the prediction protein infos stored in the class instance.
+
+    Returns:
+        list[str]: A list of protein names.
+    """
+    tmp_protein_names = []
+    for tmp_prediction_info in self.prediction_protein_infos:
+      tmp_protein_names.append(tmp_prediction_info.name)
+    return tmp_protein_names
 
 
 @dataclass
 class DistanceAnalysisJobSummary:
-    """Contains all information about a distance analysis job."""
+  """Contains all information about a distance analysis job."""
 
-    # <editor-fold desc="Class attributes">
-    analysis_names: list[str]
-    """A list of analysis names."""
-    
-    # </editor-fold>
+  # <editor-fold desc="Class attributes">
+  analysis_names: list[str]
+  """A list of analysis names."""
+
+  # </editor-fold>

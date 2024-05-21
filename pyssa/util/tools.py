@@ -28,31 +28,35 @@ from pyssa.util import constants, exception
 
 
 def check_internet_connectivity() -> bool:
-    """Checks the connection to the internet.
-    
-    Returns:
-        A boolean indicating whether the internet is available or not.
-    """
-    timeout: float = 6
-    try:
-        urlopen("https://www.google.com", timeout=timeout)
-    except URLError:
-        return False
-    except socket.timeout:
-        return False
-    except Exception as e:
-        constants.PYSSA_LOGGER.error(f"Could not connect to internet, due to an unknown error: {e}")
-        return False
-    else:
-        return True
-    
+  """Checks the connection to the internet.
+
+  Returns:
+      A boolean indicating whether the internet is available or not.
+  """
+  timeout: float = 6
+  try:
+    urlopen("https://www.google.com", timeout=timeout)
+  except URLError:
+    return False
+  except socket.timeout:
+    return False
+  except Exception as e:
+    constants.PYSSA_LOGGER.error(
+        f"Could not connect to internet, due to an unknown error: {e}"
+    )
+    return False
+  else:
+    return True
+
 
 def restore_default_settings(settings_obj: "settings.Settings") -> None:
-    """Creates a settings.json file which is filled with the pre-defined values.
-    
-    Args:
-        settings_obj: The settings object where the default values should be stored.
-    """
-    if settings_obj is None:
-        raise exception.IllegalArgumentError("settings_obj is None.")
-    settings_obj.restore_settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
+  """Creates a settings.json file which is filled with the pre-defined values.
+
+  Args:
+      settings_obj: The settings object where the default values should be stored.
+  """
+  if settings_obj is None:
+    raise exception.IllegalArgumentError("settings_obj is None.")
+  settings_obj.restore_settings(
+      constants.SETTINGS_DIR, constants.SETTINGS_FILENAME
+  )

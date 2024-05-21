@@ -29,24 +29,24 @@ __docformat__ = "google"
 
 @dataclass
 class PyMOLCommand:
-    """Holds information about a pymol command."""
+  """Holds information about a pymol command."""
 
-    # <editor-fold desc="Class attributes">
-    command: "pymol_enums.CommandEnum"
-    """The pymol command."""
-    
-    arguments: tuple
-    """The command arguments."""
-    
-    # </editor-fold>
+  # <editor-fold desc="Class attributes">
+  command: "pymol_enums.CommandEnum"
+  """The pymol command."""
 
-    def get_command(self) -> dict:
-        """Returns a dictionary with the command and its arguments.
+  arguments: tuple
+  """The command arguments."""
 
-        Returns:
-            dict: A dictionary containing the command and its arguments.
-        """
-        return {
-            "command": self.command.value,
-            "arguments": self.arguments,
-        }
+  # </editor-fold>
+
+  def get_command(self) -> dict:
+    """Returns a dictionary with the command and its arguments.
+
+    Returns:
+        dict: A dictionary containing the command and its arguments.
+    """
+    return {
+        "command": self.command.value,
+        "arguments": self.arguments,
+    }

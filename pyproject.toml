@@ -6,15 +6,40 @@ authors = ["Martin Urban <martin.urban@studmail.w-hs.de>", "Hannah Kullik <hanna
 maintainers = ["Martin Urban <martin.urban@studmail.w-hs.de>", "Hannah Kullik <hannah.kullik@studmail.w-hs.de>"]
 requires-python = '>=3.9'
 
-[tool.ruff]
-select = ["E", "F", "W", "N", "D", "ANN", "A", "COM", "C4", "RET", "SLF"]
-ignore = ["ANN101", "D203", "D213", "D407", "D408", "D409", "W291", "W293", "E501"]  # temporarily ignore E501
-fixable = ["D", "COM"]
-line-length = 120
-exclude = ["__init__.py", "pyssa/experimental", "conf.py"]
-[tool.ruff.pydocstyle]
-convention = "google"
+[tool.pyink]
+pyink-indentation = 2
+pyink-use-majority-quotes = true
+line-length = 80
+preview = true
 
-[tool.black]
-line-length = 120
-target-version = ["py39"]
+[tool.ruff]
+# Exclude a variety of commonly ignored directories.
+exclude = [
+  "__init__.py",
+]
+
+line-length = 80
+indent-width = 2
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
+select = [
+  "F401",  # unused-import
+#  "ANN101",  # Missing type annotation
+  "D208",  # Docstring is over-indented
+#  "E501",  #  Line too long (x > 80)
+  "ANN201",  #  Missing return type annotation for public function
+#  "D212",  #  Multi-line docstring summary should start at the first line
+  "A003",  # builtin-attribute-shadowing
+  "W291",  # trailing-whitespace
+  "PTH110",  # `os.path.exists()` should be replaced by `Path.exists()`
+  "Q000",   # Single quotes found but double quotes preferred
+]
+ignore = []
+# Allow fix for all enabled rules (when `--fix`) is provided.
+# Full list of rules: https://docs.astral.sh/ruff/rules/
+fixable = ["D208", "W291", "PTH110"]
+unfixable = []
+
+[tool.ruff.format]
+indent-style = "space"

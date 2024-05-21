@@ -32,28 +32,30 @@ from pyssa.util import constants
 
 
 class RenameSequenceView(QtWidgets.QDialog):
-    """Class for the rename sequence dialog."""
+  """Class for the rename sequence dialog."""
 
-    dialogClosed = QtCore.pyqtSignal(tuple)
-    """A signal indicating that the dialog is closed."""
+  dialogClosed = QtCore.pyqtSignal(tuple)
+  """A signal indicating that the dialog is closed."""
 
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
-        """Constructor."""
-        QtWidgets.QDialog.__init__(self, parent)
-        # build ui object
-        self.ui = auto_rename_object_view.Ui_Dialog()
-        self.ui.setupUi(self)
+  def __init__(self, parent=None) -> None:  # noqa: ANN001
+    """Constructor."""
+    QtWidgets.QDialog.__init__(self, parent)
+    # build ui object
+    self.ui = auto_rename_object_view.Ui_Dialog()
+    self.ui.setupUi(self)
 
-        self.ui.lbl_description.setText("Enter a new sequence name")
-        self.ui.lbl_status.setStyleSheet("color: #ba1a1a; font-size: 11px;")
-        styles.color_bottom_frame_button(self.ui.btn_rename)
+    self.ui.lbl_description.setText("Enter a new sequence name")
+    self.ui.lbl_status.setStyleSheet("color: #ba1a1a; font-size: 11px;")
+    styles.color_bottom_frame_button(self.ui.btn_rename)
 
-        self.setMaximumSize(600, 80)
-        self.setMinimumWidth(250)
-        self.resize(450, 80)
-        self.ui.btn_cancel.clicked.connect(self.close)
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        styles.set_stylesheet(self)
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        self.setWindowTitle("Rename Selected Sequence")
-        self.setModal(True)
+    self.setMaximumSize(600, 80)
+    self.setMinimumWidth(250)
+    self.resize(450, 80)
+    self.ui.btn_cancel.clicked.connect(self.close)
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    styles.set_stylesheet(self)
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )
+    self.setWindowTitle("Rename Selected Sequence")
+    self.setModal(True)

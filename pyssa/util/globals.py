@@ -30,7 +30,9 @@ g_settings = None
 g_plugin_path = pathlib.Path(
     "C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\PySSA",
 )
-g_plugin_root_path = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
+g_plugin_root_path = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
 g_os = ""
 
 g_server_status = enums.DocsServerStatus.INACTIVE

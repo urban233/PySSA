@@ -31,16 +31,16 @@ logger.addHandler(log_handlers.log_file_handler)
 
 
 class FilesystemCleaner:
-    """Class for cleaning up the filesystem."""
+  """Class for cleaning up the filesystem."""
 
-    def __init__(self) -> None:
-        """Empty constructor."""
-        pass
+  def __init__(self) -> None:
+    """Empty constructor."""
+    pass
 
-    @staticmethod
-    def clean_prediction_scratch_folder() -> None:
-        """Deletes the scratch folder for fasta and pdb files and creates new ones."""
-        shutil.rmtree(constants.PREDICTION_FASTA_DIR)
-        os.mkdir(constants.PREDICTION_FASTA_DIR)
-        shutil.rmtree(constants.PREDICTION_PDB_DIR)
-        os.mkdir(constants.PREDICTION_PDB_DIR)
+  @staticmethod
+  def clean_prediction_scratch_folder() -> None:
+    """Deletes the scratch folder for fasta and pdb files and creates new ones."""
+    shutil.rmtree(constants.PREDICTION_FASTA_DIR)
+    os.mkdir(constants.PREDICTION_FASTA_DIR)
+    shutil.rmtree(constants.PREDICTION_PDB_DIR)
+    os.mkdir(constants.PREDICTION_PDB_DIR)

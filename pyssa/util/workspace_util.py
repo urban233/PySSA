@@ -37,7 +37,7 @@ from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 
 # def get_proteins_of_project_xml(xml_filepath: pathlib.Path, result_queue, lock) -> None:  # noqa: ANN001
 #     """Gets the protein information from the project xml file.
-# 
+#
 #     Args:
 #         xml_filepath: a path to the project xml file.
 #         result_queue: a queue to put the protein information into.
@@ -60,11 +60,11 @@ from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 #             )
 #     with lock:
 #         result_queue.put((list(tmp_protein_names), list(tmp_protein_infos)))
-# 
-# 
+#
+#
 # def scan_workspace_for_non_duplicate_proteins(the_workspace_path: pathlib.Path) -> np.ndarray:
 #     """Scans the workspace for non-duplicate proteins.
-# 
+#
 #     Args:
 #         the_workspace_path: Path to the current workspace.
 #     """
@@ -80,16 +80,16 @@ from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 #         # Create a queue and a lock for thread safety
 #         result_queue = Queue()
 #         lock = Lock()
-# 
+#
 #         # Map each XML file to the read_xml_file function in parallel
 #         futures = [
 #             executor.submit(get_proteins_of_project_xml, pathlib.Path(file_path), result_queue, lock)
 #             for file_path in xml_files
 #         ]
-# 
+#
 #         # Wait for all tasks to complete
 #         concurrent.futures.wait(futures)
-# 
+#
 #         # Retrieve results from the queue in the main thread
 #         all_proteins_of_workspace: collections.deque = collections.deque()
 #         while not result_queue.empty():
@@ -104,13 +104,13 @@ from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 #         # Iterate through the list and add unique elements to the set
 #         for protein in flatten_proteins:
 #             unique_proteins_set.add(protein)
-# 
+#
 #         return np.array(list(unique_proteins_set))
-# 
-# 
+#
+#
 # def scan_workspace_for_valid_projects(the_workspace_path: pathlib.Path) -> list[str]:
 #     """Scans the workspace for valid projects.
-# 
+#
 #     Args:
 #         the_workspace_path: Path to the current workspace.
 #     """

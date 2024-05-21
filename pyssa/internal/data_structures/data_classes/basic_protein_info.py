@@ -25,34 +25,38 @@ from dataclasses import dataclass
 
 @dataclass
 class BasicProteinInfo:
-    """Holds basic information about a protein."""
+  """Holds basic information about a protein."""
 
-    # <editor-fold desc="Class attributes">
-    name: str
-    """Name of the protein."""
-    
-    id: str  # noqa: A003
-    """Id of the protein."""
-    
-    project_name: str
-    """Name of the project that this protein belongs to."""
-    
-    # </editor-fold>
+  # <editor-fold desc="Class attributes">
+  name: str
+  """Name of the protein."""
 
-    def __eq__(self, other) -> bool:  # noqa: ANN001 #TODO: needs to be checked
-        """Checks if two basic protein information objects are equal.
-        
-        Returns:
-            A boolean indicating equality.
-        """
-        if not isinstance(other, BasicProteinInfo):
-            return False
-        return (self.name, self.id, self.project_name) == (other.name, other.id, other.project_name)
+  id: str  # noqa: A003
+  """Id of the protein."""
 
-    def __hash__(self) -> int:
-        """Combines the hash values of the attributes to create a unique hash.
-        
-        Returns:
-            An hash value.
-        """
-        return hash((self.name, self.id, self.project_name))
+  project_name: str
+  """Name of the project that this protein belongs to."""
+
+  # </editor-fold>
+
+  def __eq__(self, other) -> bool:  # noqa: ANN001 #TODO: needs to be checked
+    """Checks if two basic protein information objects are equal.
+
+    Returns:
+        A boolean indicating equality.
+    """
+    if not isinstance(other, BasicProteinInfo):
+      return False
+    return (self.name, self.id, self.project_name) == (
+        other.name,
+        other.id,
+        other.project_name,
+    )
+
+  def __hash__(self) -> int:
+    """Combines the hash values of the attributes to create a unique hash.
+
+    Returns:
+        An hash value.
+    """
+    return hash((self.name, self.id, self.project_name))

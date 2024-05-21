@@ -34,90 +34,95 @@ __docformat__ = "google"
 
 
 class SequenceListContextMenu:
-    """A custom context menu wrapper for the sequence list view of the main dialog."""
+  """A custom context menu wrapper for the sequence list view of the main dialog."""
 
-    def __init__(self) -> None:
-        """Constructor."""
-        self._context_menu = QtWidgets.QMenu()
-        self._rename_sequence_action = QtWidgets.QAction("Rename Selected Protein")
-        self._help_action = QtWidgets.QAction("Get Help")
-        
-        self._context_menu.addAction(self._rename_sequence_action)
-        self._context_menu.addAction(self._help_action)
+  def __init__(self) -> None:
+    """Constructor."""
+    self._context_menu = QtWidgets.QMenu()
+    self._rename_sequence_action = QtWidgets.QAction("Rename Selected Protein")
+    self._help_action = QtWidgets.QAction("Get Help")
 
-        self._rename_sequence_action.triggered.connect(self._generic_action)
-        self._help_action.triggered.connect(self._generic_action)
+    self._context_menu.addAction(self._rename_sequence_action)
+    self._context_menu.addAction(self._help_action)
 
-    # <editor-fold desc="Connect actions from outside">
-    def connect_rename_sequence_action(self, the_function_to_connect: Callable) -> None:
-        """Connects the `_rename_sequence_action` triggered signal to a given callable.
+    self._rename_sequence_action.triggered.connect(self._generic_action)
+    self._help_action.triggered.connect(self._generic_action)
 
-        Args:
-            the_function_to_connect: A callable object that will be connected to the triggered signal of the `_rename_sequence_action` attribute.
+  # <editor-fold desc="Connect actions from outside">
+  def connect_rename_sequence_action(
+      self, the_function_to_connect: Callable
+  ) -> None:
+    """Connects the `_rename_sequence_action` triggered signal to a given callable.
 
-        Raises:
-            exception.IllegalArgumentError: If the_function_to_connect is None.
-        """
-        # <editor-fold desc="Checks">
-        if the_function_to_connect is None:
-            logger.error("the_function_to_connect is None.")
-            raise exception.IllegalArgumentError("the_function_to_connect is None.")
+    Args:
+        the_function_to_connect: A callable object that will be connected to the triggered signal of the `_rename_sequence_action` attribute.
 
-        # </editor-fold>
-        
-        self._rename_sequence_action.triggered.disconnect()
-        self._rename_sequence_action.triggered.connect(the_function_to_connect)
+    Raises:
+        exception.IllegalArgumentError: If the_function_to_connect is None.
+    """
+    # <editor-fold desc="Checks">
+    if the_function_to_connect is None:
+      logger.error("the_function_to_connect is None.")
+      raise exception.IllegalArgumentError("the_function_to_connect is None.")
 
-    def connect_help_action(self, the_function_to_connect: Callable) -> None:
-        """Connects the `_help_action` triggered signal to a given callable.
-
-        Args:
-            the_function_to_connect: A callable object that will be connected to the triggered signal of the `_help_action` attribute.
-
-        Raises:
-            exception.IllegalArgumentError: If the_function_to_connect is None.
-        """
-        # <editor-fold desc="Checks">
-        if the_function_to_connect is None:
-            logger.error("the_function_to_connect is None.")
-            raise exception.IllegalArgumentError("the_function_to_connect is None.")
-
-        # </editor-fold>
-        
-        self._help_action.triggered.disconnect()
-        self._help_action.triggered.connect(the_function_to_connect)
     # </editor-fold>
-    
-    def _generic_action(self) -> None:
-        raise NotImplementedError("The called action is not connected to a function!")
-    
-    def get_context_menu(self, the_selected_indexes) -> QtWidgets.QMenu:
-        """Gets the context menu for the current situation.
 
-        Args:
-            the_selected_indexes (list): A list of selected indexes.
+    self._rename_sequence_action.triggered.disconnect()
+    self._rename_sequence_action.triggered.connect(the_function_to_connect)
 
-        Returns:
-            QMenu: The context menu.
-        """
-        if len(the_selected_indexes) == 1:
-            level = 0
-            index = the_selected_indexes[0]
-            while index.parent().isValid():
-                index = index.parent()
-                level += 1
-        elif len(the_selected_indexes) > 1:
-            # More than one sequence is selected
-            self._help_action.setVisible(False)
-            self._rename_sequence_action.setVisible(False)
-            return self._context_menu
-        else:
-            # No sequences are selected
-            self._help_action.setVisible(False)
-            self._rename_sequence_action.setVisible(False)
-            return self._context_menu
-        # One sequence is selected
-        self._help_action.setVisible(False)
-        self._rename_sequence_action.setVisible(True)
+  def connect_help_action(self, the_function_to_connect: Callable) -> None:
+    """Connects the `_help_action` triggered signal to a given callable.
 
-        return self._context_menu
+    Args:
+        the_function_to_connect: A callable object that will be connected to the triggered signal of the `_help_action` attribute.
+
+    Raises:
+        exception.IllegalArgumentError: If the_function_to_connect is None.
+    """
+    # <editor-fold desc="Checks">
+    if the_function_to_connect is None:
+      logger.error("the_function_to_connect is None.")
+      raise exception.IllegalArgumentError("the_function_to_connect is None.")
+
+    # </editor-fold>
+
+    self._help_action.triggered.disconnect()
+    self._help_action.triggered.connect(the_function_to_connect)
+
+  # </editor-fold>
+
+  def _generic_action(self) -> None:
+    raise NotImplementedError(
+        "The called action is not connected to a function!"
+    )
+
+  def get_context_menu(self, the_selected_indexes) -> QtWidgets.QMenu:
+    """Gets the context menu for the current situation.
+
+    Args:
+        the_selected_indexes (list): A list of selected indexes.
+
+    Returns:
+        QMenu: The context menu.
+    """
+    if len(the_selected_indexes) == 1:
+      level = 0
+      index = the_selected_indexes[0]
+      while index.parent().isValid():
+        index = index.parent()
+        level += 1
+    elif len(the_selected_indexes) > 1:
+      # More than one sequence is selected
+      self._help_action.setVisible(False)
+      self._rename_sequence_action.setVisible(False)
+      return self._context_menu
+    else:
+      # No sequences are selected
+      self._help_action.setVisible(False)
+      self._rename_sequence_action.setVisible(False)
+      return self._context_menu
+    # One sequence is selected
+    self._help_action.setVisible(False)
+    self._rename_sequence_action.setVisible(True)
+
+    return self._context_menu

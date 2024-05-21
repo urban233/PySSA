@@ -31,13 +31,13 @@ __docformat__ = "google"
 
 
 def is_main_thread() -> bool:
-    """Check if the current thread is the main thread.
-  
-    Returns:
-        The boolean True if the current thread is the main thread, False otherwise.
-    """
-    if threading.current_thread() == threading.main_thread():
-      logger.info("Running in main thread.")
-      return True
-    logger.info("Running in separate thread.")
-    return False
+  """Check if the current thread is the main thread.
+
+  Returns:
+      The boolean True if the current thread is the main thread, False otherwise.
+  """
+  if threading.current_thread() == threading.main_thread():
+    logger.info("Running in main thread.")
+    return True
+  logger.info("Running in separate thread.")
+  return False

@@ -37,67 +37,77 @@ __docformat__ = "google"
 
 
 class DialogAdvancedPredictionConfigurations(QtWidgets.QDialog):
-    """Class that contains the dialog for the advanced configuration of the ColabFold."""
+  """Class that contains the dialog for the advanced configuration of the ColabFold."""
 
-    def __init__(self, prediction_config: "prediction_configuration.PredictionConfiguration", parent=None) -> None:  # noqa: ANN001
-        """Constructor.
+  def __init__(
+      self,
+      prediction_config: "prediction_configuration.PredictionConfiguration",
+      parent=None,
+  ) -> None:  # noqa: ANN001
+    """Constructor.
 
-        Args:
-            prediction_config (prediction_configuration.PredictionConfiguration): The configuration of the ColabFold prediction.
-            parent: The parent.
-        
-        Raises:
-            exception.IllegalArgumentError: If `prediction_config` is None.
-        """
-        # <editor-fold desc="Checks">
-        if prediction_config is None:
-            logger.error("prediction_config is None.")
-            raise exception.IllegalArgumentError("prediction_config is None.")
-        
-        # </editor-fold>
-        
-        QtWidgets.QDialog.__init__(self, parent)
-        # build ui object
-        self.ui = Ui_Dialog()
-        self.ui.setupUi(self)
+    Args:
+        prediction_config (prediction_configuration.PredictionConfiguration): The configuration of the ColabFold prediction.
+        parent: The parent.
 
-        self.prediction_config: "prediction_configuration.PredictionConfiguration" = prediction_config
+    Raises:
+        exception.IllegalArgumentError: If `prediction_config` is None.
+    """
+    # <editor-fold desc="Checks">
+    if prediction_config is None:
+      logger.error("prediction_config is None.")
+      raise exception.IllegalArgumentError("prediction_config is None.")
 
-        self.ui.cb_amber.setChecked(self.prediction_config.amber_force_field)
-        item_list_templates = [
-            "none",
-            "pdb70",
-            # "custom", TODO: implement a way to add a custom MSA
-        ]
-        gui_utils.fill_combo_box(self.ui.combo_box_template, item_list_templates)
-        self.ui.combo_box_template.setCurrentIndex(
-            self.ui.combo_box_template.findText(self.prediction_config.templates),
-        )
+    # </editor-fold>
 
-        self.ui.btn_cancel.clicked.connect(self.close_dialog)
-        self.ui.btn_save.clicked.connect(self.save_config)
-        self.ui.cb_amber.stateChanged.connect(self.change_amber_force_field)
-        self.ui.combo_box_template.currentIndexChanged.connect(self.change_template_mode)
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        self.setWindowTitle("Advanced prediction configuration")
+    QtWidgets.QDialog.__init__(self, parent)
+    # build ui object
+    self.ui = Ui_Dialog()
+    self.ui.setupUi(self)
 
-    # @SLOT
-    def close_dialog(self) -> None:
-        """Closes the dialog."""
-        self.close()
+    self.prediction_config: (
+        "prediction_configuration.PredictionConfiguration"
+    ) = prediction_config
 
-    def save_config(self) -> "prediction_configuration.PredictionConfiguration":
-        """Closes the dialog and return the prediction configuration."""
-        self.close()
-        return self.prediction_config
+    self.ui.cb_amber.setChecked(self.prediction_config.amber_force_field)
+    item_list_templates = [
+        "none",
+        "pdb70",
+        # "custom", TODO: implement a way to add a custom MSA
+    ]
+    gui_utils.fill_combo_box(self.ui.combo_box_template, item_list_templates)
+    self.ui.combo_box_template.setCurrentIndex(
+        self.ui.combo_box_template.findText(self.prediction_config.templates),
+    )
 
-    def change_amber_force_field(self) -> None:
-        """Changes the amber force field of the prediction configuration."""
-        if self.ui.cb_amber.checkState() == 0:
-            self.prediction_config.amber_force_field = False
-        else:
-            self.prediction_config.amber_force_field = True
+    self.ui.btn_cancel.clicked.connect(self.close_dialog)
+    self.ui.btn_save.clicked.connect(self.save_config)
+    self.ui.cb_amber.stateChanged.connect(self.change_amber_force_field)
+    self.ui.combo_box_template.currentIndexChanged.connect(
+        self.change_template_mode
+    )
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )
+    self.setWindowTitle("Advanced prediction configuration")
 
-    def change_template_mode(self) -> None:
-        """Changes the template mode of the prediction."""
-        self.prediction_config.templates = self.ui.combo_box_template.currentText()
+  # @SLOT
+  def close_dialog(self) -> None:
+    """Closes the dialog."""
+    self.close()
+
+  def save_config(self) -> "prediction_configuration.PredictionConfiguration":
+    """Closes the dialog and return the prediction configuration."""
+    self.close()
+    return self.prediction_config
+
+  def change_amber_force_field(self) -> None:
+    """Changes the amber force field of the prediction configuration."""
+    if self.ui.cb_amber.checkState() == 0:
+      self.prediction_config.amber_force_field = False
+    else:
+      self.prediction_config.amber_force_field = True
+
+  def change_template_mode(self) -> None:
+    """Changes the template mode of the prediction."""
+    self.prediction_config.templates = self.ui.combo_box_template.currentText()

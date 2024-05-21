@@ -31,36 +31,38 @@ logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 if TYPE_CHECKING:
-    from pyssa.internal.data_structures import protein_pair
+  from pyssa.internal.data_structures import protein_pair
 
 
-def color_protein_pair_by_rmsd_value(a_protein_pair: "protein_pair.ProteinPair",
-                                     the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> tuple[str, Optional["protein_pair.ProteinPair"]]:
-    """Colors protein pair by RMSD value.
+def color_protein_pair_by_rmsd_value(
+    a_protein_pair: "protein_pair.ProteinPair",
+    the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
+) -> tuple[str, Optional["protein_pair.ProteinPair"]]:
+  """Colors protein pair by RMSD value.
 
-    Args:
-        a_protein_pair (protein_pair.ProteinPair): The protein pair to be colored.
-        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The Pymol session manager object.
+  Args:
+      a_protein_pair (protein_pair.ProteinPair): The protein pair to be colored.
+      the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The Pymol session manager object.
 
-    Returns:
-        A tuple containing the result and the protein pair.
-        If an exception occurs during coloring, an empty string and None will be returned.
-        Otherwise, the string "result" and the protein pair will be returned.
-    """
-    # <editor-fold desc="Checks">
-    if a_protein_pair is None:
-        logger.error("a_protein_pair is None.")
-        return "", None
-    if the_pymol_session_manager is None:
-        logger.error("the_pymol_session_manager is None.")
-        return "", None
-    
-    # </editor-fold>
-    
-    try:
-        the_pymol_session_manager.color_protein_pair_by_rmsd(a_protein_pair)
-    except Exception as e:
-        logger.error(e)
-        return "", None
-    else:
-        return "result", a_protein_pair
+  Returns:
+      A tuple containing the result and the protein pair.
+      If an exception occurs during coloring, an empty string and None will be returned.
+      Otherwise, the string "result" and the protein pair will be returned.
+  """
+  # <editor-fold desc="Checks">
+  if a_protein_pair is None:
+    logger.error("a_protein_pair is None.")
+    return "", None
+  if the_pymol_session_manager is None:
+    logger.error("the_pymol_session_manager is None.")
+    return "", None
+
+  # </editor-fold>
+
+  try:
+    the_pymol_session_manager.color_protein_pair_by_rmsd(a_protein_pair)
+  except Exception as e:
+    logger.error(e)
+    return "", None
+  else:
+    return "result", a_protein_pair

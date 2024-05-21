@@ -33,33 +33,37 @@ global_var_add_model = ("", False)
 
 
 class ImportSequenceView(QtWidgets.QDialog):
-    """Class for a dialog to add sequences to a project."""
+  """Class for a dialog to add sequences to a project."""
 
-    return_value = pyqtSignal(tuple)
-    """A pyqtsignal that is used to hand-over the sequence information."""
+  return_value = pyqtSignal(tuple)
+  """A pyqtsignal that is used to hand-over the sequence information."""
 
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
-        """Constructor.
+  def __init__(self, parent=None) -> None:  # noqa: ANN001
+    """Constructor.
 
-        Args:
-            parent: The parent.
-        """
-        QtWidgets.QDialog.__init__(self, parent)
-        # build ui object
-        self.ui = auto_import_sequence_view.Ui_Dialog()
-        self.ui.setupUi(self)
-        self.ui.btn_import_sequence.setEnabled(False)
-        self.ui.txt_import_sequence.setEnabled(False)
-        styles.color_bottom_frame_button(self.ui.btn_import_sequence)
-        self.ui.lbl_status.setText("")
-        self.ui.btn_choose_fasta_file.setToolTip("Click to add a .fasta file")
-        styles.set_stylesheet(self)
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
-        self.ui.btn_help.setText("")
-        self.ui.btn_cancel.clicked.connect(self.close)
-        self.setWindowTitle("Import Protein Sequence")
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        self.setModal(True)
+    Args:
+        parent: The parent.
+    """
+    QtWidgets.QDialog.__init__(self, parent)
+    # build ui object
+    self.ui = auto_import_sequence_view.Ui_Dialog()
+    self.ui.setupUi(self)
+    self.ui.btn_import_sequence.setEnabled(False)
+    self.ui.txt_import_sequence.setEnabled(False)
+    styles.color_bottom_frame_button(self.ui.btn_import_sequence)
+    self.ui.lbl_status.setText("")
+    self.ui.btn_choose_fasta_file.setToolTip("Click to add a .fasta file")
+    styles.set_stylesheet(self)
+    self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
+    self.ui.btn_help.setIconSize(
+        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
+    )
+    self.ui.btn_help.setText("")
+    self.ui.btn_cancel.clicked.connect(self.close)
+    self.setWindowTitle("Import Protein Sequence")
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )
+    self.setModal(True)

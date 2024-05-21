@@ -23,6 +23,8 @@
 
 import os
 
-global_var_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), "../gui", ".."))
+global_var_root_dir = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), "../gui", "..")
+)
 global_var_tmp_project_info = []
 global_var_workspace_proteins: dict = {}

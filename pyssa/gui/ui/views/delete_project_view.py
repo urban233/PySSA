@@ -30,43 +30,51 @@ from pyssa.util import constants
 
 
 class DeleteProjectView(QtWidgets.QDialog):
-    """Class for the Delete dialog."""
-    
-    dialogClosed = QtCore.pyqtSignal()
-    """A signal indicating that the dialog is closed."""
+  """Class for the Delete dialog."""
 
-    def __init__(self) -> None:
-        """Constructor."""
-        QtWidgets.QDialog.__init__(self)
-        # build ui object
-        self.ui = auto_delete_project_view.Ui_Dialog()
-        self.ui.setupUi(self)
-        self._initialize_ui()
-        self.resize(450, 600)
-        self.ui.btn_cancel.clicked.connect(self._close_dialog)
-        self.setModal(True)
+  dialogClosed = QtCore.pyqtSignal()
+  """A signal indicating that the dialog is closed."""
 
-    def _initialize_ui(self) -> None:
-        """Initialize the UI elements."""
-        self.ui.lbl_delete_status_search.setText("")
-        styles.color_bottom_frame_button(self.ui.btn_delete_delete_project)
-        self.ui.btn_delete_delete_project.setEnabled(False)
-        self.ui.list_delete_projects_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.ui.list_delete_projects_view.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
-        self.ui.btn_help.setText("")
-        styles.set_stylesheet(self)
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Delete Project")
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+  def __init__(self) -> None:
+    """Constructor."""
+    QtWidgets.QDialog.__init__(self)
+    # build ui object
+    self.ui = auto_delete_project_view.Ui_Dialog()
+    self.ui.setupUi(self)
+    self._initialize_ui()
+    self.resize(450, 600)
+    self.ui.btn_cancel.clicked.connect(self._close_dialog)
+    self.setModal(True)
 
-    def closeEvent(self, event) -> None:
-        """Closes the dialog (with the closeEvent) and emits the 'dialogClosed' signal."""
-        event.accept()
-        self.dialogClosed.emit()
+  def _initialize_ui(self) -> None:
+    """Initialize the UI elements."""
+    self.ui.lbl_delete_status_search.setText("")
+    styles.color_bottom_frame_button(self.ui.btn_delete_delete_project)
+    self.ui.btn_delete_delete_project.setEnabled(False)
+    self.ui.list_delete_projects_view.setEditTriggers(
+        QtWidgets.QAbstractItemView.NoEditTriggers
+    )
+    self.ui.list_delete_projects_view.setSelectionMode(
+        QtWidgets.QAbstractItemView.ExtendedSelection
+    )
+    self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
+    self.ui.btn_help.setIconSize(
+        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
+    )
+    self.ui.btn_help.setText("")
+    styles.set_stylesheet(self)
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    self.setWindowTitle("Delete Project")
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )
 
-    def _close_dialog(self) -> None:
-        """Closes the dialog and emits the 'dialogClosed' signal."""
-        self.close()
-        self.dialogClosed.emit()
+  def closeEvent(self, event) -> None:
+    """Closes the dialog (with the closeEvent) and emits the 'dialogClosed' signal."""
+    event.accept()
+    self.dialogClosed.emit()
+
+  def _close_dialog(self) -> None:
+    """Closes the dialog and emits the 'dialogClosed' signal."""
+    self.close()
+    self.dialogClosed.emit()

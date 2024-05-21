@@ -33,30 +33,32 @@ __docformat__ = "google"
 
 
 class SequenceModel(QtGui.QStandardItemModel):
-    """Contains the sequences of the project in form of a QStandardItemModel."""
-    
-    def __init__(self) -> None:
-        """Constructor."""
-        super(SequenceModel, self).__init__()
+  """Contains the sequences of the project in form of a QStandardItemModel."""
 
-    def add_sequence(self, a_sequence: str) -> None:
-        """Adds a sequence to the model.
+  def __init__(self) -> None:
+    """Constructor."""
+    super(SequenceModel, self).__init__()
 
-        Args:
-            a_sequence (str): The amino acid sequence to be added.
-            
-        Raises:
-            exception.IllegalArgumentError: If a_sequence is either None or an empty string.
-        """
-        # <editor-fold desc="Checks">
-        if a_sequence is None or a_sequence == "":
-            logger.error("a_sequence is either None or an empty string.")
-            raise exception.IllegalArgumentError("a_sequence is either None or an empty string.")
-        
-        # </editor-fold>
-        
-        i = self.rowCount()
-        j = 0
-        for tmp_amino_acid in a_sequence:
-            self.setItem(i, j, QtGui.QStandardItem(tmp_amino_acid))
-            logger.debug(self.item(i, j).text())
+  def add_sequence(self, a_sequence: str) -> None:
+    """Adds a sequence to the model.
+
+    Args:
+        a_sequence (str): The amino acid sequence to be added.
+
+    Raises:
+        exception.IllegalArgumentError: If a_sequence is either None or an empty string.
+    """
+    # <editor-fold desc="Checks">
+    if a_sequence is None or a_sequence == "":
+      logger.error("a_sequence is either None or an empty string.")
+      raise exception.IllegalArgumentError(
+          "a_sequence is either None or an empty string."
+      )
+
+    # </editor-fold>
+
+    i = self.rowCount()
+    j = 0
+    for tmp_amino_acid in a_sequence:
+      self.setItem(i, j, QtGui.QStandardItem(tmp_amino_acid))
+      logger.debug(self.item(i, j).text())

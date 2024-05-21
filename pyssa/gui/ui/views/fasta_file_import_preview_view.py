@@ -33,25 +33,31 @@ from pyssa.gui.ui.forms.auto_generated.auto_fasta_file_import_preview_view impor
 
 
 class FastaFileImportPreviewView(QDialog):
-    """A QDialog that allows users to customize the fasta file import."""
+  """A QDialog that allows users to customize the fasta file import."""
 
-    def __init__(self, parent=None) -> None:
-        """Constructor."""
-        QtWidgets.QDialog.__init__(self, parent)
-        # build ui object
-        self.ui = Ui_Dialog()
-        self.ui.setupUi(self)
+  def __init__(self, parent=None) -> None:
+    """Constructor."""
+    QtWidgets.QDialog.__init__(self, parent)
+    # build ui object
+    self.ui = Ui_Dialog()
+    self.ui.setupUi(self)
 
-        self.ui.table.setItemDelegate(sequence_table_delegate.InputCheckDelegate(self.ui.table))
+    self.ui.table.setItemDelegate(
+        sequence_table_delegate.InputCheckDelegate(self.ui.table)
+    )
 
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
-        self.ui.btn_help.setText("")
-        self.ui.btn_cancel.clicked.connect(self.close)
-        self.setWindowTitle("FASTA File Import Preview")
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        styles.set_stylesheet(self)
-        self.resize(900, 600)
-        # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        self.setModal(True)
+    self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
+    self.ui.btn_help.setIconSize(
+        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
+    )
+    self.ui.btn_help.setText("")
+    self.ui.btn_cancel.clicked.connect(self.close)
+    self.setWindowTitle("FASTA File Import Preview")
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    styles.set_stylesheet(self)
+    self.resize(900, 600)
+    # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )
+    self.setModal(True)

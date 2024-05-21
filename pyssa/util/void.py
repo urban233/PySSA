@@ -24,19 +24,21 @@ from pyssa.util import constants, exception
 
 
 def rvoid(a_python_object) -> None:  # noqa: ANN001
-    """Only logs that a return value of a function or method is not used.
-    
-    Args:
-        a_python_object (object): the object to be void.
-        
-    Raises:
-        exception.IllegalArgumentError: If a_python_object is None.
-    """
-    # <editor-fold desc="Checks">
-    if a_python_object is None:
-        constants.PYSSA_LOGGER.error("a_python_object is None.")
-        raise exception.IllegalArgumentError("a_python_object is None.")
-    
-    # </editor-fold>
-    
-    constants.PYSSA_LOGGER.debug("VOID: Return value: %s is not used.", a_python_object)
+  """Only logs that a return value of a function or method is not used.
+
+  Args:
+      a_python_object (object): the object to be void.
+
+  Raises:
+      exception.IllegalArgumentError: If a_python_object is None.
+  """
+  # <editor-fold desc="Checks">
+  if a_python_object is None:
+    constants.PYSSA_LOGGER.error("a_python_object is None.")
+    raise exception.IllegalArgumentError("a_python_object is None.")
+
+  # </editor-fold>
+
+  constants.PYSSA_LOGGER.debug(
+      "VOID: Return value: %s is not used.", a_python_object
+  )

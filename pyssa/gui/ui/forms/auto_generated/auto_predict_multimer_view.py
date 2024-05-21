@@ -12,374 +12,649 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_Dialog(object):
-    def setupUi(self, Dialog):
-        Dialog.setObjectName("Dialog")
-        Dialog.resize(460, 818)
-        self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.tabWidget_2 = QtWidgets.QTabWidget(Dialog)
-        self.tabWidget_2.setObjectName("tabWidget_2")
-        self.tab_3 = QtWidgets.QWidget()
-        self.tab_3.setObjectName("tab_3")
-        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.tab_3)
-        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_4.setObjectName("verticalLayout_4")
-        self.frame = QtWidgets.QFrame(self.tab_3)
-        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame.setObjectName("frame")
-        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.frame)
-        self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.verticalLayout_123 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_123.setObjectName("verticalLayout_123")
-        self.verticalLayout_124 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_124.setObjectName("verticalLayout_124")
-        self.lbl_pred_analysis_multi_prot_to_predict = QtWidgets.QLabel(self.frame)
-        self.lbl_pred_analysis_multi_prot_to_predict.setObjectName("lbl_pred_analysis_multi_prot_to_predict")
-        self.verticalLayout_124.addWidget(self.lbl_pred_analysis_multi_prot_to_predict)
-        self.table_pred_analysis_multi_prot_to_predict = QtWidgets.QTableWidget(self.frame)
-        self.table_pred_analysis_multi_prot_to_predict.setObjectName("table_pred_analysis_multi_prot_to_predict")
-        self.table_pred_analysis_multi_prot_to_predict.setColumnCount(2)
-        self.table_pred_analysis_multi_prot_to_predict.setRowCount(0)
-        item = QtWidgets.QTableWidgetItem()
-        self.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(1, item)
-        self.verticalLayout_124.addWidget(self.table_pred_analysis_multi_prot_to_predict)
-        self.verticalLayout_123.addLayout(self.verticalLayout_124)
-        self.horizontalLayout_108 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_108.setObjectName("horizontalLayout_108")
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_108.addItem(spacerItem)
-        self.btn_pred_analysis_multi_prot_to_predict_remove = QtWidgets.QPushButton(self.frame)
-        self.btn_pred_analysis_multi_prot_to_predict_remove.setObjectName("btn_pred_analysis_multi_prot_to_predict_remove")
-        self.horizontalLayout_108.addWidget(self.btn_pred_analysis_multi_prot_to_predict_remove)
-        self.btn_pred_analysis_multi_prot_to_predict_add = QtWidgets.QPushButton(self.frame)
-        self.btn_pred_analysis_multi_prot_to_predict_add.setObjectName("btn_pred_analysis_multi_prot_to_predict_add")
-        self.horizontalLayout_108.addWidget(self.btn_pred_analysis_multi_prot_to_predict_add)
-        self.verticalLayout_123.addLayout(self.horizontalLayout_108)
-        self.verticalLayout_3.addLayout(self.verticalLayout_123)
-        self.verticalLayout_127 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_127.setObjectName("verticalLayout_127")
-        self.verticalLayout_128 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_128.setObjectName("verticalLayout_128")
-        self.lbl_pred_analysis_multi_prot_name = QtWidgets.QLabel(self.frame)
-        self.lbl_pred_analysis_multi_prot_name.setObjectName("lbl_pred_analysis_multi_prot_name")
-        self.verticalLayout_128.addWidget(self.lbl_pred_analysis_multi_prot_name)
-        self.txt_pred_analysis_multi_prot_name = QtWidgets.QLineEdit(self.frame)
-        self.txt_pred_analysis_multi_prot_name.setObjectName("txt_pred_analysis_multi_prot_name")
-        self.verticalLayout_128.addWidget(self.txt_pred_analysis_multi_prot_name)
-        self.lbl_pred_analysis_multi_prot_name_status = QtWidgets.QLabel(self.frame)
-        self.lbl_pred_analysis_multi_prot_name_status.setObjectName("lbl_pred_analysis_multi_prot_name_status")
-        self.verticalLayout_128.addWidget(self.lbl_pred_analysis_multi_prot_name_status)
-        self.verticalLayout_127.addLayout(self.verticalLayout_128)
-        self.horizontalLayout_111 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_111.setObjectName("horizontalLayout_111")
-        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_111.addItem(spacerItem1)
-        self.btn_pred_analysis_multi_back = QtWidgets.QPushButton(self.frame)
-        self.btn_pred_analysis_multi_back.setObjectName("btn_pred_analysis_multi_back")
-        self.horizontalLayout_111.addWidget(self.btn_pred_analysis_multi_back)
-        self.btn_pred_analysis_multi_next = QtWidgets.QPushButton(self.frame)
-        self.btn_pred_analysis_multi_next.setObjectName("btn_pred_analysis_multi_next")
-        self.horizontalLayout_111.addWidget(self.btn_pred_analysis_multi_next)
-        self.verticalLayout_127.addLayout(self.horizontalLayout_111)
-        self.verticalLayout_3.addLayout(self.verticalLayout_127)
-        self.verticalLayout_125 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_125.setObjectName("verticalLayout_125")
-        self.verticalLayout_126 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_126.setObjectName("verticalLayout_126")
-        self.lbl_pred_analysis_multi_prot_seq = QtWidgets.QLabel(self.frame)
-        self.lbl_pred_analysis_multi_prot_seq.setObjectName("lbl_pred_analysis_multi_prot_seq")
-        self.verticalLayout_126.addWidget(self.lbl_pred_analysis_multi_prot_seq)
-        self.txt_pred_analysis_multi_prot_seq = QtWidgets.QTextEdit(self.frame)
-        self.txt_pred_analysis_multi_prot_seq.setObjectName("txt_pred_analysis_multi_prot_seq")
-        self.verticalLayout_126.addWidget(self.txt_pred_analysis_multi_prot_seq)
-        self.lbl_pred_analysis_multi_prot_seq_status = QtWidgets.QLabel(self.frame)
-        self.lbl_pred_analysis_multi_prot_seq_status.setObjectName("lbl_pred_analysis_multi_prot_seq_status")
-        self.verticalLayout_126.addWidget(self.lbl_pred_analysis_multi_prot_seq_status)
-        self.verticalLayout_125.addLayout(self.verticalLayout_126)
-        self.horizontalLayout_110 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_110.setObjectName("horizontalLayout_110")
-        self.lbl_pred_multi_prot_seq_add_2 = QtWidgets.QLabel(self.frame)
-        self.lbl_pred_multi_prot_seq_add_2.setObjectName("lbl_pred_multi_prot_seq_add_2")
-        self.horizontalLayout_110.addWidget(self.lbl_pred_multi_prot_seq_add_2)
-        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_110.addItem(spacerItem2)
-        self.btn_pred_analysis_multi_prot_seq_add = QtWidgets.QPushButton(self.frame)
-        self.btn_pred_analysis_multi_prot_seq_add.setObjectName("btn_pred_analysis_multi_prot_seq_add")
-        self.horizontalLayout_110.addWidget(self.btn_pred_analysis_multi_prot_seq_add)
-        self.verticalLayout_125.addLayout(self.horizontalLayout_110)
-        self.verticalLayout_3.addLayout(self.verticalLayout_125)
-        self.verticalLayout_121 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_121.setObjectName("verticalLayout_121")
-        self.verticalLayout_122 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_122.setObjectName("verticalLayout_122")
-        self.lbl_pred_analysis_multi_prot_seq_overview = QtWidgets.QLabel(self.frame)
-        self.lbl_pred_analysis_multi_prot_seq_overview.setObjectName("lbl_pred_analysis_multi_prot_seq_overview")
-        self.verticalLayout_122.addWidget(self.lbl_pred_analysis_multi_prot_seq_overview)
-        self.list_pred_analysis_multi_prot_seq_overview = QtWidgets.QListWidget(self.frame)
-        self.list_pred_analysis_multi_prot_seq_overview.setObjectName("list_pred_analysis_multi_prot_seq_overview")
-        self.verticalLayout_122.addWidget(self.list_pred_analysis_multi_prot_seq_overview)
-        self.verticalLayout_121.addLayout(self.verticalLayout_122)
-        self.horizontalLayout_106 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_106.setObjectName("horizontalLayout_106")
-        spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_106.addItem(spacerItem3)
-        self.btn_pred_analysis_multi_prot_seq_overview_remove = QtWidgets.QPushButton(self.frame)
-        self.btn_pred_analysis_multi_prot_seq_overview_remove.setObjectName("btn_pred_analysis_multi_prot_seq_overview_remove")
-        self.horizontalLayout_106.addWidget(self.btn_pred_analysis_multi_prot_seq_overview_remove)
-        self.verticalLayout_121.addLayout(self.horizontalLayout_106)
-        self.verticalLayout_3.addLayout(self.verticalLayout_121)
-        self.horizontalLayout_107 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_107.setObjectName("horizontalLayout_107")
-        self.lbl_pred_analysis_multi_prot_to_predict_2 = QtWidgets.QLabel(self.frame)
-        self.lbl_pred_analysis_multi_prot_to_predict_2.setObjectName("lbl_pred_analysis_multi_prot_to_predict_2")
-        self.horizontalLayout_107.addWidget(self.lbl_pred_analysis_multi_prot_to_predict_2)
-        spacerItem4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_107.addItem(spacerItem4)
-        self.btn_pred_analysis_multi_back_2 = QtWidgets.QPushButton(self.frame)
-        self.btn_pred_analysis_multi_back_2.setObjectName("btn_pred_analysis_multi_back_2")
-        self.horizontalLayout_107.addWidget(self.btn_pred_analysis_multi_back_2)
-        self.btn_pred_analysis_multi_prot_to_predict_add_2 = QtWidgets.QPushButton(self.frame)
-        self.btn_pred_analysis_multi_prot_to_predict_add_2.setObjectName("btn_pred_analysis_multi_prot_to_predict_add_2")
-        self.horizontalLayout_107.addWidget(self.btn_pred_analysis_multi_prot_to_predict_add_2)
-        self.verticalLayout_3.addLayout(self.horizontalLayout_107)
-        self.horizontalLayout_112 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_112.setObjectName("horizontalLayout_112")
-        self.lbl_pred_analysis_multi_advanced_config = QtWidgets.QLabel(self.frame)
-        self.lbl_pred_analysis_multi_advanced_config.setObjectName("lbl_pred_analysis_multi_advanced_config")
-        self.horizontalLayout_112.addWidget(self.lbl_pred_analysis_multi_advanced_config)
-        spacerItem5 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_112.addItem(spacerItem5)
-        self.btn_pred_analysis_multi_advanced_config = QtWidgets.QPushButton(self.frame)
-        self.btn_pred_analysis_multi_advanced_config.setObjectName("btn_pred_analysis_multi_advanced_config")
-        self.horizontalLayout_112.addWidget(self.btn_pred_analysis_multi_advanced_config)
-        self.verticalLayout_3.addLayout(self.horizontalLayout_112)
-        self.checkbox_add_analysis = QtWidgets.QCheckBox(self.frame)
-        self.checkbox_add_analysis.setObjectName("checkbox_add_analysis")
-        self.verticalLayout_3.addWidget(self.checkbox_add_analysis)
-        self.verticalLayout_4.addWidget(self.frame)
-        spacerItem6 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
-        self.verticalLayout_4.addItem(spacerItem6)
-        self.frame_bottom = QtWidgets.QFrame(self.tab_3)
-        self.frame_bottom.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_bottom.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_bottom.setObjectName("frame_bottom")
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.frame_bottom)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.btn_help = QtWidgets.QPushButton(self.frame_bottom)
-        self.btn_help.setObjectName("btn_help")
-        self.horizontalLayout.addWidget(self.btn_help)
-        spacerItem7 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem7)
-        self.lbl_pred_analysis_multi_to_analysis_setup = QtWidgets.QLabel(self.frame_bottom)
-        self.lbl_pred_analysis_multi_to_analysis_setup.setObjectName("lbl_pred_analysis_multi_to_analysis_setup")
-        self.horizontalLayout.addWidget(self.lbl_pred_analysis_multi_to_analysis_setup)
-        self.btn_pred_analysis_multi_go_analysis_setup = QtWidgets.QPushButton(self.frame_bottom)
-        self.btn_pred_analysis_multi_go_analysis_setup.setObjectName("btn_pred_analysis_multi_go_analysis_setup")
-        self.horizontalLayout.addWidget(self.btn_pred_analysis_multi_go_analysis_setup)
-        self.verticalLayout_2.addLayout(self.horizontalLayout)
-        self.verticalLayout_4.addWidget(self.frame_bottom)
-        self.tabWidget_2.addTab(self.tab_3, "")
-        self.tab_4 = QtWidgets.QWidget()
-        self.tab_4.setObjectName("tab_4")
-        self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.tab_4)
-        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_7.setObjectName("verticalLayout_7")
-        self.frame_3 = QtWidgets.QFrame(self.tab_4)
-        self.frame_3.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_3.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_3.setObjectName("frame_3")
-        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.frame_3)
-        self.verticalLayout_6.setObjectName("verticalLayout_6")
-        self.verticalLayout_131 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_131.setObjectName("verticalLayout_131")
-        self.lbl_pred_analysis_multi_overview = QtWidgets.QLabel(self.frame_3)
-        self.lbl_pred_analysis_multi_overview.setObjectName("lbl_pred_analysis_multi_overview")
-        self.verticalLayout_131.addWidget(self.lbl_pred_analysis_multi_overview)
-        self.list_pred_analysis_multi_overview = QtWidgets.QListWidget(self.frame_3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.list_pred_analysis_multi_overview.sizePolicy().hasHeightForWidth())
-        self.list_pred_analysis_multi_overview.setSizePolicy(sizePolicy)
-        self.list_pred_analysis_multi_overview.setMinimumSize(QtCore.QSize(0, 0))
-        self.list_pred_analysis_multi_overview.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.list_pred_analysis_multi_overview.setObjectName("list_pred_analysis_multi_overview")
-        self.verticalLayout_131.addWidget(self.list_pred_analysis_multi_overview)
-        self.horizontalLayout_116 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_116.setObjectName("horizontalLayout_116")
-        spacerItem8 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_116.addItem(spacerItem8)
-        self.btn_pred_analysis_multi_remove = QtWidgets.QPushButton(self.frame_3)
-        self.btn_pred_analysis_multi_remove.setObjectName("btn_pred_analysis_multi_remove")
-        self.horizontalLayout_116.addWidget(self.btn_pred_analysis_multi_remove)
-        self.btn_pred_analysis_multi_add = QtWidgets.QPushButton(self.frame_3)
-        self.btn_pred_analysis_multi_add.setObjectName("btn_pred_analysis_multi_add")
-        self.horizontalLayout_116.addWidget(self.btn_pred_analysis_multi_add)
-        self.verticalLayout_131.addLayout(self.horizontalLayout_116)
-        self.verticalLayout_6.addLayout(self.verticalLayout_131)
-        self.horizontalLayout_118 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_118.setObjectName("horizontalLayout_118")
-        self.verticalLayout_132 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_132.setObjectName("verticalLayout_132")
-        self.lbl_pred_analysis_multi_prot_struct_1 = QtWidgets.QLabel(self.frame_3)
-        self.lbl_pred_analysis_multi_prot_struct_1.setAlignment(QtCore.Qt.AlignCenter)
-        self.lbl_pred_analysis_multi_prot_struct_1.setObjectName("lbl_pred_analysis_multi_prot_struct_1")
-        self.verticalLayout_132.addWidget(self.lbl_pred_analysis_multi_prot_struct_1)
-        self.box_pred_analysis_multi_prot_struct_1 = QtWidgets.QComboBox(self.frame_3)
-        self.box_pred_analysis_multi_prot_struct_1.setObjectName("box_pred_analysis_multi_prot_struct_1")
-        self.verticalLayout_132.addWidget(self.box_pred_analysis_multi_prot_struct_1)
-        self.horizontalLayout_118.addLayout(self.verticalLayout_132)
-        self.lbl_analysis_batch_vs_3 = QtWidgets.QLabel(self.frame_3)
-        self.lbl_analysis_batch_vs_3.setAlignment(QtCore.Qt.AlignCenter)
-        self.lbl_analysis_batch_vs_3.setObjectName("lbl_analysis_batch_vs_3")
-        self.horizontalLayout_118.addWidget(self.lbl_analysis_batch_vs_3)
-        self.verticalLayout_133 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_133.setObjectName("verticalLayout_133")
-        self.lbl_pred_analysis_multi_prot_struct_2 = QtWidgets.QLabel(self.frame_3)
-        self.lbl_pred_analysis_multi_prot_struct_2.setAlignment(QtCore.Qt.AlignCenter)
-        self.lbl_pred_analysis_multi_prot_struct_2.setObjectName("lbl_pred_analysis_multi_prot_struct_2")
-        self.verticalLayout_133.addWidget(self.lbl_pred_analysis_multi_prot_struct_2)
-        self.box_pred_analysis_multi_prot_struct_2 = QtWidgets.QComboBox(self.frame_3)
-        self.box_pred_analysis_multi_prot_struct_2.setObjectName("box_pred_analysis_multi_prot_struct_2")
-        self.verticalLayout_133.addWidget(self.box_pred_analysis_multi_prot_struct_2)
-        self.horizontalLayout_118.addLayout(self.verticalLayout_133)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_118)
-        self.horizontalLayout_113 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_113.setObjectName("horizontalLayout_113")
-        spacerItem9 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_113.addItem(spacerItem9)
-        self.btn_pred_analysis_multi_back_3 = QtWidgets.QPushButton(self.frame_3)
-        self.btn_pred_analysis_multi_back_3.setObjectName("btn_pred_analysis_multi_back_3")
-        self.horizontalLayout_113.addWidget(self.btn_pred_analysis_multi_back_3)
-        self.btn_pred_analysis_multi_next_2 = QtWidgets.QPushButton(self.frame_3)
-        self.btn_pred_analysis_multi_next_2.setObjectName("btn_pred_analysis_multi_next_2")
-        self.horizontalLayout_113.addWidget(self.btn_pred_analysis_multi_next_2)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_113)
-        self.verticalLayout_134 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_134.setObjectName("verticalLayout_134")
-        self.lbl_pred_analysis_multi_ref_chains = QtWidgets.QLabel(self.frame_3)
-        self.lbl_pred_analysis_multi_ref_chains.setObjectName("lbl_pred_analysis_multi_ref_chains")
-        self.verticalLayout_134.addWidget(self.lbl_pred_analysis_multi_ref_chains)
-        self.list_pred_analysis_multi_ref_chains = QtWidgets.QListWidget(self.frame_3)
-        self.list_pred_analysis_multi_ref_chains.setMinimumSize(QtCore.QSize(0, 0))
-        self.list_pred_analysis_multi_ref_chains.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.list_pred_analysis_multi_ref_chains.setObjectName("list_pred_analysis_multi_ref_chains")
-        self.verticalLayout_134.addWidget(self.list_pred_analysis_multi_ref_chains)
-        self.verticalLayout_6.addLayout(self.verticalLayout_134)
-        self.horizontalLayout_114 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_114.setObjectName("horizontalLayout_114")
-        spacerItem10 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_114.addItem(spacerItem10)
-        self.btn_pred_analysis_multi_back_4 = QtWidgets.QPushButton(self.frame_3)
-        self.btn_pred_analysis_multi_back_4.setObjectName("btn_pred_analysis_multi_back_4")
-        self.horizontalLayout_114.addWidget(self.btn_pred_analysis_multi_back_4)
-        self.btn_pred_analysis_multi_next_3 = QtWidgets.QPushButton(self.frame_3)
-        self.btn_pred_analysis_multi_next_3.setObjectName("btn_pred_analysis_multi_next_3")
-        self.horizontalLayout_114.addWidget(self.btn_pred_analysis_multi_next_3)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_114)
-        self.verticalLayout_130 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_130.setObjectName("verticalLayout_130")
-        self.lbl_pred_analysis_multi_model_chains = QtWidgets.QLabel(self.frame_3)
-        self.lbl_pred_analysis_multi_model_chains.setObjectName("lbl_pred_analysis_multi_model_chains")
-        self.verticalLayout_130.addWidget(self.lbl_pred_analysis_multi_model_chains)
-        self.list_pred_analysis_multi_model_chains = QtWidgets.QListWidget(self.frame_3)
-        self.list_pred_analysis_multi_model_chains.setMinimumSize(QtCore.QSize(0, 0))
-        self.list_pred_analysis_multi_model_chains.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.list_pred_analysis_multi_model_chains.setObjectName("list_pred_analysis_multi_model_chains")
-        self.verticalLayout_130.addWidget(self.list_pred_analysis_multi_model_chains)
-        self.verticalLayout_6.addLayout(self.verticalLayout_130)
-        self.horizontalLayout_115 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_115.setObjectName("horizontalLayout_115")
-        spacerItem11 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_115.addItem(spacerItem11)
-        self.btn_pred_analysis_multi_back_5 = QtWidgets.QPushButton(self.frame_3)
-        self.btn_pred_analysis_multi_back_5.setObjectName("btn_pred_analysis_multi_back_5")
-        self.horizontalLayout_115.addWidget(self.btn_pred_analysis_multi_back_5)
-        self.btn_pred_analysis_multi_next_4 = QtWidgets.QPushButton(self.frame_3)
-        self.btn_pred_analysis_multi_next_4.setObjectName("btn_pred_analysis_multi_next_4")
-        self.horizontalLayout_115.addWidget(self.btn_pred_analysis_multi_next_4)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_115)
-        self.verticalLayout_7.addWidget(self.frame_3)
-        spacerItem12 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
-        self.verticalLayout_7.addItem(spacerItem12)
-        self.frame_bottom_2 = QtWidgets.QFrame(self.tab_4)
-        self.frame_bottom_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_bottom_2.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_bottom_2.setObjectName("frame_bottom_2")
-        self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.frame_bottom_2)
-        self.verticalLayout_5.setObjectName("verticalLayout_5")
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.btn_help_2 = QtWidgets.QPushButton(self.frame_bottom_2)
-        self.btn_help_2.setObjectName("btn_help_2")
-        self.horizontalLayout_2.addWidget(self.btn_help_2)
-        spacerItem13 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_2.addItem(spacerItem13)
-        self.btn_pred_analysis_multi_back_pred_setup = QtWidgets.QPushButton(self.frame_bottom_2)
-        self.btn_pred_analysis_multi_back_pred_setup.setObjectName("btn_pred_analysis_multi_back_pred_setup")
-        self.horizontalLayout_2.addWidget(self.btn_pred_analysis_multi_back_pred_setup)
-        self.btn_pred_analysis_multi_start = QtWidgets.QPushButton(self.frame_bottom_2)
-        self.btn_pred_analysis_multi_start.setObjectName("btn_pred_analysis_multi_start")
-        self.horizontalLayout_2.addWidget(self.btn_pred_analysis_multi_start)
-        self.verticalLayout_5.addLayout(self.horizontalLayout_2)
-        self.verticalLayout_7.addWidget(self.frame_bottom_2)
-        self.tabWidget_2.addTab(self.tab_4, "")
-        self.verticalLayout.addWidget(self.tabWidget_2)
 
-        self.retranslateUi(Dialog)
-        self.tabWidget_2.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(Dialog)
+  def setupUi(self, Dialog):
+    Dialog.setObjectName("Dialog")
+    Dialog.resize(460, 818)
+    self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
+    self.verticalLayout.setObjectName("verticalLayout")
+    self.tabWidget_2 = QtWidgets.QTabWidget(Dialog)
+    self.tabWidget_2.setObjectName("tabWidget_2")
+    self.tab_3 = QtWidgets.QWidget()
+    self.tab_3.setObjectName("tab_3")
+    self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.tab_3)
+    self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
+    self.verticalLayout_4.setObjectName("verticalLayout_4")
+    self.frame = QtWidgets.QFrame(self.tab_3)
+    self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+    self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+    self.frame.setObjectName("frame")
+    self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.frame)
+    self.verticalLayout_3.setObjectName("verticalLayout_3")
+    self.verticalLayout_123 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_123.setObjectName("verticalLayout_123")
+    self.verticalLayout_124 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_124.setObjectName("verticalLayout_124")
+    self.lbl_pred_analysis_multi_prot_to_predict = QtWidgets.QLabel(self.frame)
+    self.lbl_pred_analysis_multi_prot_to_predict.setObjectName(
+        "lbl_pred_analysis_multi_prot_to_predict"
+    )
+    self.verticalLayout_124.addWidget(
+        self.lbl_pred_analysis_multi_prot_to_predict
+    )
+    self.table_pred_analysis_multi_prot_to_predict = QtWidgets.QTableWidget(
+        self.frame
+    )
+    self.table_pred_analysis_multi_prot_to_predict.setObjectName(
+        "table_pred_analysis_multi_prot_to_predict"
+    )
+    self.table_pred_analysis_multi_prot_to_predict.setColumnCount(2)
+    self.table_pred_analysis_multi_prot_to_predict.setRowCount(0)
+    item = QtWidgets.QTableWidgetItem()
+    self.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(
+        0, item
+    )
+    item = QtWidgets.QTableWidgetItem()
+    self.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(
+        1, item
+    )
+    self.verticalLayout_124.addWidget(
+        self.table_pred_analysis_multi_prot_to_predict
+    )
+    self.verticalLayout_123.addLayout(self.verticalLayout_124)
+    self.horizontalLayout_108 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_108.setObjectName("horizontalLayout_108")
+    spacerItem = QtWidgets.QSpacerItem(
+        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+    )
+    self.horizontalLayout_108.addItem(spacerItem)
+    self.btn_pred_analysis_multi_prot_to_predict_remove = QtWidgets.QPushButton(
+        self.frame
+    )
+    self.btn_pred_analysis_multi_prot_to_predict_remove.setObjectName(
+        "btn_pred_analysis_multi_prot_to_predict_remove"
+    )
+    self.horizontalLayout_108.addWidget(
+        self.btn_pred_analysis_multi_prot_to_predict_remove
+    )
+    self.btn_pred_analysis_multi_prot_to_predict_add = QtWidgets.QPushButton(
+        self.frame
+    )
+    self.btn_pred_analysis_multi_prot_to_predict_add.setObjectName(
+        "btn_pred_analysis_multi_prot_to_predict_add"
+    )
+    self.horizontalLayout_108.addWidget(
+        self.btn_pred_analysis_multi_prot_to_predict_add
+    )
+    self.verticalLayout_123.addLayout(self.horizontalLayout_108)
+    self.verticalLayout_3.addLayout(self.verticalLayout_123)
+    self.verticalLayout_127 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_127.setObjectName("verticalLayout_127")
+    self.verticalLayout_128 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_128.setObjectName("verticalLayout_128")
+    self.lbl_pred_analysis_multi_prot_name = QtWidgets.QLabel(self.frame)
+    self.lbl_pred_analysis_multi_prot_name.setObjectName(
+        "lbl_pred_analysis_multi_prot_name"
+    )
+    self.verticalLayout_128.addWidget(self.lbl_pred_analysis_multi_prot_name)
+    self.txt_pred_analysis_multi_prot_name = QtWidgets.QLineEdit(self.frame)
+    self.txt_pred_analysis_multi_prot_name.setObjectName(
+        "txt_pred_analysis_multi_prot_name"
+    )
+    self.verticalLayout_128.addWidget(self.txt_pred_analysis_multi_prot_name)
+    self.lbl_pred_analysis_multi_prot_name_status = QtWidgets.QLabel(self.frame)
+    self.lbl_pred_analysis_multi_prot_name_status.setObjectName(
+        "lbl_pred_analysis_multi_prot_name_status"
+    )
+    self.verticalLayout_128.addWidget(
+        self.lbl_pred_analysis_multi_prot_name_status
+    )
+    self.verticalLayout_127.addLayout(self.verticalLayout_128)
+    self.horizontalLayout_111 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_111.setObjectName("horizontalLayout_111")
+    spacerItem1 = QtWidgets.QSpacerItem(
+        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+    )
+    self.horizontalLayout_111.addItem(spacerItem1)
+    self.btn_pred_analysis_multi_back = QtWidgets.QPushButton(self.frame)
+    self.btn_pred_analysis_multi_back.setObjectName(
+        "btn_pred_analysis_multi_back"
+    )
+    self.horizontalLayout_111.addWidget(self.btn_pred_analysis_multi_back)
+    self.btn_pred_analysis_multi_next = QtWidgets.QPushButton(self.frame)
+    self.btn_pred_analysis_multi_next.setObjectName(
+        "btn_pred_analysis_multi_next"
+    )
+    self.horizontalLayout_111.addWidget(self.btn_pred_analysis_multi_next)
+    self.verticalLayout_127.addLayout(self.horizontalLayout_111)
+    self.verticalLayout_3.addLayout(self.verticalLayout_127)
+    self.verticalLayout_125 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_125.setObjectName("verticalLayout_125")
+    self.verticalLayout_126 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_126.setObjectName("verticalLayout_126")
+    self.lbl_pred_analysis_multi_prot_seq = QtWidgets.QLabel(self.frame)
+    self.lbl_pred_analysis_multi_prot_seq.setObjectName(
+        "lbl_pred_analysis_multi_prot_seq"
+    )
+    self.verticalLayout_126.addWidget(self.lbl_pred_analysis_multi_prot_seq)
+    self.txt_pred_analysis_multi_prot_seq = QtWidgets.QTextEdit(self.frame)
+    self.txt_pred_analysis_multi_prot_seq.setObjectName(
+        "txt_pred_analysis_multi_prot_seq"
+    )
+    self.verticalLayout_126.addWidget(self.txt_pred_analysis_multi_prot_seq)
+    self.lbl_pred_analysis_multi_prot_seq_status = QtWidgets.QLabel(self.frame)
+    self.lbl_pred_analysis_multi_prot_seq_status.setObjectName(
+        "lbl_pred_analysis_multi_prot_seq_status"
+    )
+    self.verticalLayout_126.addWidget(
+        self.lbl_pred_analysis_multi_prot_seq_status
+    )
+    self.verticalLayout_125.addLayout(self.verticalLayout_126)
+    self.horizontalLayout_110 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_110.setObjectName("horizontalLayout_110")
+    self.lbl_pred_multi_prot_seq_add_2 = QtWidgets.QLabel(self.frame)
+    self.lbl_pred_multi_prot_seq_add_2.setObjectName(
+        "lbl_pred_multi_prot_seq_add_2"
+    )
+    self.horizontalLayout_110.addWidget(self.lbl_pred_multi_prot_seq_add_2)
+    spacerItem2 = QtWidgets.QSpacerItem(
+        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+    )
+    self.horizontalLayout_110.addItem(spacerItem2)
+    self.btn_pred_analysis_multi_prot_seq_add = QtWidgets.QPushButton(
+        self.frame
+    )
+    self.btn_pred_analysis_multi_prot_seq_add.setObjectName(
+        "btn_pred_analysis_multi_prot_seq_add"
+    )
+    self.horizontalLayout_110.addWidget(
+        self.btn_pred_analysis_multi_prot_seq_add
+    )
+    self.verticalLayout_125.addLayout(self.horizontalLayout_110)
+    self.verticalLayout_3.addLayout(self.verticalLayout_125)
+    self.verticalLayout_121 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_121.setObjectName("verticalLayout_121")
+    self.verticalLayout_122 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_122.setObjectName("verticalLayout_122")
+    self.lbl_pred_analysis_multi_prot_seq_overview = QtWidgets.QLabel(
+        self.frame
+    )
+    self.lbl_pred_analysis_multi_prot_seq_overview.setObjectName(
+        "lbl_pred_analysis_multi_prot_seq_overview"
+    )
+    self.verticalLayout_122.addWidget(
+        self.lbl_pred_analysis_multi_prot_seq_overview
+    )
+    self.list_pred_analysis_multi_prot_seq_overview = QtWidgets.QListWidget(
+        self.frame
+    )
+    self.list_pred_analysis_multi_prot_seq_overview.setObjectName(
+        "list_pred_analysis_multi_prot_seq_overview"
+    )
+    self.verticalLayout_122.addWidget(
+        self.list_pred_analysis_multi_prot_seq_overview
+    )
+    self.verticalLayout_121.addLayout(self.verticalLayout_122)
+    self.horizontalLayout_106 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_106.setObjectName("horizontalLayout_106")
+    spacerItem3 = QtWidgets.QSpacerItem(
+        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+    )
+    self.horizontalLayout_106.addItem(spacerItem3)
+    self.btn_pred_analysis_multi_prot_seq_overview_remove = (
+        QtWidgets.QPushButton(self.frame)
+    )
+    self.btn_pred_analysis_multi_prot_seq_overview_remove.setObjectName(
+        "btn_pred_analysis_multi_prot_seq_overview_remove"
+    )
+    self.horizontalLayout_106.addWidget(
+        self.btn_pred_analysis_multi_prot_seq_overview_remove
+    )
+    self.verticalLayout_121.addLayout(self.horizontalLayout_106)
+    self.verticalLayout_3.addLayout(self.verticalLayout_121)
+    self.horizontalLayout_107 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_107.setObjectName("horizontalLayout_107")
+    self.lbl_pred_analysis_multi_prot_to_predict_2 = QtWidgets.QLabel(
+        self.frame
+    )
+    self.lbl_pred_analysis_multi_prot_to_predict_2.setObjectName(
+        "lbl_pred_analysis_multi_prot_to_predict_2"
+    )
+    self.horizontalLayout_107.addWidget(
+        self.lbl_pred_analysis_multi_prot_to_predict_2
+    )
+    spacerItem4 = QtWidgets.QSpacerItem(
+        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+    )
+    self.horizontalLayout_107.addItem(spacerItem4)
+    self.btn_pred_analysis_multi_back_2 = QtWidgets.QPushButton(self.frame)
+    self.btn_pred_analysis_multi_back_2.setObjectName(
+        "btn_pred_analysis_multi_back_2"
+    )
+    self.horizontalLayout_107.addWidget(self.btn_pred_analysis_multi_back_2)
+    self.btn_pred_analysis_multi_prot_to_predict_add_2 = QtWidgets.QPushButton(
+        self.frame
+    )
+    self.btn_pred_analysis_multi_prot_to_predict_add_2.setObjectName(
+        "btn_pred_analysis_multi_prot_to_predict_add_2"
+    )
+    self.horizontalLayout_107.addWidget(
+        self.btn_pred_analysis_multi_prot_to_predict_add_2
+    )
+    self.verticalLayout_3.addLayout(self.horizontalLayout_107)
+    self.horizontalLayout_112 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_112.setObjectName("horizontalLayout_112")
+    self.lbl_pred_analysis_multi_advanced_config = QtWidgets.QLabel(self.frame)
+    self.lbl_pred_analysis_multi_advanced_config.setObjectName(
+        "lbl_pred_analysis_multi_advanced_config"
+    )
+    self.horizontalLayout_112.addWidget(
+        self.lbl_pred_analysis_multi_advanced_config
+    )
+    spacerItem5 = QtWidgets.QSpacerItem(
+        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+    )
+    self.horizontalLayout_112.addItem(spacerItem5)
+    self.btn_pred_analysis_multi_advanced_config = QtWidgets.QPushButton(
+        self.frame
+    )
+    self.btn_pred_analysis_multi_advanced_config.setObjectName(
+        "btn_pred_analysis_multi_advanced_config"
+    )
+    self.horizontalLayout_112.addWidget(
+        self.btn_pred_analysis_multi_advanced_config
+    )
+    self.verticalLayout_3.addLayout(self.horizontalLayout_112)
+    self.checkbox_add_analysis = QtWidgets.QCheckBox(self.frame)
+    self.checkbox_add_analysis.setObjectName("checkbox_add_analysis")
+    self.verticalLayout_3.addWidget(self.checkbox_add_analysis)
+    self.verticalLayout_4.addWidget(self.frame)
+    spacerItem6 = QtWidgets.QSpacerItem(
+        20,
+        40,
+        QtWidgets.QSizePolicy.Minimum,
+        QtWidgets.QSizePolicy.MinimumExpanding,
+    )
+    self.verticalLayout_4.addItem(spacerItem6)
+    self.frame_bottom = QtWidgets.QFrame(self.tab_3)
+    self.frame_bottom.setFrameShape(QtWidgets.QFrame.StyledPanel)
+    self.frame_bottom.setFrameShadow(QtWidgets.QFrame.Raised)
+    self.frame_bottom.setObjectName("frame_bottom")
+    self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.frame_bottom)
+    self.verticalLayout_2.setObjectName("verticalLayout_2")
+    self.horizontalLayout = QtWidgets.QHBoxLayout()
+    self.horizontalLayout.setObjectName("horizontalLayout")
+    self.btn_help = QtWidgets.QPushButton(self.frame_bottom)
+    self.btn_help.setObjectName("btn_help")
+    self.horizontalLayout.addWidget(self.btn_help)
+    spacerItem7 = QtWidgets.QSpacerItem(
+        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+    )
+    self.horizontalLayout.addItem(spacerItem7)
+    self.lbl_pred_analysis_multi_to_analysis_setup = QtWidgets.QLabel(
+        self.frame_bottom
+    )
+    self.lbl_pred_analysis_multi_to_analysis_setup.setObjectName(
+        "lbl_pred_analysis_multi_to_analysis_setup"
+    )
+    self.horizontalLayout.addWidget(
+        self.lbl_pred_analysis_multi_to_analysis_setup
+    )
+    self.btn_pred_analysis_multi_go_analysis_setup = QtWidgets.QPushButton(
+        self.frame_bottom
+    )
+    self.btn_pred_analysis_multi_go_analysis_setup.setObjectName(
+        "btn_pred_analysis_multi_go_analysis_setup"
+    )
+    self.horizontalLayout.addWidget(
+        self.btn_pred_analysis_multi_go_analysis_setup
+    )
+    self.verticalLayout_2.addLayout(self.horizontalLayout)
+    self.verticalLayout_4.addWidget(self.frame_bottom)
+    self.tabWidget_2.addTab(self.tab_3, "")
+    self.tab_4 = QtWidgets.QWidget()
+    self.tab_4.setObjectName("tab_4")
+    self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.tab_4)
+    self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
+    self.verticalLayout_7.setObjectName("verticalLayout_7")
+    self.frame_3 = QtWidgets.QFrame(self.tab_4)
+    self.frame_3.setFrameShape(QtWidgets.QFrame.StyledPanel)
+    self.frame_3.setFrameShadow(QtWidgets.QFrame.Raised)
+    self.frame_3.setObjectName("frame_3")
+    self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.frame_3)
+    self.verticalLayout_6.setObjectName("verticalLayout_6")
+    self.verticalLayout_131 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_131.setObjectName("verticalLayout_131")
+    self.lbl_pred_analysis_multi_overview = QtWidgets.QLabel(self.frame_3)
+    self.lbl_pred_analysis_multi_overview.setObjectName(
+        "lbl_pred_analysis_multi_overview"
+    )
+    self.verticalLayout_131.addWidget(self.lbl_pred_analysis_multi_overview)
+    self.list_pred_analysis_multi_overview = QtWidgets.QListWidget(self.frame_3)
+    sizePolicy = QtWidgets.QSizePolicy(
+        QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+    )
+    sizePolicy.setHorizontalStretch(0)
+    sizePolicy.setVerticalStretch(0)
+    sizePolicy.setHeightForWidth(
+        self.list_pred_analysis_multi_overview.sizePolicy().hasHeightForWidth()
+    )
+    self.list_pred_analysis_multi_overview.setSizePolicy(sizePolicy)
+    self.list_pred_analysis_multi_overview.setMinimumSize(QtCore.QSize(0, 0))
+    self.list_pred_analysis_multi_overview.setMaximumSize(
+        QtCore.QSize(16777215, 16777215)
+    )
+    self.list_pred_analysis_multi_overview.setObjectName(
+        "list_pred_analysis_multi_overview"
+    )
+    self.verticalLayout_131.addWidget(self.list_pred_analysis_multi_overview)
+    self.horizontalLayout_116 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_116.setObjectName("horizontalLayout_116")
+    spacerItem8 = QtWidgets.QSpacerItem(
+        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+    )
+    self.horizontalLayout_116.addItem(spacerItem8)
+    self.btn_pred_analysis_multi_remove = QtWidgets.QPushButton(self.frame_3)
+    self.btn_pred_analysis_multi_remove.setObjectName(
+        "btn_pred_analysis_multi_remove"
+    )
+    self.horizontalLayout_116.addWidget(self.btn_pred_analysis_multi_remove)
+    self.btn_pred_analysis_multi_add = QtWidgets.QPushButton(self.frame_3)
+    self.btn_pred_analysis_multi_add.setObjectName(
+        "btn_pred_analysis_multi_add"
+    )
+    self.horizontalLayout_116.addWidget(self.btn_pred_analysis_multi_add)
+    self.verticalLayout_131.addLayout(self.horizontalLayout_116)
+    self.verticalLayout_6.addLayout(self.verticalLayout_131)
+    self.horizontalLayout_118 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_118.setObjectName("horizontalLayout_118")
+    self.verticalLayout_132 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_132.setObjectName("verticalLayout_132")
+    self.lbl_pred_analysis_multi_prot_struct_1 = QtWidgets.QLabel(self.frame_3)
+    self.lbl_pred_analysis_multi_prot_struct_1.setAlignment(
+        QtCore.Qt.AlignCenter
+    )
+    self.lbl_pred_analysis_multi_prot_struct_1.setObjectName(
+        "lbl_pred_analysis_multi_prot_struct_1"
+    )
+    self.verticalLayout_132.addWidget(
+        self.lbl_pred_analysis_multi_prot_struct_1
+    )
+    self.box_pred_analysis_multi_prot_struct_1 = QtWidgets.QComboBox(
+        self.frame_3
+    )
+    self.box_pred_analysis_multi_prot_struct_1.setObjectName(
+        "box_pred_analysis_multi_prot_struct_1"
+    )
+    self.verticalLayout_132.addWidget(
+        self.box_pred_analysis_multi_prot_struct_1
+    )
+    self.horizontalLayout_118.addLayout(self.verticalLayout_132)
+    self.lbl_analysis_batch_vs_3 = QtWidgets.QLabel(self.frame_3)
+    self.lbl_analysis_batch_vs_3.setAlignment(QtCore.Qt.AlignCenter)
+    self.lbl_analysis_batch_vs_3.setObjectName("lbl_analysis_batch_vs_3")
+    self.horizontalLayout_118.addWidget(self.lbl_analysis_batch_vs_3)
+    self.verticalLayout_133 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_133.setObjectName("verticalLayout_133")
+    self.lbl_pred_analysis_multi_prot_struct_2 = QtWidgets.QLabel(self.frame_3)
+    self.lbl_pred_analysis_multi_prot_struct_2.setAlignment(
+        QtCore.Qt.AlignCenter
+    )
+    self.lbl_pred_analysis_multi_prot_struct_2.setObjectName(
+        "lbl_pred_analysis_multi_prot_struct_2"
+    )
+    self.verticalLayout_133.addWidget(
+        self.lbl_pred_analysis_multi_prot_struct_2
+    )
+    self.box_pred_analysis_multi_prot_struct_2 = QtWidgets.QComboBox(
+        self.frame_3
+    )
+    self.box_pred_analysis_multi_prot_struct_2.setObjectName(
+        "box_pred_analysis_multi_prot_struct_2"
+    )
+    self.verticalLayout_133.addWidget(
+        self.box_pred_analysis_multi_prot_struct_2
+    )
+    self.horizontalLayout_118.addLayout(self.verticalLayout_133)
+    self.verticalLayout_6.addLayout(self.horizontalLayout_118)
+    self.horizontalLayout_113 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_113.setObjectName("horizontalLayout_113")
+    spacerItem9 = QtWidgets.QSpacerItem(
+        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+    )
+    self.horizontalLayout_113.addItem(spacerItem9)
+    self.btn_pred_analysis_multi_back_3 = QtWidgets.QPushButton(self.frame_3)
+    self.btn_pred_analysis_multi_back_3.setObjectName(
+        "btn_pred_analysis_multi_back_3"
+    )
+    self.horizontalLayout_113.addWidget(self.btn_pred_analysis_multi_back_3)
+    self.btn_pred_analysis_multi_next_2 = QtWidgets.QPushButton(self.frame_3)
+    self.btn_pred_analysis_multi_next_2.setObjectName(
+        "btn_pred_analysis_multi_next_2"
+    )
+    self.horizontalLayout_113.addWidget(self.btn_pred_analysis_multi_next_2)
+    self.verticalLayout_6.addLayout(self.horizontalLayout_113)
+    self.verticalLayout_134 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_134.setObjectName("verticalLayout_134")
+    self.lbl_pred_analysis_multi_ref_chains = QtWidgets.QLabel(self.frame_3)
+    self.lbl_pred_analysis_multi_ref_chains.setObjectName(
+        "lbl_pred_analysis_multi_ref_chains"
+    )
+    self.verticalLayout_134.addWidget(self.lbl_pred_analysis_multi_ref_chains)
+    self.list_pred_analysis_multi_ref_chains = QtWidgets.QListWidget(
+        self.frame_3
+    )
+    self.list_pred_analysis_multi_ref_chains.setMinimumSize(QtCore.QSize(0, 0))
+    self.list_pred_analysis_multi_ref_chains.setMaximumSize(
+        QtCore.QSize(16777215, 16777215)
+    )
+    self.list_pred_analysis_multi_ref_chains.setObjectName(
+        "list_pred_analysis_multi_ref_chains"
+    )
+    self.verticalLayout_134.addWidget(self.list_pred_analysis_multi_ref_chains)
+    self.verticalLayout_6.addLayout(self.verticalLayout_134)
+    self.horizontalLayout_114 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_114.setObjectName("horizontalLayout_114")
+    spacerItem10 = QtWidgets.QSpacerItem(
+        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+    )
+    self.horizontalLayout_114.addItem(spacerItem10)
+    self.btn_pred_analysis_multi_back_4 = QtWidgets.QPushButton(self.frame_3)
+    self.btn_pred_analysis_multi_back_4.setObjectName(
+        "btn_pred_analysis_multi_back_4"
+    )
+    self.horizontalLayout_114.addWidget(self.btn_pred_analysis_multi_back_4)
+    self.btn_pred_analysis_multi_next_3 = QtWidgets.QPushButton(self.frame_3)
+    self.btn_pred_analysis_multi_next_3.setObjectName(
+        "btn_pred_analysis_multi_next_3"
+    )
+    self.horizontalLayout_114.addWidget(self.btn_pred_analysis_multi_next_3)
+    self.verticalLayout_6.addLayout(self.horizontalLayout_114)
+    self.verticalLayout_130 = QtWidgets.QVBoxLayout()
+    self.verticalLayout_130.setObjectName("verticalLayout_130")
+    self.lbl_pred_analysis_multi_model_chains = QtWidgets.QLabel(self.frame_3)
+    self.lbl_pred_analysis_multi_model_chains.setObjectName(
+        "lbl_pred_analysis_multi_model_chains"
+    )
+    self.verticalLayout_130.addWidget(self.lbl_pred_analysis_multi_model_chains)
+    self.list_pred_analysis_multi_model_chains = QtWidgets.QListWidget(
+        self.frame_3
+    )
+    self.list_pred_analysis_multi_model_chains.setMinimumSize(
+        QtCore.QSize(0, 0)
+    )
+    self.list_pred_analysis_multi_model_chains.setMaximumSize(
+        QtCore.QSize(16777215, 16777215)
+    )
+    self.list_pred_analysis_multi_model_chains.setObjectName(
+        "list_pred_analysis_multi_model_chains"
+    )
+    self.verticalLayout_130.addWidget(
+        self.list_pred_analysis_multi_model_chains
+    )
+    self.verticalLayout_6.addLayout(self.verticalLayout_130)
+    self.horizontalLayout_115 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_115.setObjectName("horizontalLayout_115")
+    spacerItem11 = QtWidgets.QSpacerItem(
+        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+    )
+    self.horizontalLayout_115.addItem(spacerItem11)
+    self.btn_pred_analysis_multi_back_5 = QtWidgets.QPushButton(self.frame_3)
+    self.btn_pred_analysis_multi_back_5.setObjectName(
+        "btn_pred_analysis_multi_back_5"
+    )
+    self.horizontalLayout_115.addWidget(self.btn_pred_analysis_multi_back_5)
+    self.btn_pred_analysis_multi_next_4 = QtWidgets.QPushButton(self.frame_3)
+    self.btn_pred_analysis_multi_next_4.setObjectName(
+        "btn_pred_analysis_multi_next_4"
+    )
+    self.horizontalLayout_115.addWidget(self.btn_pred_analysis_multi_next_4)
+    self.verticalLayout_6.addLayout(self.horizontalLayout_115)
+    self.verticalLayout_7.addWidget(self.frame_3)
+    spacerItem12 = QtWidgets.QSpacerItem(
+        20,
+        40,
+        QtWidgets.QSizePolicy.Minimum,
+        QtWidgets.QSizePolicy.MinimumExpanding,
+    )
+    self.verticalLayout_7.addItem(spacerItem12)
+    self.frame_bottom_2 = QtWidgets.QFrame(self.tab_4)
+    self.frame_bottom_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
+    self.frame_bottom_2.setFrameShadow(QtWidgets.QFrame.Raised)
+    self.frame_bottom_2.setObjectName("frame_bottom_2")
+    self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.frame_bottom_2)
+    self.verticalLayout_5.setObjectName("verticalLayout_5")
+    self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+    self.btn_help_2 = QtWidgets.QPushButton(self.frame_bottom_2)
+    self.btn_help_2.setObjectName("btn_help_2")
+    self.horizontalLayout_2.addWidget(self.btn_help_2)
+    spacerItem13 = QtWidgets.QSpacerItem(
+        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+    )
+    self.horizontalLayout_2.addItem(spacerItem13)
+    self.btn_pred_analysis_multi_back_pred_setup = QtWidgets.QPushButton(
+        self.frame_bottom_2
+    )
+    self.btn_pred_analysis_multi_back_pred_setup.setObjectName(
+        "btn_pred_analysis_multi_back_pred_setup"
+    )
+    self.horizontalLayout_2.addWidget(
+        self.btn_pred_analysis_multi_back_pred_setup
+    )
+    self.btn_pred_analysis_multi_start = QtWidgets.QPushButton(
+        self.frame_bottom_2
+    )
+    self.btn_pred_analysis_multi_start.setObjectName(
+        "btn_pred_analysis_multi_start"
+    )
+    self.horizontalLayout_2.addWidget(self.btn_pred_analysis_multi_start)
+    self.verticalLayout_5.addLayout(self.horizontalLayout_2)
+    self.verticalLayout_7.addWidget(self.frame_bottom_2)
+    self.tabWidget_2.addTab(self.tab_4, "")
+    self.verticalLayout.addWidget(self.tabWidget_2)
 
-    def retranslateUi(self, Dialog):
-        _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.lbl_pred_analysis_multi_prot_to_predict.setText(_translate("Dialog", "Proteins to predict"))
-        item = self.table_pred_analysis_multi_prot_to_predict.horizontalHeaderItem(0)
-        item.setText(_translate("Dialog", "Chain"))
-        item = self.table_pred_analysis_multi_prot_to_predict.horizontalHeaderItem(1)
-        item.setText(_translate("Dialog", "Sequence"))
-        self.btn_pred_analysis_multi_prot_to_predict_remove.setText(_translate("Dialog", "Remove"))
-        self.btn_pred_analysis_multi_prot_to_predict_add.setText(_translate("Dialog", "Add"))
-        self.lbl_pred_analysis_multi_prot_name.setText(_translate("Dialog", "Enter new protein name"))
-        self.lbl_pred_analysis_multi_prot_name_status.setText(_translate("Dialog", "TextLabel"))
-        self.btn_pred_analysis_multi_back.setText(_translate("Dialog", "Back"))
-        self.btn_pred_analysis_multi_next.setText(_translate("Dialog", "Next"))
-        self.lbl_pred_analysis_multi_prot_seq.setText(_translate("Dialog", "Enter new protein sequence"))
-        self.lbl_pred_analysis_multi_prot_seq_status.setText(_translate("Dialog", "TextLabel"))
-        self.lbl_pred_multi_prot_seq_add_2.setText(_translate("Dialog", "Sequence"))
-        self.btn_pred_analysis_multi_prot_seq_add.setText(_translate("Dialog", "Add"))
-        self.lbl_pred_analysis_multi_prot_seq_overview.setText(_translate("Dialog", "Protein sequences"))
-        self.btn_pred_analysis_multi_prot_seq_overview_remove.setText(_translate("Dialog", "Remove"))
-        self.lbl_pred_analysis_multi_prot_to_predict_2.setText(_translate("Dialog", "Protein to predict"))
-        self.btn_pred_analysis_multi_back_2.setText(_translate("Dialog", "Back"))
-        self.btn_pred_analysis_multi_prot_to_predict_add_2.setText(_translate("Dialog", "Add"))
-        self.lbl_pred_analysis_multi_advanced_config.setText(_translate("Dialog", "Advanced configurations"))
-        self.btn_pred_analysis_multi_advanced_config.setText(_translate("Dialog", "Edit"))
-        self.checkbox_add_analysis.setText(_translate("Dialog", "Add analysis"))
-        self.btn_help.setText(_translate("Dialog", "Help"))
-        self.lbl_pred_analysis_multi_to_analysis_setup.setText(_translate("Dialog", "To analysis setup"))
-        self.btn_pred_analysis_multi_go_analysis_setup.setText(_translate("Dialog", "Go"))
-        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_3), _translate("Dialog", "Prediction"))
-        self.lbl_pred_analysis_multi_overview.setText(_translate("Dialog", "Protein structure analysis\'"))
-        self.btn_pred_analysis_multi_remove.setText(_translate("Dialog", "Remove"))
-        self.btn_pred_analysis_multi_add.setText(_translate("Dialog", "Add"))
-        self.lbl_pred_analysis_multi_prot_struct_1.setText(_translate("Dialog", "Protein structure 1"))
-        self.lbl_analysis_batch_vs_3.setText(_translate("Dialog", "vs."))
-        self.lbl_pred_analysis_multi_prot_struct_2.setText(_translate("Dialog", "Protein structure 2"))
-        self.btn_pred_analysis_multi_back_3.setText(_translate("Dialog", "Back"))
-        self.btn_pred_analysis_multi_next_2.setText(_translate("Dialog", "Next"))
-        self.lbl_pred_analysis_multi_ref_chains.setText(_translate("Dialog", "Select chains in protein structure 1"))
-        self.btn_pred_analysis_multi_back_4.setText(_translate("Dialog", "Back"))
-        self.btn_pred_analysis_multi_next_3.setText(_translate("Dialog", "Next"))
-        self.lbl_pred_analysis_multi_model_chains.setText(_translate("Dialog", "Select chains in protein structure 2"))
-        self.btn_pred_analysis_multi_back_5.setText(_translate("Dialog", "Back"))
-        self.btn_pred_analysis_multi_next_4.setText(_translate("Dialog", "Next"))
-        self.btn_help_2.setText(_translate("Dialog", "Help"))
-        self.btn_pred_analysis_multi_back_pred_setup.setText(_translate("Dialog", "Back"))
-        self.btn_pred_analysis_multi_start.setText(_translate("Dialog", "Start"))
-        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_4), _translate("Dialog", "Analysis"))
+    self.retranslateUi(Dialog)
+    self.tabWidget_2.setCurrentIndex(0)
+    QtCore.QMetaObject.connectSlotsByName(Dialog)
+
+  def retranslateUi(self, Dialog):
+    _translate = QtCore.QCoreApplication.translate
+    Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+    self.lbl_pred_analysis_multi_prot_to_predict.setText(
+        _translate("Dialog", "Proteins to predict")
+    )
+    item = self.table_pred_analysis_multi_prot_to_predict.horizontalHeaderItem(
+        0
+    )
+    item.setText(_translate("Dialog", "Chain"))
+    item = self.table_pred_analysis_multi_prot_to_predict.horizontalHeaderItem(
+        1
+    )
+    item.setText(_translate("Dialog", "Sequence"))
+    self.btn_pred_analysis_multi_prot_to_predict_remove.setText(
+        _translate("Dialog", "Remove")
+    )
+    self.btn_pred_analysis_multi_prot_to_predict_add.setText(
+        _translate("Dialog", "Add")
+    )
+    self.lbl_pred_analysis_multi_prot_name.setText(
+        _translate("Dialog", "Enter new protein name")
+    )
+    self.lbl_pred_analysis_multi_prot_name_status.setText(
+        _translate("Dialog", "TextLabel")
+    )
+    self.btn_pred_analysis_multi_back.setText(_translate("Dialog", "Back"))
+    self.btn_pred_analysis_multi_next.setText(_translate("Dialog", "Next"))
+    self.lbl_pred_analysis_multi_prot_seq.setText(
+        _translate("Dialog", "Enter new protein sequence")
+    )
+    self.lbl_pred_analysis_multi_prot_seq_status.setText(
+        _translate("Dialog", "TextLabel")
+    )
+    self.lbl_pred_multi_prot_seq_add_2.setText(_translate("Dialog", "Sequence"))
+    self.btn_pred_analysis_multi_prot_seq_add.setText(
+        _translate("Dialog", "Add")
+    )
+    self.lbl_pred_analysis_multi_prot_seq_overview.setText(
+        _translate("Dialog", "Protein sequences")
+    )
+    self.btn_pred_analysis_multi_prot_seq_overview_remove.setText(
+        _translate("Dialog", "Remove")
+    )
+    self.lbl_pred_analysis_multi_prot_to_predict_2.setText(
+        _translate("Dialog", "Protein to predict")
+    )
+    self.btn_pred_analysis_multi_back_2.setText(_translate("Dialog", "Back"))
+    self.btn_pred_analysis_multi_prot_to_predict_add_2.setText(
+        _translate("Dialog", "Add")
+    )
+    self.lbl_pred_analysis_multi_advanced_config.setText(
+        _translate("Dialog", "Advanced configurations")
+    )
+    self.btn_pred_analysis_multi_advanced_config.setText(
+        _translate("Dialog", "Edit")
+    )
+    self.checkbox_add_analysis.setText(_translate("Dialog", "Add analysis"))
+    self.btn_help.setText(_translate("Dialog", "Help"))
+    self.lbl_pred_analysis_multi_to_analysis_setup.setText(
+        _translate("Dialog", "To analysis setup")
+    )
+    self.btn_pred_analysis_multi_go_analysis_setup.setText(
+        _translate("Dialog", "Go")
+    )
+    self.tabWidget_2.setTabText(
+        self.tabWidget_2.indexOf(self.tab_3), _translate("Dialog", "Prediction")
+    )
+    self.lbl_pred_analysis_multi_overview.setText(
+        _translate("Dialog", "Protein structure analysis'")
+    )
+    self.btn_pred_analysis_multi_remove.setText(_translate("Dialog", "Remove"))
+    self.btn_pred_analysis_multi_add.setText(_translate("Dialog", "Add"))
+    self.lbl_pred_analysis_multi_prot_struct_1.setText(
+        _translate("Dialog", "Protein structure 1")
+    )
+    self.lbl_analysis_batch_vs_3.setText(_translate("Dialog", "vs."))
+    self.lbl_pred_analysis_multi_prot_struct_2.setText(
+        _translate("Dialog", "Protein structure 2")
+    )
+    self.btn_pred_analysis_multi_back_3.setText(_translate("Dialog", "Back"))
+    self.btn_pred_analysis_multi_next_2.setText(_translate("Dialog", "Next"))
+    self.lbl_pred_analysis_multi_ref_chains.setText(
+        _translate("Dialog", "Select chains in protein structure 1")
+    )
+    self.btn_pred_analysis_multi_back_4.setText(_translate("Dialog", "Back"))
+    self.btn_pred_analysis_multi_next_3.setText(_translate("Dialog", "Next"))
+    self.lbl_pred_analysis_multi_model_chains.setText(
+        _translate("Dialog", "Select chains in protein structure 2")
+    )
+    self.btn_pred_analysis_multi_back_5.setText(_translate("Dialog", "Back"))
+    self.btn_pred_analysis_multi_next_4.setText(_translate("Dialog", "Next"))
+    self.btn_help_2.setText(_translate("Dialog", "Help"))
+    self.btn_pred_analysis_multi_back_pred_setup.setText(
+        _translate("Dialog", "Back")
+    )
+    self.btn_pred_analysis_multi_start.setText(_translate("Dialog", "Start"))
+    self.tabWidget_2.setTabText(
+        self.tabWidget_2.indexOf(self.tab_4), _translate("Dialog", "Analysis")
+    )

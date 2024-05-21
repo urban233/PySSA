@@ -27,26 +27,30 @@ __docformat__ = "google"
 
 @dataclass
 class ResidueColorConfig:
-    """Holds information about a residue's color configuration."""
+  """Holds information about a residue's color configuration."""
 
-    # <editor-fold desc="Class attributes">
-    carbon_color: str
-    """The color of the carbon atoms."""
-    
-    nitrogen_color: str
-    """The color of the nitrogen atoms."""
-    
-    oxygen_color: str
-    """The color of the oxygen atoms."""
-    
-    # </editor-fold>
+  # <editor-fold desc="Class attributes">
+  carbon_color: str
+  """The color of the carbon atoms."""
 
-    def atoms_are_colored_by_elements(self) -> bool:
-        """Checks if atoms are colored correctly based on their elements.
+  nitrogen_color: str
+  """The color of the nitrogen atoms."""
 
-        Returns:
-            True if atoms are colored by their elements, False otherwise.
-        """
-        if self.carbon_color == "grey70" and self.nitrogen_color == "N-blue" and self.oxygen_color == "O-red":
-            return True
-        return False
+  oxygen_color: str
+  """The color of the oxygen atoms."""
+
+  # </editor-fold>
+
+  def atoms_are_colored_by_elements(self) -> bool:
+    """Checks if atoms are colored correctly based on their elements.
+
+    Returns:
+        True if atoms are colored by their elements, False otherwise.
+    """
+    if (
+        self.carbon_color == "grey70"
+        and self.nitrogen_color == "N-blue"
+        and self.oxygen_color == "O-red"
+    ):
+      return True
+    return False

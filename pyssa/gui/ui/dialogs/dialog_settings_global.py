@@ -37,26 +37,26 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def is_wsl2_installed() -> bool:
-    """Checks if the WSL2 is installed.
-    
-    Returns:
-        True if the WSL2 is installed, False otherwise.
-    """
-    output = subprocess.run("wsl --list --verbose")
-    if output.returncode == 0:
-        return True
-    return False
+  """Checks if the WSL2 is installed.
+
+  Returns:
+      True if the WSL2 is installed, False otherwise.
+  """
+  output = subprocess.run("wsl --list --verbose")
+  if output.returncode == 0:
+    return True
+  return False
 
 
 def is_local_colabfold_installed() -> bool:
-    """Checks if the local colabfold is installed.
-    
-    Returns:
-        True if the local colabfold is installed, False otherwise.
-    """
-    powershell_results = subprocess.run(["wsl", "-d", "almaColabfold9", "ls"])
-    if powershell_results.returncode == 0:
-        subprocess.run(["wsl", "--shutdown"])
-        return True
+  """Checks if the local colabfold is installed.
+
+  Returns:
+      True if the local colabfold is installed, False otherwise.
+  """
+  powershell_results = subprocess.run(["wsl", "-d", "almaColabfold9", "ls"])
+  if powershell_results.returncode == 0:
     subprocess.run(["wsl", "--shutdown"])
-    return False
+    return True
+  subprocess.run(["wsl", "--shutdown"])
+  return False

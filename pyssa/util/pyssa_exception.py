@@ -23,40 +23,44 @@
 
 
 class IllegalArgumentError(Exception):
-    """Class for an illegal argument exception type."""
+  """Class for an illegal argument exception type."""
 
-    def __init__(self, name_of_argument: str, value_of_argument) -> None:
-        """Constructor."""
-        super().__init__(f"The argument {name_of_argument} with value {value_of_argument} is illegal!")
+  def __init__(self, name_of_argument: str, value_of_argument) -> None:
+    """Constructor."""
+    super().__init__(
+        f"The argument {name_of_argument} with value {value_of_argument} is illegal!"
+    )
 
 
 class DatabaseIsClosedError(Exception):
-    """Class for a database is closed exception type."""
+  """Class for a database is closed exception type."""
 
-    def __init__(self) -> None:
-        """Constructor."""
-        super().__init__("A database needs to be open for this operation!")
+  def __init__(self) -> None:
+    """Constructor."""
+    super().__init__("A database needs to be open for this operation!")
 
 
 class UnableToConnectToDatabaseError(Exception):
-    """Class for an unable to connect to database exception type."""
+  """Class for an unable to connect to database exception type."""
 
-    def __init__(self) -> None:
-        """Constructor."""
-        super().__init__("Database could not be opened!")
+  def __init__(self) -> None:
+    """Constructor."""
+    super().__init__("Database could not be opened!")
 
 
 class IllegalReturnValueError(Exception):
-    """Class for an illegal return value exception type."""
+  """Class for an illegal return value exception type."""
 
-    def __init__(self) -> None:
-        """Constructor."""
-        super().__init__("A return value is illegal!")
+  def __init__(self) -> None:
+    """Constructor."""
+    super().__init__("A return value is illegal!")
 
 
 class PyMOLNotRespondingError(Exception):
-    """Class for an illegal return value exception type."""
+  """Class for an illegal return value exception type."""
 
-    def __init__(self) -> None:
-        """Constructor."""
-        super().__init__("The PyMOL application is not responding to the send message!")
+  def __init__(self) -> None:
+    """Constructor."""
+    super().__init__(
+        "The PyMOL application is not responding to the send message!"
+    )

@@ -30,29 +30,33 @@ from pyssa.util import constants
 
 
 class SettingsView(QtWidgets.QDialog):
-    """Class representing the settings dialog."""
-    
-    dialogClosed = QtCore.pyqtSignal(tuple)
-    """A signal indicating that the dialog is closed."""
-    
-    def __init__(self) -> None:
-        """Constructor."""
-        QtWidgets.QDialog.__init__(self)
-        # build ui object
-        self.ui = auto_settings_view.Ui_Dialog()
-        self.ui.setupUi(self)
-        self._initialize_ui()
-        self.resize(450, 600)
-        self.ui.btn_cancel.clicked.connect(self.close)
-        self.setModal(True)
+  """Class representing the settings dialog."""
 
-    def _initialize_ui(self) -> None:
-        """Initialize the UI elements."""
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
-        self.ui.btn_help.setText("")
-        styles.color_bottom_frame_button(self.ui.btn_ok)
-        styles.set_stylesheet(self)
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Settings")
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+  dialogClosed = QtCore.pyqtSignal(tuple)
+  """A signal indicating that the dialog is closed."""
+
+  def __init__(self) -> None:
+    """Constructor."""
+    QtWidgets.QDialog.__init__(self)
+    # build ui object
+    self.ui = auto_settings_view.Ui_Dialog()
+    self.ui.setupUi(self)
+    self._initialize_ui()
+    self.resize(450, 600)
+    self.ui.btn_cancel.clicked.connect(self.close)
+    self.setModal(True)
+
+  def _initialize_ui(self) -> None:
+    """Initialize the UI elements."""
+    self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
+    self.ui.btn_help.setIconSize(
+        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
+    )
+    self.ui.btn_help.setText("")
+    styles.color_bottom_frame_button(self.ui.btn_ok)
+    styles.set_stylesheet(self)
+    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    self.setWindowTitle("Settings")
+    self.setWindowFlags(
+        self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
+    )
