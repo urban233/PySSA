@@ -1321,6 +1321,7 @@ class MainViewController:
               a_task_scheduler=self._interface_manager.get_task_scheduler(),
           )
       )
+
       # self._help_task = tasks.LegacyTask(
       #     target=util_async.open_documentation_on_certain_page,
       #     args=(a_page_name, self._interface_manager.documentation_window),
