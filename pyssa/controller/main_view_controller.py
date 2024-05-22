@@ -54,7 +54,7 @@ from pyssa.util import constants, enums, exit_codes, tools, ui_util, exception
 from pyssa.gui.ui.views import main_view
 from pyssa.controller import interface_manager, distance_analysis_view_controller, delete_project_view_controller, create_project_view_controller, open_project_view_controller, database_manager
 from pyssa.util import globals
-from tea.thread import tasks
+from tea.thread import tasks, task_manager, task_result_factory, task_result, action
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -1306,11 +1306,26 @@ class MainViewController:
           != 1
       ):
         self._interface_manager.documentation_window = None
-      self._help_task = tasks.LegacyTask(
-          target=util_async.open_documentation_on_certain_page,
-          args=(a_page_name, self._interface_manager.documentation_window),
-          post_func=self.__await_open_help,
+      self._interface_manager.get_task_manager().append_task_result(
+          task_result_factory.TaskResultFactory.run_task_result(
+              a_task_result=task_result.TaskResult.from_action(
+                  an_action=action.Action(
+                      a_target=util_async.open_documentation_on_certain_page,
+                      args=(
+                          a_page_name,
+                          self._interface_manager.documentation_window,
+                      ),
+                  ),
+                  an_await_function=self.__await_open_help,
+              ),
+              a_task_scheduler=self._interface_manager.get_task_scheduler(),
+          )
       )
+      # self._help_task = tasks.LegacyTask(
+      #     target=util_async.open_documentation_on_certain_page,
+      #     args=(a_page_name, self._interface_manager.documentation_window),
+      #     post_func=self.__await_open_help,
+      # )
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -1318,7 +1333,7 @@ class MainViewController:
       )
     else:
       self._interface_manager.block_gui(with_wait_cursor=True)
-      self._help_task.start()
+      # self._help_task.start()
 
   def __await_open_help(self, return_value: tuple) -> None:
     """Opens the help center and performs necessary actions based on the return value.
@@ -1327,6 +1342,7 @@ class MainViewController:
         return_value (tuple): The return value from opening the help center.
     """
     try:
+      logger.debug("Method __await_open_help started")
       self._interface_manager.documentation_window = return_value[2]
       if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
         tmp_dialog = custom_message_box.CustomMessageBoxOk(
