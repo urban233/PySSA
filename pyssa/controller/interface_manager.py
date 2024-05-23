@@ -54,7 +54,7 @@ from pyssa.model import proteins_model, protein_pairs_model
 from pyssa.util import enums, constants, main_window_util, ui_util, exception
 from pyssa.util.void import rvoid
 from pyssa.internal.thread import thread_util
-
+from tea.thread import task_manager, task_scheduler
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -150,6 +150,12 @@ class InterfaceManager:
   _protein_pair_model: QtGui.QStandardItemModel
   """The model for the protein pairs."""
 
+  _task_manager: "task_manager.TaskManager"
+  """The global manager of tasks."""
+
+  _task_scheduler: "task_scheduler.TaskScheduler"
+  """The global scheduler of tasks."""
+
   # </editor-fold>
 
   def __init__(self) -> None:
@@ -200,6 +206,10 @@ class InterfaceManager:
     self.status_bar_manager = status_bar_manager.StatusBarManager(
         self._main_view
     )
+    self._settings_manager = settings_manager.SettingsManager()
+    self._task_manager = task_manager.TaskManager()
+
+    self._task_scheduler = task_scheduler.TaskScheduler()
 
     self.watcher = watcher.Watcher()
 
@@ -209,8 +219,6 @@ class InterfaceManager:
     self.refresh_after_job_finished_signal = (
         custom_signals.RefreshAfterJobFinishedSignal()
     )
-
-    self._settings_manager = settings_manager.SettingsManager()
 
     # <editor-fold desc="Setup App Settings">
     # self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
@@ -1201,6 +1209,17 @@ class InterfaceManager:
         The protein model used for displaying protein data.
     """
     return self._protein_model
+
+  def get_task_manager(self) -> "task_manager.TaskManager":
+    """Gets the task manager.
+
+    Returns:
+        The task manager instance.
+    """
+    return self._task_manager
+
+  def get_task_scheduler(self) -> "task_scheduler.TaskScheduler":
+    return self._task_scheduler
 
   # </editor-fold>
 

@@ -61,9 +61,6 @@ def open_documentation_on_certain_page(
   if a_page_name is None or a_page_name == "":
     logger.error("a_page_name is either None or an empty string.")
     return "", None, None
-  if the_docs_window is None:
-    logger.error("the_docs_window is None.")
-    return "", None, None
 
   # </editor-fold>
 
