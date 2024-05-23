@@ -23,7 +23,9 @@
 import logging
 import os.path
 import pathlib
-from typing import Optional
+from typing import Optional, Callable
+
+from PyQt5 import QtCore
 
 from application_process import application_process_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
@@ -31,8 +33,8 @@ from pyssa.internal.data_structures import protein, protein_pair
 from pyssa.internal.data_structures.data_classes import residue_color_config
 from pyssa.io_pyssa import binary_data
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import constants, exception, protein_pair_util
-from pyssa_pymol import user_pymol_connector
+from pyssa.util import constants, exception, protein_pair_util, pyssa_exception
+from pyssa_pymol import user_pymol_connector, pymol_enums
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -90,6 +92,7 @@ class PymolSessionManager:
             self._app_process_manager,
         )
     )
+    self.lock_user_pymol_connector: QtCore.QMutex = QtCore.QMutex()
 
   # <editor-fold desc="Private methods">
   def _check_session_integrity(self, a_protein_name: str) -> bool:
@@ -314,7 +317,41 @@ class PymolSessionManager:
       return False
 
   # </editor-fold>
+  
+  def cmd(self, a_command_name: "pymol_enums.CommandEnum", the_args: tuple = ()) -> dict:
+    """Runs a PyMOL cmd command.
+    
+    Args:
+      a_command_name (pymol_enums.CommandEnum): The name of the command to be executed.
+      the_args (tuple): (Optional) The arguments to be passed to the command. Defaults to ().
 
+    Returns:
+      The result of the command execution as a dictionary.
+    
+    Raises:
+      exception.PyMOLCommandFailedError: If the pymol command failed.
+    """
+    with QtCore.QMutexLocker(self.lock_user_pymol_connector):
+      tmp_success_flag, tmp_result = self.user_pymol_connector.run_command(a_command_name, the_args)
+    if tmp_success_flag:
+      return tmp_result
+    raise exception.PyMOLCommandFailedError(f"The pymol command {a_command_name.value} with the args {the_args} failed.")
+  
+  def async_cmd(self, a_command_name: "pymol_enums.CommandEnum", the_args: tuple = (), an_await_function: Optional[Callable] = None) -> dict:
+    """Runs a PyMOL cmd command in an asynchronous manner.
+    
+    Args:
+      a_command_name (pymol_enums.CommandEnum): The name of the command to be executed.
+      the_args (tuple): (Optional) The arguments to be passed to the command. Defaults to ().
+
+    Returns:
+      The result of the command execution as a dictionary.
+    
+    Raises:
+      exception.PyMOLCommandFailedError: If the pymol command failed.
+    """
+    raise NotImplementedError()
+    
   # <editor-fold desc="Cmd-depended methods">
   def reinitialize_session(self) -> None:
     """Reinitialize the pymol session and class attributes."""

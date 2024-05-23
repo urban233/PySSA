@@ -147,7 +147,7 @@ def set_checked_async(
     raise exception.NotMainThreadError()
 
   # </editor-fold>
-
+  
   a_checkbox_like_widget.blockSignals(True)
   a_checkbox_like_widget.setChecked(a_check_state)
   a_checkbox_like_widget.blockSignals(False)

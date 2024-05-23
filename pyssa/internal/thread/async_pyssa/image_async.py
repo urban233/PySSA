@@ -24,7 +24,7 @@ import logging
 
 from pyssa.controller import pymol_session_manager
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import exception
+from pyssa_pymol import pymol_enums
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -59,8 +59,8 @@ def preview_image(
 
   try:
     # TODO: the renderer should be changeable
-    the_pymol_session_manager.user_pymol_connector.ray(
-        a_width=2400, a_height=2400, a_renderer=int(0)
+    the_pymol_session_manager.cmd(
+      pymol_enums.CommandEnum.RAY, (2400, 2400, int(0))
     )
   except Exception as e:
     logger.error(e)
@@ -92,11 +92,11 @@ def create_drawn_image(
   # </editor-fold>
 
   try:
-    the_pymol_session_manager.user_pymol_connector.draw(
-        a_width=2400, a_height=2400, an_antialias_value=2
+    the_pymol_session_manager.cmd(
+      pymol_enums.CommandEnum.DRAW, (2400, 2400, 2)
     )
-    the_pymol_session_manager.user_pymol_connector.png(
-        an_image_filepath, a_dpi_value=300
+    the_pymol_session_manager.cmd(
+      pymol_enums.CommandEnum.PNG, (an_image_filepath, 300)
     )
   except Exception as e:
     logger.error(e)

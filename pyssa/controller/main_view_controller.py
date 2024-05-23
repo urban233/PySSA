@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the main view controller."""
+import copy
 import logging
 import os
 import pathlib
@@ -4196,8 +4197,8 @@ class MainViewController:
       self._interface_manager.pymol_session_manager.current_scene_name = (
           tmp_scene_name
       )
-
-      self._task_result = tasks.TaskResult.run_action(
+      
+      self._task_result = tasks.TaskResult.run_action(  # fixme: raises currently an error if the unlock function is called
           tasks.Action(
               a_target=pymol_session_async.load_scene,
               args=(
@@ -7256,7 +7257,7 @@ class MainViewController:
 
       logger.debug("Check if chain is colored by element.")
       if tmp_residue_color_config.atoms_are_colored_by_elements():
-        # self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
+        #self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
         ui_util.set_checked_async(
             self._view.tg_protein_pair_color_atoms.toggle_button, True
         )
@@ -8069,7 +8070,7 @@ class MainViewController:
     try:
       logger.log(
           log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Cartoon' toggle on the 'Protein Pairs Tab' was clicked.",
+          "'Sticks' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
           self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -8111,7 +8112,7 @@ class MainViewController:
     try:
       logger.log(
           log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Cartoon' toggle on the 'Protein Pairs Tab' was clicked.",
+          "'Ribbon' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
           self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -8153,7 +8154,7 @@ class MainViewController:
     try:
       logger.log(
           log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Cartoon' toggle on the 'Protein Pairs Tab' was clicked.",
+          "'Lines' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
           self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -8195,7 +8196,7 @@ class MainViewController:
     try:
       logger.log(
           log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Cartoon' toggle on the 'Protein Pairs Tab' was clicked.",
+          "'Spheres' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
           self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -8237,7 +8238,7 @@ class MainViewController:
     try:
       logger.log(
           log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Cartoon' toggle on the 'Protein Pairs Tab' was clicked.",
+          "'Dots' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
           self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -8279,7 +8280,7 @@ class MainViewController:
     try:
       logger.log(
           log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Cartoon' toggle on the 'Protein Pairs Tab' was clicked.",
+          "'Mesh' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
           self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -8321,7 +8322,7 @@ class MainViewController:
     try:
       logger.log(
           log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Cartoon' toggle on the 'Protein Pairs Tab' was clicked.",
+          "'Surface' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
           self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
