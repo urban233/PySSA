@@ -1336,15 +1336,16 @@ class MainViewController:
       self._interface_manager.block_gui(with_wait_cursor=True)
       # self._help_task.start()
 
-  def __await_open_help(self, return_value: tuple) -> None:
+  def __await_open_help(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Opens the help center and performs necessary actions based on the return value.
 
     Args:
-        return_value (tuple): The return value from opening the help center.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The return value from opening the help center.
     """
     try:
       logger.debug("Method __await_open_help started")
-      self._interface_manager.documentation_window = return_value[2]
+      tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
+      self._interface_manager.documentation_window = tmp_result[2]
       if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
         tmp_dialog = custom_message_box.CustomMessageBoxOk(
             "The script for bringing the documentation window in front could not be found!",
