@@ -4714,11 +4714,7 @@ class MainViewController:
       self._interface_manager.refresh_main_view()
       self._interface_manager.stop_wait_cursor()
       return
-    if return_value[1] == "":
-      logger.error("return_value[1] is an empty string.")
-      self._interface_manager.status_bar_manager.show_error_message(
-          "return_value[1] is an empty string."
-      )
+    
 
     # </editor-fold>
 
@@ -4927,11 +4923,7 @@ class MainViewController:
       self._interface_manager.refresh_main_view()
       self._interface_manager.stop_wait_cursor()
       return
-    if return_value[1] == "":
-      logger.error("return_value[1] is an empty string.")
-      self._interface_manager.status_bar_manager.show_error_message(
-          "return_value[1] is an empty string."
-      )
+    
 
     # </editor-fold>
 
@@ -5086,8 +5078,8 @@ class MainViewController:
 
     # </editor-fold>
 
-    tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
     try:
+      tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
       if tmp_result[0]:
         self._update_protein_scene_legacy()
         self._save_protein_pymol_session()
@@ -6814,6 +6806,7 @@ class MainViewController:
         This is a legacy method that is used in many other methods!
         TODO: after discussion of workaround, this can be removed!
     """
+    return
     raise NotImplementedError()
     # The code below can be useful if the scene saving feature needs to be implemented
     # if self._interface_manager.pymol_session_manager.is_the_current_pymol_scene_base is False:
@@ -7871,15 +7864,31 @@ class MainViewController:
           self._interface_manager.get_current_active_chain_object_of_protein_pair()
       )
       tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-      self._active_task = tasks.LegacyTask(
-          target=pymol_session_async.get_representation_config_of_a_given_protein_chain,
-          args=(
-              tmp_protein.pymol_selection.selection_string,
-              tmp_chain.chain_letter,
-              self._interface_manager.pymol_session_manager,
+      self._interface_manager.get_task_manager().append_task_result(
+        task_result_factory.TaskResultFactory.run_task_result(
+          a_task_result=task_result.TaskResult.from_action(
+            an_action=action.Action(
+              a_target=pymol_session_async.get_representation_config_of_a_given_protein_chain,
+              args=(
+                tmp_protein.pymol_selection.selection_string,
+                tmp_chain.chain_letter,
+                self._interface_manager.pymol_session_manager,
+              ),
+            ),
+            an_await_function=self.__await_get_representation_config_of_a_given_protein_chain_of_a_protein_pair,
           ),
-          post_func=self.__await_get_representation_config_of_a_given_protein_chain_of_a_protein_pair,
+          a_task_scheduler=self._interface_manager.get_task_scheduler(),
+        )
       )
+      # self._active_task = tasks.LegacyTask(
+      #     target=pymol_session_async.get_representation_config_of_a_given_protein_chain,
+      #     args=(
+      #         tmp_protein.pymol_selection.selection_string,
+      #         tmp_chain.chain_letter,
+      #         self._interface_manager.pymol_session_manager,
+      #     ),
+      #     post_func=self.__await_get_representation_config_of_a_given_protein_chain_of_a_protein_pair,
+      # )
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -8104,11 +8113,7 @@ class MainViewController:
       self._interface_manager.refresh_main_view()
       self._interface_manager.stop_wait_cursor()
       return
-    if return_value[1] == "":
-      logger.error("return_value[1] is an empty string.")
-      self._interface_manager.status_bar_manager.show_error_message(
-          "return_value[1] is an empty string."
-      )
+    
 
     # </editor-fold>
 
@@ -8405,11 +8410,7 @@ class MainViewController:
       self._interface_manager.refresh_main_view()
       self._interface_manager.stop_wait_cursor()
       return
-    if return_value[1] == "":
-      logger.error("return_value[1] is an empty string.")
-      self._interface_manager.status_bar_manager.show_error_message(
-          "return_value[1] is an empty string."
-      )
+    
 
     # </editor-fold>
 
@@ -8510,7 +8511,7 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
       self._interface_manager.refresh_main_view()
       return
-    tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
+    tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(result)
     if tmp_result[0] == "":
       self._interface_manager.status_bar_manager.show_error_message(
           "Coloring the protein pair failed!"
