@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the TaskResult class."""
+import collections
 import pathlib
 import queue
 from typing import Optional, Callable, Any
@@ -38,67 +39,75 @@ class TaskResult(task.Task):
   """Represents an asynchronous operation that can return a value."""
 
   # <editor-fold desc="Class attributes">
-  t_result: queue.Queue = queue.Queue()
+  t_result: dict[str, tuple]
   """Contains the results of a finished task."""
   # </editor-fold>
 
   def __init__(self):
     """Empty constructor."""
     super().__init__()
-    self.t_result: queue.Queue = queue.Queue()
+    self.action_order: collections.deque = collections.deque()
+    self.t_result: dict[str, tuple] = {}
     self._lock = QtCore.QMutex()
 
   # <editor-fold desc="Private methods">
-  def _action_completed_with_result(self, the_action_id: str) -> None:
+  def _action_completed_with_result(self, the_action_finished_data: tuple[str, tuple[bool, Any]]) -> None:
     """Updates the task status and completion flag when an action is completed.
 
     Args:
-      the_action_id (str): The `id` of an action.
+      the_action_finished_data (tuple[str, tuple[bool, Any]]): A tuple with the action id and the result.
 
     Raises:
-      tea_exception.IllegalArgumentError: If `the_action_id` is either None or an empty string.
+      tea_exception.IllegalArgumentError: If `the_action_finished_data` is None.
     """
     # <editor-fold desc="Checks">
-    if the_action_id is None or the_action_id == "":
-      logger.error("the_action_id is either None or an empty string.")
+    if the_action_finished_data is None:
+      logger.error("the_action_finished_data is None.")
       raise tea_exception.IllegalArgumentError(
-          "the_action_id is either None or an empty string."
+        "the_action_finished_data is None."
       )
 
     # </editor-fold>
 
+    self._completed_actions += 1
     if (
-        the_action_id == self.id_of_last_action
+        self._completed_actions == self._total_actions
         and self.status != tea_enums.TaskStatus.FAILED
     ):
       self.is_completed: bool = True
       self.status: "tea_enums.TaskStatus" = (
           tea_enums.TaskStatus.RAN_TO_COMPLETION
       )
-      #self.task_finished.emit((self.id, []))
+      self._save_single_action_result(the_action_finished_data[0], the_action_finished_data[1])
     elif (
-        the_action_id == self.id_of_last_action
+        self._completed_actions == self._total_actions
         and self.status == tea_enums.TaskStatus.FAILED
     ):
       # Case is handled by method _action_ended_with_error
-      return
+      self._action_ended_with_error()
     else:
       self.is_completed: bool = False
       self.status: "tea_enums.TaskStatus" = tea_enums.TaskStatus.RUNNING
+      self._save_single_action_result(the_action_finished_data[0], the_action_finished_data[1])
 
   def _save_single_action_result(
       self,
+      an_action_id: str,
       an_action_result: tuple[bool, Any],
   ) -> None:
     """Saves a result to a queue and sends a task finished signal.
 
     Args:
-      an_action_result (tuple[bool, Any]): A tuple representing the `action result`. It should be of the form (success: bool, result: Any).
+      an_action_id (str): The action id.
+      an_action_result (tuple[bool, Any]): A tuple representing the action result. It should be of the form (success: bool, result: Any).
 
     Raises:
-      IllegalArgumentError: If `an_action_result` is either None or an empty tuple.
+      IllegalArgumentError: If `an_action_id` is either None or an empty string or `an_action_result` is either None or an empty tuple.
     """
     # <editor-fold desc="Checks">
+    if an_action_id is None or an_action_id == "":
+      logger.error("an_action_id is either None or an empty string.")
+      raise tea_exception.IllegalArgumentError("an_action_id is either None or an empty string.")
     if an_action_result is None or len(an_action_result) == 0:
       logger.error("an_action_result is either None or an empty tuple.")
       raise tea_exception.IllegalArgumentError(
@@ -108,13 +117,12 @@ class TaskResult(task.Task):
     # </editor-fold>
 
     # TODO: wrap in try-except block
-    self.t_result.put(an_action_result)
+    self.t_result.update({an_action_id: an_action_result})
     if self.is_completed:
-      tmp_action_results = []
-      while self.t_result.empty() is False:
-      #for tmp_action_result in self.t_result.get():
-        tmp_action_results.append(self.t_result.get())
-
+      tmp_action_results: list[tuple] = []
+      for i in range(len(self.t_result)):
+        tmp_action_results.append(self.t_result[self.action_order[i]])
+        i += 1
       self.task_finished.emit((self.id, tmp_action_results))
 
   # </editor-fold>
@@ -169,90 +177,90 @@ class TaskResult(task.Task):
   # </editor-fold>
 
   # <editor-fold desc="Static methods">
-  @staticmethod
-  def run_action(
-      an_action: "action.Action",
-      the_threadpool: QtCore.QThreadPool,
-      an_await_function: Optional[Callable] = None,
-  ) -> "TaskResult":
-    """Static constructor for the TaskResult class that takes an action to
-    construct the `TaskResult` and starts the task.
-
-    Args:
-      an_action (action.Action): The `action` to be executed.
-      the_threadpool (QtCore.QThreadPool): The `thread pool` to be used for executing the action.
-      an_await_function (Optional[Callable]): The function to be called when a `task` is completed. Defaults to None.
-
-    Returns: A `TaskResult` object representing the running task.
-
-    Raises:
-      IllegalArgumentError: If `an_action` or `the_threadpool` is None.
-    """
-    # <editor-fold desc="Checks">
-    if an_action is None:
-      logger.error("an_action is None.")
-      raise tea_exception.IllegalArgumentError("an_action is None.")
-    if the_threadpool is None:
-      logger.error("the_threadpool is None.")
-      raise tea_exception.IllegalArgumentError("the_threadpool is None.")
-
-    # </editor-fold>
-
-    tmp_task_result: "TaskResult" = TaskResult()
-    tmp_task_result.actions.put(an_action)
-    tmp_action: "action.Action" = tmp_task_result.actions.get()
-    tmp_task_result.connect_basic_signals(tmp_action)
-    tmp_task_result.connect_result_signal(tmp_action)
-    if an_await_function is not None:
-      tmp_task_result.task_finished.connect(an_await_function)
-    tmp_action.is_runnable = True
-    the_threadpool.start(tmp_action)
-    return tmp_task_result
-
-  @staticmethod
-  def run_actions(
-      the_actions: tuple["action.Action"],
-      the_threadpool: QtCore.QThreadPool,
-      an_await_function: Optional[Callable] = None,
-  ) -> "TaskResult":
-    """Static constructor for the TaskResult class that takes actions to
-    construct the `TaskResult` and starts the task.
-
-    Args:
-      the_actions (tuple["Action"]): `Actions` to be executed.
-      the_threadpool (QtCore.QThreadPool): The `thread pool` to be used for executing the actions.
-      an_await_function (Optional[Callable]): The function to be called when a `task` is completed. Defaults to None.
-
-    Returns: A `TaskResult` object representing the running task.
-
-    Raises:
-      IllegalArgumentError: If `an_action_result` is either None or an empty tuple or `the_threadpool` is None.
-    """
-    # <editor-fold desc="Checks">
-    if the_actions is None or len(the_actions) == 0:
-      logger.error("the_actions is either None or an empty tuple.")
-      raise tea_exception.IllegalArgumentError(
-          "the_actions is either None or an empty tuple.",
-      )
-    if the_threadpool is None:
-      logger.error("the_threadpool is None.")
-      raise tea_exception.IllegalArgumentError("the_threadpool is None.")
-
-    # </editor-fold>
-
-    tmp_task_result: "TaskResult" = TaskResult()
-    for tmp_action in the_actions:
-      tmp_task_result.connect_basic_signals(tmp_action)
-      tmp_task_result.connect_result_signal(tmp_action)
-      tmp_action.set_lock(tmp_task_result.get_lock())
-      tmp_task_result.actions.put(tmp_action)
-    if an_await_function is not None:
-      tmp_task_result.task_finished.connect(an_await_function)
-    while tmp_task_result.actions.empty() is False:
-      tmp_action = tmp_task_result.actions.get()
-      tmp_action.is_runnable = True
-      the_threadpool.start(tmp_action)
-    return tmp_task_result
+  # @staticmethod
+  # def run_action(
+  #     an_action: "action.Action",
+  #     the_threadpool: QtCore.QThreadPool,
+  #     an_await_function: Optional[Callable] = None,
+  # ) -> "TaskResult":
+  #   """Static constructor for the TaskResult class that takes an action to
+  #   construct the `TaskResult` and starts the task.
+  #
+  #   Args:
+  #     an_action (action.Action): The `action` to be executed.
+  #     the_threadpool (QtCore.QThreadPool): The `thread pool` to be used for executing the action.
+  #     an_await_function (Optional[Callable]): The function to be called when a `task` is completed. Defaults to None.
+  #
+  #   Returns: A `TaskResult` object representing the running task.
+  #
+  #   Raises:
+  #     IllegalArgumentError: If `an_action` or `the_threadpool` is None.
+  #   """
+  #   # <editor-fold desc="Checks">
+  #   if an_action is None:
+  #     logger.error("an_action is None.")
+  #     raise tea_exception.IllegalArgumentError("an_action is None.")
+  #   if the_threadpool is None:
+  #     logger.error("the_threadpool is None.")
+  #     raise tea_exception.IllegalArgumentError("the_threadpool is None.")
+  #
+  #   # </editor-fold>
+  #
+  #   tmp_task_result: "TaskResult" = TaskResult()
+  #   tmp_task_result.actions.put(an_action)
+  #   tmp_action: "action.Action" = tmp_task_result.actions.get()
+  #   tmp_task_result.connect_basic_signals(tmp_action)
+  #   tmp_task_result.connect_result_signal(tmp_action)
+  #   if an_await_function is not None:
+  #     tmp_task_result.task_finished.connect(an_await_function)
+  #   tmp_action.is_runnable = True
+  #   the_threadpool.start(tmp_action)
+  #   return tmp_task_result
+  #
+  # @staticmethod
+  # def run_actions(
+  #     the_actions: tuple["action.Action"],
+  #     the_threadpool: QtCore.QThreadPool,
+  #     an_await_function: Optional[Callable] = None,
+  # ) -> "TaskResult":
+  #   """Static constructor for the TaskResult class that takes actions to
+  #   construct the `TaskResult` and starts the task.
+  #
+  #   Args:
+  #     the_actions (tuple["Action"]): `Actions` to be executed.
+  #     the_threadpool (QtCore.QThreadPool): The `thread pool` to be used for executing the actions.
+  #     an_await_function (Optional[Callable]): The function to be called when a `task` is completed. Defaults to None.
+  #
+  #   Returns: A `TaskResult` object representing the running task.
+  #
+  #   Raises:
+  #     IllegalArgumentError: If `an_action_result` is either None or an empty tuple or `the_threadpool` is None.
+  #   """
+  #   # <editor-fold desc="Checks">
+  #   if the_actions is None or len(the_actions) == 0:
+  #     logger.error("the_actions is either None or an empty tuple.")
+  #     raise tea_exception.IllegalArgumentError(
+  #         "the_actions is either None or an empty tuple.",
+  #     )
+  #   if the_threadpool is None:
+  #     logger.error("the_threadpool is None.")
+  #     raise tea_exception.IllegalArgumentError("the_threadpool is None.")
+  #
+  #   # </editor-fold>
+  #
+  #   tmp_task_result: "TaskResult" = TaskResult()
+  #   for tmp_action in the_actions:
+  #     tmp_task_result.connect_basic_signals(tmp_action)
+  #     tmp_task_result.connect_result_signal(tmp_action)
+  #     tmp_action.set_lock(tmp_task_result.get_lock())
+  #     tmp_task_result.actions.put(tmp_action)
+  #   if an_await_function is not None:
+  #     tmp_task_result.task_finished.connect(an_await_function)
+  #   while tmp_task_result.actions.empty() is False:
+  #     tmp_action = tmp_task_result.actions.get()
+  #     tmp_action.is_runnable = True
+  #     the_threadpool.start(tmp_action)
+  #   return tmp_task_result
 
   @staticmethod
   def from_action(an_action: "action.Action", an_await_function: Optional[Callable] = None) -> "TaskResult":
@@ -274,6 +282,7 @@ class TaskResult(task.Task):
     # </editor-fold>
 
     tmp_task_result = TaskResult()
+    tmp_task_result._total_actions = 1
     tmp_task_result.connect_basic_signals(an_action)
     tmp_task_result.connect_result_signal(an_action)
     if an_await_function is not None:
@@ -281,6 +290,7 @@ class TaskResult(task.Task):
     an_action.is_runnable = False
     an_action.set_lock(tmp_task_result.lock)
     tmp_task_result.actions.put(an_action)
+    tmp_task_result.action_order.append(an_action.id)
     return tmp_task_result
 
   @staticmethod
@@ -305,12 +315,14 @@ class TaskResult(task.Task):
     # </editor-fold>
 
     tmp_task_result = TaskResult()
+    tmp_task_result._total_actions = len(the_actions)
     for tmp_action in the_actions:
       tmp_task_result.connect_basic_signals(tmp_action)
       tmp_task_result.connect_result_signal(tmp_action)
       tmp_action.is_runnable = False
       tmp_action.set_lock(tmp_task_result.lock)
       tmp_task_result.actions.put(tmp_action)
+      tmp_task_result.action_order.append(tmp_action.id)
     if an_await_function is not None:
       tmp_task_result.task_finished.connect(an_await_function)
     return tmp_task_result

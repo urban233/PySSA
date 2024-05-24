@@ -65,6 +65,14 @@ class NotMainThreadError(Exception):
     )
 
 
+class PyMOLCommandFailedError(Exception):
+  """Class for a pymol command failed exception type."""
+
+  def __init__(self, message: str) -> None:
+    """Constructor."""
+    super().__init__(message)
+    
+
 class DirectoryNotFoundError(Exception):
   """Class for a directory does not exist exception type."""
 

@@ -63,7 +63,13 @@ class Task(QtCore.QObject):
 
   _lock: QtCore.QMutex
   """A lock used to indicate if the action is executable."""
-
+  
+  _completed_actions: int
+  """The number of actions that have been executed."""
+  
+  _total_actions: int
+  """The number of total actions that should be executed."""
+  
   # </editor-fold>
 
   def __init__(self):
@@ -74,6 +80,8 @@ class Task(QtCore.QObject):
     self.is_completed: bool = False
     self._status: Optional["tea_enums.TaskStatus"] = None
     self.actions: queue.Queue = queue.Queue()
+    self._total_actions = 0
+    self._completed_actions = 0
     self.id_of_last_action: Optional[str] = None
     self.lock = QtCore.QMutex()
 
@@ -99,9 +107,10 @@ class Task(QtCore.QObject):
       )
 
     # </editor-fold>
-
+    
+    self._completed_actions += 1
     if (
-        the_action_id == self.id_of_last_action
+        self._completed_actions == self._total_actions
         and self.status != tea_enums.TaskStatus.FAILED
     ):
       self.is_completed: bool = True
@@ -110,7 +119,7 @@ class Task(QtCore.QObject):
       )
       self.task_finished.emit((self.id, []))
     elif (
-        the_action_id == self.id_of_last_action
+        self._completed_actions == self._total_actions
         and self.status == tea_enums.TaskStatus.FAILED
     ):
       # Case is handled by method _action_ended_with_error
@@ -207,6 +216,7 @@ class Task(QtCore.QObject):
 
     tmp_task: "Task" = Task()
     try:
+      tmp_task._total_actions = 1
       tmp_task.actions.put(an_action)
       tmp_action: "action.Action" = tmp_task.actions.get()
       tmp_task.connect_basic_signals(tmp_action)
@@ -235,10 +245,11 @@ class Task(QtCore.QObject):
       raise tea_exception.IllegalArgumentError("an_action is None.")
     # </editor-fold>
 
-    a_task = Task()
-    an_action.set_lock(a_task.lock)
-    a_task.actions.put(an_action)
-    return a_task
+    tmp_task = Task()
+    tmp_task._total_actions = 1
+    an_action.set_lock(tmp_task.lock)
+    tmp_task.actions.put(an_action)
+    return tmp_task
 
   @staticmethod
   def from_actions(the_actions: tuple["action.Action"]) -> "Task":
@@ -258,10 +269,11 @@ class Task(QtCore.QObject):
       raise tea_exception.IllegalArgumentError("the_actions is None.")
     # </editor-fold>
 
-    a_task = Task()
+    tmp_task = Task()
+    tmp_task._total_actions = len(the_actions)
     for tmp_action in the_actions:
-      tmp_action.set_lock(a_task.lock)
-      a_task.actions.put(tmp_action)
-    return a_task
+      tmp_action.set_lock(tmp_task.lock)
+      tmp_task.actions.put(tmp_action)
+    return tmp_task
 
   # </editor-fold>

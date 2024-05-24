@@ -22,6 +22,7 @@
 """Module that functions as client for the User PyMOL interface."""
 import logging
 import os
+from typing import Union, Callable
 
 import pygetwindow
 import zmq
@@ -66,6 +67,33 @@ class UserPyMOLConnector:
     self._app_process_manager: (
         "application_process_manager.ApplicationProcessManager"
     ) = an_app_process_manager
+    
+    self.commands: dict["pymol_enums.CommandEnum", Callable] = {
+      pymol_enums.CommandEnum.REINITIALIZE_SESSION: self.reinitialize_session,
+      pymol_enums.CommandEnum.LOAD_PYMOL_SESSION: self.load_pymol_session,
+      pymol_enums.CommandEnum.SAVE_PYMOL_SESSION: self.save_pymol_session,
+      pymol_enums.CommandEnum.GET_ALL_OBJECT_NAMES: self.get_all_object_names,
+      pymol_enums.CommandEnum.GET_MODEL: self.get_model,
+      pymol_enums.CommandEnum.SELECT: self.select,
+      pymol_enums.CommandEnum.SCENE: self.scene,
+      pymol_enums.CommandEnum.LOAD_SCENE: self.load_scene,
+      pymol_enums.CommandEnum.GET_SCENE_LIST: self.get_scene_list,
+      pymol_enums.CommandEnum.SET_CUSTOM_SETTINGS: self.set_custom_setting,
+      pymol_enums.CommandEnum.GET_RESIDUE_COLORS: self.get_residue_colors,
+      pymol_enums.CommandEnum.GET_CHAIN_COLOR: self.get_chain_color,
+      pymol_enums.CommandEnum.GET_RESIDUE_COLOR_CONFIG: self.get_residue_color_config,
+      pymol_enums.CommandEnum.GET_CHAIN_REPR_STATE: self.get_chain_repr_state,
+      pymol_enums.CommandEnum.SHOW_CUSTOM_REPRESENTATION: self.show_custom_representation,
+      pymol_enums.CommandEnum.HIDE_CUSTOM_REPRESENTATION: self.hide_custom_representation,
+      pymol_enums.CommandEnum.ZOOM_WITH_CUSTOM_PARAMETERS: self.zoom_with_custom_parameters,
+      pymol_enums.CommandEnum.COLOR_SELECTION: self.color_selection,
+      pymol_enums.CommandEnum.SET_BACKGROUND_COLOR: self.set_background_color,
+      pymol_enums.CommandEnum.SET_DEFAULT_GRAPHIC_SETTINGS: self.set_default_graphic_settings,
+      pymol_enums.CommandEnum.RAY: self.ray,
+      pymol_enums.CommandEnum.DRAW: self.draw,
+      pymol_enums.CommandEnum.PNG: self.png,
+    }
+    
     context = zmq.Context()
     self._main_socket = context.socket(zmq.REQ)
     self._main_socket.setsockopt(zmq.REQ_RELAXED, 1)
@@ -80,7 +108,44 @@ class UserPyMOLConnector:
 
     self._poller = zmq.Poller()
     self._poller.register(self._recv_socket, zmq.POLLIN)
-
+  
+  def run_command(self, a_command_name: "pymol_enums.CommandEnum", the_args: tuple = ()) -> tuple[bool, dict]:
+    """Runs a PyMOL command in the User PyMOL.
+    
+    Args:
+      a_command_name (pymol_enums.CommandEnum): The name of the PyMOL command.
+      the_args (tuple[bool, dict]): A tuple of the command arguments.
+    
+    Returns:
+      A tuple with two elements:
+        - A boolean indicating success or failure.
+        - A dict containing the reply from the PyMOL command execution.
+    
+    Raises:
+      exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if a_command_name is None:
+      logger.error("a_command_name is None.")
+      raise exception.IllegalArgumentError("a_command_name is None.")
+    if the_args is None:
+      logger.error("the_args is None.")
+      raise exception.IllegalArgumentError("the_args is None.")
+    
+    # </editor-fold>
+    
+    try:
+      tmp_command_function: Callable = self.commands[a_command_name]
+      if len(the_args) == 0:
+        tmp_result: dict = tmp_command_function()
+      else:
+        tmp_result: dict = tmp_command_function(*the_args)
+    except Exception as e:
+      logger.error(e)
+      return False, {}
+    else:
+      return True, tmp_result
+    
   def reinitialize_session(self) -> dict:
     """Reinitializes the PyMOL session.
 
@@ -563,7 +628,7 @@ class UserPyMOLConnector:
           "a_chain_letter is either None or an empty string."
       )
     if a_chain_letter not in constants.chain_dict.values():
-      logger.error("a_chain_letter is not part of the chain_dict.")
+      logger.error(f"a_chain_letter (value: {a_chain_letter}) is not part of the chain_dict.")
       raise exception.IllegalArgumentError(
           "a_chain_letter is not part of the chain_dict."
       )
@@ -613,7 +678,7 @@ class UserPyMOLConnector:
           "a_chain_letter is either None or an empty string"
       )
     if a_chain_letter not in constants.chain_dict.values():
-      logger.error("a_chain_letter is not part of the chain_dict.")
+      logger.error(f"a_chain_letter (value: {a_chain_letter}) is not part of the chain_dict.")
       raise exception.IllegalArgumentError(
           "a_chain_letter is not part of the chain_dict"
       )

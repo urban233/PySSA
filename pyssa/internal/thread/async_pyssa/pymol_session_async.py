@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for all asynchronous functions that are related to the pymol session."""
+import copy
 import logging
 import time
 from typing import Optional
@@ -601,7 +602,9 @@ def get_residue_color_config_of_a_given_protein_chain(
     return False, None
 
   # </editor-fold>
-
+  
+  # tmp_protein_name = copy.deepcopy(a_protein_name)
+  # tmp_chain_letter = copy.deepcopy(a_chain_letter)
   try:
     tmp_residue_config: "residue_color_config.ResidueColorConfig" = (
         the_pymol_session_manager.get_residue_color_config_of_a_given_selection(
@@ -684,7 +687,9 @@ def get_representation_config_of_a_given_protein_chain(
     return False, None
 
   # </editor-fold>
-
+  
+  # tmp_selection_string = copy.deepcopy(a_selection_string)
+  # tmp_chain_letter = copy.deepcopy(a_chain_letter)
   try:
     tmp_repr_state = the_pymol_session_manager.get_chain_repr_state(
         a_selection_string, a_chain_letter

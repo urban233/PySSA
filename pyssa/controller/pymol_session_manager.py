@@ -20,10 +20,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the PyMOL session manager class."""
+import collections
 import logging
 import os.path
 import pathlib
-from typing import Optional
+from typing import Optional, Callable
+
+from PyQt5 import QtCore
 
 from application_process import application_process_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
@@ -31,8 +34,9 @@ from pyssa.internal.data_structures import protein, protein_pair
 from pyssa.internal.data_structures.data_classes import residue_color_config
 from pyssa.io_pyssa import binary_data
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import constants, exception, protein_pair_util
-from pyssa_pymol import user_pymol_connector
+from pyssa.util import constants, exception, protein_pair_util, pyssa_exception
+from pyssa_pymol import user_pymol_connector, pymol_enums
+from tea.thread import task_result, action, task_result_factory, task_manager, task_scheduler
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -90,6 +94,7 @@ class PymolSessionManager:
             self._app_process_manager,
         )
     )
+    self.lock_user_pymol_connector: QtCore.QMutex = QtCore.QMutex()
 
   # <editor-fold desc="Private methods">
   def _check_session_integrity(self, a_protein_name: str) -> bool:
@@ -314,7 +319,139 @@ class PymolSessionManager:
       return False
 
   # </editor-fold>
+  
+  def cmd(self, a_command_name: "pymol_enums.CommandEnum", the_args: tuple = ()) -> dict:
+    """Runs a PyMOL cmd command.
+    
+    Args:
+      a_command_name (pymol_enums.CommandEnum): The name of the command to be executed.
+      the_args (tuple): (Optional) The arguments to be passed to the command. Defaults to ().
 
+    Returns:
+      The result of the command execution as a dictionary.
+    
+    Raises:
+      exception.PyMOLCommandFailedError: If the pymol command failed.
+    """
+    with QtCore.QMutexLocker(self.lock_user_pymol_connector):
+      tmp_success_flag, tmp_result = self.user_pymol_connector.run_command(a_command_name, the_args)
+    if tmp_success_flag:
+      return tmp_result
+    raise exception.PyMOLCommandFailedError(f"The pymol command {a_command_name.value} with the args {the_args} failed.")
+  
+  def async_cmd(self,
+                the_task_manager: "task_manager.TaskManager",
+                the_task_scheduler: "task_scheduler.TaskScheduler",
+                a_command_name: "pymol_enums.CommandEnum",
+                the_args: tuple = (),
+                an_await_function: Optional[Callable] = None) -> None:
+    """Runs a PyMOL cmd command in an asynchronous manner.
+    
+    The PyMOL command gets executed in the User PyMOL.
+    The results will be given to the await function as argument.
+    Therefore, the await function needs an argument to use the results.
+    
+    Args:
+      the_task_manager (task_manager.TaskManager): The task manager instance of the interface manager.
+      the_task_scheduler (task_scheduler.TaskScheduler): The task scheduler instance of the interface manager.
+      a_command_name (pymol_enums.CommandEnum): The name of the command to be executed.
+      the_args (tuple): (Optional) The arguments to be passed to the command. Defaults to ().
+      an_await_function (Callable): An await function to call after the async function finished. Defaults to None.
+      
+    Raises:
+      exception.IllegalArgumentError: If any of the arguments is None except an_await_function.
+    """
+    # <editor-fold desc="Checks">
+    if the_task_manager is None:
+      logger.error("the_task_manager is None.")
+      raise exception.IllegalArgumentError("the_task_manager is None.")
+    if the_task_scheduler is None:
+      logger.error("the_task_scheduler is None.")
+      raise exception.IllegalArgumentError("the_task_scheduler is None.")
+    if a_command_name is None:
+      logger.error("a_command_name is None.")
+      raise exception.IllegalArgumentError("a_command_name is None.")
+    if the_args is None:
+      logger.error("the_args is None.")
+      raise exception.IllegalArgumentError("the_args is None.")
+    
+    # </editor-fold>
+    
+    the_task_manager.append_task_result(
+      task_result_factory.TaskResultFactory.run_task_result(
+        a_task_result=task_result.TaskResult.from_action(
+          an_action=action.Action(
+            a_target=self.cmd,
+            args=(
+              a_command_name,
+              the_args,
+            ),
+          ),
+          an_await_function=an_await_function,
+        ),
+        a_task_scheduler=the_task_scheduler,
+      )
+    )
+
+  def async_cmds(self,
+                 the_task_manager: "task_manager.TaskManager",
+                 the_task_scheduler: "task_scheduler.TaskScheduler",
+                 the_command_names: tuple["pymol_enums.CommandEnum"],
+                 the_args: tuple[tuple],
+                 an_await_function: Optional[Callable] = None) -> None:
+    """Runs multiple PyMOL cmd command sequentially in an asynchronous manner.
+
+    The PyMOL command gets executed in the User PyMOL.
+    The results will be given to the await function as argument.
+    Therefore, the await function needs an argument to use the results.
+
+    Args:
+      the_task_manager (task_manager.TaskManager): The task manager instance of the interface manager.
+      the_task_scheduler (task_scheduler.TaskScheduler): The task scheduler instance of the interface manager.
+      the_command_names (tuple[pymol_enums.CommandEnum]): The name of the command to be executed.
+      the_args tuple[tuple]: The arguments to be passed to the command.
+      an_await_function (Callable): An await function to call after the async function finished. Defaults to None.
+    
+    Raises:
+      exception.IllegalArgumentError: If any of the arguments is None except `an_await_function` or `the_command_names` or `the_args` are an empty list.
+    """
+    # <editor-fold desc="Checks">
+    if the_task_manager is None:
+      logger.error("the_task_manager is None.")
+      raise exception.IllegalArgumentError("the_task_manager is None.")
+    if the_task_scheduler is None:
+      logger.error("the_task_scheduler is None.")
+      raise exception.IllegalArgumentError("the_task_scheduler is None.")
+    if the_command_names is None or len(the_command_names) == 0:
+      logger.error("the_command_names is either None or an empty list.")
+      raise exception.IllegalArgumentError("the_command_names is either None or an empty list.")
+    if the_args is None or len(the_args) == 0:
+      logger.error("the_args is either None or an empty list.")
+      raise exception.IllegalArgumentError("the_args is either None or an empty list.")
+    
+    # </editor-fold>
+    
+    tmp_actions: collections.deque = collections.deque()
+    i = 0
+    for tmp_command_name in the_command_names:
+      tmp_actions.append(
+        action.Action(
+          a_target=self.cmd,
+          args=(tmp_command_name, the_args[i])
+        )
+      )
+      i += 1
+    
+    the_task_manager.append_task_result(
+      task_result_factory.TaskResultFactory.run_task_result(
+        a_task_result=task_result.TaskResult.from_actions(
+          the_actions=tuple(tmp_actions),
+          an_await_function=an_await_function,
+        ),
+        a_task_scheduler=the_task_scheduler,
+      )
+    )
+    
   # <editor-fold desc="Cmd-depended methods">
   def reinitialize_session(self) -> None:
     """Reinitialize the pymol session and class attributes."""

@@ -114,3 +114,32 @@ if return_value is None:
             parent: the parent.
         """
 
+
+self._interface_manager.get_task_manager().append_task_result(
+  task_result_factory.TaskResultFactory.run_task_result(
+    a_task_result=task_result.TaskResult.from_action(
+      an_action=action.Action(
+        a_target=pymol_session_async.load_protein_pymol_session,
+        args=(
+          tmp_protein,
+          self._interface_manager.pymol_session_manager,
+          tmp_flag,
+        ),
+      ),
+      an_await_function=self.__await_open_protein_pymol_session,
+    ),
+    a_task_scheduler=self._interface_manager.get_task_scheduler(),
+  )
+)
+
+
+tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
+
+
+
+
+
+
+
+
+

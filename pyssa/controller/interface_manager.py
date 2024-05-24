@@ -1564,37 +1564,69 @@ class InterfaceManager:
     # </editor-fold>
 
     if tmp_repr_state[enums.PyMOLRepresentation.CARTOON.value] == 0:
-      self._main_view.tg_protein_pair_cartoon.toggle_button.setChecked(False)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_cartoon.toggle_button, False
+      )
     else:
-      self._main_view.tg_protein_pair_cartoon.toggle_button.setChecked(True)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_cartoon.toggle_button, True
+      )
     if tmp_repr_state[enums.PyMOLRepresentation.STICKS.value] == 0:
-      self._main_view.tg_protein_pair_sticks.toggle_button.setChecked(False)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_sticks.toggle_button, False
+      )
     else:
-      self._main_view.tg_protein_pair_sticks.toggle_button.setChecked(True)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_sticks.toggle_button, True
+      )
     if tmp_repr_state[enums.PyMOLRepresentation.RIBBON.value] == 0:
-      self._main_view.tg_protein_pair_ribbon.toggle_button.setChecked(False)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_ribbon.toggle_button, False
+      )
     else:
-      self._main_view.tg_protein_pair_ribbon.toggle_button.setChecked(True)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_ribbon.toggle_button, True
+      )
     if tmp_repr_state[enums.PyMOLRepresentation.LINES.value] == 0:
-      self._main_view.tg_protein_pair_lines.toggle_button.setChecked(False)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_lines.toggle_button, False
+      )
     else:
-      self._main_view.tg_protein_pair_lines.toggle_button.setChecked(True)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_lines.toggle_button, True
+      )
     if tmp_repr_state[enums.PyMOLRepresentation.SPHERES.value] == 0:
-      self._main_view.tg_protein_pair_spheres.toggle_button.setChecked(False)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_spheres.toggle_button, False
+      )
     else:
-      self._main_view.tg_protein_pair_spheres.toggle_button.setChecked(True)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_spheres.toggle_button, True
+      )
     if tmp_repr_state[enums.PyMOLRepresentation.DOTS.value] == 0:
-      self._main_view.tg_protein_pair_dots.toggle_button.setChecked(False)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_dots.toggle_button, False
+      )
     else:
-      self._main_view.tg_protein_pair_dots.toggle_button.setChecked(True)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_dots.toggle_button, True
+      )
     if tmp_repr_state[enums.PyMOLRepresentation.MESH.value] == 0:
-      self._main_view.tg_protein_pair_mesh.toggle_button.setChecked(False)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_mesh.toggle_button, False
+      )
     else:
-      self._main_view.tg_protein_pair_mesh.toggle_button.setChecked(True)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_mesh.toggle_button, True
+      )
     if tmp_repr_state[enums.PyMOLRepresentation.SURFACE.value] == 0:
-      self._main_view.tg_protein_pair_surface.toggle_button.setChecked(False)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_surface.toggle_button, False
+      )
     else:
-      self._main_view.tg_protein_pair_surface.toggle_button.setChecked(True)
+      ui_util.set_checked_async(
+        self._main_view.tg_protein_pair_surface.toggle_button, True
+      )
 
   # </editor-fold>
 
@@ -2823,8 +2855,8 @@ class InterfaceManager:
       self._main_view.ui.verticalLayout_15.setSpacing(
           0
       )  # layout for the representation section
-      """IMPORTANT: 
-                The layout for the hide all repr frame must have a top and bottom margin of 6, 
+      """IMPORTANT:
+                The layout for the hide all repr frame must have a top and bottom margin of 6,
                 set in the QDesigner's settings
             """
       # toggles should be used
@@ -3428,8 +3460,8 @@ class InterfaceManager:
       self._main_view.ui.verticalLayout_18.setSpacing(
           0
       )  # layout for the representation section
-      """IMPORTANT: 
-                The layout for the hide all repr frame must have a top and bottom margin of 6, 
+      """IMPORTANT:
+                The layout for the hide all repr frame must have a top and bottom margin of 6,
                 set in the QDesigner's settings
             """
       # toggles should be used

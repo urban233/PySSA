@@ -221,10 +221,10 @@ class Action(QtCore.QRunnable):
           tmp_result: Any = self._target(*self._args)
     except Exception as e:
       logger.error(e)
-      self._signals.finished.emit(str(self.id))
-      self._signals.error.emit((e,))
+      self._signals.finished.emit((str(self.id), False, e))
+      #self._signals.error.emit((e,))
     else:
-      self._signals.finished.emit(str(self.id))
-      self._signals.result.emit((True, tmp_result))
+      self._signals.finished.emit((str(self.id), (True, tmp_result)))
+      #self._signals.result.emit((True, tmp_result))
 
   # </editor-fold>

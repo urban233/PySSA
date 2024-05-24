@@ -271,6 +271,7 @@ class MainView(QtWidgets.QMainWindow):
     # fixme: the tutorial action of the menubar IS HIDDEN!!!
     self.ui.action_tutorials.setVisible(False)
     self.ui.action_abort_prediction.setVisible(False)
+    self.ui.action_preview_image.setVisible(False)
 
     self.ui.frame_job_overview.hide()
     self.ui.frame_job_notification.hide()
