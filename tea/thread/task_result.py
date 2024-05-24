@@ -308,11 +308,11 @@ class TaskResult(task.Task):
     for tmp_action in the_actions:
       tmp_task_result.connect_basic_signals(tmp_action)
       tmp_task_result.connect_result_signal(tmp_action)
-      if an_await_function is not None:
-        tmp_task_result.task_finished.connect(an_await_function)
       tmp_action.is_runnable = False
       tmp_action.set_lock(tmp_task_result.lock)
       tmp_task_result.actions.put(tmp_action)
+    if an_await_function is not None:
+      tmp_task_result.task_finished.connect(an_await_function)
     return tmp_task_result
 
   @staticmethod
