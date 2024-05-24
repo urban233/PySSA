@@ -628,7 +628,7 @@ class UserPyMOLConnector:
           "a_chain_letter is either None or an empty string."
       )
     if a_chain_letter not in constants.chain_dict.values():
-      logger.error("a_chain_letter is not part of the chain_dict.")
+      logger.error(f"a_chain_letter (value: {a_chain_letter}) is not part of the chain_dict.")
       raise exception.IllegalArgumentError(
           "a_chain_letter is not part of the chain_dict."
       )
@@ -678,7 +678,7 @@ class UserPyMOLConnector:
           "a_chain_letter is either None or an empty string"
       )
     if a_chain_letter not in constants.chain_dict.values():
-      logger.error("a_chain_letter is not part of the chain_dict.")
+      logger.error(f"a_chain_letter (value: {a_chain_letter}) is not part of the chain_dict.")
       raise exception.IllegalArgumentError(
           "a_chain_letter is not part of the chain_dict"
       )

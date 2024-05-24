@@ -38,7 +38,7 @@ class TaskSignals(QtCore.QObject):
   """
   A signal indicating that the action has started with its execution.
   """
-  finished = pyqtSignal(str)
+  finished = pyqtSignal(tuple)
   """
   A signal indicating that the action is finished whether the task was
   successful or not.

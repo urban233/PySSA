@@ -55,6 +55,7 @@ from pyssa.util import constants, enums, exit_codes, tools, ui_util, exception
 from pyssa.gui.ui.views import main_view
 from pyssa.controller import interface_manager, distance_analysis_view_controller, delete_project_view_controller, create_project_view_controller, open_project_view_controller, database_manager
 from pyssa.util import globals
+from pyssa_pymol import pymol_enums
 from tea.thread import tasks, task_manager, task_result_factory, task_result, action
 
 logger = logging.getLogger(__file__)
@@ -3430,14 +3431,13 @@ class MainViewController:
         logger.info("No file has been selected.")
         self.update_status("No file has been selected.")
         return
-
-      self._active_task = tasks.LegacyTask(
-          target=image_async.create_drawn_image,
-          args=(
-              full_file_name[0],
-              self._interface_manager.pymol_session_manager,
-          ),
-          post_func=self.__await_create_drawn_image,
+      
+      self._interface_manager.pymol_session_manager.async_cmds(
+        self._interface_manager.get_task_manager(),
+        self._interface_manager.get_task_scheduler(),
+        (pymol_enums.CommandEnum.DRAW, pymol_enums.CommandEnum.PNG),
+        ((2400, 2400, 2), (full_file_name[0], 300)),
+        self.__await_create_drawn_image
       )
     except Exception as e:
       logger.error(f"An error occurred: {e}")
@@ -3447,7 +3447,6 @@ class MainViewController:
     else:
       self.update_status("Creating simple image ...")
       self._interface_manager.block_gui(with_wait_cursor=True)
-      self._active_task.start()
 
   def __await_create_drawn_image(self, return_value: tuple) -> None:
     """Refreshes the main view and reverts the cursor after image creation."""
@@ -4215,18 +4214,25 @@ class MainViewController:
       self._interface_manager.pymol_session_manager.current_scene_name = (
           tmp_scene_name
       )
-      
-      self._task_result = tasks.TaskResult.run_action(  # fixme: raises currently an error if the unlock function is called
-          tasks.Action(
-              a_target=pymol_session_async.load_scene,
-              args=(
-                  self._interface_manager.pymol_session_manager,
-                  tmp_scene_name,
-              ),
-          ),
-          self.thread_pool,
-          an_await_function=self.__await_load_scene_protein,
+
+      self._interface_manager.pymol_session_manager.async_cmd(
+        self._interface_manager.get_task_manager(),
+        self._interface_manager.get_task_scheduler(),
+        pymol_enums.CommandEnum.LOAD_SCENE,
+        (tmp_scene_name,),
+        self.__await_load_scene_protein
       )
+      # self._task_result = tasks.TaskResult.run_action(  # fixme: raises currently an error if the unlock function is called
+      #     tasks.Action(
+      #         a_target=pymol_session_async.load_scene,
+      #         args=(
+      #             self._interface_manager.pymol_session_manager,
+      #             tmp_scene_name,
+      #         ),
+      #     ),
+      #     self.thread_pool,
+      #     an_await_function=self.__await_load_scene_protein,
+      # )
 
       # self._active_task = tasks.LegacyTask(
       #     target=pymol_session_async.load_scene,
@@ -4290,6 +4296,7 @@ class MainViewController:
   # <editor-fold desc="Setup PyMOL scene configuration">
   def _setup_protein_pymol_scene_config(self) -> None:
     """Sets up the color grid and representation section of the pymol scene configuration panel."""
+    logger.debug("Running method '_setup_protein_pymol_scene_config'.")
     try:
       tmp_chain_letter = self._view.ui.proteins_tree_view.currentIndex().data(
           Qt.DisplayRole
@@ -4316,28 +4323,42 @@ class MainViewController:
       tmp_protein = self._interface_manager.get_current_active_protein_object()
       tmp_chain = self._interface_manager.get_current_active_chain_object()
 
-      self._task_result = tasks.TaskResult.run_actions(
-          the_actions=(
-              tasks.Action(
-                  a_target=pymol_session_async.get_residue_color_config_of_a_given_protein_chain,
-                  args=(
-                      tmp_protein.get_molecule_object(),
-                      tmp_chain.chain_letter,
-                      self._interface_manager.pymol_session_manager,
-                  ),
-              ),
-              tasks.Action(
-                  a_target=pymol_session_async.get_representation_config_of_a_given_protein_chain,
-                  args=(
-                      tmp_protein.get_molecule_object(),
-                      tmp_chain.chain_letter,
-                      self._interface_manager.pymol_session_manager,
-                  ),
-              ),
-          ),
-          the_threadpool=self.thread_pool,
-          an_await_function=self.__await_setup_protein_pymol_scene_config,
+      self._interface_manager.pymol_session_manager.async_cmds(
+        self._interface_manager.get_task_manager(),
+        self._interface_manager.get_task_scheduler(),
+        (
+          pymol_enums.CommandEnum.GET_RESIDUE_COLOR_CONFIG,
+          pymol_enums.CommandEnum.GET_CHAIN_REPR_STATE
+        ),
+        (
+          (tmp_protein.get_molecule_object(), tmp_chain.chain_letter),
+          (tmp_protein.get_molecule_object(), tmp_chain.chain_letter)
+        ),
+        self.__await_setup_protein_pymol_scene_config
       )
+      
+      # self._task_result = tasks.TaskResult.run_actions(
+      #     the_actions=(
+      #         tasks.Action(
+      #             a_target=pymol_session_async.get_residue_color_config_of_a_given_protein_chain,
+      #             args=(
+      #                 tmp_protein.get_molecule_object(),
+      #                 tmp_chain.chain_letter,
+      #                 self._interface_manager.pymol_session_manager,
+      #             ),
+      #         ),
+      #         tasks.Action(
+      #             a_target=pymol_session_async.get_representation_config_of_a_given_protein_chain,
+      #             args=(
+      #                 tmp_protein.get_molecule_object(),
+      #                 tmp_chain.chain_letter,
+      #                 self._interface_manager.pymol_session_manager,
+      #             ),
+      #         ),
+      #     ),
+      #     the_threadpool=self.thread_pool,
+      #     an_await_function=self.__await_setup_protein_pymol_scene_config,
+      # )
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -4347,7 +4368,7 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_setup_protein_pymol_scene_config(
-      self, a_t_result: list[tuple[bool, Any]]
+      self, a_t_result: tuple[str, list[tuple[bool, Any]]]
   ) -> None:
     """Finishes the setup of the color grid and representation section process.
 
@@ -4366,11 +4387,16 @@ class MainViewController:
 
     # </editor-fold>
 
+    logger.debug("Running method '__await_setup_protein_pymol_scene_config'.")
+    logger.debug(a_t_result)
+    
     try:
-      logger.debug("Returned from async method.")
-      logger.debug(a_t_result)
-      tmp_t_result_async_1 = a_t_result[0]
-      tmp_success_flag, tmp_residue_color_config = tmp_t_result_async_1[1]
+      # <editor-fold desc="Color config">
+      tmp_success_flag, tmp_raw_residue_color_config = a_t_result[1][0]
+      tmp_residue_color_config = residue_color_config.ResidueColorConfig(
+        tmp_raw_residue_color_config["data"][0], tmp_raw_residue_color_config["data"][1], tmp_raw_residue_color_config["data"][2]
+      )
+      
       logger.debug(f"The return_value is: {a_t_result[0]}.")
       if not tmp_success_flag:
         logger.error("Retrieving color information failed!")
@@ -4406,12 +4432,15 @@ class MainViewController:
       tmp_protein.pymol_selection.selection_string = (
           f"first chain {tmp_chain.chain_letter}"
       )
-      # ----------------------------------------------------------------------------------------
+      
+      # </editor-fold>
+      
+      # <editor-fold desc="Representation config">
       logger.debug(
           "Returned from method 'pymol_session_async.get_representation_config_of_a_given_protein_chain'."
       )
-      tmp_t_result_async_2 = a_t_result[1]
-      tmp_success_flag, tmp_representation_config = tmp_t_result_async_2[1]
+      tmp_success_flag, tmp_raw_representation_config = a_t_result[1][1]
+      tmp_representation_config = tmp_raw_representation_config["data"]
       logger.debug(f"The return_value is: {a_t_result[1]}.")
       if tmp_success_flag:
         tmp_chain = self._interface_manager.get_current_active_chain_object()
@@ -4446,6 +4475,9 @@ class MainViewController:
           ui_util.set_checked_async(
               self._view.tg_protein_surface.toggle_button, False
           )
+      
+      # </editor-fold>
+    
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
