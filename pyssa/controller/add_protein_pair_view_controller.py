@@ -77,9 +77,6 @@ class AddProteinPairViewController(QtCore.QObject):
     if the_protein_pairs is None:
       logger.error("the_protein_pairs is None.")
       raise exception.IllegalArgumentError("the_protein_pairs is None.")
-    if a_list_of_extra_proteins is None:
-      logger.error("a_list_of_extra_proteins is None.")
-      raise exception.IllegalArgumentError("a_list_of_extra_proteins is None.")
 
     # </editor-fold>
 

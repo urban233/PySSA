@@ -1187,9 +1187,7 @@ class MainViewController:
 
     # </editor-fold>
 
-    # self._interface_manager = return_value[1]
     tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
-    self._interface_manager.refresh_main_view = tmp_result[2]
     self._interface_manager.refresh_main_view()
     self._interface_manager.stop_wait_cursor()
 
@@ -1261,8 +1259,6 @@ class MainViewController:
       self._interface_manager.status_bar_manager.show_error_message(
         "An unknown error occurred!"
       )
-    else:
-      self._active_task.start()
 
   def _update_progress_bar(self, return_value: tuple) -> None:
     """Updates the progress bar.
@@ -2177,8 +2173,6 @@ class MainViewController:
       self._interface_manager.status_bar_manager.show_error_message(
         "An unknown error occurred!"
       )
-    else:
-      self._active_task.start()
 
   def __await_create_project(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Awaits the async method that creates the new project.
@@ -2318,8 +2312,6 @@ class MainViewController:
       self._interface_manager.status_bar_manager.show_error_message(
         "An unknown error occurred!"
       )
-    else:
-      logger.debug("Error occurs.")
 
   def __await_open_project(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the project opening process.
@@ -3459,7 +3451,6 @@ class MainViewController:
         "Getting demo projects ...", a_with_timeout_flag=False
       )
       self._interface_manager.block_gui()
-      # self._active_task.start()
 
     # try:
     #     logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/Get Demo Projects' clicked.")
@@ -3625,7 +3616,6 @@ class MainViewController:
     else:
       self._interface_manager.block_gui(with_wait_cursor=True)
       self.update_status("Creating preview of image ...")
-      self._active_task.start()
 
   def __await_preview_image(self, return_value: tuple) -> None:
     """Refreshes the main view and reverts the cursor after image preview."""
@@ -4007,7 +3997,6 @@ class MainViewController:
       )
     else:
       self._interface_manager.block_gui(with_wait_cursor=True)
-      # self._active_task.start()
     finally:
       self._interface_manager.refresh_main_view()
 
@@ -4535,7 +4524,6 @@ class MainViewController:
         "Loading PyMOL scene ...", a_with_timeout_flag=False
       )
       self._interface_manager.block_gui()
-      # self._active_task.start()
 
   def __await_load_scene_protein(self, return_value: tuple[bool]) -> None:
     """Finishes the load default pymol scene process.
@@ -5141,7 +5129,6 @@ class MainViewController:
       )
     else:
       self._interface_manager.block_gui()
-      self._active_task.start()
 
   def __await_color_pymol_selection_atoms_by_element_for_protein(
           self, return_value: tuple
@@ -5292,7 +5279,6 @@ class MainViewController:
       )
     else:
       self._interface_manager.block_gui()
-      self._active_task.start()
 
   def __await_set_background_color_for_protein_session(
           self, return_value: tuple[bool]
@@ -6585,6 +6571,8 @@ class MainViewController:
         "Protein delete failed!"
       )
     finally:
+      self._view.ui.proteins_tree_view.selectionModel().clearSelection()
+      self._interface_manager.disable_proteins_tab_buttons()
       self._interface_manager.stop_wait_cursor()
       self._interface_manager.refresh_main_view()
 
@@ -6909,7 +6897,6 @@ class MainViewController:
           post_func=self.__await_post_rename_selected_protein_structure,
         )
         self._interface_manager.block_gui(with_wait_cursor=True)
-        self._active_task.start()
         self.update_status("Renaming protein ...")
       else:
         pass
@@ -7169,7 +7156,6 @@ class MainViewController:
       )
     else:
       self._interface_manager.block_gui()
-      self._active_task.start()
 
   def __await_create_new_scene_for_protein_session(
           self, return_value: tuple[bool, str]
@@ -7271,7 +7257,6 @@ class MainViewController:
       logger.debug(
         "Start async task 'pymol_session_async.save_protein_pymol_session_to_database'."
       )
-      self._active_task.start()
 
   def __await_save_scene_protein(self, return_value: tuple) -> None:
     """Finishes the save protein scene process.
@@ -7445,7 +7430,6 @@ class MainViewController:
           ),
           post_func=self.__await_delete_current_scene,
         )
-        self._active_task.start()
         self._interface_manager.status_bar_manager.show_temporary_message(
           "Deleting selected scene ...",
           False,
@@ -10075,8 +10059,7 @@ class MainViewController:
     # </editor-fold>
 
     try:
-      tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
-      if tmp_result[0]:
+      if return_value[0]:
         tmp_protein_pair: "protein_pair.ProteinPair" = (
           self._interface_manager.get_current_active_protein_pair_object()
         )
@@ -10102,6 +10085,8 @@ class MainViewController:
         "Protein pair delete process failed!"
       )
     finally:
+      self._view.ui.protein_pairs_tree_view.selectionModel().clearSelection()
+      self._interface_manager.disable_protein_pairs_tab_buttons()
       self._interface_manager.stop_wait_cursor()
       self._interface_manager.refresh_main_view()
 

@@ -85,15 +85,19 @@ class ResultsViewController(QtCore.QObject):
     self._distance_data_visualizer = None
     self.cb_protein_pair_color = QtWidgets.QComboBox()
 
+    self._connect_all_ui_elements_to_slot_functions()
+    self._build_table_widget()
+    self._fill_table_widget()
+    
     if not self._pymol_session_manager.is_the_current_protein_pair_in_session(
         self._interface_manager.get_current_active_protein_pair_object().name
     ):
       self.cb_protein_pair_color.setEnabled(False)
-
-    self._connect_all_ui_elements_to_slot_functions()
-    self._build_table_widget()
-    self._fill_table_widget()
+    else:
+      self._check_coloring()
+      
     self._check_results()
+    
     self._view.setWindowTitle(f"Results Summary Of {self._protein_pair.name}")
 
   def open_help(self, a_page_name: str) -> None:
@@ -200,7 +204,7 @@ class ResultsViewController(QtCore.QObject):
     self._view.ui.table_widget_results.setHorizontalHeaderLabels(
         ["Name", "Value"]
     )
-    gui_utils.fill_combo_box(self.cb_protein_pair_color, ["Normal", "By RMSD"])
+    gui_utils.fill_combo_box(self.cb_protein_pair_color, ["Default", "By RMSD"])
     self.cb_protein_pair_color.adjustSize()
     self.cb_protein_pair_color.currentIndexChanged.connect(
         self.__slot_color_protein_pair
@@ -292,7 +296,37 @@ class ResultsViewController(QtCore.QObject):
     else:
       self._view.ui.btn_view_plots.setEnabled(True)
       self._view.ui.btn_view_plots.setToolTip("")
-
+  
+  def _check_coloring(self):
+    """Checks if the protein pair is already colored by RMSD and sets combo box index accordingly."""
+    tmp_chain_letter = None
+    for tmp_chain in self._protein_pair.protein_1.chains:
+      if tmp_chain.chain_type == "protein_chain":
+        tmp_chain_letter = tmp_chain.chain_letter
+    if tmp_chain_letter is None:
+      return
+    self._protein_pair.protein_1.pymol_selection.set_selection_for_a_single_chain(
+      tmp_chain_letter
+    )
+    tmp_chain_color = self._pymol_session_manager.get_chain_color(
+      self._protein_pair.protein_1.pymol_selection.selection_string, tmp_chain_letter
+    )
+    # if constants.PYMOL_COLORS_WITH_INDICES["rmsd_color_1"] in tmp_chain_color[1]:
+    #   self.cb_protein_pair_color.setCurrentIndex(1)
+    # elif constants.PYMOL_COLORS_WITH_INDICES["rmsd_color_2"] in tmp_chain_color[1]:
+    #   self.cb_protein_pair_color.setCurrentIndex(1)
+    # elif constants.PYMOL_COLORS_WITH_INDICES["rmsd_color_3"] in tmp_chain_color[1]:
+    #   self.cb_protein_pair_color.setCurrentIndex(1)
+    # elif constants.PYMOL_COLORS_WITH_INDICES["rmsd_color_4"] in tmp_chain_color[1]:
+    #   self.cb_protein_pair_color.setCurrentIndex(1)
+    # elif constants.PYMOL_COLORS_WITH_INDICES["rmsd_color_5"] in tmp_chain_color[1]:
+    #   self.cb_protein_pair_color.setCurrentIndex(1)
+    if "By RMSD" in tmp_chain_color[1]:
+      self.cb_protein_pair_color.setCurrentIndex(1)
+    else:
+      self.cb_protein_pair_color.setCurrentIndex(0)
+    print(tmp_chain_color)
+    
   # </editor-fold>
 
   def __slot_highlight_protein(self) -> None:
@@ -307,6 +341,7 @@ class ResultsViewController(QtCore.QObject):
     #     cmd.select(tmp_pymol_selection.selection_string)
     # else:
     #     cmd.select(name="", selection="none")
+    return
     raise NotImplementedError()
 
   def _open_plot_view(self) -> None:
@@ -345,9 +380,7 @@ class ResultsViewController(QtCore.QObject):
                 self._protein_pair.protein_1.get_id(),
                 tmp_chain.chain_letter,
                 enums.PymolParameterEnum.COLOR.value,
-            )[
-                0
-            ],  # the [0] is needed because the db return the color as tuple e.g. ('green',)
+            )
         )
       for tmp_chain in self._protein_pair.protein_2.chains:
         self._color_configuration_protein_pair[1].append(
@@ -356,9 +389,7 @@ class ResultsViewController(QtCore.QObject):
                 self._protein_pair.protein_2.get_id(),
                 tmp_chain.chain_letter,
                 enums.PymolParameterEnum.COLOR.value,
-            )[
-                0
-            ],  # the [0] is needed because the db return the color as tuple e.g. ('green',)
+            )
         )
 
   def _color_protein_pair_by_rmsd(self) -> None:
@@ -367,7 +398,7 @@ class ResultsViewController(QtCore.QObject):
         target=protein_pair_async.color_protein_pair_by_rmsd_value,
         args=(
             self._protein_pair,
-            0,
+            self._pymol_session_manager,
         ),
         post_func=self.__await_color_protein_pair_by_rmsd,
     )
@@ -409,7 +440,7 @@ class ResultsViewController(QtCore.QObject):
           tmp_chain.chain_letter
       )
       self._interface_manager.pymol_session_manager.color_protein(
-          tmp_protein_1_colors[i],
+          "green",  # tmp_protein_1_colors[i],
           self._protein_pair.protein_1.pymol_selection.selection_string,
       )
       # self._protein_pair.protein_1.pymol_selection.color_selection(tmp_protein_1_colors[i])
@@ -422,7 +453,7 @@ class ResultsViewController(QtCore.QObject):
           tmp_chain.chain_letter
       )
       self._interface_manager.pymol_session_manager.color_protein(
-          tmp_protein_2_colors[i],
+          "blue",  # tmp_protein_2_colors[i],
           self._protein_pair.protein_2.pymol_selection.selection_string,
       )
       # self._protein_pair.protein_2.pymol_selection.color_selection(tmp_protein_2_colors[i])

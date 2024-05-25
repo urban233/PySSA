@@ -1150,8 +1150,7 @@ class PlotView(QtWidgets.QDialog):
       tmp_lower_bin = tmp_bin - 1
       tmp_upper_bin = tmp_bin
       if (
-          point_to_highlight >= tmp_lower_bin
-          and point_to_highlight <= tmp_upper_bin
+          tmp_lower_bin <= point_to_highlight <= tmp_upper_bin
       ):
         self.highlighted_bin_index = int(tmp_lower_bin)
         break

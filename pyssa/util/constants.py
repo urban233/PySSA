@@ -359,10 +359,17 @@ PYMOL_COLORS_WITH_INDICES = {
     124: 'grey70',
     84: 'grey30',
     1: 'black',
-    'By RMSD': 'By RMSD',
     27: 'N-blue',
     28: 'O-red',
+    'By RMSD': 'By RMSD',
     'By Element': 'By Element',
+    'hydrogen': 'hydrogen',
+    'rmsd_color_1': 'br0',
+    'rmsd_color_2': 'br2',
+    'rmsd_color_3': 'br4',
+    'rmsd_color_4': 'br6',
+    'rmsd_color_5': 'br8',
+    'rmsd_color_6': 'red'
 }
 
 AMINO_ACID_CODE = {

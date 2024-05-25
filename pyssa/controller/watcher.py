@@ -134,7 +134,7 @@ class Watcher:
         for tmp_analysis_name in tmp_job.list_with_analysis_names:
           elements.append(tmp_analysis_name)
     if the_current_distance_analysis_job is not None:
-      elements.extend(the_current_distance_analysis_job)
+      elements.extend(the_current_distance_analysis_job.analysis_names)
     return elements
 
   # </editor-fold>

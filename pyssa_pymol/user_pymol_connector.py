@@ -895,10 +895,10 @@ class UserPyMOLConnector:
         and a_pymol_color != "atomic"
     ):
       logger.error(
-          "a_pymol_color could not be found in the PYMOL_COLORS_WITH_INDICES dict."
+          f"a_pymol_color (value: {a_pymol_color}) could not be found in the PYMOL_COLORS_WITH_INDICES dict."
       )
       raise exception.IllegalArgumentError(
-          "a_pymol_color could not be found in the PYMOL_COLORS_WITH_INDICES dict."
+          f"a_pymol_color (value: {a_pymol_color}) could not be found in the PYMOL_COLORS_WITH_INDICES dict."
       )
     if a_selection_string is None or a_selection_string == "":
       logger.error("a_selection_string is either None or an empty string.")

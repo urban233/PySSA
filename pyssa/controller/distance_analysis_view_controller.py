@@ -186,12 +186,6 @@ class DistanceAnalysisViewController(QtCore.QObject):
 
   def display_distance_analysis(self) -> None:
     """Displays the job analysis work area."""
-    self._view.ui.list_distance_analysis_prot_1_chains.setSelectionMode(
-        QtWidgets.QAbstractItemView.ExtendedSelection
-    )
-    self._view.ui.list_distance_analysis_prot_2_chains.setSelectionMode(
-        QtWidgets.QAbstractItemView.ExtendedSelection
-    )
     gui_elements_to_show = [
         self._view.ui.btn_distance_analysis_add,
         self._view.ui.lbl_distance_analysis_overview,
