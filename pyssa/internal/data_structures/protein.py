@@ -498,15 +498,13 @@ class Protein:
         chain_type (str): type of chain to append to the protein.
 
     Raises:
-        exception.IllegalArgumentError: If chain_name is either None or an empty string.
-        exception.IllegalArgumentError: If chain_sequence is None.
-        exception.IllegalArgumentError: If chain_type is either None or an empty string.
+        exception.IllegalArgumentError: If any of the arguments are None or `chain_type` is an empty string.
     """
     # <editor-fold desc="Checks">
-    if chain_name is None or chain_name == "":
-      logger.error("chain_name is either None or an empty string.")
+    if chain_name is None:
+      logger.error("chain_name is None.")
       raise exception.IllegalArgumentError(
-          "chain_name is either None or an empty string."
+          "chain_name is None."
       )
     if chain_sequence is None:
       logger.error("chain_sequence is None.")

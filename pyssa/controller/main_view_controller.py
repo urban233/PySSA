@@ -7188,13 +7188,20 @@ class MainViewController:
         logging.debug(
           "Setting up new async task 'pymol_session_async.save_protein_pymol_session_to_database'."
         )
-        self._active_task = tasks.LegacyTask(
-          target=pymol_session_async.save_protein_pymol_session_to_database,
-          args=(
-            self._interface_manager,
-            0,
-          ),
-          post_func=self.__await_save_scene_protein,
+        self._interface_manager.get_task_manager().append_task_result(
+          task_result_factory.TaskResultFactory.run_task_result(
+            a_task_result=task_result.TaskResult.from_action(
+              an_action=action.Action(
+                a_target=pymol_session_async.save_protein_pymol_session_to_database,
+                args=(
+                  self._interface_manager,
+                  0,
+                ),
+              ),
+              an_await_function=self.__await_save_scene_protein,
+            ),
+            a_task_scheduler=self._interface_manager.get_task_scheduler(),
+          )
         )
         self._interface_manager.status_bar_manager.show_temporary_message(
           "Adding new scene to protein ...", False
@@ -7215,13 +7222,20 @@ class MainViewController:
         # User is on Protein Pairs tab
         # The database thread cannot be used here because the session gets loaded again
         # before the new data is in the db
-        self._active_task = tasks.LegacyTask(
-          target=pymol_session_async.save_protein_pair_pymol_session_to_database,
-          args=(
-            self._interface_manager,
-            0,
-          ),
-          post_func=self.__await_save_scene_protein_pair,
+        self._interface_manager.get_task_manager().append_task_result(
+          task_result_factory.TaskResultFactory.run_task_result(
+            a_task_result=task_result.TaskResult.from_action(
+              an_action=action.Action(
+                a_target=pymol_session_async.save_protein_pair_pymol_session_to_database,
+                args=(
+                  self._interface_manager,
+                  0,
+                ),
+              ),
+              an_await_function=self.__await_save_scene_protein_pair,
+            ),
+            a_task_scheduler=self._interface_manager.get_task_scheduler(),
+          )
         )
         self._interface_manager.status_bar_manager.show_temporary_message(
           "Adding new scene to protein pair ...", False
@@ -7418,17 +7432,24 @@ class MainViewController:
         self._view.ui.lbl_pymol_protein_scene.setText(
           "PyMOL Scene: No Scene Selected"
         )
-        self.__await_delete_current_scene((0, True))
+        self.__await_delete_current_scene(('generic_id', [(True, (0, True))]))
       elif self._interface_manager.current_tab_index == 2:
         # The database thread cannot be used here because the session gets loaded again
         # before the new data is in the db
-        self._active_task = tasks.LegacyTask(
-          target=pymol_session_async.save_protein_pair_pymol_session_to_database,
-          args=(
-            self._interface_manager,
-            0,
-          ),
-          post_func=self.__await_delete_current_scene,
+        self._interface_manager.get_task_manager().append_task_result(
+          task_result_factory.TaskResultFactory.run_task_result(
+            a_task_result=task_result.TaskResult.from_action(
+              an_action=action.Action(
+                a_target=pymol_session_async.save_protein_pair_pymol_session_to_database,
+                args=(
+                  self._interface_manager,
+                  0,
+                ),
+              ),
+              an_await_function=self.__await_delete_current_scene,
+            ),
+            a_task_scheduler=self._interface_manager.get_task_scheduler(),
+          )
         )
         self._interface_manager.status_bar_manager.show_temporary_message(
           "Deleting selected scene ...",
