@@ -1019,7 +1019,6 @@ class MainViewController:
     if tmp_result[0] is True and tmp_result[1] == "ColabFold Prediction":
       self.__slot_abort_prediction()
 
-  # TODO: Test it!!!
   def _update_main_view_ui(
           self, refresh_after_job_finished_signal_values: tuple
   ) -> None:
@@ -2350,6 +2349,12 @@ class MainViewController:
         enums.StatusMessages.OPENING_PROJECT_FINISHED.value,
       )
       self._connect_sequence_selection_model()
+      # Expand all available proteins
+      #if len(self._interface_manager) > 0: # fixme: NOT FINISHED
+       # self.__slot_expand_all_proteins()
+      # Expand all available protein pairs
+      #if len(self.) > 0:
+       # self.__slot_expand_all_protein_pairs()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -4080,6 +4085,9 @@ class MainViewController:
         )
         self._interface_manager.get_current_project().delete_specific_sequence(
           tmp_seq_record.name
+        )
+        self._interface_manager.status_bar_manager.show_temporary_message(
+          "The sequence was successfully deleted."
         )
       except Exception as e:
         logger.error(f"An error occurred: {e}")
@@ -6563,6 +6571,9 @@ class MainViewController:
           tmp_protein.get_molecule_object()
         )
         self._interface_manager.remove_protein_from_proteins_model()
+        self._interface_manager.status_bar_manager.show_temporary_message(
+          "The protein was successfully deleted."
+        )
     except Exception as e:
       logger.error(
         f"An error occurred during the protein deletion process: {e}"
@@ -10098,6 +10109,9 @@ class MainViewController:
           tmp_protein_pair.name
         )
         self._interface_manager.remove_protein_pair_from_protein_pairs_model()
+        self._interface_manager.status_bar_manager.show_temporary_message(
+          "The protein pair was successfully deleted."
+        )
     except Exception as e:
       logger.error(
         f"An error occurred during the protein pair deletion process: {e}"

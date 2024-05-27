@@ -1290,6 +1290,7 @@ class InterfaceManager:
     self._protein_pair_model.clear()
     self._build_protein_pairs_model()
 
+  # fixme: This function does not used anymore!!!
   def set_new_workspace(self, the_current_workspace: str) -> None:
     """Sets the new current workspace into the interface manager.
 
@@ -2069,6 +2070,9 @@ class InterfaceManager:
     """
     self._workspace_model.clear()
     self._build_workspace_model()
+    self.status_bar_manager.show_temporary_message(
+      "Workspace changed successfully."
+    )
 
   def refresh_sequence_model(self) -> None:
     """Refreshes the sequence model.
