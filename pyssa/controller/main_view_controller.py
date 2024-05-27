@@ -2350,11 +2350,9 @@ class MainViewController:
       )
       self._connect_sequence_selection_model()
       # Expand all available proteins
-      #if len(self._interface_manager) > 0: # fixme: NOT FINISHED
-       # self.__slot_expand_all_proteins()
+      self.__slot_expand_all_proteins()
       # Expand all available protein pairs
-      #if len(self.) > 0:
-       # self.__slot_expand_all_protein_pairs()
+      self.__slot_expand_all_protein_pairs()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -4650,7 +4648,7 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_setup_protein_pymol_scene_config(
-      self, a_t_result: tuple[str, list[tuple[bool, Any]]]
+          self, a_t_result: tuple[str, list[tuple[bool, Any]]]
   ) -> None:
     """Finishes the setup of the color grid and representation section process.
 
@@ -4676,7 +4674,8 @@ class MainViewController:
       # <editor-fold desc="Color config">
       tmp_success_flag, tmp_raw_residue_color_config = a_t_result[1][0]
       tmp_residue_color_config = residue_color_config.ResidueColorConfig(
-        tmp_raw_residue_color_config["data"][0], tmp_raw_residue_color_config["data"][1], tmp_raw_residue_color_config["data"][2]
+        tmp_raw_residue_color_config["data"][0], tmp_raw_residue_color_config["data"][1],
+        tmp_raw_residue_color_config["data"][2]
       )
 
       logger.debug(f"The return_value is: {a_t_result[0]}.")
@@ -4989,7 +4988,6 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
       return
 
-
     # </editor-fold>
 
     try:
@@ -5196,7 +5194,6 @@ class MainViewController:
       self._interface_manager.refresh_main_view()
       self._interface_manager.stop_wait_cursor()
       return
-
 
     # </editor-fold>
 
@@ -8408,7 +8405,6 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
       return
 
-
     # </editor-fold>
 
     try:
@@ -8704,7 +8700,6 @@ class MainViewController:
       self._interface_manager.refresh_main_view()
       self._interface_manager.stop_wait_cursor()
       return
-
 
     # </editor-fold>
 
@@ -9075,8 +9070,8 @@ class MainViewController:
     """Changes the representation based on the toggle state."""
     try:
       logger.log(
-          log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Sticks' toggle on the 'Protein Pairs Tab' was clicked.",
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        "'Sticks' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
         self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -9148,8 +9143,8 @@ class MainViewController:
     """Changes the representation based on the toggle state."""
     try:
       logger.log(
-          log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Ribbon' toggle on the 'Protein Pairs Tab' was clicked.",
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        "'Ribbon' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
         self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -9221,8 +9216,8 @@ class MainViewController:
     """Changes the representation based on the toggle state."""
     try:
       logger.log(
-          log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Lines' toggle on the 'Protein Pairs Tab' was clicked.",
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        "'Lines' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
         self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -9294,8 +9289,8 @@ class MainViewController:
     """Changes the representation based on the toggle state."""
     try:
       logger.log(
-          log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Spheres' toggle on the 'Protein Pairs Tab' was clicked.",
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        "'Spheres' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
         self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -9367,8 +9362,8 @@ class MainViewController:
     """Changes the representation based on the toggle state."""
     try:
       logger.log(
-          log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Dots' toggle on the 'Protein Pairs Tab' was clicked.",
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        "'Dots' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
         self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -9440,8 +9435,8 @@ class MainViewController:
     """Changes the representation based on the toggle state."""
     try:
       logger.log(
-          log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Mesh' toggle on the 'Protein Pairs Tab' was clicked.",
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        "'Mesh' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
         self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -9513,8 +9508,8 @@ class MainViewController:
     """Changes the representation based on the toggle state."""
     try:
       logger.log(
-          log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-          "'Surface' toggle on the 'Protein Pairs Tab' was clicked.",
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        "'Surface' toggle on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_selection = (
         self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
@@ -10021,11 +10016,11 @@ class MainViewController:
     try:
       logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-        "'Delete protein' button on the 'Proteins Tab' was clicked.",
+        "'Delete protein pair' button on the 'Protein Pairs Tab' was clicked.",
       )
       tmp_dialog = custom_message_box.CustomMessageBoxDelete(
-        "Are you sure you want to delete this protein?",
-        "Delete Protein",
+        "Are you sure you want to delete this protein pair?",
+        "Delete Protein Pair",
         custom_message_box.CustomMessageBoxIcons.WARNING.value,
       )
       tmp_dialog.exec_()
@@ -10039,16 +10034,16 @@ class MainViewController:
       if not self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(
               tmp_protein_pair.name
       ):
-        self.__await_reinitialize_session_before_delete_protein_pair((True,))
+        tmp_return_value = ("generic_id", [(True, (True, 0))])
+        self.__await_reinitialize_session_before_delete_protein_pair(tmp_return_value)
         return
       self._interface_manager.get_task_manager().append_task_result(
         task_result_factory.TaskResultFactory.run_task_result(
           a_task_result=task_result.TaskResult.from_action(
             an_action=action.Action(
               a_target=pymol_session_async.reinitialize_session,
-              args=(
-                self._interface_manager.pymol_session_manager,
-              ),
+              args=
+              (self._interface_manager.pymol_session_manager,)
             ),
             an_await_function=self.__await_reinitialize_session_before_delete_protein_pair,
           ),
@@ -10071,12 +10066,12 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_reinitialize_session_before_delete_protein_pair(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Removes protein pair from database and refreshes the main view.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -10091,7 +10086,8 @@ class MainViewController:
     # </editor-fold>
 
     try:
-      if return_value[0]:
+      tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
+      if tmp_result[0]:
         tmp_protein_pair: "protein_pair.ProteinPair" = (
           self._interface_manager.get_current_active_protein_pair_object()
         )

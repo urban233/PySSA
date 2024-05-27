@@ -2180,7 +2180,6 @@ class InterfaceManager:
 
     # </editor-fold>
 
-    self._main_view.ui.btn_save_protein_pair.setEnabled(False)
     self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
     self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
     self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)
