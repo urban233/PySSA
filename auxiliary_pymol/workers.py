@@ -125,12 +125,17 @@ def handle_request(a_job_type: str, a_queue: queue.Queue, a_socket: zmq.Socket) 
                         )
                         print("Cleaning given protein finished.")
                         response = {"result": "", "data": (tmp_pymol_session, tmp_new_pdb_filepath)}
+            except AttributeError as e:
+                if str(e).find("Error: Selection 1: More than one atom found") != -1:
+                    response = {"result": "error", "data": "Ambiguous selection."}
+                else:
+                    response = {"result": "error", "data": str(e)}
             except Exception as e:
-                response = {"result": str(e), "data": ""}
+                response = {"result": "error", "data": str(e)}
             # Indicate that the task is done
             a_queue.task_done()
             # Send the response back to the client
-            print("This is the response: {}".format(response))
+            #print("This is the response: {}".format(response))
             a_socket.recv_json()
             a_socket.send_json(response)  # Send JSON-encoded response
     except Exception as e:

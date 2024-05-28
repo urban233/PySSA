@@ -456,6 +456,13 @@ class DistanceAnalysisJob(Job):
           enums.JobProgress.FAILED
       )
       self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
+    except exception.UnableToDoAnalysisError as e:
+      tmp_msg = f"Error: {e}"
+      logger.error(tmp_msg)
+      self.job_entry_widget.job_base_information.job_progress = (
+        enums.JobProgress.FAILED
+      )
+      self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
     except Exception as e:
       tmp_msg = f"Unknown error: {e}"
       logger.error(tmp_msg)
