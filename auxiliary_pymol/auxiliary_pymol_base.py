@@ -134,6 +134,7 @@ class AuxiliaryPyMOL:
                     quiet=0,
                 )
 
+
                 fasta_prot_1 = auxiliary_pymol.cmd.get_fastastr(a_protein_1_pymol_selection_string)
                 seq_len_protein_1 = len(fasta_prot_1[fasta_prot_1.find("\n") :])
                 rmsd_dict = {

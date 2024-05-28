@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """A module to hold the global constants from the PySSA in the auxiliary scope."""
+import datetime
 import pathlib
 import os
 
@@ -39,6 +40,11 @@ CACHE_CSV_DIR = pathlib.Path(f"{CACHE_DIR}/csv")
 CACHE_IMAGES = pathlib.Path(f"{CACHE_DIR}/images")
 CACHE_STRUCTURE_ALN_IMAGES_DIR = pathlib.Path(f"{CACHE_DIR}/images/structure_alignment")
 CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR = pathlib.Path(f"{CACHE_STRUCTURE_ALN_IMAGES_DIR}/interesting_regions")
+
+current_time = datetime.datetime.now()
+LOG_FILENAME = f'{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log'  # noqa: E501
+LOG_FILEPATH = pathlib.Path(f'{SETTINGS_DIR}/logs/{LOG_FILENAME}')
+LOG_PATH = pathlib.Path(f'{SETTINGS_DIR}/logs')
 
 PYMOL_DEFAULT_BACKGROUND_COLOR = "black"
 PYMOL_DEFAULT_RAY_TRACE_MODE = 1

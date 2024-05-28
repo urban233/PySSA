@@ -676,7 +676,7 @@ class MainViewController:
       lambda: self.__slot_change_chain_color_protein_pairs("magenta")
     )
     self._view.color_grid_protein_pairs.c_purple.clicked.connect(
-      lambda: self.__slot_change_chain_color_protein_pairs("pink")
+      lambda: self.__slot_change_chain_color_protein_pairs("purple")
     )
     self._view.color_grid_protein_pairs.c_pink.clicked.connect(
       lambda: self.__slot_change_chain_color_protein_pairs("pink")
@@ -715,10 +715,10 @@ class MainViewController:
       lambda: self.__slot_change_chain_color_protein_pairs("white")
     )
     self._view.color_grid_protein_pairs.c_grey_70.clicked.connect(
-      lambda: self.__slot_change_chain_color_protein_pairs("grey_70")
+      lambda: self.__slot_change_chain_color_protein_pairs("grey70")
     )
     self._view.color_grid_protein_pairs.c_grey_30.clicked.connect(
-      lambda: self.__slot_change_chain_color_protein_pairs("grey_30")
+      lambda: self.__slot_change_chain_color_protein_pairs("grey30")
     )
     self._view.color_grid_protein_pairs.c_black.clicked.connect(
       lambda: self.__slot_change_chain_color_protein_pairs("black")
@@ -754,7 +754,7 @@ class MainViewController:
 
     # </editor-fold>
 
-  def _close_main_window(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+  def _close_main_window(self, return_value: tuple[str, QtGui.QCloseEvent]) -> None:
     """Cleans after the main window closes.
 
     Args:
@@ -767,8 +767,7 @@ class MainViewController:
 
     # </editor-fold>
 
-    tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
-    _, tmp_event = tmp_result
+    _, tmp_event = return_value
     logger.info("Check if any jobs are running before closing PySSA.")
     if self._interface_manager.job_manager.there_are_jobs_running():
       logger.info("Running jobs found!")
