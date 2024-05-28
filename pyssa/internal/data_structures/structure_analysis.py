@@ -128,6 +128,7 @@ class Analysis:
         exception.IllegalArgumentError: If any of the arguments are None.
         UnableToSetImageError: If no image was setting.
         UnableToOpenFileError: If file could not be opened.
+        exception.UnableToDoAnalysisError: If the analysis fails.
     """
     # <editor-fold desc="Checks">
     if the_image_creation_option is None:
@@ -193,8 +194,10 @@ class Analysis:
                 tmp_protein_pair.distance_analysis.cycles,
             ),
         )
-        result = tmp_reply["result"]
+        if tmp_reply["result"] == "error" and tmp_reply["data"] == "More than one state":
+          raise exception.UnableToDoAnalysisError(tmp_reply["data"])
         if tmp_reply["data"] is not None:
+          print(tmp_reply["data"])
           distance_analysis_results_object_values, base64_string = tmp_reply[
               "data"
           ]
@@ -245,6 +248,8 @@ class Analysis:
         raise exception.UnableToOpenFileError(
             f"filename: {tmp_protein_pair.name}"
         )
+      except exception.UnableToDoAnalysisError:
+        raise exception.UnableToDoAnalysisError("Ambiguous selection during structure analysis.")
       except Exception as e:
         logger.error(f"Unknown error: {e}")
         raise exception.UnableToSetImageError("")

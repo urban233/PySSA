@@ -96,6 +96,7 @@ class AuxiliaryPyMOL:
                 auxiliary_pymol.cmd.color(local_constants.DEFAULT_COLOR_PROTEIN_1, tmp_protein_1_name)
                 auxiliary_pymol.cmd.color(local_constants.DEFAULT_COLOR_PROTEIN_2, tmp_protein_2_name)
 
+                auxiliary_pymol.cmd.reset()
                 auxiliary_pymol.cmd.scene("base", action="store")
 
                 auxiliary_pymol.cmd.bg_color(local_constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
@@ -217,7 +218,7 @@ class AuxiliaryPyMOL:
                 #     auxiliary_pymol.cmd.hide("cartoon", selection)
                 auxiliary_pymol.cmd.hide("cgo", "all")
                 auxiliary_pymol.cmd.orient()
-                auxiliary_pymol.cmd.center()
+                auxiliary_pymol.cmd.reset()
                 auxiliary_pymol.cmd.scene(
                     key=f"{tmp_protein_1_name}-{tmp_protein_2_name}",
                     action="store",
@@ -250,7 +251,7 @@ class AuxiliaryPyMOL:
                         auxiliary_pymol.cmd.label(atom1, "'%s-%s' % (resn, resi)")
                         auxiliary_pymol.cmd.label(atom2, "'%s-%s' % (resn, resi)")
                         auxiliary_pymol.cmd.set("label_position", (0, 0, 10))
-                        # set image parameters
+                        # set scene
                         auxiliary_pymol.cmd.scene(key=f"{ref_pos}-{model_pos}", action="store")
                         # hide created labels
                         auxiliary_pymol.cmd.hide("labels", atom1)
@@ -288,9 +289,13 @@ class AuxiliaryPyMOL:
                     rmsd_dict["aligned_residues"],
                 )
         except Exception as e:
-            tmp_msg: str = f"The analysis in PyMOL failed with the error: {e}"
-            print(tmp_msg)
-        return distance_analysis_results_object_values, base64_string
+            if str(e).find("Error: Selection 1: More than one atom found") != -1:
+                raise AttributeError("Error: Selection 1: More than one atom found")
+            else:
+                tmp_msg: str = f"The analysis in PyMOL failed with the error: {e}"
+                print(tmp_msg)
+        else:
+            return distance_analysis_results_object_values, base64_string
 
     @staticmethod
     def create_ray_traced_image(
@@ -391,6 +396,7 @@ class AuxiliaryPyMOL:
                 auxiliary_pymol.cmd.set("ray_trace_color", local_constants.PYMOL_DEFAULT_RAY_COLOR)
                 auxiliary_pymol.cmd.unset("depth_cue")
                 auxiliary_pymol.cmd.color("green", tmp_protein_name)
+                auxiliary_pymol.cmd.reset()
                 auxiliary_pymol.cmd.scene("base", action="store")
                 session_filepath: pathlib.Path = pathlib.Path(
                     f"{local_constants.SCRATCH_DIR}/{tmp_protein_name}_session.pse",
@@ -490,8 +496,10 @@ class AuxiliaryPyMOL:
             except Exception as e:
                 print(f"Protein states could not be consolidated! Ran into error: {e}")
                 return ""
-
-            if auxiliary_pymol.cmd.count_states(tmp_protein_name) > 1:
+            
+            tmp_states = auxiliary_pymol.cmd.count_states(tmp_protein_name)
+            print(f"Number of states: {tmp_states}")
+            if tmp_states > 1:
                 try:
                     # Create a new object with only the first state
                     auxiliary_pymol.cmd.create("new_object", tmp_protein_name, 1, 1)
@@ -514,8 +522,10 @@ class AuxiliaryPyMOL:
                     print(f"Protein states could not be consolidated! Ran into error: {e}")
                     return ""
                 else:
+                    print("Protein states successfully consolidated!")
                     return str(tmp_pdb_cache_filepath)
             else:
+                print("No states to consolidate.")
                 return a_pdb_filepath
 
     @staticmethod

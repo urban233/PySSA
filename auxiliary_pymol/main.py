@@ -133,6 +133,7 @@ if __name__ == "__main__":
                 queues[task_type].put(data)
                 main_socket.send_string("Received data and added job to queue.")
     except Exception as e:
-        response = {"result": str(e)}
+        print("Caught general exception.")
+        response = {"result": "error", "data": str(e)}
         main_socket.send_json(response)  # Send JSON-encoded response
     exit(0)

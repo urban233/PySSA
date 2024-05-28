@@ -2539,45 +2539,48 @@ class MainViewController:
         "",
         "Project Database File (*.db)",
       )
-      if file_path:
-        file = QtCore.QFile(file_path)
-        if not file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text):
-          print("Error: Cannot open file for reading")
-          return
-        tmp_import_filepath = pathlib.Path(file_path)
-        tmp_project_name_input_dialog = QtWidgets.QInputDialog()
-        tmp_new_project_name = tmp_project_name_input_dialog.getText(
-          self._view,
-          "Project Name",
-          "Enter A Project Name:",
-          text=tmp_import_filepath.name.replace(".db", ""),
-        )[0]
-        # self._active_task = tasks.LegacyTask(
-        #   target=project_async.import_project,
-        #   args=(
-        #     tmp_new_project_name,
-        #     tmp_import_filepath,
-        #     self._interface_manager,
-        #   ),
-        #   post_func=self._await__slot_import_project,
-        # )
+      if not file_path:
+        return
+      file = QtCore.QFile(file_path)
+      if not file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text):
+        print("Error: Cannot open file for reading")
+        return
+      tmp_import_filepath = pathlib.Path(file_path)
+      tmp_project_name_input_dialog = QtWidgets.QInputDialog()
+      tmp_new_project_name = tmp_project_name_input_dialog.getText(
+        self._view,
+        "Project Name",
+        "Enter A Project Name:",
+        text=tmp_import_filepath.name.replace(".db", ""),
+      )[0]
+      if tmp_new_project_name == "":
+        return
+      # self._active_task = tasks.LegacyTask(
+      #   target=project_async.import_project,
+      #   args=(
+      #     tmp_new_project_name,
+      #     tmp_import_filepath,
+      #     self._interface_manager,
+      #   ),
+      #   post_func=self._await__slot_import_project,
+      # )
 
-        self._interface_manager.get_task_manager().append_task_result(
-          task_result_factory.TaskResultFactory.run_task_result(
-            a_task_result=task_result.TaskResult.from_action(
-              an_action=action.Action(
-                a_target=project_async.import_project,
-                args=(
-                  tmp_new_project_name,
-                  tmp_import_filepath,
-                  self._interface_manager,
-                ),
+      self._interface_manager.get_task_manager().append_task_result(
+        task_result_factory.TaskResultFactory.run_task_result(
+          a_task_result=task_result.TaskResult.from_action(
+            an_action=action.Action(
+              a_target=project_async.import_project,
+              args=(
+                tmp_new_project_name,
+                tmp_import_filepath,
+                self._interface_manager,
               ),
-              an_await_function=self._await__slot_import_project,
             ),
-            a_task_scheduler=self._interface_manager.get_task_scheduler(),
-          )
+            an_await_function=self._await__slot_import_project,
+          ),
+          a_task_scheduler=self._interface_manager.get_task_scheduler(),
         )
+      )
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
