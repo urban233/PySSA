@@ -1382,7 +1382,7 @@ class MainViewController:
     """Checks if the documentation server started correctly.
 
     Args:
-        return_value (tuple): A tuple containing information about the start of the documentation server.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing information about the start of the documentation server.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -3224,7 +3224,7 @@ class MainViewController:
     # self._interface_manager.update_settings()
     # self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
 
-  def post_open_settings_global(self, return_value: tuple) -> None:
+  def post_open_settings_global(self) -> None:
     """Refreshes the workspace model and the main view after the settings dialog closed."""
     try:
       self._interface_manager.refresh_workspace_model()
@@ -3621,7 +3621,7 @@ class MainViewController:
       self._interface_manager.block_gui(with_wait_cursor=True)
       self.update_status("Creating preview of image ...")
 
-  def __await_preview_image(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+  def __await_preview_image(self) -> None:
     """Refreshes the main view and reverts the cursor after image preview."""
     self._interface_manager.stop_wait_cursor()
     self._interface_manager.refresh_main_view()
@@ -3703,7 +3703,7 @@ class MainViewController:
       self.update_status("Creating simple image ...")
       self._interface_manager.block_gui(with_wait_cursor=True)
 
-  def __await_create_drawn_image(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+  def __await_create_drawn_image(self) -> None:
     """Refreshes the main view and reverts the cursor after image creation."""
     self._interface_manager.stop_wait_cursor()
     self._interface_manager.refresh_main_view()
@@ -4353,7 +4353,7 @@ class MainViewController:
     """Finishes the open protein pymol session process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -4536,7 +4536,7 @@ class MainViewController:
     """Finishes the load default pymol scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -4977,7 +4977,7 @@ class MainViewController:
     """Updates the color of the protein chain based on the return value provided in the object and data model.
 
     Args:
-        return_value (tuple): A tuple containing two values, a boolean flag indicating the success of the operation and a string representing the color.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing two values, a boolean flag indicating the success of the operation and a string representing the color.
     """
     # <editor-fold desc="Checks">
     if return_value is None or len(return_value) == 0:
@@ -5143,7 +5143,7 @@ class MainViewController:
     """Await method for the coloring of atom by their element.
 
     Args:
-        return_value (tuple): A tuple containing the result of the operation. The first element of the tuple determines whether the operation was successful or not.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the result of the operation. The first element of the tuple determines whether the operation was successful or not.
     """
     # <editor-fold desc="Checks">
     if return_value is None or len(return_value) == 0:
@@ -5184,7 +5184,7 @@ class MainViewController:
     """Await method for the reset coloring of atom by their element.
 
     Args:
-        return_value (tuple): A tuple containing the result of the operation and the chain color.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the result of the operation and the chain color.
     """
     # <editor-fold desc="Checks">
     if return_value is None or len(return_value) == 0:
@@ -5292,7 +5292,7 @@ class MainViewController:
     """Await method for setting the background color.
 
     Args:
-        return_value (tuple): A tuple containing the result of the operation.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the result of the operation.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -5334,7 +5334,7 @@ class MainViewController:
     """Saves the pymol session after changing the representation.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -6253,7 +6253,7 @@ class MainViewController:
     """Finishes hide all representations for the selected chain process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -6427,7 +6427,7 @@ class MainViewController:
     """Finishes the import protein process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -6535,7 +6535,7 @@ class MainViewController:
     """Removes protein from database and refreshes the main view.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -6762,7 +6762,7 @@ class MainViewController:
     """Finishes the cleaning process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -6835,7 +6835,7 @@ class MainViewController:
     """Loads the cleaned version back in PyMOL if it was in the session before cleaning.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7028,7 +7028,7 @@ class MainViewController:
     """Finishes the update protein scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7175,7 +7175,7 @@ class MainViewController:
     """Finishes the create new scene process and starts async method to save PyMOL session.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7288,7 +7288,7 @@ class MainViewController:
     """Finishes the save protein scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7326,7 +7326,7 @@ class MainViewController:
     """Finishes the save protein pair scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7412,7 +7412,7 @@ class MainViewController:
     """Finishes the delete scene for protein session process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7493,7 +7493,7 @@ class MainViewController:
     """Finishes the delete current scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7791,7 +7791,7 @@ class MainViewController:
     """Finishes the open protein pair pymol session process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7982,7 +7982,7 @@ class MainViewController:
     """Finishes the load default pymol scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -8098,7 +8098,7 @@ class MainViewController:
     """Finishes the setup of the color grid and representation section process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -8395,7 +8395,7 @@ class MainViewController:
     """Updates the color of the protein chain based on the return value provided in the object and data model.
 
     Args:
-        return_value (tuple): A tuple containing two values, a boolean flag indicating the success of the operation and a string representing the color.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing two values, a boolean flag indicating the success of the operation and a string representing the color.
     """
     # <editor-fold desc="Checks">
     if return_value is None or len(return_value) == 0:
@@ -8644,7 +8644,7 @@ class MainViewController:
     """Await method for the coloring of atom by their element.
 
     Args:
-        return_value: A tuple containing the result of the operation. The first element of the tuple determines whether the operation was successful or not.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the result of the operation. The first element of the tuple determines whether the operation was successful or not.
 
     Returns:
         None
@@ -8688,7 +8688,7 @@ class MainViewController:
     """Await method for the reset coloring of atom by their element.
 
     Args:
-        return_value: A tuple containing the result of the operation and the chain color.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the result of the operation and the chain color.
 
     Returns:
         None
@@ -8873,7 +8873,7 @@ class MainViewController:
     """Await method for setting the background color.
 
     Args:
-        return_value (tuple): A tuple containing the result of the operation.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the result of the operation.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -8915,7 +8915,7 @@ class MainViewController:
     """Saves the pymol session after changing the representation.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -9835,7 +9835,7 @@ class MainViewController:
     """Finishes hide all representations for the selected chain process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -9941,7 +9941,7 @@ class MainViewController:
     """Finishes the update protein pair scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
