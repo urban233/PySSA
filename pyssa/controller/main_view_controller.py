@@ -3877,7 +3877,7 @@ class MainViewController:
       self._interface_manager.show_menu_options_with_seq()
     finally:
       self._interface_manager.refresh_main_view()
-  
+
   # </editor-fold>
 
   # <editor-fold desc="Add sequence">
@@ -3945,7 +3945,7 @@ class MainViewController:
       self._interface_manager.refresh_sequence_model()
     finally:
       self._interface_manager.refresh_main_view()
-  
+
   # </editor-fold>
 
   # <editor-fold desc="Save sequence">
@@ -4065,7 +4065,7 @@ class MainViewController:
       self._interface_manager.refresh_sequence_model()
     finally:
       self._interface_manager.refresh_main_view()
-  
+
   # </editor-fold>
 
   def __slot_delete_selected_sequence(self) -> None:
@@ -4178,7 +4178,7 @@ class MainViewController:
       self._view.ui.seqs_table_widget.item(0, 1).setText(tmp_new_name)
     finally:
       self._interface_manager.refresh_main_view()
-  
+
   # </editor-fold>
 
   def open_context_menu_for_sequences(self, position) -> None:
@@ -4745,31 +4745,32 @@ class MainViewController:
             tmp_representation_config
           )
         else:
-          self._view.ui.frame_protein_repr.setEnabled(False)
-          ui_util.set_checked_async(
-            self._view.tg_protein_cartoon.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_ribbon.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_sticks.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_lines.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_spheres.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_dots.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_mesh.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_surface.toggle_button, False
-          )
+          self._view.ui.frame_protein_repr.setVisible(False)
+          # self._view.ui.frame_protein_repr.setEnabled(False)
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_cartoon.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_ribbon.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_sticks.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_lines.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_spheres.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_dots.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_mesh.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_surface.toggle_button, False
+          # )
 
       # </editor-fold>
 
@@ -8229,36 +8230,35 @@ class MainViewController:
           self._interface_manager.get_current_active_chain_object_of_protein_pair()
         )
         if tmp_chain.chain_type == "protein_chain":
-          self._view.ui.frame_protein_pair_repr.setEnabled(True)
           self._interface_manager.manage_toggle_state_of_protein_pair_repr(
             tmp_representation_config
           )
         else:
-          self._view.ui.frame_protein_pair_repr.setEnabled(False)
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_cartoon.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_ribbon.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_sticks.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_lines.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_spheres.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_dots.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_mesh.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_surface.toggle_button, False
-          )
+          self._view.ui.frame_protein_pair_repr.setVisible(False)
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_cartoon.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_ribbon.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_sticks.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_lines.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_spheres.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_dots.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_mesh.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_surface.toggle_button, False
+          # )
           # self._view.tg_protein_pair_cartoon.toggle_button.setChecked(False)
           # self._view.tg_protein_pair_ribbon.toggle_button.setChecked(False)
           # self._view.tg_protein_pair_sticks.toggle_button.setChecked(False)
