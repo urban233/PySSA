@@ -3815,6 +3815,7 @@ class MainViewController:
         "An unknown error occurred!"
       )
 
+  # <editor-fold desc="Import sequence">
   def __slot_import_sequence(self) -> None:
     """Opens the import seqeunce dialog."""
     try:
@@ -3878,7 +3879,10 @@ class MainViewController:
       self._interface_manager.show_menu_options_with_seq()
     finally:
       self._interface_manager.refresh_main_view()
+  
+  # </editor-fold>
 
+  # <editor-fold desc="Add sequence">
   def __slot_add_sequence(self) -> None:
     """Opens the add sequence dialog."""
     try:
@@ -3943,7 +3947,10 @@ class MainViewController:
       self._interface_manager.refresh_sequence_model()
     finally:
       self._interface_manager.refresh_main_view()
+  
+  # </editor-fold>
 
+  # <editor-fold desc="Save sequence">
   def __slot_save_selected_sequence_as_fasta_file(self) -> None:
     """Opens a QFileDialog to choose a filepath and saves the sequence as fasta file to that filepath."""
     try:
@@ -3963,39 +3970,40 @@ class MainViewController:
         "",
         "FASTA File (*.fasta)",
       )
-      if file_path:
-        tmp_seq_record = (
-          self._interface_manager.get_current_sequence_list_index_object()
-        )
-        # pre-process seq record object for the SeqIO module
-        if tmp_seq_record.id == "<unknown id>":
-          tmp_seq_record.id = tmp_seq_record.name
-        tmp_seq_record.seq = Seq(tmp_seq_record.seq)
-        # defines the task to save the sequence as .fasta file
-        # self._active_task = tasks.LegacyTask(
-        #   target=sequence_async.save_selected_protein_sequence_as_fasta_file,
-        #   args=(
-        #     tmp_seq_record,
-        #     file_path,
-        #   ),
-        #   post_func=self.__await_save_selected_sequence_as_fasta_file,
-        # )
+      if not file_path:
+        return
+      tmp_seq_record = (
+        self._interface_manager.get_current_sequence_list_index_object()
+      )
+      # pre-process seq record object for the SeqIO module
+      if tmp_seq_record.id == "<unknown id>":
+        tmp_seq_record.id = tmp_seq_record.name
+      tmp_seq_record.seq = Seq(tmp_seq_record.seq)
+      # defines the task to save the sequence as .fasta file
+      # self._active_task = tasks.LegacyTask(
+      #   target=sequence_async.save_selected_protein_sequence_as_fasta_file,
+      #   args=(
+      #     tmp_seq_record,
+      #     file_path,
+      #   ),
+      #   post_func=self.__await_save_selected_sequence_as_fasta_file,
+      # )
 
-        self._interface_manager.get_task_manager().append_task_result(
-          task_result_factory.TaskResultFactory.run_task_result(
-            a_task_result=task_result.TaskResult.from_action(
-              an_action=action.Action(
-                a_target=sequence_async.save_selected_protein_sequence_as_fasta_file,
-                args=(
-                  tmp_seq_record,
-                  file_path,
-                ),
+      self._interface_manager.get_task_manager().append_task_result(
+        task_result_factory.TaskResultFactory.run_task_result(
+          a_task_result=task_result.TaskResult.from_action(
+            an_action=action.Action(
+              a_target=sequence_async.save_selected_protein_sequence_as_fasta_file,
+              args=(
+                tmp_seq_record,
+                file_path,
               ),
-              an_await_function=self.__await_save_selected_sequence_as_fasta_file,
             ),
-            a_task_scheduler=self._interface_manager.get_task_scheduler(),
-          )
+            an_await_function=self.__await_save_selected_sequence_as_fasta_file,
+          ),
+          a_task_scheduler=self._interface_manager.get_task_scheduler(),
         )
+      )
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -4059,6 +4067,8 @@ class MainViewController:
       self._interface_manager.refresh_sequence_model()
     finally:
       self._interface_manager.refresh_main_view()
+  
+  # </editor-fold>
 
   def __slot_delete_selected_sequence(self) -> None:
     """Deletes a selected sequence from the project."""
@@ -4102,6 +4112,7 @@ class MainViewController:
         self._view.ui.seqs_table_widget.setRowCount(0)
         self._view.build_sequence_table()
 
+  # <editor-fold desc="Rename sequence">
   def __slot_rename_selected_sequence(self) -> None:
     """Opens a new view to rename the selected sequence."""
     try:
@@ -4169,6 +4180,8 @@ class MainViewController:
       self._view.ui.seqs_table_widget.item(0, 1).setText(tmp_new_name)
     finally:
       self._interface_manager.refresh_main_view()
+  
+  # </editor-fold>
 
   def open_context_menu_for_sequences(self, position) -> None:
     """Opens the context menu for the sequences tab."""
@@ -5200,35 +5213,42 @@ class MainViewController:
 
     # </editor-fold>
 
-    tmp_success_flag, tmp_chain_color = return_value
+    tmp_success_flag, tmp_chain_color_result = task_result.TaskResult.get_single_action_result(return_value)
     try:
-      if tmp_success_flag:
-        self._view.color_grid_proteins.reset_icon_for_selected_color()
-
-        # <editor-fold desc="Update chain color">
-        # Updates chain color in chain object and data model
-        tmp_chain = self._interface_manager.get_current_active_chain_object()
-        tmp_chain.pymol_parameters["chain_color"] = tmp_chain_color
-        self._interface_manager.set_current_active_chain_color_of_protein(
-          tmp_chain_color
+      if not tmp_success_flag:
+        logger.error("The task failed!")
+        self._interface_manager.status_bar_manager.show_error_message(
+          "The task failed!"
         )
-
-        # </editor-fold>
-
-        self._view.color_grid_proteins.set_icon_for_selected_color(
-          tmp_chain_color
-        )
-        self._view.ui.lbl_protein_current_color.setText(
-          f"{tmp_chain_color}    "
-        )
-
-        self._update_protein_scene_legacy()
-        self._save_protein_pymol_session()
-      else:
+        return
+      if not tmp_chain_color_result[0]:
         logger.error("The operation failed!")
         self._interface_manager.status_bar_manager.show_error_message(
           "The operation failed!"
         )
+        return
+      tmp_chain_color = tmp_chain_color_result[1]
+      self._view.color_grid_proteins.reset_icon_for_selected_color()
+
+      # <editor-fold desc="Update chain color">
+      # Updates chain color in chain object and data model
+      tmp_chain = self._interface_manager.get_current_active_chain_object()
+      tmp_chain.pymol_parameters["chain_color"] = tmp_chain_color
+      self._interface_manager.set_current_active_chain_color_of_protein(
+        tmp_chain_color
+      )
+
+      # </editor-fold>
+
+      self._view.color_grid_proteins.set_icon_for_selected_color(
+        tmp_chain_color
+      )
+      self._view.ui.lbl_protein_current_color.setText(
+        f"{tmp_chain_color}    "
+      )
+
+      self._update_protein_scene_legacy()
+      self._save_protein_pymol_session()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -6451,6 +6471,13 @@ class MainViewController:
 
     try:
       tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
+      if tmp_result[2] is True:
+        tmp_dialog = custom_message_box.CustomMessageBoxOk(
+          "The pdb file has more than one CA atom for a single residue.\nThis could lead to problems in the future!",
+          "Reading PDB File",
+          custom_message_box.CustomMessageBoxIcons.WARNING.value,
+        )
+        tmp_dialog.exec_()
       tmp_protein: "protein.Protein" = tmp_result[1]
       self._interface_manager.get_current_project().add_existing_protein(
         tmp_protein
@@ -6608,38 +6635,27 @@ class MainViewController:
         "",
         "Protein Data Bank File (*.pdb)",
       )
-      if file_path:
-        tmp_protein: "protein.Protein" = (
-          self._interface_manager.get_current_protein_tree_index_object()
-        )
-        self._interface_manager.get_task_manager().append_task_result(
-          task_result_factory.TaskResultFactory.run_task_result(
-            a_task_result=task_result.TaskResult.from_action(
-              an_action=action.Action(
-                a_target=protein_async.save_selected_protein_structure_as_pdb_file,
-                args=(
-                  tmp_protein,
-                  file_path,
-                  self._interface_manager.get_current_project().get_database_filepath(),
-                ),
+      if not file_path:
+        return
+      tmp_protein: "protein.Protein" = (
+        self._interface_manager.get_current_protein_tree_index_object()
+      )
+      self._interface_manager.get_task_manager().append_task_result(
+        task_result_factory.TaskResultFactory.run_task_result(
+          a_task_result=task_result.TaskResult.from_action(
+            an_action=action.Action(
+              a_target=protein_async.save_selected_protein_structure_as_pdb_file,
+              args=(
+                tmp_protein,
+                file_path,
+                self._interface_manager.get_current_project().get_database_filepath(),
               ),
-              an_await_function=self.__await_save_selected_protein_structure_as_pdb_file,
             ),
-            a_task_scheduler=self._interface_manager.get_task_scheduler(),
-          )
+            an_await_function=self.__await_save_selected_protein_structure_as_pdb_file,
+          ),
+          a_task_scheduler=self._interface_manager.get_task_scheduler(),
         )
-        # self._active_task = tasks.LegacyTask(
-        #     target=protein_async.save_selected_protein_structure_as_pdb_file,
-        #     args=(
-        #         tmp_protein,
-        #         file_path,
-        #         self._interface_manager.get_current_project().get_database_filepath(),
-        #     ),
-        #     post_func=self.__await_save_selected_protein_structure_as_pdb_file,
-        # )
-      else:
-        self._interface_manager.stop_wait_cursor()
-        self._interface_manager.refresh_main_view()
+      )
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -6781,7 +6797,13 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
       self._interface_manager.refresh_main_view()
       return
-
+    if tmp_result[2] is True:
+      tmp_dialog = custom_message_box.CustomMessageBoxOk(
+        "The pdb file has more than one CA atom for a single residue.\nThis could lead to problems in the future!",
+        "Reading PDB File",
+        custom_message_box.CustomMessageBoxIcons.WARNING.value,
+      )
+      tmp_dialog.exec_()
     # </editor-fold>
 
     try:

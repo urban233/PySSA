@@ -2790,6 +2790,9 @@
    </property>
   </action>
   <action name="action_protein_regions">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Protein Regions</string>
    </property>
