@@ -1172,7 +1172,7 @@ class MainViewController:
       self._interface_manager.close_job_notification_panel()
     self._interface_manager.block_gui(with_wait_cursor=True)
 
-  def _post_update_project_and_model(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+  def _post_update_project_and_model(self, return_value: tuple) -> None:
     """Refreshes the main view and reverts the cursor.
 
     Args:
@@ -1185,7 +1185,6 @@ class MainViewController:
 
     # </editor-fold>
 
-    tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
     self._interface_manager.refresh_main_view()
     self._interface_manager.stop_wait_cursor()
 
@@ -3226,7 +3225,7 @@ class MainViewController:
     # self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
 
   def post_open_settings_global(self, return_value: tuple) -> None:
-    """Refreshes the workspae model and the main view after the settings dialog closed."""
+    """Refreshes the workspace model and the main view after the settings dialog closed."""
     try:
       self._interface_manager.refresh_workspace_model()
       self._interface_manager.refresh_main_view()
@@ -3622,7 +3621,7 @@ class MainViewController:
       self._interface_manager.block_gui(with_wait_cursor=True)
       self.update_status("Creating preview of image ...")
 
-  def __await_preview_image(self, return_value: tuple) -> None:
+  def __await_preview_image(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Refreshes the main view and reverts the cursor after image preview."""
     self._interface_manager.stop_wait_cursor()
     self._interface_manager.refresh_main_view()
@@ -3704,7 +3703,7 @@ class MainViewController:
       self.update_status("Creating simple image ...")
       self._interface_manager.block_gui(with_wait_cursor=True)
 
-  def __await_create_drawn_image(self, return_value: tuple) -> None:
+  def __await_create_drawn_image(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Refreshes the main view and reverts the cursor after image creation."""
     self._interface_manager.stop_wait_cursor()
     self._interface_manager.refresh_main_view()
@@ -4350,7 +4349,7 @@ class MainViewController:
     else:
       self._interface_manager.block_gui(with_wait_cursor=True)
 
-  def __await_open_protein_pymol_session(self, return_value: tuple) -> None:
+  def __await_open_protein_pymol_session(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the open protein pymol session process.
 
     Args:
@@ -4533,7 +4532,7 @@ class MainViewController:
       )
       self._interface_manager.block_gui()
 
-  def __await_load_scene_protein(self, return_value: tuple[bool]) -> None:
+  def __await_load_scene_protein(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the load default pymol scene process.
 
     Args:
@@ -4973,7 +4972,7 @@ class MainViewController:
       self._interface_manager.block_gui()  # fixme: This blocks the entire UI which leads to quick flashes. This might be a problem.
 
   def __await_color_pymol_selection_for_protein(
-          self, return_value: tuple[bool, str]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Updates the color of the protein chain based on the return value provided in the object and data model.
 
@@ -5139,7 +5138,7 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_color_pymol_selection_atoms_by_element_for_protein(
-          self, return_value: tuple
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Await method for the coloring of atom by their element.
 
@@ -5180,7 +5179,7 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
 
   def __await_reset_color_pymol_selection_atoms_by_element_for_protein(
-          self, return_value: tuple
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Await method for the reset coloring of atom by their element.
 
@@ -5288,7 +5287,7 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_set_background_color_for_protein_session(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Await method for setting the background color.
 
@@ -5330,7 +5329,7 @@ class MainViewController:
 
   # <editor-fold desc="Show/Hide representations">
   def __await_set_representation_for_protein_session(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Saves the pymol session after changing the representation.
 
@@ -6249,7 +6248,7 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_hide_all_representations_of_protein_chain_of_a_protein(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes hide all representations for the selected chain process.
 
@@ -6424,7 +6423,7 @@ class MainViewController:
     else:
       self._interface_manager.block_gui(with_wait_cursor=True)
 
-  def __await_post_import_protein_structure(self, return_value: tuple) -> None:
+  def __await_post_import_protein_structure(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the import protein process.
 
     Args:
@@ -6531,7 +6530,7 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_reinitialize_session_before_delete_protein(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Removes protein from database and refreshes the main view.
 
@@ -6744,7 +6743,9 @@ class MainViewController:
         #     post_func=self.__await_clean_protein_update,
         # )
         self._interface_manager.block_gui()
-        self.update_status("Cleaning protein ...")
+        self._interface_manager.status_bar_manager.show_temporary_message(
+          "Cleaning protein ...", a_with_timeout_flag=False
+        )
       else:
         constants.PYSSA_LOGGER.info("No protein has been cleaned.")
         self._interface_manager.stop_wait_cursor()
@@ -6757,7 +6758,7 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
       self._interface_manager.refresh_main_view()
 
-  def __await_clean_protein_update(self, return_value: tuple) -> None:
+  def __await_clean_protein_update(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the cleaning process.
 
     Args:
@@ -6789,6 +6790,9 @@ class MainViewController:
       ):
         self._interface_manager.stop_wait_cursor()
         self._interface_manager.refresh_main_view()
+        self._interface_manager.status_bar_manager.show_temporary_message(
+          "Cleaning the protein finished."
+        )
         return
 
       self._interface_manager.get_task_manager().append_task_result(
@@ -6826,9 +6830,7 @@ class MainViewController:
 
   def __await_load_protein_pymol_session_after_cleaning(
           self,
-          return_value: tuple[
-            Optional["pymol_session_manager.PymolSessionManager"], bool
-          ],
+          return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Loads the cleaned version back in PyMOL if it was in the session before cleaning.
 
@@ -7021,7 +7023,7 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_update_scene_for_protein_session(
-          self, return_value: tuple[bool, str]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes the update protein scene process.
 
@@ -7168,7 +7170,7 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_create_new_scene_for_protein_session(
-          self, return_value: tuple[bool, str]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes the create new scene process and starts async method to save PyMOL session.
 
@@ -7282,7 +7284,7 @@ class MainViewController:
         "Start async task 'pymol_session_async.save_protein_pymol_session_to_database'."
       )
 
-  def __await_save_scene_protein(self, return_value: tuple) -> None:
+  def __await_save_scene_protein(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the save protein scene process.
 
     Args:
@@ -7320,7 +7322,7 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
       self._interface_manager.refresh_main_view()
 
-  def __await_save_scene_protein_pair(self, return_value: tuple) -> None:
+  def __await_save_scene_protein_pair(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the save protein pair scene process.
 
     Args:
@@ -7405,7 +7407,7 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_delete_scene_for_protein_session(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes the delete scene for protein session process.
 
@@ -7487,7 +7489,7 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
       self._interface_manager.refresh_main_view()
 
-  def __await_delete_current_scene(self, return_value: tuple) -> None:
+  def __await_delete_current_scene(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the delete current scene process.
 
     Args:
@@ -7784,7 +7786,7 @@ class MainViewController:
       )
 
   def __await_open_protein_pair_pymol_session(
-          self, return_value: tuple
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes the open protein pair pymol session process.
 
@@ -7976,7 +7978,7 @@ class MainViewController:
       )
       self._interface_manager.block_gui()
 
-  def __await_load_scene_protein_pair(self, return_value: tuple[bool]) -> None:
+  def __await_load_scene_protein_pair(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the load default pymol scene process.
 
     Args:
@@ -8091,9 +8093,7 @@ class MainViewController:
 
   def __await_get_residue_color_config_of_a_given_protein_chain_of_a_protein_pair(
           self,
-          return_value: tuple[
-            bool, Optional["residue_color_config.ResidueColorConfig"]
-          ],
+          return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes the setup of the color grid and representation section process.
 
@@ -8192,7 +8192,7 @@ class MainViewController:
 
   def __await_get_representation_config_of_a_given_protein_chain_of_a_protein_pair(
           self,
-          return_value: tuple[bool, Optional[dict]],
+          return_value: tuple[str, list[tuple[bool, tuple]]],
   ) -> None:
     """Fixme: This method should be obsolete with the new TEA lib is introduced!"""
     try:
@@ -8390,7 +8390,7 @@ class MainViewController:
     #     self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
   def __await_color_pymol_selection_for_protein_pair(
-          self, return_value: tuple[bool, str]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Updates the color of the protein chain based on the return value provided in the object and data model.
 
@@ -8639,7 +8639,7 @@ class MainViewController:
     #     self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
   def __await_color_pymol_selection_atoms_by_element_for_protein_pair(
-          self, return_value: tuple
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Await method for the coloring of atom by their element.
 
@@ -8683,7 +8683,7 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
 
   def __await_reset_color_pymol_selection_atoms_by_element_for_protein_pair(
-          self, return_value: tuple
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Await method for the reset coloring of atom by their element.
 
@@ -8868,7 +8868,7 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_set_background_color_for_protein_pair_session(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Await method for setting the background color.
 
@@ -8910,7 +8910,7 @@ class MainViewController:
 
   # <editor-fold desc="Representations">
   def __await_set_representation_for_protein_pair_session(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Saves the pymol session after changing the representation.
 
@@ -9830,7 +9830,7 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_hide_all_representations_of_protein_chain_of_a_protein_pair(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes hide all representations for the selected chain process.
 
@@ -9936,7 +9936,7 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_update_scene_for_protein_pair_session(
-          self, return_value: tuple[bool, str]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes the update protein pair scene process.
 
