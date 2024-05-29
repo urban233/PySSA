@@ -381,7 +381,7 @@ def close_project(
 def add_protein_from_pdb_to_project(
     tmp_protein_name: str,
     the_interface_manager: "interface_manager.InterfaceManager",
-) -> tuple[str, Optional["protein.Protein"]]:
+) -> tuple[str, Optional["protein.Protein"], Optional[bool]]:
   """Adds a protein from a pdb file to the protein model.
 
   Args:
@@ -390,15 +390,16 @@ def add_protein_from_pdb_to_project(
 
   Returns:
       A tuple of a string and an optional instance of the "protein.Protein" class. The string represents the result of the method call,
-      and the optional protein object represents the added protein if successful, or None if not successful.
+      and the optional protein object represents the added protein if successful, or None if not successful and a boolean indicating if
+      there are multiple CA atoms within a single residue.
   """
   # <editor-fold desc="Checks">
   if tmp_protein_name is None or tmp_protein_name == "":
     logger.error("tmp_protein_name is either None or an empty string.")
-    return "", None
+    return "", None, None
   if the_interface_manager is None:
     logger.error("the_interface_manager is None.")
-    return "", None
+    return "", None, None
 
   # </editor-fold>
 
@@ -414,7 +415,7 @@ def add_protein_from_pdb_to_project(
       tmp_ref_protein.db_project_id = (
           the_interface_manager.get_current_project().get_id()
       )
-      tmp_ref_protein.add_protein_structure_data_from_pdb_db(
+      tmp_more_than_one_ca_atom = tmp_ref_protein.add_protein_structure_data_from_pdb_db(
           tmp_protein_name.upper(), the_main_socket, the_general_purpose_socket
       )
       tmp_ref_protein.add_id_to_all_chains(
@@ -426,15 +427,15 @@ def add_protein_from_pdb_to_project(
     the_interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
   except Exception as e:
     logger.error(e)
-    return "", None
+    return "", None, None
   else:
-    return "result", tmp_ref_protein
+    return "result", tmp_ref_protein, tmp_more_than_one_ca_atom
 
 
 def add_protein_from_local_filesystem_to_project(
     tmp_protein_name: str,
     the_interface_manager: "interface_manager.InterfaceManager",
-) -> tuple[str, Optional["protein.Protein"]]:
+) -> tuple[str, Optional["protein.Protein"], Optional[bool]]:
   """Adds a protein from the local filesystem to the protein model.
 
   Args:
@@ -442,15 +443,16 @@ def add_protein_from_local_filesystem_to_project(
       the_interface_manager (interface_manager.InterfaceManager): The interface manager object.
 
   Returns:
-      A tuple containing the result message and the protein object if it was successfully added, or None if there was an error.
+      A tuple containing the result message and the protein object if it was successfully added, or None if there was an error
+      and a boolean indicating if there are multiple CA atoms within a single residue.
   """
   # <editor-fold desc="Checks">
   if tmp_protein_name is None or tmp_protein_name == "":
     logger.error("tmp_protein_name is either None or an empty string.")
-    return "", None
+    return "", None, None
   if the_interface_manager is None:
     logger.error("the_interface_manager is None.")
-    return "", None
+    return "", None, None
 
   # </editor-fold>
 
@@ -469,7 +471,7 @@ def add_protein_from_local_filesystem_to_project(
       the_main_socket, the_general_purpose_socket = (
           the_interface_manager.job_manager.get_general_purpose_socket_pair()
       )
-      tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(
+      tmp_more_than_one_ca_atom = tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(
           pdb_filepath, the_main_socket, the_general_purpose_socket
       )
       tmp_ref_protein.add_id_to_all_chains(
@@ -481,6 +483,6 @@ def add_protein_from_local_filesystem_to_project(
     the_interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
   except Exception as e:
     logger.error(e)
-    return "", None
+    return "", None, None
   else:
-    return "result", tmp_ref_protein
+    return "result", tmp_ref_protein, tmp_more_than_one_ca_atom

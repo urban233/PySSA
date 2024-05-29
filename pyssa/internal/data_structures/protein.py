@@ -105,14 +105,17 @@ class Protein:
 
   def add_protein_structure_data_from_pdb_db(
       self, a_pdb_id: str, the_main_socket: zmq.Socket, a_socket: zmq.Socket
-  ) -> None:
+  ) -> bool:
     """Adds protein structure data based on a protein from the PDB database.
 
     Args:
         a_pdb_id (str): The ID of the protein structure in the PDB database.
         the_main_socket (zmq.Socket): The main ZeroMQ socket for communication.
         a_socket (zmq.Socket): An auxiliary ZeroMQ socket for communication.
-
+    
+    Returns:
+      A boolean indicating if there are multiple CA atoms in a single residue in the pdb data.
+    
     Raises:
         exception.IllegalArgumentError: If any of the arguments are None.
     """
@@ -152,28 +155,31 @@ class Protein:
         tmp_job_description,
     )
     print(tmp_reply)
-    self._pdb_data = bio_data.parse_pdb_file(tmp_reply["data"])
-    # self.check_states_and_reduce_to_one_state_if_necessary()
+    self._pdb_data, tmp_more_than_one_ca_atom = bio_data.parse_pdb_file(tmp_reply["data"])
     try:
       os.remove(
           str(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb"))
       )
     except Exception as e:
       logger.error(f"Could not delete pdb file! Ran into error: {e}")
+    return tmp_more_than_one_ca_atom
 
   def add_protein_structure_data_from_local_pdb_file(
       self,
       a_filepath: pathlib.Path,
       the_main_socket: zmq.Socket,
       a_socket: zmq.Socket,
-  ) -> None:
+  ) -> bool:
     """Adds protein structure data based on a protein from the local filesystem.
 
     Args:
         a_filepath (pathlib.Path): The filepath of the PDB file to be processed.
         the_main_socket (zmq.Socket): The main socket for communication.
         a_socket (zmq.Socket): A secondary socket for communication.
-
+    
+    Returns:
+      A boolean indicating if there are multiple CA atoms in a single residue in the pdb data.
+    
     Raises:
         exception.IllegalArgumentError: If any of the arguments are None.
         FileNotFoundError: If the PDB file specified by `a_filepath` cannot be found.
@@ -210,7 +216,7 @@ class Protein:
     if tmp_reply["data"] == "":
       logger.error(f"Could not find pdb file! Ran into error: {tmp_reply}")
       raise FileNotFoundError()
-    self._pdb_data = bio_data.parse_pdb_file(tmp_reply["data"])
+    self._pdb_data, tmp_more_than_one_ca_atom = bio_data.parse_pdb_file(tmp_reply["data"])
     try:
       os.remove(
           pathlib.Path(
@@ -219,7 +225,8 @@ class Protein:
       )
     except Exception as e:
       logger.error(f"Could not delete pdb file! Ran into error: {e}")
-
+    return tmp_more_than_one_ca_atom
+    
   def add_id_to_all_chains(self, the_last_chain_id: int) -> None:
     """Adds an ID to each chain in the list of chains.
 
@@ -577,15 +584,18 @@ class Protein:
 
   def clean_protein(
       self, the_main_socket: zmq.Socket, the_general_purpose_socket: zmq.Socket
-  ) -> None:
+  ) -> bool:
     """Cleans the protein objects and sets the new pdb data into the instance.
 
     Args:
-        the_main_socket (zmq.Socket): The main ZeroMQ socket for communication with the auxiliary pymol client.
-        the_general_purpose_socket (zmq.Socket): The general purpose ZeroMQ socket for communication with the auxiliary pymol client.
-
+      the_main_socket (zmq.Socket): The main ZeroMQ socket for communication with the auxiliary pymol client.
+      the_general_purpose_socket (zmq.Socket): The general purpose ZeroMQ socket for communication with the auxiliary pymol client.
+    
+    Returns:
+      A boolean indicating if there are multiple CA atoms in a single residue in the pdb data.
+    
     Raises:
-        exception.IllegalArgumentError: If any of the arguments are None.
+      exception.IllegalArgumentError: If any of the arguments are None.
     """
     # <editor-fold desc="Checks">
     if the_main_socket is None:
@@ -621,8 +631,9 @@ class Protein:
       raise ValueError(f"{tmp_reply['data'][0]}; {tmp_reply['data'][1]}")
 
     self.pymol_session, tmp_pdb_filepath = tmp_reply["data"]
-    tmp_pdb_data = bio_data.parse_pdb_file(tmp_pdb_filepath)
+    tmp_pdb_data, tmp_more_than_one_ca_atom = bio_data.parse_pdb_file(tmp_pdb_filepath)
     self._pdb_data = tmp_pdb_data
+    return tmp_more_than_one_ca_atom
 
   def get_object_as_dict_for_database(self) -> dict:
     """Serializes the protein object to a dict which can be inserted into a database.

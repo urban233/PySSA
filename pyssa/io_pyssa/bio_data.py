@@ -23,8 +23,12 @@
 import logging
 import os.path
 import pathlib
+import threading
+
 import requests
 
+from pyssa.gui.ui.custom_dialogs import custom_message_box
+from pyssa.internal.thread import thread_util
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import exception
 
@@ -178,17 +182,19 @@ def build_pdb_file(records: list, a_filepath: str) -> None:
   pdb_file.close()
 
 
-def parse_pdb_file(a_filepath: str) -> list[dict]:
+def parse_pdb_file(a_filepath: str) -> tuple[list[dict], bool]:
   """Parses an existing pdb file.
 
   Args:
-      a_filepath: The filepath of the PDB file to be parsed.
-
+      a_filepath (str): The filepath of the PDB file to be parsed.
+      
   Returns:
-      A list of dictionaries containing the parsed records from the PDB file.
+      A tuple with two elements:
+        - a list of dictionaries containing the parsed records from the PDB file
+        - a boolean indicating if there are multiple CA atoms for a single residue
 
   Raises:
-      exception.IllegalArgumentError: If `a_filepath` is either None or an empty string.
+      exception.IllegalArgumentError: If `a_filepath` is None.
       FileNotFoundError: If `a_filepath` does not exist.
   """
   # <editor-fold desc="Checks">
@@ -200,9 +206,11 @@ def parse_pdb_file(a_filepath: str) -> list[dict]:
   if not os.path.exists(a_filepath):
     logger.error('a_filepath does not exist.')
     raise FileNotFoundError('a_filepath does not exist.')
-
+  
   # </editor-fold>
-
+  
+  tmp_double_ca_atoms_in_one_aa: bool = False
+  tmp_last_atom_name: str = ""
   records = []
   with open(a_filepath, 'r') as pdb_file:
     for line in pdb_file:
@@ -223,7 +231,7 @@ def parse_pdb_file(a_filepath: str) -> list[dict]:
         segment_identifier = line[72:76].strip()
         element_symbol = line[76:78].strip()
         charge = line[78:80].strip()
-
+        
         records.append(
             {
                 'record_type': record_type,
@@ -244,6 +252,10 @@ def parse_pdb_file(a_filepath: str) -> list[dict]:
                 'charge': charge,
             }
         )
+        if tmp_last_atom_name == "CA" and atom_name == "CA":
+          logger.warning("There are two CA atoms within one residue.")
+          tmp_double_ca_atoms_in_one_aa = True
+        tmp_last_atom_name = atom_name
       elif record_type == 'TER':
         try:
           atom_number_ter = int(line[6:11])
@@ -327,4 +339,4 @@ def parse_pdb_file(a_filepath: str) -> list[dict]:
                 'charge': charge_het,
             }
         )
-  return records
+  return records, tmp_double_ca_atoms_in_one_aa

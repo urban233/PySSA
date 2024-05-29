@@ -63,7 +63,7 @@ def clean_protein_update(
     the_database_filepath: str,
     the_main_socket: zmq.Socket,
     the_general_purpose_socket: zmq.Socket,
-) -> tuple[str, Optional[protein.Protein]]:
+) -> tuple[str, Optional[protein.Protein], Optional[bool]]:
   """Cleans a protein by removing all solvent and sugar molecules in the current molecule object.
 
   Args:
@@ -73,43 +73,43 @@ def clean_protein_update(
       the_general_purpose_socket (zmq.Socket): The general purpose socket of the auxiliary pymol.
 
   Returns:
-      A tuple with ("result", a_protein or None).
+      A tuple with ("result", a_protein or None, tmp_more_than_one_ca_atom or None).
   """
   # <editor-fold desc="Checks">
   if a_protein is None:
     logger.error("a_protein is None.")
-    return "", None
+    return "", None, None
   if the_database_filepath is None or the_database_filepath == "":
     logger.error("the_database_filepath is either None or an empty string.")
-    return "", None
+    return "", None, None
   if the_main_socket is None:
     logger.error("the_main_socket is None.")
-    return "", None
+    return "", None, None
   if the_general_purpose_socket is None:
     logger.error("the_general_purpose_socket is None.")
-    return "", None
+    return "", None, None
 
   # </editor-fold>
 
   try:
-    a_protein.clean_protein(the_main_socket, the_general_purpose_socket)
+    tmp_more_than_one_ca_atom = a_protein.clean_protein(the_main_socket, the_general_purpose_socket)
     if len(a_protein.get_pdb_data()) == 0:
       logger.error("No PDB data found after cleaning process!")
-      return "", None
+      return "", None, None
 
     with database_manager.DatabaseManager(the_database_filepath) as db_manager:
       db_manager.update_protein_pdb_atom_data(
-          a_protein.get_id(), a_protein.get_pdb_data()
+        a_protein.get_id(), a_protein.get_pdb_data()
       )
       a_protein.set_pdb_data([])
     constants.PYSSA_LOGGER.info(
-        "The protein %s has been cleaned.", a_protein.get_molecule_object()
+      "The protein %s has been cleaned.", a_protein.get_molecule_object()
     )
   except Exception as e:
     logger.error(e)
-    return "", None
+    return "", None, None
   else:
-    return "result", a_protein
+    return "result", a_protein, tmp_more_than_one_ca_atom
 
 
 def save_selected_protein_structure_as_pdb_file(
