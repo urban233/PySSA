@@ -6808,6 +6808,11 @@ class MainViewController:
     # </editor-fold>
 
     try:
+      # remove non_protein chains from database
+      # fixme: NOT alone
+      # remove non_protein chains from model
+      self._interface_manager.remove_non_protein_chain_from_protein()
+
       if not self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
               self._interface_manager.get_current_active_protein_object().get_molecule_object(),
       ):

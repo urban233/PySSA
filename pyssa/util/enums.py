@@ -45,6 +45,13 @@ class ModelTypeEnum(enum.Enum):
   MULTIMER_SEQ = "multimer_seq"
 
 
+class ChainTypeEnum(enum.Enum):
+  """An enum for all chain types."""
+
+  PROTEIN_CHAIN = "protein_chain"
+  NON_PROTEIN_CHAIN = "non_protein_chain"
+
+
 class TaskStatus(enum.IntEnum):
   CANCELED = 6
   CREATED = 0
