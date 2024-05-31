@@ -31,6 +31,10 @@ import utils
 
 __docformat__ = "google"
 
+from auxiliary_pymol import logger
+
+module_logger = logger.setup_logger(__file__, log_path=f"{local_constants.LOG_PATH}\\auxiliary_pymol")
+
 
 class AuxiliaryPyMOL:
     """A container for static methods that use an independent pymol instance, for each static method."""
@@ -136,7 +140,7 @@ class AuxiliaryPyMOL:
                 )
 
                 fasta_prot_1 = auxiliary_pymol.cmd.get_fastastr(a_protein_1_pymol_selection_string)
-                seq_len_protein_1 = len(fasta_prot_1[fasta_prot_1.find("\n") :])
+                seq_len_protein_1 = len(fasta_prot_1[fasta_prot_1.find("\n"):])
                 rmsd_dict = {
                     "rmsd": str(round(tmp_align_results[0], 2)),
                     "aligned_residues": f"{str(tmp_align_results[1])} / {seq_len_protein_1}",
@@ -160,6 +164,7 @@ class AuxiliaryPyMOL:
                 prot_1_indices = []
                 prot_2_indices = []
                 for tmp_prot_atom in idx2resi:
+                    module_logger.debug(idx2resi)
                     if tmp_prot_atom[0] == tmp_protein_1_name:
                         try:
                             tmp_residue_number = int(tmp_prot_atom[2])
@@ -176,7 +181,8 @@ class AuxiliaryPyMOL:
                 for resi_no in range(len(prot_1_indices)):
                     atom1 = f"/{tmp_protein_1_name}//{prot_1_indices[resi_no][0]}/{prot_1_indices[resi_no][1]}/CA"
                     atom2 = f"/{tmp_protein_2_name}//{prot_2_indices[resi_no][0]}/{prot_2_indices[resi_no][1]}/CA"
-                    distance = round(auxiliary_pymol.cmd.get_distance(atom1, atom2, state=-1), 2)
+                    distance = round(auxiliary_pymol.cmd.get_distance(atom1, atom2, state=1), 2)
+                    module_logger.debug(f"Distance of atom_1 {atom1} and atom_2 {atom2} is {distance}")
 
                     ref_chain_list.append(prot_1_indices[resi_no][0])
                     ref_pos_list.append(int(prot_1_indices[resi_no][1]))
@@ -495,7 +501,7 @@ class AuxiliaryPyMOL:
             except Exception as e:
                 print(f"Protein states could not be consolidated! Ran into error: {e}")
                 return ""
-            
+
             tmp_states = auxiliary_pymol.cmd.count_states(tmp_protein_name)
             print(f"Number of states: {tmp_states}")
             if tmp_states > 1:

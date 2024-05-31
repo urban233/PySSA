@@ -165,7 +165,7 @@ def build_pdb_file(records: list, a_filepath: str) -> None:
           pdb_line = ''
         except (
             ValueError
-        ):  # fixme: this could be the fix for the protein import problem
+        ):
           logger.warning('PDB file has only the record type for TER.')
           pdb_line = f'{record_type:3s}\n'
       elif record_type == 'HETATM':

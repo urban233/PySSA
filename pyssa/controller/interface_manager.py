@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the interface manager."""
+import collections
 import glob
 import logging
 import os
@@ -2427,6 +2428,17 @@ class InterfaceManager:
   def remove_protein_from_proteins_model(self) -> None:
     """Removes the current protein from the protein model."""
     self._protein_model.remove_protein(self.get_current_protein_tree_index())
+
+  def remove_non_protein_chain_from_protein(self) -> None:
+    """Removes the non-protein chains from protein."""
+    tmp_chains_index = self.get_current_protein_tree_index().child(1, 0)
+    tmp_non_protein_chain_indexes: collections.deque = collections.deque()
+    for i in range(self._protein_model.rowCount(tmp_chains_index)):
+      if tmp_chains_index.child(i, 0).data(enums.ModelEnum.OBJECT_ROLE).chain_type == enums.ChainTypeEnum.NON_PROTEIN_CHAIN.value:
+        tmp_non_protein_chain_indexes.append(tmp_chains_index.child(i, 0))
+    tmp_non_protein_chain_indexes.reverse()
+    for tmp_non_protein_chain_index in tmp_non_protein_chain_indexes:
+      self._protein_model.remove_chain_of_protein(tmp_non_protein_chain_index)
 
   # <editor-fold desc="Menu Options">
   def show_menu_options_with_protein(self) -> None:

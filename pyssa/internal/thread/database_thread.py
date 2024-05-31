@@ -69,6 +69,7 @@ class DatabaseThread(QtCore.QObject):
     self._operations_mapping = {
         enums.SQLQueryType.INSERT_NEW_PROTEIN: self.__wrapper_insert_new_protein,
         enums.SQLQueryType.DELETE_EXISTING_PROTEIN: self.__wrapper_delete_existing_protein,
+        enums.SQLQueryType.DELETE_SPECIFIC_CHAIN: self.__wrapper_delete_specific_chain,
         enums.SQLQueryType.INSERT_NEW_PROTEIN_PAIR: self.__wrapper_insert_new_protein_pair,
         enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR: self.__wrapper_delete_existing_protein_pair,
         enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN: self.__wrapper_update_pymol_session_of_protein,
@@ -277,6 +278,32 @@ class DatabaseThread(QtCore.QObject):
 
     _, tmp_protein_id = the_buffered_data
     the_db_manager.delete_existing_protein(tmp_protein_id)
+
+  @staticmethod
+  def __wrapper_delete_specific_chain(
+      the_db_manager: "database_manager.DatabaseManager",
+      the_buffered_data: tuple,
+  ) -> None:
+    """Wrapper function for deleting a specific chain.
+
+    Args:
+        the_db_manager (database_manager.DatabaseManager): An instance of the class "database_manager.DatabaseManager" that provides access to the database and methods to manipulate data.
+        the_buffered_data (tuple): A tuple containing the data to be inserted into the database.
+
+    Raises:
+        exception.IllegalArgumentError: If any of the arguments are None.
+    """
+    # <editor-fold desc="Checks">
+    if the_db_manager is None:
+      logger.error("the_db_manager is None.")
+      raise exception.IllegalArgumentError("the_db_manager is None.")
+    if the_buffered_data is None:
+      logger.error("the_buffered_data is None.")
+      raise exception.IllegalArgumentError("the_buffered_data is None.")
+    # </editor-fold>
+
+    tmp_protein_id, tmp_chain_id = the_buffered_data
+    the_db_manager.delete_specific_chain(tmp_protein_id, tmp_chain_id)
 
   @staticmethod
   def __wrapper_insert_new_protein_pair(

@@ -676,7 +676,7 @@ class MainViewController:
       lambda: self.__slot_change_chain_color_protein_pairs("magenta")
     )
     self._view.color_grid_protein_pairs.c_purple.clicked.connect(
-      lambda: self.__slot_change_chain_color_protein_pairs("pink")
+      lambda: self.__slot_change_chain_color_protein_pairs("purple")
     )
     self._view.color_grid_protein_pairs.c_pink.clicked.connect(
       lambda: self.__slot_change_chain_color_protein_pairs("pink")
@@ -715,10 +715,10 @@ class MainViewController:
       lambda: self.__slot_change_chain_color_protein_pairs("white")
     )
     self._view.color_grid_protein_pairs.c_grey_70.clicked.connect(
-      lambda: self.__slot_change_chain_color_protein_pairs("grey_70")
+      lambda: self.__slot_change_chain_color_protein_pairs("grey70")
     )
     self._view.color_grid_protein_pairs.c_grey_30.clicked.connect(
-      lambda: self.__slot_change_chain_color_protein_pairs("grey_30")
+      lambda: self.__slot_change_chain_color_protein_pairs("grey30")
     )
     self._view.color_grid_protein_pairs.c_black.clicked.connect(
       lambda: self.__slot_change_chain_color_protein_pairs("black")
@@ -754,7 +754,7 @@ class MainViewController:
 
     # </editor-fold>
 
-  def _close_main_window(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+  def _close_main_window(self, return_value: tuple[str, QtGui.QCloseEvent]) -> None:
     """Cleans after the main window closes.
 
     Args:
@@ -767,8 +767,7 @@ class MainViewController:
 
     # </editor-fold>
 
-    tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
-    _, tmp_event = tmp_result
+    _, tmp_event = return_value
     logger.info("Check if any jobs are running before closing PySSA.")
     if self._interface_manager.job_manager.there_are_jobs_running():
       logger.info("Running jobs found!")
@@ -1173,7 +1172,7 @@ class MainViewController:
       self._interface_manager.close_job_notification_panel()
     self._interface_manager.block_gui(with_wait_cursor=True)
 
-  def _post_update_project_and_model(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+  def _post_update_project_and_model(self, return_value: tuple) -> None:
     """Refreshes the main view and reverts the cursor.
 
     Args:
@@ -1186,7 +1185,6 @@ class MainViewController:
 
     # </editor-fold>
 
-    tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
     self._interface_manager.refresh_main_view()
     self._interface_manager.stop_wait_cursor()
 
@@ -1384,7 +1382,7 @@ class MainViewController:
     """Checks if the documentation server started correctly.
 
     Args:
-        return_value (tuple): A tuple containing information about the start of the documentation server.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing information about the start of the documentation server.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -3226,8 +3224,8 @@ class MainViewController:
     # self._interface_manager.update_settings()
     # self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
 
-  def post_open_settings_global(self, return_value: tuple) -> None:
-    """Refreshes the workspae model and the main view after the settings dialog closed."""
+  def post_open_settings_global(self) -> None:
+    """Refreshes the workspace model and the main view after the settings dialog closed."""
     try:
       self._interface_manager.refresh_workspace_model()
       self._interface_manager.refresh_main_view()
@@ -3623,7 +3621,7 @@ class MainViewController:
       self._interface_manager.block_gui(with_wait_cursor=True)
       self.update_status("Creating preview of image ...")
 
-  def __await_preview_image(self, return_value: tuple) -> None:
+  def __await_preview_image(self) -> None:
     """Refreshes the main view and reverts the cursor after image preview."""
     self._interface_manager.stop_wait_cursor()
     self._interface_manager.refresh_main_view()
@@ -3705,7 +3703,7 @@ class MainViewController:
       self.update_status("Creating simple image ...")
       self._interface_manager.block_gui(with_wait_cursor=True)
 
-  def __await_create_drawn_image(self, return_value: tuple) -> None:
+  def __await_create_drawn_image(self) -> None:
     """Refreshes the main view and reverts the cursor after image creation."""
     self._interface_manager.stop_wait_cursor()
     self._interface_manager.refresh_main_view()
@@ -3879,7 +3877,7 @@ class MainViewController:
       self._interface_manager.show_menu_options_with_seq()
     finally:
       self._interface_manager.refresh_main_view()
-  
+
   # </editor-fold>
 
   # <editor-fold desc="Add sequence">
@@ -3947,7 +3945,7 @@ class MainViewController:
       self._interface_manager.refresh_sequence_model()
     finally:
       self._interface_manager.refresh_main_view()
-  
+
   # </editor-fold>
 
   # <editor-fold desc="Save sequence">
@@ -4067,7 +4065,7 @@ class MainViewController:
       self._interface_manager.refresh_sequence_model()
     finally:
       self._interface_manager.refresh_main_view()
-  
+
   # </editor-fold>
 
   def __slot_delete_selected_sequence(self) -> None:
@@ -4180,7 +4178,7 @@ class MainViewController:
       self._view.ui.seqs_table_widget.item(0, 1).setText(tmp_new_name)
     finally:
       self._interface_manager.refresh_main_view()
-  
+
   # </editor-fold>
 
   def open_context_menu_for_sequences(self, position) -> None:
@@ -4364,11 +4362,11 @@ class MainViewController:
     else:
       self._interface_manager.block_gui(with_wait_cursor=True)
 
-  def __await_open_protein_pymol_session(self, return_value: tuple) -> None:
+  def __await_open_protein_pymol_session(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the open protein pymol session process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -4547,11 +4545,11 @@ class MainViewController:
       )
       self._interface_manager.block_gui()
 
-  def __await_load_scene_protein(self, return_value: tuple[bool]) -> None:
+  def __await_load_scene_protein(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the load default pymol scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -4747,31 +4745,32 @@ class MainViewController:
             tmp_representation_config
           )
         else:
-          self._view.ui.frame_protein_repr.setEnabled(False)
-          ui_util.set_checked_async(
-            self._view.tg_protein_cartoon.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_ribbon.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_sticks.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_lines.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_spheres.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_dots.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_mesh.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_surface.toggle_button, False
-          )
+          self._view.ui.frame_protein_repr.setVisible(False)
+          # self._view.ui.frame_protein_repr.setEnabled(False)
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_cartoon.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_ribbon.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_sticks.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_lines.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_spheres.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_dots.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_mesh.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_surface.toggle_button, False
+          # )
 
       # </editor-fold>
 
@@ -4987,12 +4986,12 @@ class MainViewController:
       self._interface_manager.block_gui()  # fixme: This blocks the entire UI which leads to quick flashes. This might be a problem.
 
   def __await_color_pymol_selection_for_protein(
-          self, return_value: tuple[bool, str]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Updates the color of the protein chain based on the return value provided in the object and data model.
 
     Args:
-        return_value (tuple): A tuple containing two values, a boolean flag indicating the success of the operation and a string representing the color.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing two values, a boolean flag indicating the success of the operation and a string representing the color.
     """
     # <editor-fold desc="Checks">
     if return_value is None or len(return_value) == 0:
@@ -5153,12 +5152,12 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_color_pymol_selection_atoms_by_element_for_protein(
-          self, return_value: tuple
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Await method for the coloring of atom by their element.
 
     Args:
-        return_value (tuple): A tuple containing the result of the operation. The first element of the tuple determines whether the operation was successful or not.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the result of the operation. The first element of the tuple determines whether the operation was successful or not.
     """
     # <editor-fold desc="Checks">
     if return_value is None or len(return_value) == 0:
@@ -5194,12 +5193,12 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
 
   def __await_reset_color_pymol_selection_atoms_by_element_for_protein(
-          self, return_value: tuple
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Await method for the reset coloring of atom by their element.
 
     Args:
-        return_value (tuple): A tuple containing the result of the operation and the chain color.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the result of the operation and the chain color.
     """
     # <editor-fold desc="Checks">
     if return_value is None or len(return_value) == 0:
@@ -5309,12 +5308,12 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_set_background_color_for_protein_session(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Await method for setting the background color.
 
     Args:
-        return_value (tuple): A tuple containing the result of the operation.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the result of the operation.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -5351,12 +5350,12 @@ class MainViewController:
 
   # <editor-fold desc="Show/Hide representations">
   def __await_set_representation_for_protein_session(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Saves the pymol session after changing the representation.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -6270,12 +6269,12 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_hide_all_representations_of_protein_chain_of_a_protein(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes hide all representations for the selected chain process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -6445,11 +6444,11 @@ class MainViewController:
     else:
       self._interface_manager.block_gui(with_wait_cursor=True)
 
-  def __await_post_import_protein_structure(self, return_value: tuple) -> None:
+  def __await_post_import_protein_structure(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the import protein process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -6559,12 +6558,12 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_reinitialize_session_before_delete_protein(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Removes protein from database and refreshes the main view.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -6761,7 +6760,9 @@ class MainViewController:
         #     post_func=self.__await_clean_protein_update,
         # )
         self._interface_manager.block_gui()
-        self.update_status("Cleaning protein ...")
+        self._interface_manager.status_bar_manager.show_temporary_message(
+          "Cleaning protein ...", a_with_timeout_flag=False
+        )
       else:
         constants.PYSSA_LOGGER.info("No protein has been cleaned.")
         self._interface_manager.stop_wait_cursor()
@@ -6774,11 +6775,11 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
       self._interface_manager.refresh_main_view()
 
-  def __await_clean_protein_update(self, return_value: tuple) -> None:
+  def __await_clean_protein_update(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the cleaning process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -6807,11 +6808,26 @@ class MainViewController:
     # </editor-fold>
 
     try:
+      # remove non_protein chains from database
+      tmp_protein = self._interface_manager.get_current_active_protein_object()
+      for tmp_chain in tmp_protein.chains:
+        if tmp_chain.chain_type == enums.ChainTypeEnum.NON_PROTEIN_CHAIN.value:
+          tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.DELETE_SPECIFIC_CHAIN, (tmp_protein.get_id(), tmp_chain.get_id())
+          )
+          tmp_database_operation_to_execute = copy.deepcopy(tmp_database_operation)
+          self._database_thread.put_database_operation_into_queue(tmp_database_operation_to_execute)
+      # remove non_protein chains from model
+      self._interface_manager.remove_non_protein_chain_from_protein()
+
       if not self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
               self._interface_manager.get_current_active_protein_object().get_molecule_object(),
       ):
         self._interface_manager.stop_wait_cursor()
         self._interface_manager.refresh_main_view()
+        self._interface_manager.status_bar_manager.show_temporary_message(
+          "Cleaning the protein finished."
+        )
         return
 
       self._interface_manager.get_task_manager().append_task_result(
@@ -6849,14 +6865,12 @@ class MainViewController:
 
   def __await_load_protein_pymol_session_after_cleaning(
           self,
-          return_value: tuple[
-            Optional["pymol_session_manager.PymolSessionManager"], bool
-          ],
+          return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Loads the cleaned version back in PyMOL if it was in the session before cleaning.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7044,12 +7058,12 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_update_scene_for_protein_session(
-          self, return_value: tuple[bool, str]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes the update protein scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7191,12 +7205,12 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_create_new_scene_for_protein_session(
-          self, return_value: tuple[bool, str]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes the create new scene process and starts async method to save PyMOL session.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7305,11 +7319,11 @@ class MainViewController:
         "Start async task 'pymol_session_async.save_protein_pymol_session_to_database'."
       )
 
-  def __await_save_scene_protein(self, return_value: tuple) -> None:
+  def __await_save_scene_protein(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the save protein scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7343,11 +7357,11 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
       self._interface_manager.refresh_main_view()
 
-  def __await_save_scene_protein_pair(self, return_value: tuple) -> None:
+  def __await_save_scene_protein_pair(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the save protein pair scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7428,12 +7442,12 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_delete_scene_for_protein_session(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes the delete scene for protein session process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7510,11 +7524,11 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
       self._interface_manager.refresh_main_view()
 
-  def __await_delete_current_scene(self, return_value: tuple) -> None:
+  def __await_delete_current_scene(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the delete current scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7807,12 +7821,12 @@ class MainViewController:
       )
 
   def __await_open_protein_pair_pymol_session(
-          self, return_value: tuple
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes the open protein pair pymol session process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -7999,11 +8013,11 @@ class MainViewController:
       )
       self._interface_manager.block_gui()
 
-  def __await_load_scene_protein_pair(self, return_value: tuple[bool]) -> None:
+  def __await_load_scene_protein_pair(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Finishes the load default pymol scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -8114,14 +8128,12 @@ class MainViewController:
 
   def __await_get_residue_color_config_of_a_given_protein_chain_of_a_protein_pair(
           self,
-          return_value: tuple[
-            bool, Optional["residue_color_config.ResidueColorConfig"]
-          ],
+          return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes the setup of the color grid and representation section process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -8215,7 +8227,7 @@ class MainViewController:
 
   def __await_get_representation_config_of_a_given_protein_chain_of_a_protein_pair(
           self,
-          return_value: tuple[bool, Optional[dict]],
+          return_value: tuple[str, list[tuple[bool, tuple]]],
   ) -> None:
     """Fixme: This method should be obsolete with the new TEA lib is introduced!"""
     try:
@@ -8230,36 +8242,35 @@ class MainViewController:
           self._interface_manager.get_current_active_chain_object_of_protein_pair()
         )
         if tmp_chain.chain_type == "protein_chain":
-          self._view.ui.frame_protein_pair_repr.setEnabled(True)
           self._interface_manager.manage_toggle_state_of_protein_pair_repr(
             tmp_representation_config
           )
         else:
-          self._view.ui.frame_protein_pair_repr.setEnabled(False)
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_cartoon.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_ribbon.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_sticks.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_lines.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_spheres.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_dots.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_mesh.toggle_button, False
-          )
-          ui_util.set_checked_async(
-            self._view.tg_protein_pair_surface.toggle_button, False
-          )
+          self._view.ui.frame_protein_pair_repr.setVisible(False)
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_cartoon.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_ribbon.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_sticks.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_lines.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_spheres.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_dots.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_mesh.toggle_button, False
+          # )
+          # ui_util.set_checked_async(
+          #   self._view.tg_protein_pair_surface.toggle_button, False
+          # )
           # self._view.tg_protein_pair_cartoon.toggle_button.setChecked(False)
           # self._view.tg_protein_pair_ribbon.toggle_button.setChecked(False)
           # self._view.tg_protein_pair_sticks.toggle_button.setChecked(False)
@@ -8413,12 +8424,12 @@ class MainViewController:
     #     self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
   def __await_color_pymol_selection_for_protein_pair(
-          self, return_value: tuple[bool, str]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Updates the color of the protein chain based on the return value provided in the object and data model.
 
     Args:
-        return_value (tuple): A tuple containing two values, a boolean flag indicating the success of the operation and a string representing the color.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing two values, a boolean flag indicating the success of the operation and a string representing the color.
     """
     # <editor-fold desc="Checks">
     if return_value is None or len(return_value) == 0:
@@ -8662,12 +8673,12 @@ class MainViewController:
     #     self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
   def __await_color_pymol_selection_atoms_by_element_for_protein_pair(
-          self, return_value: tuple
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Await method for the coloring of atom by their element.
 
     Args:
-        return_value: A tuple containing the result of the operation. The first element of the tuple determines whether the operation was successful or not.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the result of the operation. The first element of the tuple determines whether the operation was successful or not.
 
     Returns:
         None
@@ -8706,12 +8717,12 @@ class MainViewController:
       self._interface_manager.stop_wait_cursor()
 
   def __await_reset_color_pymol_selection_atoms_by_element_for_protein_pair(
-          self, return_value: tuple
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Await method for the reset coloring of atom by their element.
 
     Args:
-        return_value: A tuple containing the result of the operation and the chain color.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the result of the operation and the chain color.
 
     Returns:
         None
@@ -8891,12 +8902,12 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_set_background_color_for_protein_pair_session(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Await method for setting the background color.
 
     Args:
-        return_value (tuple): A tuple containing the result of the operation.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the result of the operation.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -8933,12 +8944,12 @@ class MainViewController:
 
   # <editor-fold desc="Representations">
   def __await_set_representation_for_protein_pair_session(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Saves the pymol session after changing the representation.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -9853,12 +9864,12 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_hide_all_representations_of_protein_chain_of_a_protein_pair(
-          self, return_value: tuple[bool]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes hide all representations for the selected chain process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:
@@ -9959,12 +9970,12 @@ class MainViewController:
       self._interface_manager.block_gui()
 
   def __await_update_scene_for_protein_pair_session(
-          self, return_value: tuple[bool, str]
+          self, return_value: tuple[str, list[tuple[bool, tuple]]]
   ) -> None:
     """Finishes the update protein pair scene process.
 
     Args:
-        return_value (tuple): The result data from the async method.
+        return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
     """
     # <editor-fold desc="Checks">
     if return_value is None:

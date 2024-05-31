@@ -163,11 +163,11 @@ class Analysis:
 
         tmp_protein_1_name = tmp_protein_pair.protein_1.get_molecule_object()
         tmp_protein_1_pdb_cache_filepath = pathlib.Path(
-            f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein_1_name}.pdb",
+            f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein_1_name}.pdb",  # fixme: Must be a string, but is a path!
         )
         tmp_protein_2_name = tmp_protein_pair.protein_2.get_molecule_object()
         tmp_protein_2_pdb_cache_filepath = pathlib.Path(
-            f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein_2_name}.pdb",
+            f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein_2_name}.pdb",  # fixme: Must be a string, but is a path!
         )
         try:
           bio_data.build_pdb_file(

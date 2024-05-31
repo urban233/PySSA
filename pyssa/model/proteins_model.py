@@ -352,6 +352,32 @@ class ProteinsModel(QtGui.QStandardItemModel):
     tmp_protein_item = self.itemFromIndex(the_model_index_of_the_scene)
     self.removeRow(tmp_protein_item.row())
 
+  def remove_chain_of_protein(self, the_model_index_of_the_chain: QtCore.QModelIndex) -> None:
+    """
+
+    Args:
+      the_model_index_of_the_chain (QtCore.QModelIndex): The index of the chain in the protein model.
+
+    Returns:
+      exception.IllegalArgumentError: If the_model_index_of_the_chain is None.
+      ValueError: If the type of the item at the given index is not "protein".
+    """
+    # <editor-fold desc="Checks">
+    if the_model_index_of_the_chain is None:
+      logger.error("the_model_index_of_the_chain is None.")
+      raise exception.IllegalArgumentError(
+          "the_model_index_of_the_chain is None."
+      )
+    if (
+        self.data(the_model_index_of_the_chain, enums.ModelEnum.TYPE_ROLE)
+        != "chain"
+    ):
+      raise ValueError("Wrong type!")
+    # </editor-fold>
+
+    tmp_chain_item = self.itemFromIndex(the_model_index_of_the_chain)
+    tmp_scenes_item = tmp_chain_item.parent()
+    tmp_scenes_item.removeRow(tmp_chain_item.row())
 
 class TemporaryProteinsModel(ProteinsModel):
   """Models a possible future ProteinModel."""
