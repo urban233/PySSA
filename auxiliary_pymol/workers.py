@@ -127,7 +127,7 @@ def handle_request(a_job_type: str, a_queue: queue.Queue, a_socket: zmq.Socket) 
                         response = {"result": "", "data": (tmp_pymol_session, tmp_new_pdb_filepath)}
             except AttributeError as e:
                 if str(e).find("Error: Selection 1: More than one atom found") != -1:
-                    response = {"result": "error", "data": "Ambiguous selection."}
+                    response = {"result": "error", "data": "Malformed pdb file."}
                 else:
                     response = {"result": "error", "data": str(e)}
             except Exception as e:

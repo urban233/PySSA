@@ -181,6 +181,7 @@ class AuxiliaryPyMOL:
                 for resi_no in range(len(prot_1_indices)):
                     atom1 = f"/{tmp_protein_1_name}//{prot_1_indices[resi_no][0]}/{prot_1_indices[resi_no][1]}/CA"
                     atom2 = f"/{tmp_protein_2_name}//{prot_2_indices[resi_no][0]}/{prot_2_indices[resi_no][1]}/CA"
+                    # Raises Exception if "Error: Selection 1: More than one atom found"
                     distance = round(auxiliary_pymol.cmd.get_distance(atom1, atom2, state=1), 2)
                     module_logger.debug(f"Distance of atom_1 {atom1} and atom_2 {atom2} is {distance}")
 

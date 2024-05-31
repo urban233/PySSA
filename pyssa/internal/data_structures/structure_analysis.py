@@ -194,7 +194,7 @@ class Analysis:
                 tmp_protein_pair.distance_analysis.cycles,
             ),
         )
-        if tmp_reply["result"] == "error" and tmp_reply["data"] == "More than one state":
+        if tmp_reply["result"] == "error" and tmp_reply["data"] == "Malformed pdb file.":
           raise exception.UnableToDoAnalysisError(tmp_reply["data"])
         if tmp_reply["data"] is not None:
           print(tmp_reply["data"])
@@ -249,7 +249,7 @@ class Analysis:
             f"filename: {tmp_protein_pair.name}"
         )
       except exception.UnableToDoAnalysisError:
-        raise exception.UnableToDoAnalysisError("Ambiguous selection during structure analysis.")
+        raise exception.UnableToDoAnalysisError("Malformed pdb file.")
       except Exception as e:
         logger.error(f"Unknown error: {e}")
         raise exception.UnableToSetImageError("")
