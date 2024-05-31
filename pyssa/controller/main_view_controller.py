@@ -6817,6 +6817,7 @@ class MainViewController:
           )
           tmp_database_operation_to_execute = copy.deepcopy(tmp_database_operation)
           self._database_thread.put_database_operation_into_queue(tmp_database_operation_to_execute)
+          tmp_protein.chains.remove(tmp_chain)
       # remove non_protein chains from model
       self._interface_manager.remove_non_protein_chain_from_protein()
 
