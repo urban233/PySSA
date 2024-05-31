@@ -1023,7 +1023,7 @@ class Ui_MainWindow(object):
         self.action_preview_image = QtWidgets.QAction(MainWindow)
         self.action_preview_image.setObjectName("action_preview_image")
         self.action_protein_regions = QtWidgets.QAction(MainWindow)
-        self.action_protein_regions.setCheckable(True)
+        self.action_protein_regions.setCheckable(False)
         self.action_protein_regions.setObjectName("action_protein_regions")
         self.action_import_project = QtWidgets.QAction(MainWindow)
         self.action_import_project.setObjectName("action_import_project")
