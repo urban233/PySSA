@@ -109,6 +109,7 @@ class SQLQueryType(enum.Enum):
   CLOSE_PROJECT = "close_project"
   INSERT_NEW_PROTEIN = "insert_new_protein"
   DELETE_EXISTING_PROTEIN = "delete_existing_protein"
+  DELETE_SPECIFIC_CHAIN = "delete_specific_chain"
   INSERT_NEW_PROTEIN_PAIR = "insert_new_protein_pair"
   DELETE_EXISTING_PROTEIN_PAIR = "delete_existing_protein_pair"
   UPDATE_PYMOL_SESSION_PROTEIN = "update_pymol_session_protein"
@@ -194,6 +195,10 @@ class SQLQueryStatement(enum.Enum):
         DELETE FROM Chain
         WHERE protein_id = ?
     """
+  DELETE_SPECIFIC_CHAIN = """
+        DELETE FROM Chain
+        WHERE protein_id = ? and id = ?
+  """
   DELETE_PYMOL_PARAMETER = """   
         DELETE FROM PyMOLParameter
         WHERE chain_id = ?

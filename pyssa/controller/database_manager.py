@@ -1900,6 +1900,37 @@ class DatabaseManager:
       )
       self._pyssa_database_interface.disconnect()
 
+  def delete_specific_chain(self, a_protein_id: int, a_chain_id: int) -> None:
+    """Deletes the chain with the given ids.
+
+    Args:
+      a_protein_id (int): The ID of the protein.
+      a_chain_id (int): The ID of the chain to delete from the database.
+
+    Raises:
+      exception.IllegalArgumentError: If any of the arguments are either None or has a value less than 0.
+    """
+    # <editor-fold desc="Checks">
+    if a_protein_id is None or a_protein_id < 0:
+      logger.error("a_protein_id is either None or has a value less than 0.")
+      raise exception.IllegalArgumentError("a_protein_id is either None or has a value less than 0.")
+    if a_chain_id is None or a_chain_id < 0:
+      logger.error("a_chain_id is either None or has a value less than 0.")
+      raise exception.IllegalArgumentError("a_chain_id is either None or has a value less than 0.")
+
+    # </editor-fold>
+
+    if self._pyssa_database_interface.connect():
+      tmp_sql_query_chain = PyssaSqlQuery.create_sql_query(
+        self._pyssa_database_interface.db,
+        enums.SQLQueryStatement.DELETE_SPECIFIC_CHAIN,
+      )
+      self._pyssa_database_interface.execute_query(
+        tmp_sql_query_chain,
+        params=(a_protein_id, a_chain_id),
+      )
+      self._pyssa_database_interface.disconnect()
+
   def get_protein_as_object(
       self, the_pymol_molecule_object: str
   ) -> "protein.Protein":

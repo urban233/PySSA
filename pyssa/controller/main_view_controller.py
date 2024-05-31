@@ -6809,7 +6809,14 @@ class MainViewController:
 
     try:
       # remove non_protein chains from database
-      # fixme: NOT alone
+      tmp_protein = self._interface_manager.get_current_active_protein_object()
+      for tmp_chain in tmp_protein.chains:
+        if tmp_chain.chain_type == enums.ChainTypeEnum.NON_PROTEIN_CHAIN.value:
+          tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.DELETE_SPECIFIC_CHAIN, (tmp_protein.get_id(), tmp_chain.get_id())
+          )
+          tmp_database_operation_to_execute = copy.deepcopy(tmp_database_operation)
+          self._database_thread.put_database_operation_into_queue(tmp_database_operation_to_execute)
       # remove non_protein chains from model
       self._interface_manager.remove_non_protein_chain_from_protein()
 
