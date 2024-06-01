@@ -1400,7 +1400,7 @@ class MainViewController:
     # </editor-fold>
 
     tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
-    self._interface_manager.documentation_window = tmp_result[2]
+    self._interface_manager.documentation_window = tmp_result[1]
     # self._interface_manager.documentation_window = return_value[1]
     self._interface_manager.status_bar_manager.show_temporary_message(
       "Opening help center finished."

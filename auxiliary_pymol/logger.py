@@ -26,7 +26,7 @@ from typing import Optional
 
 __docformat__ = "google"
 
-from auxiliary_pymol import local_constants
+import local_constants
 
 
 def setup_logger(

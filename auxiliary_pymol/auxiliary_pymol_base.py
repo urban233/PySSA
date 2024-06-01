@@ -31,7 +31,7 @@ import utils
 
 __docformat__ = "google"
 
-from auxiliary_pymol import logger
+import logger
 
 module_logger = logger.setup_logger(__file__, log_path=f"{local_constants.LOG_PATH}\\auxiliary_pymol")
 
