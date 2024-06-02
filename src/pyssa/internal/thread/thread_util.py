@@ -1,10 +1,10 @@
 #
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
-# Copyright (C) 2022
+# Copyright (C) 2024
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
 #
-# Source code is available at <https://github.com/urban233/PySSA>
+# Source code is available at <https://github.com/zielesny/PySSA>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,18 +19,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Init file for PyMOL interface."""
-from src.pyssa_pymol import user_pymol_interface
+"""Module for util methods related to threading."""
+import logging
+import threading
 
-# This global reference is needed to avoid garbage collection due to reference counting
-mainInterface = None
+from src.pyssa.logging_pyssa import log_handlers
 
-
-def start_user_pymol_interface():
-    """Function to start the PyMOL interface, by instantiating the Interface class."""
-    global mainInterface
-    mainInterface = user_pymol_interface.UserPyMOLInterface()
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
-# Starting the actual interface
-start_user_pymol_interface()
+def is_main_thread() -> bool:
+  """Check if the current thread is the main thread.
+
+  Returns:
+      The boolean True if the current thread is the main thread, False otherwise.
+  """
+  if threading.current_thread() == threading.main_thread():
+    logger.info("Running in main thread.")
+    return True
+  logger.info("Running in separate thread.")
+  return False

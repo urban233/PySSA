@@ -1,10 +1,10 @@
 #
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
-# Copyright (C) 2022
+# Copyright (C) 2024
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
 #
-# Source code is available at <https://github.com/urban233/PySSA>
+# Source code is available at <https://github.com/zielesny/PySSA>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,18 +19,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Init file for PyMOL interface."""
-from src.pyssa_pymol import user_pymol_interface
+"""PySSA global variables."""
+import os
+import pathlib
 
-# This global reference is needed to avoid garbage collection due to reference counting
-mainInterface = None
+from src.pyssa.util import enums
 
+g_settings = None
 
-def start_user_pymol_interface():
-    """Function to start the PyMOL interface, by instantiating the Interface class."""
-    global mainInterface
-    mainInterface = user_pymol_interface.UserPyMOLInterface()
+g_plugin_path = pathlib.Path(
+    "C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\PySSA",
+)
+g_plugin_root_path = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
+g_os = ""
 
-
-# Starting the actual interface
-start_user_pymol_interface()
+g_server_status = enums.DocsServerStatus.INACTIVE
