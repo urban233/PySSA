@@ -37,7 +37,7 @@ logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 if TYPE_CHECKING:
-  from pyssa.internal.data_structures import settings
+  from src.pyssa.internal.data_structures import settings
 
 
 def check_operating_system() -> None:

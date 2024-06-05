@@ -2,7 +2,6 @@
 <project version="4">
   <component name="RuffConfigService">
     <option name="disableOnSaveOutsideOfProject" value="false" />
-    <option name="projectRuffExecutablePath" value="C:\Users\martin\Miniforge3\envs\pyssa_dev\Scripts\ruff.exe" />
     <option name="ruffConfigPath" value="C:\Users\martin\github_repos\PySSA\pyproject.toml" />
     <option name="runRuffOnSave" value="true" />
   </component>

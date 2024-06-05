@@ -116,8 +116,8 @@ class JobManager:
       return
     process = subprocess.Popen(
         [
-            r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\python.exe",
-            f"{constants.PLUGIN_PATH}\\auxiliary_pymol\\main.py",
+            constants.PYTHON_FILEPATH,
+            f"{constants.PROGRAM_SRC_PATH}\\auxiliary_pymol\\main.py",
         ],
         creationflags=subprocess.CREATE_NO_WINDOW,
     )

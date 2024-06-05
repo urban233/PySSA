@@ -1,1 +1,1 @@
-call C:\ProgramData\pyssa\mambaforge_pyssa\base-mamba\condabin\conda.bat activate C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env && pymol -A1
+C:\ProgramData\IBCI\PySSA\bin\.venv\Scripts\pymol.exe -A1

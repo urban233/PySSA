@@ -103,7 +103,7 @@ def set_stylesheet(self) -> None:  # noqa: ANN001
   logger.info("Using the 'in-project' stylesheet.")
   with open(
       pathlib.Path(
-          f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/ui/styles/pyssa_style.css"
+          f"{constants.PROGRAM_SRC_PATH}/pyssa/gui/ui/styles/pyssa_style.css"
       ),
       "r",
       encoding="utf-8",
@@ -122,7 +122,7 @@ def set_stylesheet_homepage(self) -> None:  # noqa: ANN001
   logger.info("Using the homepage stylesheet.")
   with open(
       pathlib.Path(
-          f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/ui/styles/pyssa_style_homepage.css"
+          f"{constants.PROGRAM_SRC_PATH}/pyssa/gui/ui/styles/pyssa_style_homepage.css"
       ),
       "r",
       encoding="utf-8",

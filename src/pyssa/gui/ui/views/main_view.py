@@ -751,11 +751,7 @@ class MainView(QtWidgets.QMainWindow):
     # </editor-fold>
 
     self._create_all_tooltips()
-    pixmap = QtGui.QPixmap(str(constants.PLUGIN_LOGO_WITH_FONT_FILEPATH))
-    # Resize the pixmap
-    pixmap = QtGui.QPixmap(
-        r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Lib\site-packages\pymol\pymol_path\data\startup\PySSA\assets\images\logo_type_2.tiff"
-    )
+    pixmap = QtGui.QPixmap(str(constants.PLUGIN_LOGO_WITH_CAPTION_FILEPATH))
     scaled_pixmap = pixmap.scaled(
         700,
         700,

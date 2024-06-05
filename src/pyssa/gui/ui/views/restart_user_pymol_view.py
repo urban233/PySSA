@@ -84,4 +84,4 @@ class RestartUserPyMOLView(QtWidgets.QDialog):
     )
     tmp_dialog.exec_()
     if tmp_dialog.response:
-      self.return_value.emit(True, 0)
+      self.return_value.emit((True, 0))

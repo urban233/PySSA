@@ -163,7 +163,7 @@ def copy_pyssa_colabfold_directory_to_wsl2() -> None:
       r"\\wsl$\almaColabfold9\home\rhel_user\pyssa_colabfold"
   )
   tmp_pyssa_colabfold_windows_path: str = str(
-      pathlib.Path(f"{constants.PLUGIN_PATH}/pyssa_colabfold")
+      pathlib.Path(f"{constants.PROGRAM_SRC_PATH}/pyssa_colabfold")
   )
   subprocess.run(
       [

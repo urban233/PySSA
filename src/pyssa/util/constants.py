@@ -27,37 +27,45 @@ import pathlib
 from pathlib import Path
 from src.pyssa.util import globals, enums
 
-DEBUGGING = False
-
+# General
 PLUGIN_NAME = 'PySSA'
-PLUGIN_PATH = globals.g_plugin_path
-PLUGIN_ROOT_PATH = globals.g_plugin_root_path
-PLUGIN_EXTRA_TOOLS_PATH = str(pathlib.Path(f'{PLUGIN_ROOT_PATH}/extra_tools/'))
-PLUGIN_DOCS_PATH = str(
-    pathlib.Path(f'{PLUGIN_ROOT_PATH}/docs/pyssa-documentation')
-)
-PLUGIN_LOGO_FILEPATH = str(
-    pathlib.Path(f'{PLUGIN_ROOT_PATH}/assets/images/pyssa_logo.png')
-)
-PLUGIN_LOGO_WITH_FONT_FILEPATH = str(
-    pathlib.Path(f'{PLUGIN_ROOT_PATH}/assets/images/logo_type_2.tiff')
-)
 VERSION_NUMBER = "v0.10.23"  # The version number MUST be in double quotes
-PLUGIN_PATH_WSL_NOTATION = '/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA'
-# important PATHs
-# settings path: /home/$USER/.pyssa/settings.xml
-SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
-SETTINGS_DIR_UNIX_NOTATION = SETTINGS_DIR.replace('\\', '/')
 SETTINGS_FILE_NAME = 'settings'
 SETTINGS_FILENAME = 'settings.json'
-SETTINGS_FULL_FILEPATH = pathlib.Path(f'{SETTINGS_DIR}/{SETTINGS_FILENAME}')
 
+# Flags
+DEBUGGING = False
+
+# Paths/Filepaths
+PLUGIN_PATH = globals.g_plugin_path
+PROGRAM_BIN_ROOT_PATH = "C:\\ProgramData\\IBCI\\PySSA\\bin\\PySSA"  # fixme: It could be beneficial to use this instead of the "PLUGIN_PATH" var
+PROGRAM_SRC_PATH = f"{PROGRAM_BIN_ROOT_PATH}\\src"
+PYTHON_FILEPATH = r"C:\ProgramData\IBCI\PySSA\bin\.venv\Scripts\python.exe"
+PLUGIN_EXTRA_TOOLS_PATH = str(pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/extra_tools/'))
+PLUGIN_DOCS_PATH = str(
+    pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/docs/pyssa-documentation')
+)
+PLUGIN_LOGO_FILEPATH = str(
+    pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/assets/images/pyssa_logo.png')
+)
+PLUGIN_LOGO_WITH_CAPTION_FILEPATH = str(
+    pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/assets/images/logo_type_2.tiff')
+)
+SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
+SETTINGS_FULL_FILEPATH = pathlib.Path(f'{SETTINGS_DIR}/{SETTINGS_FILENAME}')
+SETTINGS_DIR_UNIX_NOTATION = SETTINGS_DIR.replace('\\', '/')
 DEFAULT_WORKSPACE_PATH = pathlib.Path(
     f"{os.path.expanduser('~')}/.pyssa/default_workspace"
 )
 
-CONTAINER_NAME = 'localcolabfold-container'
-IMAGE_NAME = 'localhost/localcolabfold-ubuntu2204:1.5.1.2'
+# Commented out in this revision
+#PLUGIN_PATH_WSL_NOTATION = '/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA'
+#CONTAINER_NAME = 'localcolabfold-container'
+#IMAGE_NAME = 'localhost/localcolabfold-ubuntu2204:1.5.1.2'
+# ---------
+
+
+
 SCRATCH_DIR = Path(f'{SETTINGS_DIR}/scratch')
 SCRATCH_DIR_ANALYSIS = Path(f'{SCRATCH_DIR}/analysis')
 SCRATCH_DIR_IMAGES = Path(f'{SCRATCH_DIR_ANALYSIS}/images')
@@ -94,25 +102,25 @@ POWERSHELL_EXE = (
     'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe'
 )
 # Constants for structure prediction
-CONVERT_DOS_TO_UNIX = pathlib.Path(f'{PLUGIN_PATH}/scripts/batch/convert.bat')
-CONVERT_DOS_TO_UNIX_EXE = pathlib.Path(f'{PLUGIN_PATH}/externals/dos2unix.exe')
-UNIX_SCRIPTS_WIN = pathlib.Path(f'{PLUGIN_PATH}/scripts/unix/')
+CONVERT_DOS_TO_UNIX = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/scripts/batch/convert.bat')
+CONVERT_DOS_TO_UNIX_EXE = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/externals/dos2unix.exe')
+UNIX_SCRIPTS_WIN = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/scripts/unix/')
 COLABFOLD_PREDICT_SCRIPT_WIN = pathlib.Path(
     f'{UNIX_SCRIPTS_WIN}/colabfold_predict.sh'
 )
 
 INSTALL_WSL_PS1 = pathlib.Path(
-    f'{PLUGIN_ROOT_PATH}/scripts/powershell/install_wsl.ps1'
+    f'{PROGRAM_BIN_ROOT_PATH}/scripts/powershell/install_wsl.ps1'
 )
 PREDICTION_PS1 = pathlib.Path(
-    f'{PLUGIN_ROOT_PATH}/scripts/powershell/run_prediction.ps1'
+    f'{PROGRAM_BIN_ROOT_PATH}/scripts/powershell/run_prediction.ps1'
 )
-INSTALL_WSL = pathlib.Path(f'{PLUGIN_ROOT_PATH}/scripts/batch/install_wsl.bat')
+INSTALL_WSL = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/scripts/batch/install_wsl.bat')
 INSTALL_LOCAL_COLABFOLD_DISTRO = pathlib.Path(
-    f'{PLUGIN_ROOT_PATH}/scripts/batch/import_distro.bat'
+    f'{PROGRAM_BIN_ROOT_PATH}/scripts/batch/import_distro.bat'
 )
 UNINSTALL_LOCAL_COLABFOLD_DISTRO = pathlib.Path(
-    f'{PLUGIN_ROOT_PATH}/scripts/batch/uninstall_distro.bat'
+    f'{PROGRAM_BIN_ROOT_PATH}/scripts/batch/uninstall_distro.bat'
 )
 # TODO: original paths, please uncomment before deployment!!!
 COLABFOLD_PREDICT_SCRIPT_OLD = f'/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh'
@@ -138,10 +146,10 @@ TUTORIAL_PATH = 'C:\\ProgramData\\pyssa\\tutorials'
 DOCS_PATH = 'C:\\ProgramData\\pyssa\\user_guide.pdf'
 
 REMOVE_WSL_POWERSHELL = pathlib.Path(
-    f'{PLUGIN_ROOT_PATH}/scripts/powershell/remove_wsl_env.ps1'
+    f'{PROGRAM_BIN_ROOT_PATH}/scripts/powershell/remove_wsl_env.ps1'
 )
 ADD_WSL_POWERSHELL = pathlib.Path(
-    f'{PLUGIN_ROOT_PATH}/scripts/powershell/add_wsl_env.ps1'
+    f'{PROGRAM_BIN_ROOT_PATH}/scripts/powershell/add_wsl_env.ps1'
 )
 # Constants for config file
 # TODO: uncomment constant below before deployment
@@ -171,73 +179,73 @@ ANALYSIS_WORKER_LOGGER = logging.getLogger('AnalysisWorker')
 # docs paths
 # TODO: get correct paths
 DOCS_PDF = ''
-DOCS_HTML = pathlib.Path(f'{PLUGIN_PATH}/docs/html/index.html')
+DOCS_HTML = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/docs/html/index.html')
 
 WINDOW_TITLE_OF_HELP_CENTER = 'PySSA - Documentation Center'
 WINDOW_TITLE_OF_PYSSA = 'PySSA'
 WINDOW_TITLE_OF_PYMOL_PART = 'PyMOL'
 HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH = (
-    f'{PLUGIN_PATH}\\winbatch\\bring_docs_to_front.exe'
+    f'{PROGRAM_BIN_ROOT_PATH}\\winbatch\\bring_docs_to_front.exe'
 )
-ARRANGE_WINDOWS_EXE_FILEPATH = f'{PLUGIN_PATH}\\winbatch\\arrange_windows.exe'
+ARRANGE_WINDOWS_EXE_FILEPATH = f'{PROGRAM_BIN_ROOT_PATH}\\winbatch\\arrange_windows.exe'
 
 # Paths of help html files
 HELP_HOME_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/home.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/home.html'
 )
 HELP_ANALYSIS_IMAGES_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/analysis_images.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/analysis_images.html'
 )
 HELP_GLOBAL_SETTINGS_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/global_settings.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/global_settings.html'
 )
 HELP_HOTSPOTS_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/hotspots.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/hotspots.html'
 )
 HELP_IMAGE_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/image.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/image.html'
 )
 HELP_LOCAL_MONOMER_PREDICTION_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/local_monomer_prediction.html',
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/local_monomer_prediction.html',
 )
 HELP_LOCAL_MULTIMER_PREDICTION_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/local_multimer_prediction.html',
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/local_multimer_prediction.html',
 )
 HELP_MANAGE_PYMOL_SESSION_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/manage_pymol_session.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/manage_pymol_session.html'
 )
 HELP_MONOMER_PREDICTION_ANALYSIS_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/monomer_prediction_analysis.html',
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/monomer_prediction_analysis.html',
 )
 HELP_MULTIMER_PREDICTION_ANALYSIS_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/multimer_prediction_analysis.html',
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/multimer_prediction_analysis.html',
 )
 HELP_VIEW_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/view_proteins_of_current_project.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/view_proteins_of_current_project.html'
 )
 HELP_CREATE_NEW_PROJECT_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/create_new_project.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/create_new_project.html'
 )
 HELP_DELETE_PROJECT_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/delete_project.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/delete_project.html'
 )
 HELP_EDIT_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/edit_proteins_of_current_project.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/edit_proteins_of_current_project.html'
 )
 HELP_OPEN_EXISTING_PROJECT_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/open_existing_project.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/open_existing_project.html'
 )
 HELP_STRUCTURE_ANALYSIS_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/structure_analysis.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/structure_analysis.html'
 )
 HELP_USE_EXISTING_PROJECT_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/use_existing_project.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/use_existing_project.html'
 )
 HELP_RESULTS_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/internal_help/html/results.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/internal_help/html/results.html'
 )
 CHANGELOG_HTML_PATH = pathlib.Path(
-    f'{PLUGIN_PATH}/docs/changelog/changelog.html'
+    f'{PROGRAM_BIN_ROOT_PATH}/docs/changelog/changelog.html'
 )
 
 # page header names

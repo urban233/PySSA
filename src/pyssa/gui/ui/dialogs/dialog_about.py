@@ -44,7 +44,7 @@ class DialogAbout(QtWidgets.QDialog):
 
     self.ui.btn_ok.clicked.connect(self.close_dialog)
     original_pixmap = QtGui.QPixmap(
-        f"{constants.PLUGIN_ROOT_PATH}\\assets\\images\\pyssa_logo.png"
+        f"{constants.PROGRAM_BIN_ROOT_PATH}\\assets\\images\\pyssa_logo.png"
     )
     scaled_pixmap = original_pixmap.scaled(150, 150)
     self.ui.lbl_pyssa_logo.setPixmap(scaled_pixmap)

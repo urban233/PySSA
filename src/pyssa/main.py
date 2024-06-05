@@ -26,25 +26,20 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 
-# TODO: change these paths to the new pyssa directory!!!
-sys.path.append(
-    "C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\PySSA"
-)
-sys.path.append(
-    "C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\PySSA\\pyssa"
-)
+sys.path.append("C:\\ProgramData\\IBCI\\PySSA\\bin\\PySSA")
 
-from src.yssa.util import constants
+from src.pyssa.util import constants
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.controller import main_view_controller
 from src.pyssa.controller import interface_manager
 
 
 if __name__ == "__main__":
+  print(constants.PROGRAM_BIN_ROOT_PATH)
   app = QtWidgets.QApplication(sys.argv)
   # setup QSplashScreen
   pixmapi = QtGui.QPixmap(
-      f"{constants.PLUGIN_PATH}\\assets\\images\\splash_screen.png"
+      f"{constants.PROGRAM_BIN_ROOT_PATH}\\assets\\images\\splash_screen.png"
   )
   smaller_pixmapi = pixmapi.scaled(
       700, 700, Qt.KeepAspectRatio, Qt.SmoothTransformation
