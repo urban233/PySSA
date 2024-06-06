@@ -25,6 +25,7 @@ import os
 import subprocess
 
 import pygetwindow
+from Bio import SeqRecord
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
@@ -391,7 +392,8 @@ class PredictProteinViewController(QtCore.QObject):
         continue
       if the_watcher.is_protein_name_on_blacklist(tmp_seq_record.name):
         continue
-      tmp_seqs = tmp_seq_record.seq.split(",")
+
+      tmp_seqs: list[str] = str(tmp_seq_record.seq).split(",")
       tmp_chain_no = 0
       for tmp_seq in tmp_seqs:
         self._view.ui.table_proteins_to_predict.insertRow(tmp_row_no)

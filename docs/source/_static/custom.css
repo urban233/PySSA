@@ -1,0 +1,11 @@
+html[data-theme="light"] {
+    --pst-color-primary: #367AF6;
+}
+
+html[data-theme="dark"] {
+    --pst-color-primary: white;
+}
+
+table {
+  width: auto; /* Override fit-content which breaks Styler user guide ipynb */
+}

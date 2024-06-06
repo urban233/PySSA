@@ -1634,12 +1634,12 @@ class DatabaseManager:
           self._pyssa_database_interface.db,
           enums.SQLQueryStatement.INSERT_SEQUENCE,
       )
-      tmp_project_id = 1  # fixme: this could lead to problems in the future
+      tmp_project_id = 1  # fixme: This could lead to problems in the future
       self._pyssa_database_interface.execute_query(
           tmp_sql_query_project_id,
           params=(
               a_seq_record.id,
-              a_seq_record.seq,
+              str(a_seq_record.seq),
               a_seq_record.name,
               tmp_project_id,
           ),

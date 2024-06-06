@@ -20,6 +20,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Init file for PyMOL interface."""
+import sys
+
+sys.path.append("C:\\ProgramData\\IBCI\\PySSA\\bin\\PySSA")
 from src.pyssa_pymol import user_pymol_interface
 
 # This global reference is needed to avoid garbage collection due to reference counting

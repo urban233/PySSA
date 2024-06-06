@@ -1609,7 +1609,8 @@ class MainViewController:
       log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
       "'Help' button on the 'Sequence Tab' was clicked.",
     )
-    self.open_help("help/sequences/sequences_tab/")
+    #self.open_help("help/sequences/sequences_tab/")
+    self._interface_manager.help_manager.change_url("C:/Users/martin/github_repos/PySSA/docs/build/html/index.html")
 
   def _open_additional_information_table_help(self) -> None:
     """Opens the help dialog on the additional sequence page."""
@@ -2806,15 +2807,13 @@ class MainViewController:
       tmp_enable_multimer_flag = False
       for tmp_model_index in self._view.ui.seqs_list_view.selectedIndexes():
         tmp_type = tmp_model_index.data(enums.ModelEnum.TYPE_ROLE)
-        tmp_sequence_name: SeqRecord.SeqRecord = tmp_model_index.data(
+        tmp_sequence_name: str = tmp_model_index.data(
           enums.ModelEnum.OBJECT_ROLE
         ).name
         if (
                 tmp_type == enums.ModelTypeEnum.MONOMER_SEQ
                 and tmp_enable_monomer_flag is False
-                and not self._interface_manager.get_current_project().is_sequence_as_protein_in_project(
-          tmp_sequence_name
-        )
+                and not self._interface_manager.get_current_project().is_sequence_as_protein_in_project(tmp_sequence_name)
         ):
           tmp_enable_monomer_flag = True
         elif (

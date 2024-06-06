@@ -37,7 +37,8 @@ from PyQt5.QtCore import Qt
 
 from src.application_process import application_process_manager
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS  # noqa: F401
-from src.pyssa.controller import pymol_session_manager, settings_manager, status_bar_manager, job_manager, watcher
+from src.pyssa.controller import pymol_session_manager, settings_manager, status_bar_manager, job_manager, watcher, \
+  help_manager
 from src.pyssa.gui.ui.custom_widgets import job_entry
 from src.pyssa.gui.ui.dialogs import dialog_startup
 from src.pyssa.gui.ui.views import rename_protein_view, use_project_view, add_sequence_view, add_scene_view, settings_view, predict_protein_view, fasta_file_import_preview_view, rename_sequence_view, add_protein_pair_view, advanced_prediction_configurations, restart_user_pymol_view
@@ -194,7 +195,7 @@ class InterfaceManager:
     self._advanced_prediction_configurations = (
         advanced_prediction_configurations.AdvancedPredictionConfigurationsView()
     )
-
+    self.help_manager = help_manager.HelpManager()
     self.app_process_manager = (
         application_process_manager.ApplicationProcessManager(
             self._reset_pymol_session
