@@ -82,7 +82,7 @@ class CreateWinPackageBuildTask(IBuildTask):
 
   # </editor-fold>
 
-  def execute_task(self):
+  def execute_task(self) -> None:
     try:
       # Clean temporary build directory
       print("Clean temporary build directory ...")
@@ -114,3 +114,27 @@ class CreateWinPackageBuildTask(IBuildTask):
       # Clean directory
       print("Clean directory")
       setup_util.Directory.purge(self.temp_path)
+
+
+class MakeSphinxDocs(IBuildTask):
+  """Generates docs using Sphinx."""
+
+  # <editor-fold desc="Class attributes">
+  project_root_path = pathlib.Path(__file__).parent.absolute()
+  """The root path of the project."""
+
+  venv_activate_bat_filepath = pathlib.Path(project_root_path, ".venv", "Scripts", "activate.bat")
+  """The path to the .venv activate.bat file."""
+
+  make_bat_filepath = pathlib.Path(project_root_path, "docs", "make.bat")
+  """The path to the make.bat file."""
+
+  # </editor-fold>
+
+  def execute_task(self) -> None:
+    try:
+      activate_cmd = f'& "{self.venv_activate_bat_filepath}"'
+      combined_cmd = f'{activate_cmd} ; {self.make_bat_filepath} html'
+      subprocess.run(['powershell', '-Command', combined_cmd])
+    except Exception as e:
+      print(e)

@@ -72,87 +72,12 @@ class SettingsViewController(QtCore.QObject):
     self._connect_all_ui_elements_to_slot_functions()
 
   # <editor-fold desc="Util methods">
-  def open_help(self, a_page_name: str) -> None:
-    """Opens the pyssa documentation window if it's not already open.
-
-    Args:
-        a_page_name (str): a name of a documentation page to display
-
-    Raises:
-        exception.IllegalArgumentError: If `a_page_name` is None.
-    """
-    # <editor-fold desc="Checks">
-    if a_page_name is None:
-      logger.error("a_page_name is None.")
-      raise exception.IllegalArgumentError("a_page_name is None.")
-
-    # </editor-fold>
-
-    try:
-      self._interface_manager.status_bar_manager.show_temporary_message(
-          "Opening help center ..."
-      )
-      if (
-          len(
-              pygetwindow.getWindowsWithTitle(
-                  constants.WINDOW_TITLE_OF_HELP_CENTER
-              )
-          )
-          != 1
-      ):
-        self._interface_manager.documentation_window = None
-      self._active_task = tasks.LegacyTask(
-          target=util_async.open_documentation_on_certain_page,
-          args=(a_page_name, self._interface_manager.documentation_window),
-          post_func=self.__await_open_help,
-      )
-    except Exception as e:
-      logger.error(f"Error while opening help center: {e}")
-    else:
-      self._active_task.start()
-
-  def __await_open_help(self, return_value: tuple) -> None:
-    """Opens the help center and performs necessary actions based on the return value.
-
-    Args:
-        return_value (tuple): The return value from opening the help center.
-    """
-    # <editor-fold desc="Checks">
-    if return_value[0] == "":
-      self._interface_manager.status_bar_manager.show_error_message(
-          "Opening help center failed!"
-      )
-      return
-
-    # </editor-fold>
-
-    try:
-      self._interface_manager.documentation_window = return_value[2]
-      if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
-        tmp_dialog = custom_message_box.CustomMessageBoxOk(
-            "The script for bringing the documentation window in front could not be found!",
-            "Documentation",
-            custom_message_box.CustomMessageBoxIcons.ERROR.value,
-        )
-        tmp_dialog.exec_()
-      else:
-        self._interface_manager.documentation_window.restore()
-        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
-        self._interface_manager.status_bar_manager.show_temporary_message(
-            "Opening help center finished."
-        )
-    except Exception as e:
-      logger.error(f"Error while opening help center: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-          "Opening help center failed!"
-      )
-
   def _open_help_for_dialog(self) -> None:
     """Opens the help dialog."""
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
-    self.open_help("help/settings/pyssa_settings/")
+    self._interface_manager.help_manager.open_pyssa_settings_page()
 
   def restore_ui(self) -> None:
     """Restores the UI."""
@@ -231,10 +156,6 @@ class SettingsViewController(QtCore.QObject):
             self._settings_manager.settings.image_background_color
         ),
     )
-    if self._settings_manager.settings.start_help_at_startup == 1:
-      self._view.ui.check_box_start_help.setChecked(True)
-    else:
-      self._view.ui.check_box_start_help.setChecked(False)
     if self._settings_manager.settings.image_renderer == "0":
       self._view.ui.box_renderer.setCurrentIndex(0)
     else:
@@ -277,10 +198,6 @@ class SettingsViewController(QtCore.QObject):
     self._settings_manager.settings.image_background_color = (
         self._view.ui.box_bg_color.currentText()
     )
-    if self._view.ui.check_box_start_help.isChecked():
-      self._settings_manager.settings.start_help_at_startup = 1
-    else:
-      self._settings_manager.settings.start_help_at_startup = 0
     if self._view.ui.box_renderer.currentText() == "default renderer":
       self._settings_manager.settings.image_renderer = "0"
     else:

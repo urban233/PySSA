@@ -76,7 +76,6 @@ class Settings:
     self.image_renderer: str = "-1"  # or "0"
     self.image_ray_trace_mode: int = 1  # ranges from 0 to 3
     self.image_ray_texture: int = 0  # ranges from 0 to 5
-    self.start_help_at_startup: int = 1  # or "0"
     self.proteins_tab_use_toggle: int = 1  # or "0"
     self.proteins_tab_use_combobox_for_colors: int = 0  # or "1"
     self.protein_pairs_tab_use_toggle: int = 1  # or "0"
@@ -175,11 +174,6 @@ class Settings:
       tmp_settings.image_ray_texture = (
           Settings._check_integrity_of_ray_texture_value(
               settings_dict.get("image_ray_texture"),
-          )
-      )
-      tmp_settings.start_help_at_startup = (
-          Settings._check_integrity_of_start_help_at_startup_flag(
-              int(settings_dict.get("start_help_at_startup")),
           )
       )
       tmp_settings.proteins_tab_use_toggle = (
@@ -525,35 +519,6 @@ class Settings:
     )
 
   @staticmethod
-  def _check_integrity_of_start_help_at_startup_flag(
-      start_help_at_startup_flag: int,
-  ) -> int:
-    """Checks the integrity of the `start_help_at_startup_flag` parameter.
-
-    Args:
-        start_help_at_startup_flag (int): An integer representing the value of start_help_at_startup_flag parameter.
-
-    Returns:
-        The value of start_help_at_startup_flag if it is 0 or 1.
-
-    Raises:
-        exception.IllegalArgumentError: If start_help_at_startup_flag is None.
-        ValueError: If start_help_at_startup_flag is neither 0 nor 1.
-    """
-    # <editor-fold desc="Checks">
-    if start_help_at_startup_flag is None:
-      logger.error("start_help_at_startup_flag is None.")
-      raise exception.IllegalArgumentError(
-          "start_help_at_startup_flag is None."
-      )
-
-    # </editor-fold>
-
-    if start_help_at_startup_flag == 0 or start_help_at_startup_flag == 1:
-      return start_help_at_startup_flag
-    raise ValueError("start_help_at_startup_flag is neither 0 nor 1.")
-
-  @staticmethod
   def _check_integrity_of_proteins_tab_use_toggle_flag(
       proteins_tab_use_toggle_flag: int,
   ) -> int:
@@ -741,7 +706,6 @@ class Settings:
     self.image_renderer: str = "-1"  # or "0"
     self.image_ray_trace_mode: int = 1  # ranges from 0 to 3
     self.image_ray_texture: int = 0  # ranges from 0 to 5
-    self.start_help_at_startup: int = 1  # or "0"
     self.proteins_tab_use_toggle: int = 1  # or "0"
     self.proteins_tab_use_combobox_for_colors: int = 0  # or "1"
     self.protein_pairs_tab_use_toggle: int = 1  # or "0"

@@ -57,4 +57,4 @@ class RenameProteinView(QtWidgets.QDialog):
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
     self.setWindowTitle("Rename Selected Protein Structure")
-    self.setModal(True)
+    self.setWindowModality(Qt.WindowModal)

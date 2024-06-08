@@ -85,87 +85,12 @@ class DistanceAnalysisViewController(QtCore.QObject):
     self._connect_all_ui_elements_to_slot_functions()
     self.display_distance_analysis()
 
-  def open_help(self, a_page_name: str) -> None:
-    """Opens the pyssa documentation window if it's not already open.
-
-    Args:
-        a_page_name (str): a name of a documentation page to display
-
-    Raises:
-        exception.IllegalArgumentError: If `a_page_name` is None.
-    """
-    # <editor-fold desc="Checks">
-    if a_page_name is None:
-      logger.error("a_page_name is None.")
-      raise exception.IllegalArgumentError("a_page_name is None.")
-
-    # </editor-fold>
-
-    try:
-      self._interface_manager.status_bar_manager.show_temporary_message(
-          "Opening help center ..."
-      )
-      if (
-          len(
-              pygetwindow.getWindowsWithTitle(
-                  constants.WINDOW_TITLE_OF_HELP_CENTER
-              )
-          )
-          != 1
-      ):
-        self._interface_manager.documentation_window = None
-      self._active_task = tasks.LegacyTask(
-          target=util_async.open_documentation_on_certain_page,
-          args=(a_page_name, self._interface_manager.documentation_window),
-          post_func=self.__await_open_help,
-      )
-    except Exception as e:
-      logger.error(f"Error while opening help center: {e}")
-    else:
-      self._active_task.start()
-
-  def __await_open_help(self, return_value: tuple) -> None:
-    """Opens the help center and performs necessary actions based on the return value.
-
-    Args:
-        return_value (tuple): The return value from opening the help center.
-    """
-    # <editor-fold desc="Checks">
-    if return_value[0] == "":
-      self._interface_manager.status_bar_manager.show_error_message(
-          "Opening help center failed!"
-      )
-      return
-
-    # </editor-fold>
-
-    try:
-      self._interface_manager.documentation_window = return_value[2]
-      if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
-        tmp_dialog = custom_message_box.CustomMessageBoxOk(
-            "The script for bringing the documentation window in front could not be found!",
-            "Documentation",
-            custom_message_box.CustomMessageBoxIcons.ERROR.value,
-        )
-        tmp_dialog.exec_()
-      else:
-        self._interface_manager.documentation_window.restore()
-        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
-        self._interface_manager.status_bar_manager.show_temporary_message(
-            "Opening help center finished."
-        )
-    except Exception as e:
-      logger.error(f"Error while opening help center: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-          "Opening help center failed!"
-      )
-
   def _open_help_for_dialog(self) -> None:
     """Opens the help dialog window."""
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
-    self.open_help("help/protein_structure_analysis/distance_analysis/")
+    self._interface_manager.help_manager.open_distance_analysis_page()
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""

@@ -48,7 +48,7 @@ class OpenProjectView(QtWidgets.QDialog):
     self._initialize_ui()
     self.resize(450, 600)
     self.ui.btn_cancel.clicked.connect(self.close)
-    self.setModal(True)
+    self.setWindowModality(Qt.WindowModal)
 
   def _initialize_ui(self) -> None:
     """Initialize the UI elements."""

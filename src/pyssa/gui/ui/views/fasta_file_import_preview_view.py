@@ -23,6 +23,7 @@
 from PyQt5.QtWidgets import QDialog
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 
 from src.pyssa.gui.ui.custom_delegates import sequence_table_delegate
@@ -60,4 +61,4 @@ class FastaFileImportPreviewView(QDialog):
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
-    self.setModal(True)
+    self.setWindowModality(Qt.WindowModal)

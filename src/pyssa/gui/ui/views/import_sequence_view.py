@@ -23,6 +23,7 @@
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.forms.auto_generated import auto_import_sequence_view
@@ -66,4 +67,4 @@ class ImportSequenceView(QtWidgets.QDialog):
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
-    self.setModal(True)
+    self.setWindowModality(Qt.WindowModal)

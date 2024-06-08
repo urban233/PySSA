@@ -23,6 +23,7 @@
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.forms.auto_generated import auto_delete_project_view
 from src.pyssa.gui.ui.styles import styles
@@ -44,7 +45,7 @@ class DeleteProjectView(QtWidgets.QDialog):
     self._initialize_ui()
     self.resize(450, 600)
     self.ui.btn_cancel.clicked.connect(self._close_dialog)
-    self.setModal(True)
+    self.setWindowModality(Qt.WindowModal)
 
   def _initialize_ui(self) -> None:
     """Initialize the UI elements."""

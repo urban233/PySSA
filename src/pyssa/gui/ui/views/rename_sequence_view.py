@@ -57,4 +57,4 @@ class RenameSequenceView(QtWidgets.QDialog):
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
     self.setWindowTitle("Rename Selected Sequence")
-    self.setModal(True)
+    self.setWindowModality(Qt.WindowModal)

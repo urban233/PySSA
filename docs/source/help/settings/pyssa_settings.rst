@@ -6,7 +6,6 @@ PySSA Settings
      In this dialog you can ...
 
     - change the workspace.
-    - enable/disable the automatic startup of the _Help Center_ window.
     - change the _Cycles_ value for the distance analysis.
     - change the _Cutoff_ value for the distance analysis.
     - change the background color.
@@ -20,11 +19,6 @@ Workspace
 ************************************************
 - All projects are stored in this folder.
 - The default value is C:\Users\<username>\.pyssa\default_workspace.
-
-Automatic startup of the Help Center window
-************************************************
-- Tick the checkbox, if the _Help Center_ should open at application startup.
-- The checkbox is ticked by default.
 
 Cycles value (Distance Analysis)
 ************************************************

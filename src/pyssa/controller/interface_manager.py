@@ -183,7 +183,7 @@ class InterfaceManager:
     self._fasta_file_import_preview_view = (
         fasta_file_import_preview_view.FastaFileImportPreviewView()
     )
-    self._add_sequence_view = add_sequence_view.AddSequenceView()
+    self._add_sequence_view = add_sequence_view.AddSequenceView(self._main_view)
     self._rename_protein_view = rename_protein_view.RenameProteinView()
     self._rename_sequence_view = rename_sequence_view.RenameSequenceView()
     self._use_project_view = use_project_view.UseProjectView()

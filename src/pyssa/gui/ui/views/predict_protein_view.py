@@ -22,6 +22,7 @@
 """Module for the predict protein view."""
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
@@ -51,7 +52,7 @@ class PredictProteinView(QtWidgets.QDialog):
     self.ui.tab_widget.setTabEnabled(1, False)
     self._initialize_ui()
     self.ui.btn_cancel.clicked.connect(self.close)
-    self.setModal(True)
+    self.setWindowModality(Qt.WindowModal)
 
   def _initialize_ui(self) -> None:
     """Initialize the UI elements."""

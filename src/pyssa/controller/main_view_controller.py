@@ -157,11 +157,6 @@ class MainViewController:
     self._init_generic_help_context_menus()
     self._interface_manager.refresh_main_view()
     self._connect_all_ui_elements_with_slot_functions()
-    if (
-            self._interface_manager.get_application_settings().start_help_at_startup
-            == 1
-    ):
-      self._start_documentation_server()
 
   def _connect_all_ui_elements_with_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
@@ -294,14 +289,14 @@ class MainViewController:
       self._set_new_sequence_name_in_table_item
     )
     # self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
-    self._view.ui.btn_help.clicked.connect(self.__slot_open_sequences_tab_help)
+    self._view.ui.btn_help.clicked.connect(self._open_sequences_tab_help)
 
     # <editor-fold desc="Context menu">
     self._sequence_list_context_menu.connect_rename_sequence_action(
       self.__slot_rename_selected_sequence
     )
     self._sequence_list_context_menu.connect_help_action(
-      self.__slot_open_sequences_tab_help
+      self._open_sequences_tab_help
     )
     # </editor-fold>
 
@@ -399,7 +394,7 @@ class MainViewController:
     self._view.ui.btn_protein_hide_all_representations.clicked.connect(
       self.__slot_hide_protein_chain_all
     )
-    self._view.ui.btn_help_2.clicked.connect(self.__slot_open_proteins_tab_help)
+    self._view.ui.btn_help_2.clicked.connect(self._open_proteins_tab_help)
 
     # <editor-fold desc="Color Grid">
     # It needs to be checked if the lambda function usage is problematic in this context.
@@ -525,7 +520,7 @@ class MainViewController:
       self.__slot_show_protein_chain_sequence
     )
     self._protein_tree_context_menu.connect_help_action(
-      self.__slot_open_proteins_tab_help
+      self._open_proteins_tab_help
     )
     # </editor-fold>
 
@@ -1353,149 +1348,149 @@ class MainViewController:
     self._interface_manager.refresh_main_view()
 
   # <editor-fold desc="Help related methods">
-  def _start_documentation_server(self) -> None:
-    """Starts the documentation server."""
-    # self._help_task = tasks.LegacyTask(
-    #     target=util_async.start_documentation_server,
-    #     args=(0, 0),
-    #     post_func=self.__await_start_documentation_server,
-    # )
-
-    self._interface_manager.get_task_manager().append_task_result(
-      task_result_factory.TaskResultFactory.run_task_result(
-        a_task_result=task_result.TaskResult.from_action(
-          an_action=action.Action(
-            a_target=util_async.start_documentation_server,
-            args=(
-              (0, 0)
-            ),
-          ),
-          an_await_function=self.__await_start_documentation_server,
-        ),
-        a_task_scheduler=self._interface_manager.get_task_scheduler(),
-      )
-    )
-
-    # self._help_task.start()
-
-  def __await_start_documentation_server(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
-    """Checks if the documentation server started correctly.
-
-    Args:
-        return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing information about the start of the documentation server.
-    """
-    # <editor-fold desc="Checks">
-    if return_value is None:
-      logger.error("return_value is None.")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "Opening help center failed!"
-      )
-      return
-    if return_value[0] == "":
-      self._interface_manager.status_bar_manager.show_error_message(
-        "Opening help center failed!"
-      )
-      return
-
-    # </editor-fold>
-
-    tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
-    self._interface_manager.documentation_window = tmp_result[1]
-    # self._interface_manager.documentation_window = return_value[1]
-    self._interface_manager.status_bar_manager.show_temporary_message(
-      "Opening help center finished."
-    )
-
-  def open_help(self, a_page_name: str) -> None:
-    """Opens the pyssa documentation window if it's not already open.
-
-    Args:
-        a_page_name (str): a name of a documentation page to display
-
-    Raises:
-        exception.IllegalArgumentError: If `a_page_name` is None.
-    """
-    # <editor-fold desc="Checks">
-    if a_page_name is None:
-      logger.error("a_page_name is None.")
-      raise exception.IllegalArgumentError("a_page_name is None.")
-
-    # </editor-fold>
-    try:
-      self._interface_manager.status_bar_manager.show_temporary_message(
-        "Opening help center ...", False
-      )
-
-      if (
-              len(
-                pygetwindow.getWindowsWithTitle(
-                  constants.WINDOW_TITLE_OF_HELP_CENTER
-                )
-              )
-              != 1
-      ):
-        self._interface_manager.documentation_window = None
-      self._interface_manager.get_task_manager().append_task_result(
-        task_result_factory.TaskResultFactory.run_task_result(
-          a_task_result=task_result.TaskResult.from_action(
-            an_action=action.Action(
-              a_target=util_async.open_documentation_on_certain_page,
-              args=(
-                a_page_name,
-                self._interface_manager.documentation_window,
-              ),
-            ),
-            an_await_function=self.__await_open_help,
-          ),
-          a_task_scheduler=self._interface_manager.get_task_scheduler(),
-        )
-      )
-
-      # self._help_task = tasks.LegacyTask(
-      #     target=util_async.open_documentation_on_certain_page,
-      #     args=(a_page_name, self._interface_manager.documentation_window),
-      #     post_func=self.__await_open_help,
-      # )
-    except Exception as e:
-      logger.error(f"An error occurred: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred!"
-      )
-    else:
-      self._interface_manager.block_gui(with_wait_cursor=True)
-      # self._help_task.start()
-
-  def __await_open_help(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
-    """Opens the help center and performs necessary actions based on the return value.
-
-    Args:
-        return_value (tuple[str, list[tuple[bool, tuple]]]): The return value from opening the help center.
-    """
-    try:
-      logger.debug("Method __await_open_help started")
-      tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
-      self._interface_manager.documentation_window = tmp_result[2]
-      if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
-        tmp_dialog = custom_message_box.CustomMessageBoxOk(
-          "The script for bringing the documentation window in front could not be found!",
-          "Documentation",
-          custom_message_box.CustomMessageBoxIcons.ERROR.value,
-        )
-        tmp_dialog.exec_()
-      else:
-        self._interface_manager.documentation_window.restore()
-        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
-        self._interface_manager.status_bar_manager.show_temporary_message(
-          "Opening help center finished."
-        )
-    except Exception as e:
-      logger.error(f"An error occurred: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred!"
-      )
-    finally:
-      self._interface_manager.stop_wait_cursor()
-      self._interface_manager.refresh_main_view()
+  # def _start_documentation_server(self) -> None:
+  #   """Starts the documentation server."""
+  #   # self._help_task = tasks.LegacyTask(
+  #   #     target=util_async.start_documentation_server,
+  #   #     args=(0, 0),
+  #   #     post_func=self.__await_start_documentation_server,
+  #   # )
+  #
+  #   self._interface_manager.get_task_manager().append_task_result(
+  #     task_result_factory.TaskResultFactory.run_task_result(
+  #       a_task_result=task_result.TaskResult.from_action(
+  #         an_action=action.Action(
+  #           a_target=util_async.start_documentation_server,
+  #           args=(
+  #             (0, 0)
+  #           ),
+  #         ),
+  #         an_await_function=self.__await_start_documentation_server,
+  #       ),
+  #       a_task_scheduler=self._interface_manager.get_task_scheduler(),
+  #     )
+  #   )
+  #
+  #   # self._help_task.start()
+  #
+  # def __await_start_documentation_server(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+  #   """Checks if the documentation server started correctly.
+  #
+  #   Args:
+  #       return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing information about the start of the documentation server.
+  #   """
+  #   # <editor-fold desc="Checks">
+  #   if return_value is None:
+  #     logger.error("return_value is None.")
+  #     self._interface_manager.status_bar_manager.show_error_message(
+  #       "Opening help center failed!"
+  #     )
+  #     return
+  #   if return_value[0] == "":
+  #     self._interface_manager.status_bar_manager.show_error_message(
+  #       "Opening help center failed!"
+  #     )
+  #     return
+  #
+  #   # </editor-fold>
+  #
+  #   tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
+  #   self._interface_manager.documentation_window = tmp_result[1]
+  #   # self._interface_manager.documentation_window = return_value[1]
+  #   self._interface_manager.status_bar_manager.show_temporary_message(
+  #     "Opening help center finished."
+  #   )
+  #
+  # def open_help(self, a_page_name: str) -> None:
+  #   """Opens the pyssa documentation window if it's not already open.
+  #
+  #   Args:
+  #       a_page_name (str): a name of a documentation page to display
+  #
+  #   Raises:
+  #       exception.IllegalArgumentError: If `a_page_name` is None.
+  #   """
+  #   # <editor-fold desc="Checks">
+  #   if a_page_name is None:
+  #     logger.error("a_page_name is None.")
+  #     raise exception.IllegalArgumentError("a_page_name is None.")
+  #
+  #   # </editor-fold>
+  #   try:
+  #     self._interface_manager.status_bar_manager.show_temporary_message(
+  #       "Opening help center ...", False
+  #     )
+  #
+  #     if (
+  #             len(
+  #               pygetwindow.getWindowsWithTitle(
+  #                 constants.WINDOW_TITLE_OF_HELP_CENTER
+  #               )
+  #             )
+  #             != 1
+  #     ):
+  #       self._interface_manager.documentation_window = None
+  #     self._interface_manager.get_task_manager().append_task_result(
+  #       task_result_factory.TaskResultFactory.run_task_result(
+  #         a_task_result=task_result.TaskResult.from_action(
+  #           an_action=action.Action(
+  #             a_target=util_async.open_documentation_on_certain_page,
+  #             args=(
+  #               a_page_name,
+  #               self._interface_manager.documentation_window,
+  #             ),
+  #           ),
+  #           an_await_function=self.__await_open_help,
+  #         ),
+  #         a_task_scheduler=self._interface_manager.get_task_scheduler(),
+  #       )
+  #     )
+  #
+  #     # self._help_task = tasks.LegacyTask(
+  #     #     target=util_async.open_documentation_on_certain_page,
+  #     #     args=(a_page_name, self._interface_manager.documentation_window),
+  #     #     post_func=self.__await_open_help,
+  #     # )
+  #   except Exception as e:
+  #     logger.error(f"An error occurred: {e}")
+  #     self._interface_manager.status_bar_manager.show_error_message(
+  #       "An unknown error occurred!"
+  #     )
+  #   else:
+  #     self._interface_manager.block_gui(with_wait_cursor=True)
+  #     # self._help_task.start()
+  #
+  # def __await_open_help(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+  #   """Opens the help center and performs necessary actions based on the return value.
+  #
+  #   Args:
+  #       return_value (tuple[str, list[tuple[bool, tuple]]]): The return value from opening the help center.
+  #   """
+  #   try:
+  #     logger.debug("Method __await_open_help started")
+  #     tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
+  #     self._interface_manager.documentation_window = tmp_result[2]
+  #     if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
+  #       tmp_dialog = custom_message_box.CustomMessageBoxOk(
+  #         "The script for bringing the documentation window in front could not be found!",
+  #         "Documentation",
+  #         custom_message_box.CustomMessageBoxIcons.ERROR.value,
+  #       )
+  #       tmp_dialog.exec_()
+  #     else:
+  #       self._interface_manager.documentation_window.restore()
+  #       subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
+  #       self._interface_manager.status_bar_manager.show_temporary_message(
+  #         "Opening help center finished."
+  #       )
+  #   except Exception as e:
+  #     logger.error(f"An error occurred: {e}")
+  #     self._interface_manager.status_bar_manager.show_error_message(
+  #       "An unknown error occurred!"
+  #     )
+  #   finally:
+  #     self._interface_manager.stop_wait_cursor()
+  #     self._interface_manager.refresh_main_view()
 
   def _init_generic_help_context_menus(self) -> None:
     """Initializes the generic help context menus for the application."""
@@ -1503,7 +1498,7 @@ class MainViewController:
     context_menu = QtWidgets.QMenu()
     self.help_context_action = context_menu.addAction(self._view.tr("Get Help"))
     self.help_context_action.triggered.connect(
-      self.__slot_open_sequences_tab_help
+      self._open_sequences_tab_help
     )
 
     # </editor-fold>
@@ -1601,76 +1596,75 @@ class MainViewController:
       log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
       "Menu entry 'Help/Documentation' clicked.",
     )
-    self.open_help("help/")
+    self._interface_manager.help_manager.open_general_help_page()
 
-  def __slot_open_sequences_tab_help(self) -> None:
+  def _open_sequences_tab_help(self) -> None:
     """Opens the help dialog on the sequence tab page."""
     logger.log(
       log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
       "'Help' button on the 'Sequence Tab' was clicked.",
     )
-    #self.open_help("help/sequences/sequences_tab/")
-    self._interface_manager.help_manager.change_url("C:/Users/martin/github_repos/PySSA/docs/build/html/index.html")
+    self._interface_manager.help_manager.open_sequences_tab_page()
 
   def _open_additional_information_table_help(self) -> None:
     """Opens the help dialog on the additional sequence page."""
-    self.open_help("help/sequences/additional_sequence_information/")
+    self._interface_manager.help_manager.open_additional_sequence_information_page()
 
   def _open_sequence_import_help(self) -> None:
     """Opens the help dialog on the import sequence page."""
-    self.open_help("help/sequences/sequence_import/")
+    self._interface_manager.help_manager.open_sequence_import_page()
 
   def _open_sequence_add_help(self) -> None:
     """Opens the help dialog on the add sequence page."""
-    self.open_help("help/sequences/sequence_add/")
+    self._interface_manager.help_manager.open_sequence_add_page()
 
   def _open_sequence_save_help(self) -> None:
     """Opens the help dialog on the save sequence page."""
-    self.open_help("help/sequences/sequence_save/")
+    self._interface_manager.help_manager.open_sequence_save_page()
 
   def _open_sequence_delete_help(self) -> None:
     """Opens the help dialog on the delete sequence page."""
-    self.open_help("help/sequences/sequence_delete/")
+    self._interface_manager.help_manager.open_sequence_delete_page()
 
-  def __slot_open_proteins_tab_help(self) -> None:
+  def _open_proteins_tab_help(self) -> None:
     """Opens the help dialog on the proteins tab page."""
     logger.log(
       log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
       "'Help' button on the 'Proteins Tab' was clicked.",
     )
-    self.open_help("help/proteins/proteins_tab/")
+    self._interface_manager.help_manager.open_proteins_tab_page()
 
   def _open_protein_import_help(self) -> None:
     """Opens the help dialog on the import protein page."""
-    self.open_help("help/proteins/protein_import/")
+    self._interface_manager.help_manager.open_protein_import_page()
 
   def _open_protein_save_help(self) -> None:
     """Opens the help dialog on the save protein page."""
-    self.open_help("help/proteins/protein_save/")
+    self._interface_manager.help_manager.open_protein_save_page()
 
   def _open_protein_delete_help(self) -> None:
     """Opens the help dialog on the delete protein page."""
-    self.open_help("help/proteins/protein_delete/")
+    self._interface_manager.help_manager.open_protein_delete_page()
 
   def _open_protein_pymol_scene_config_help(self) -> None:
     """Opens the help dialog on the protein pymol scene config page."""
-    self.open_help("help/proteins/protein_pymol_scene_configuration/")
+    self._interface_manager.help_manager.open_protein_pymol_scene_configuration_page()
 
   def _open_protein_load_session_help(self) -> None:
     """Opens the help dialog on the open protein pymol session page."""
-    self.open_help("help/proteins/protein_load_session/")
+    self._interface_manager.help_manager.open_protein_load_session_page()
 
   def _open_protein_add_scene_help(self) -> None:
     """Opens the help dialog on the protein add scene page."""
-    self.open_help("help/proteins/protein_add_scene/")
+    self._interface_manager.help_manager.open_protein_add_scene_page()
 
   def _open_protein_update_scene_help(self) -> None:
     """Opens the help dialog on the protein update scene page."""
-    self.open_help("help/proteins/protein_update_scene/")
+    self._interface_manager.help_manager.open_protein_update_scene_page()
 
   def _open_protein_delete_scene_help(self) -> None:
     """Opens the help dialog on the protein delete scene page."""
-    self.open_help("help/proteins/protein_delete_scene/")
+    self._interface_manager.help_manager.open_protein_delete_scene_page()
 
   def _open_protein_pairs_tab_help(self) -> None:
     """Opens the help dialog on the protein pairs tab page."""
@@ -1678,31 +1672,131 @@ class MainViewController:
       log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
       "'Help' button on the 'Protein Pairs Tab' was clicked.",
     )
-    self.open_help("help/protein_pairs/protein_pairs_tab/")
+    self._interface_manager.help_manager.open_protein_pairs_tab_page()
 
   def _open_protein_pair_delete_help(self) -> None:
     """Opens the help dialog on the delete protein pair page."""
-    self.open_help("help/protein_pairs/protein_pair_delete/")
+    self._interface_manager.help_manager.open_protein_pair_delete_page()
 
   def _open_protein_pair_pymol_scene_config_help(self) -> None:
     """Opens the help dialog on the protein pair pymol scene config page."""
-    self.open_help("help/protein_pairs/protein_pair_pymol_scene_configuration/")
+    self._interface_manager.help_manager.open_protein_pair_pymol_scene_configuration_page()
 
   def _open_protein_pair_load_session_help(self) -> None:
     """Opens the help dialog on the open protein pair pymol session page."""
-    self.open_help("help/protein_pairs/protein_pair_load_session/")
+    self._interface_manager.help_manager.open_protein_pair_load_session_page()
 
   def _open_protein_pair_add_scene_help(self) -> None:
     """Opens the help dialog on the protein pair add scene page."""
-    self.open_help("help/protein_pairs/protein_pair_add_scene/")
+    self._interface_manager.help_manager.open_protein_pair_add_scene_page()
 
   def _open_protein_pair_update_scene_help(self) -> None:
     """Opens the help dialog on the protein pair update scene page."""
-    self.open_help("help/protein_pairs/protein_pair_update_scene/")
+    self._interface_manager.help_manager.open_protein_pair_update_scene_page()
 
   def _open_protein_pair_delete_scene_help(self) -> None:
     """Opens the help dialog on the protein pair delete scene page."""
-    self.open_help("help/protein_pairs/protein_pair_delete_scene/")
+    self._interface_manager.help_manager.open_protein_pair_delete_scene_page()
+
+  # def _open_sequences_tab_help(self) -> None:
+  #   """Opens the help dialog on the sequence tab page."""
+  #   logger.log(
+  #     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+  #     "'Help' button on the 'Sequence Tab' was clicked.",
+  #   )
+  #   self._interface_manager.help_manager.open_sequences_tab_page()
+  #
+  # def _open_additional_information_table_help(self) -> None:
+  #   """Opens the help dialog on the additional sequence page."""
+  #   self._interface_manager.help_manager.open_additional_sequence_information_page()
+  #
+  # def _open_sequence_import_help(self) -> None:
+  #   """Opens the help dialog on the import sequence page."""
+  #   self.open_help("help/sequences/sequence_import/")
+  #
+  # def _open_sequence_add_help(self) -> None:
+  #   """Opens the help dialog on the add sequence page."""
+  #   self.open_help("help/sequences/sequence_add/")
+  #
+  # def _open_sequence_save_help(self) -> None:
+  #   """Opens the help dialog on the save sequence page."""
+  #   self.open_help("help/sequences/sequence_save/")
+  #
+  # def _open_sequence_delete_help(self) -> None:
+  #   """Opens the help dialog on the delete sequence page."""
+  #   self.open_help("help/sequences/sequence_delete/")
+  #
+  # def _open_proteins_tab_help(self) -> None:
+  #   """Opens the help dialog on the proteins tab page."""
+  #   logger.log(
+  #     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+  #     "'Help' button on the 'Proteins Tab' was clicked.",
+  #   )
+  #   self.open_help("help/proteins/proteins_tab/")
+  #
+  # def _open_protein_import_help(self) -> None:
+  #   """Opens the help dialog on the import protein page."""
+  #   self.open_help("help/proteins/protein_import/")
+  #
+  # def _open_protein_save_help(self) -> None:
+  #   """Opens the help dialog on the save protein page."""
+  #   self.open_help("help/proteins/protein_save/")
+  #
+  # def _open_protein_delete_help(self) -> None:
+  #   """Opens the help dialog on the delete protein page."""
+  #   self.open_help("help/proteins/protein_delete/")
+  #
+  # def _open_protein_pymol_scene_config_help(self) -> None:
+  #   """Opens the help dialog on the protein pymol scene config page."""
+  #   self.open_help("help/proteins/protein_pymol_scene_configuration/")
+  #
+  # def _open_protein_load_session_help(self) -> None:
+  #   """Opens the help dialog on the open protein pymol session page."""
+  #   self.open_help("help/proteins/protein_load_session/")
+  #
+  # def _open_protein_add_scene_help(self) -> None:
+  #   """Opens the help dialog on the protein add scene page."""
+  #   self.open_help("help/proteins/protein_add_scene/")
+  #
+  # def _open_protein_update_scene_help(self) -> None:
+  #   """Opens the help dialog on the protein update scene page."""
+  #   self.open_help("help/proteins/protein_update_scene/")
+  #
+  # def _open_protein_delete_scene_help(self) -> None:
+  #   """Opens the help dialog on the protein delete scene page."""
+  #   self.open_help("help/proteins/protein_delete_scene/")
+  #
+  # def _open_protein_pairs_tab_help(self) -> None:
+  #   """Opens the help dialog on the protein pairs tab page."""
+  #   logger.log(
+  #     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+  #     "'Help' button on the 'Protein Pairs Tab' was clicked.",
+  #   )
+  #   self.open_help("help/protein_pairs/protein_pairs_tab/")
+  #
+  # def _open_protein_pair_delete_help(self) -> None:
+  #   """Opens the help dialog on the delete protein pair page."""
+  #   self.open_help("help/protein_pairs/protein_pair_delete/")
+  #
+  # def _open_protein_pair_pymol_scene_config_help(self) -> None:
+  #   """Opens the help dialog on the protein pair pymol scene config page."""
+  #   self.open_help("help/protein_pairs/protein_pair_pymol_scene_configuration/")
+  #
+  # def _open_protein_pair_load_session_help(self) -> None:
+  #   """Opens the help dialog on the open protein pair pymol session page."""
+  #   self.open_help("help/protein_pairs/protein_pair_load_session/")
+  #
+  # def _open_protein_pair_add_scene_help(self) -> None:
+  #   """Opens the help dialog on the protein pair add scene page."""
+  #   self.open_help("help/protein_pairs/protein_pair_add_scene/")
+  #
+  # def _open_protein_pair_update_scene_help(self) -> None:
+  #   """Opens the help dialog on the protein pair update scene page."""
+  #   self.open_help("help/protein_pairs/protein_pair_update_scene/")
+  #
+  # def _open_protein_pair_delete_scene_help(self) -> None:
+  #   """Opens the help dialog on the protein pair delete scene page."""
+  #   self.open_help("help/protein_pairs/protein_pair_delete_scene/")
 
   # </editor-fold>
 

@@ -24,6 +24,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
 from src.pyssa.gui.ui.forms.auto_generated import auto_add_sequence_view
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.util import constants
@@ -62,7 +63,7 @@ class AddSequenceView(QtWidgets.QDialog):
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
     self.setWindowTitle("Add Protein Sequence")
-    self.setModal(True)
+    self.setWindowModality(Qt.WindowModal)
 
   def _initalize_ui(self):
     self.ui.btn_next.setEnabled(False)

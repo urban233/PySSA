@@ -1,0 +1,8 @@
+\.git\
+\.venv\
+\base_win_package\
+\config\
+\demo_projects\
+\docs\api-reference\
+\test_workflows\
+\testing_area\

@@ -22,8 +22,28 @@ class CreateWinPackage(Command):
         tmp_build_task.execute_task()
 
 
+class MakeDocs(Command):
+    """Build command for creating sphinx documentation."""
+    description = 'Activates the .venv and runs the make.bat for building the sphinx docs.'
+    user_options = []
+
+    def initialize_options(self):
+        """Override the default initialization options."""
+        pass
+
+    def finalize_options(self):
+        """Override the default finalization options."""
+        pass
+
+    def run(self):
+        """Override the default run method."""
+        tmp_build_task = setup_build_tasks.MakeSphinxDocs()
+        tmp_build_task.execute_task()
+
+
 setup(
     cmdclass={
         'create_win_package': CreateWinPackage,
+        'make_docs': MakeDocs,
     },
 )
