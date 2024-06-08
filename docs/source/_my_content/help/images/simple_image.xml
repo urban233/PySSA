@@ -1,0 +1,32 @@
+<document>
+    <title>Simple Image</title>
+    <card>
+        <title>Description</title>
+        <content>
+            With this functionality you can ...
+
+            - create a "simple" rendered image.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Create a simple image of a certain view point</title>
+                <steps>
+                    <step>Select a protein from the tree.</step>
+                    <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.</step>
+                    <step>Change the view point.</step>
+                    <step>Under the _Images_ menu, click on **Simple**.</step>
+                    <step>Enter a filename for the image.</step>
+                    <step>Click on **Save**.</step>
+                    <step>Wait for the rendering process to finish before using PyMOL.</step>
+                </steps>
+        </guide>
+    </getting_started_guides>
+    <details>
+        <item>A simple image renders faster than ray-traced images but has lower quality.</item>
+    </details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

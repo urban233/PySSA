@@ -1,0 +1,25 @@
+<document>
+    <title>Delete Sequence</title>
+    <card>
+        <title>Description</title>
+        <content>
+            With this button you can ...
+
+            - delete a selected sequence.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Delete a selected sequence</title>
+            <steps>
+                <step>Select a sequence from the list.</step>
+                <step>Click on :google_material-scan_delete_w200:, to delete the sequence from the project.</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details></details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

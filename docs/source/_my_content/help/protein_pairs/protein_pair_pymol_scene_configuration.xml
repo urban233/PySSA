@@ -1,0 +1,71 @@
+<document>
+    <title>Protein Pair PyMOL Scene Configuration</title>
+    <card>
+        <title>Overview</title>
+        <content>
+            With the _Protein Pair PyMOL Scene Configuration_ you can ...
+
+            - change the color of the selected protein chain.
+            - color atoms by element color.
+            - change the background color.
+            - show or hide hydrogen atoms.
+            - display the selected protein chain as cartoon.
+            - display the selected protein chain as sticks.
+            - display the selected protein chain as ribbon.
+            - display the selected protein chain as lines.
+            - display the selected protein chain as spheres.
+            - display the selected protein chain as dots.
+            - display the selected protein chain as mesh.
+            - display the selected protein chain as surface.
+            - hide all representations.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Change the color of a protein chain</title>
+            <steps>
+                <step>Select a protein pair from the tree.</step>
+                <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein pair.</step>
+                <step>Select a chain from the tree.</step>
+                <step>Click on one of the colors in the color grid.</step>
+            </steps>
+        </guide>
+        <guide>
+            <title>Color the atoms of a protein chain by their element</title>
+            <steps>
+                <step>Select a protein pair from the tree.</step>
+                <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein pair.</step>
+                <step>Select a chain from the tree.</step>
+                <step>Choose a representation other than _Cartoon_ or _Ribbon_.</step>
+                <step>Click on **Color** besides _Atoms by Element_. (Click on **Reset** to return to the previous color.)</step>
+            </steps>
+        </guide>
+        <guide>
+            <title>Change the background color of the current session</title>
+            <steps>
+                <step>Select a protein pair from the tree.</step>
+                <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein pair.</step>
+                <step>Select a chain from the tree.</step>
+                <step>Toggle the _White Background_ button to _On_.</step>
+            </steps>
+        </guide>
+        <guide>
+            <title>Show or hide all hydrogen atoms of a protein chain</title>
+            <steps>
+                <step>Select a protein pair from the tree.</step>
+                <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein pair.</step>
+                <step>Select a chain from the tree.</step>
+                <step>Click on **Show** to display the hydrogen atoms. (Click on **Hide** to hide the hydrogen atoms again.)</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details>
+        <item>Cartoon and Ribbon representation cannot be used to color _Atoms by Element_.</item>
+        <item>Every PyMOL session has a black background by default. The background can be changed to white using the toggle.</item>
+        <item>**Show** always adds hydrogen atoms to the current active representations. This means that some representations may show hydrogen atoms while others may not.</item>
+    </details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

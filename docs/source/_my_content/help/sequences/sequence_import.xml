@@ -1,0 +1,26 @@
+<document>
+    <title>Import Sequence</title>
+    <card>
+        <title>Description</title>
+        <content>
+            With this button you can ...
+
+            - import a protein sequence from an existing .fasta file.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Import a protein sequence from an existing .fasta file</title>
+            <steps>
+                <step>Click on :google_material-upload_file_w200:, to open a new dialog window.</step>
+                <step>Select an existing .fasta file from your computer in the file dialog.</step>
+                <step>Click on **Open**.</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details></details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

@@ -2,6 +2,15 @@ PySSA Help
 ==========
 
 .. toctree::
-   :maxdepth: 1
+    :maxdepth: 1
 
-   hotspots/hotspots
+    project/project
+    sequences/sequences
+    proteins/proteins
+    protein_pairs/protein_pairs
+    protein_structure_prediction/protein_structure_prediction
+    protein_structure_analysis/protein_structure_analysis
+    results/results
+    hotspots/hotspots
+    images/images
+    settings/settings

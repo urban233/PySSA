@@ -1,0 +1,34 @@
+<document>
+    <title>Results Summary</title>
+    <card>
+        <title>Overview</title>
+        <content>
+            With this dialog you can ...
+
+            - checkout the RMSD value of the structure alignment.
+            - checkout how many residues were aligned during the structure alignment.
+            - color the protein pair based on the RMSD value.
+            - export the distance data as .csv file.
+            - open the _Distance Data Visualizer_.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Color protein pair by RMSD value</title>
+            <steps>
+                <step>Select a protein pair from the tree.</step>
+                <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein pair.</step>
+                <step>Under the _Results_ menu, click on **Summary**.</step>
+                <step>Choose **By RMSD** in the combobox besides _Color Protein Pair_.</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details>
+        <item>The total number of residues in the _Aligned Residues_ metric comes from the first protein.</item>
+        <item>If the RMSD value is 0.0, then the _Distance Data Visualizer_ cannot be opened.</item>
+    </details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

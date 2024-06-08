@@ -1,0 +1,43 @@
+<document>
+    <title>Protein Regions</title>
+    <card>
+        <title>Description</title>
+        <content>
+            With this panel you can ...
+
+            - display a selection of atoms as sticks.
+            - hide the sticks representation of a selection of atoms.
+            - show all disulfid-bonds of the protein.
+            - zoom a selection of atoms.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Open Protein Regions panel on the Proteins tab</title>
+                <steps>
+                    <step>Select a protein from the tree.</step>
+                    <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.</step>
+                    <step>Under the _Hotspots_ menu, click on **Protein Regions**.</step>
+                    <step>The _Protein Regions_ panel appears under the tree.</step>
+                </steps>
+        </guide>
+        <guide>
+            <title>Show an atom selection as sticks on the Proteins tab</title>
+                <steps>
+                    <step>Select a protein from the tree.</step>
+                    <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.</step>
+                    <step>Under the _Hotspots_ menu, click on **Protein Regions**.</step>
+                    <step>The _Protein Regions_ panel appears under the tree.</step>
+                    <step>Click on the atoms in PyMOL's sequence view that should be displayed as sticks.</step>
+                    <step>Click in the _Protein Regions_ panel on **Show** besides _Sticks_.</step>
+                </steps>
+        </guide>
+    </getting_started_guides>
+    <details>
+        <item>The zoom is fixed at a certain distance from the selection. If the protein is small, the zoom may be too small.</item>
+    </details>
+    <toctree maxdepth="1">
+        <item>protein_regions</item>
+    </toctree>
+</document>

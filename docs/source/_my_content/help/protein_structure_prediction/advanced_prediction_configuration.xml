@@ -1,0 +1,25 @@
+<document>
+    <title>Advanced Prediction Configuration</title>
+    <card>
+        <title>Overview</title>
+        <content>
+            In this dialog you can ...
+
+            - turn on/off the AMBER force field.
+            - choose a pdb template.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides></getting_started_guides>
+    <details>
+        <item>ColabFold can use an AMBER force field for energy minimization.</item>
+        <item>The default is that the prediction runs **with** AMBER force field.</item>
+        <item>If the prediction fails due to an unknown error, it may be helpful to turn off the force field.</item>
+        <item>ColabFold can use pdb files as template.</item>
+        <item>The default is that ColabFold uses the pdb70 database.</item>
+        <item>If the prediction fails due to an unknown error, it may be helpful to switch _None_.</item>
+    </details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

@@ -1,0 +1,33 @@
+<document>
+    <title>Sample Title</title>
+    <card>
+        <title>Description</title>
+        <content>This is a description of the document.</content>
+    </card>
+    <description>
+        This is the main content of the document.
+        It provides details on how to get started and additional information.
+    </description>
+    <getting_started_guides>
+       <guide>
+            <title>Add a new PyMOL scene</title>
+                <steps>
+                    <step>Select a protein pair from the tree.</step>
+                    <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein pair.</step>
+                    <step>Click on :google_material-add_circle_w200:.</step>
+                    <step>Enter a new scene name.</step>
+                    <step>Click on **Add**.</step>
+                </steps>
+        </guide>
+    </getting_started_guides>
+    <details>
+        <item>Detail 1: First Detail</item>
+        <item>Detail 2: Second Detail</item>
+        <item>Detail 3: Third Detail</item>
+    </details>
+    <toctree maxdepth="1">
+        <item>Chapter 1</item>
+        <item>Chapter 2</item>
+        <item>Chapter 3</item>
+    </toctree>
+</document>

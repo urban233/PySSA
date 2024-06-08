@@ -1,0 +1,52 @@
+<document>
+    <title>Distance Data Visualizer</title>
+    <card>
+        <title>Overview</title>
+        <content>
+            With this tool you can ...
+
+            - display a distance plot.
+            - display a distance histogram.
+            - display a distance table.
+            - interact between plot, histogram and table.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Hide the residue pair no. column</title>
+            <steps>
+                <step>Under the _Table_ menu, select **Hide Column** and then click on **Residue Pair No.**</step>
+            </steps>
+        </guide>
+        <guide>
+            <title>Show all columns of the distance table</title>
+            <steps>
+                <step>Under the _Table_ menu, select **Show Column** and then click on **All Columns**.</step>
+            </steps>
+        </guide>
+        <guide>
+            <title>Customize the distance interval of the distance histogram</title>
+            <steps>
+                <step>Right-click on the histogram.</step>
+                <step>Click on **Properties**.</step>
+                <step>Select a different value in the combobox.</step>
+                <step>Click on **Save**.</step>
+            </steps>
+        </guide>
+        <guide>
+            <title>Restore defaults for the distance histogram</title>
+            <steps>
+                <step>Right-click on the histogram.</step>
+                <step>Click on **Restore Defaults**.</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details>
+        <item>Every column in the distance table can be hidden. This can be done through the menu or the context-menu.</item>
+        <item>The distance histogram can be customized with the _Properties_ dialog window. The _Properties_ dialog can be accessed through the context-menu.</item>
+    </details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

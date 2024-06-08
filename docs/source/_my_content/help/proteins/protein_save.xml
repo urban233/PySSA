@@ -1,0 +1,26 @@
+<document>
+    <title>Save Protein</title>
+    <card>
+        <title>Description</title>
+        <content>
+            With this button you can ...
+
+            - save the selected protein as .pdb file.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Save a selected protein as .fasta file</title>
+            <steps>
+                <step>Click on :google_material-file_save_w200:, to open a file dialog window.</step>
+                <step>Enter a name for the .pdb file.</step>
+                <step>Click on **Save**.</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details></details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

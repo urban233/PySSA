@@ -1,0 +1,39 @@
+<document>
+    <title>Distance Analysis</title>
+    <card>
+        <title>Overview</title>
+        <content>
+            In this dialog you can ...
+
+            - analyze the distance of a structure alignment of two protein structures.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Run a distance analysis with two imported proteins</title>
+            <steps>
+                <step>Import at least two protein structures that you want to compare.</step>
+                <step>Under the _Analysis_ menu, click on **Distance**.</step>
+                <step>Click on **Add**.</step>
+                <step>Choose a first protein structure from the tree.</step>
+                <step>Click on **Next**.</step>
+                <step>Select another protein structure from the tree.</step>
+                <step>Click on **Add**.</step>
+                <step>Click on **Start**.</step>
+            </steps>
+            <note>
+                <step>[Import](../proteins/protein_import.md) at least two protein structures that you want to compare.</step>
+            </note>
+        </guide>
+    </getting_started_guides>
+    <details>
+        <item>During the distance analysis it is **not** possible to use PyMOL.</item>
+        <item>Everything that does not require PyMOL can still be used normally.</item>
+        <item>It is not possible to run another prediction or analysis while a distance analysis is running.</item>
+        <item>You can perform a distance analysis once. If you need to repeat the analysis, delete the corresponding protein pair first.</item>
+    </details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

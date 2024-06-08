@@ -1,0 +1,35 @@
+<document>
+    <title>Open Project</title>
+    <card>
+        <title>Description</title>
+        <content>
+            In this dialog you can ...
+
+            - open a project from your workspace.
+            - search for a project name in your workspace.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Open a project from your workspace</title>
+            <steps>
+                <step>Select a project from the list.</step>
+                <step>`Optional:` Check the text box under _Selected Project_ to see if the selected name is displayed.</step>
+                <step>Click on **Open**.</step>
+            </steps>
+        </guide>
+        <guide>
+            <title>Search for a project name in your workspace</title>
+            <steps>
+                <step>Type part of the project name in the first textbox.</step>
+                <step>Verify if the text box under 'Selected Project' displays the correct project.</step>
+                <step>Click on **Open**.</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details></details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

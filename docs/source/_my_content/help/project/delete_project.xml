@@ -1,0 +1,28 @@
+<document>
+    <title>Delete Project</title>
+    <card>
+        <title>Description</title>
+        <content>
+            In this dialog you can ...
+
+            - delete a project from your workspace.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Delete a project from your workspace</title>
+                <steps>
+                    <step>Click on one of the projects from the list.</step>
+                    <step>`Optional:` Check the text box under 'Selected Project' to confirm that the selected name is displayed.</step>
+                    <step>Click on **Delete**.</step>
+                </steps>
+        </guide>
+    </getting_started_guides>
+    <details>
+        <item>A warning message will appear every time a project is deleted.</item>
+    </details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

@@ -1,0 +1,28 @@
+<document>
+    <title>Add Protein PyMOL Scene</title>
+    <card>
+        <title>Description</title>
+        <content>
+            With this button you can
+
+            - add a new PyMOL scene to a loaded protein PyMOL session.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Add a new PyMOL scene</title>
+            <steps>
+                <step>Select a protein from the tree.</step>
+                <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.</step>
+                <step>Click on :google_material-add_circle_w200:.</step>
+                <step>Enter a new scene name.</step>
+                <step>Click on **Add**.</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details></details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

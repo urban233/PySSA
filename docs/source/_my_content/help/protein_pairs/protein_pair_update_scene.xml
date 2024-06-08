@@ -1,0 +1,30 @@
+<document>
+    <title>Update Protein Pair PyMOL Scene</title>
+    <card>
+        <title>Description</title>
+        <content>
+            With this button you can
+
+            - update the loaded PyMOL scene of the current session.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Update a PyMOL scene</title>
+            <steps>
+                <step>Select a protein pair from the tree.</step>
+                <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein pair.</step>
+                <step>Click on a scene in the tree you want to update.</step>
+                <step>Click on :google_material-change_circle_w200:, to update/save the selected scene.</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details>
+        <item>If you performed an operation on the protein directly from PyMOL, such as rotating or moving the viewpoint, you will need to update the scene manually.</item>
+        <item>Operations such as coloring with the color grid or changing the representation will be automatically saved.</item>
+    </details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

@@ -1,0 +1,28 @@
+<document>
+    <title>Use Project</title>
+    <card>
+        <title>Description</title>
+        <content>
+            In this dialog you can ...
+
+            - create a new project.
+            - create a new project and add protein structures from other projects of the same workspace.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Create a new project</title>
+            <steps>
+                <step>Enter a new project name (1)</step>
+                <annotation>The project name must have 20 characters or fewer. Moreover, the only characters that can be used are 0-9, a-z, A-Z, -, _.</annotation>
+                <step>`Optional:` Select a protein structure and click on _Add_ to include the protein in the new project.</step>
+                <step>Click on _Create_.</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details></details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

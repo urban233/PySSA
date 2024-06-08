@@ -1,0 +1,32 @@
+<document>
+    <title>Ray-Tracing Image</title>
+    <card>
+        <title>Description</title>
+        <content>
+            With this functionality you can ...
+
+            - create a ray-traced image.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Create a ray-trace image of a certain view point</title>
+                <steps>
+                    <step>Select a protein from the tree.</step>
+                    <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.</step>
+                    <step>Change the view point.</step>
+                    <step>Under the _Images_ menu, click on **Ray-Tracing**.</step>
+                    <step>Enter a filename for the image.</step>
+                    <step>Click on **Save**.</step>
+                </steps>
+        </guide>
+    </getting_started_guides>
+    <details>
+        <item>Ray-Tracing an image creates better results but can take a long time to render.</item>
+        <item>Ray-Tracing has different parameters that can be changed in the settings dialog.</item>
+    </details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

@@ -1,0 +1,55 @@
+<document>
+    <title>ColabFold Prediction</title>
+    <card>
+        <title>Overview</title>
+        <content>
+            In this dialog you can ...
+
+            - predict monomeric or/and multimeric protein structures.
+            - predict protein structures with subsequent distance analysis'.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Run a protein structure prediction</title>
+            <steps>
+                <step>[Add](../sequences/sequence_add.md) or [import](../sequences/sequence_import.md) at least one sequence.</step>
+                <step>Under the _Prediction_ menu, click on **Monomer** or **Multimer** depending on the type of sequence.</step>
+                <step>Click on **Predict**.</step>
+            </steps>
+            <note>
+                <step>[Add](../sequences/sequence_add.md) or [import](../sequences/sequence_import.md) at least one sequence.</step>
+            </note>
+        </guide>
+        <guide>
+            <title>Run a protein structure prediction with a subsequent distance analysis</title>
+            <steps>
+                <step>[Add](../sequences/sequence_add.md) or [import](../sequences/sequence_import.md) at least one sequence.</step>
+                <step>[Import](../proteins/protein_import.md) a protein structure that you want to compare to the predicted structure.</step>
+                <step>Under the _Prediction_ menu, click on **Monomer** or **Multimer** depending on the type of sequence.</step>
+                <step>Tick the checkbox besides _Add Analysis_.</step>
+                <step>Click on **Go**, to set up the analysis run.</step>
+                <step>Click on **Add**.</step>
+                <step>Choose a first protein structure from the tree.</step>
+                <step>Click on **Next**.</step>
+                <step>Select another protein structure from the tree.</step>
+                <step>Click on **Add**.</step>
+                <step>Click on **Start**.</step>
+            </steps>
+            <note>
+                <step>[Add](../sequences/sequence_add.md) or [import](../sequences/sequence_import.md) at least one sequence.</step>
+            </note>
+        </guide>
+    </getting_started_guides>
+    <details>
+        <item>During the structure prediction it is possible to work as normal.</item>
+        <item>It is not possible to run another prediction or analysis while a structure prediction is running.</item>
+        <item>The prediction runtime depends on sequence length, number of chains, number of proteins to predict, how much RAM can be used and how fast the CPU is.</item>
+        <item>The prediction cannot use an external graphics card. It only runs on CPU.</item>
+        <item>The prediction runtime can vary greatly from job to job depending on the job's setup.</item>
+    </details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

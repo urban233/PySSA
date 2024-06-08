@@ -1,0 +1,40 @@
+<document>
+    <title>Additional Information table</title>
+    <card>
+        <title>Overview</title>
+        <content>
+            With the _Additional Information_ table you can ...
+
+            - rename stored sequences.
+            - display the sequence of a stored sequence.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>To obtain more information about a sequence from the list</title>
+            <steps>
+                <step>Simply click on it. A table will then appear on the right-hand side.</step>
+            </steps>
+        </guide>
+        <guide>
+            <title>Rename a selected sequence</title>
+            <steps>
+                <step>Select a sequence from the list.</step>
+                <step>Edit the name in the _Name_ field in the table on the right. (The application automatically saves any changes made.)</step>
+            </steps>
+        </guide>
+        <guide>
+            <title>Display the full sequence of a selected sequence</title>
+            <steps>
+                <step>Select a sequence from the list.</step>
+                <step>Click on the sequence in the right table.</step>
+                <step>A new dialog window with the complete sequence string will be opened.</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details></details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

@@ -1,0 +1,37 @@
+<document>
+    <title>Export Project</title>
+    <card>
+        <title>Description</title>
+        <content>
+            With this functionality you can ...
+
+            - export the currently active project.
+            - share your work with others.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Export the currently active project</title>
+            <steps>
+                <step>Under the Project menu, click on **Export**.</step>
+                <step>Choose a location to save your _Project Database File_ on your computer in the file dialog.</step>
+                <step>Click on **Save**.</step>
+                <step>Wait for the export process to finish.</step>
+            </steps>
+        </guide>
+        <guide>
+            <title>Share your work with others</title>
+            <steps>
+                <step>Export your project.</step>
+                <step>Send the _Project Database File_ to others.</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details>
+        <item>The _Project Database File_ is a SQLite3 database file. To ensure a successful import, the project must have been exported through the PySSA application.</item>
+    </details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>

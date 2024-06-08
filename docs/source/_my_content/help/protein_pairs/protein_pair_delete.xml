@@ -1,0 +1,25 @@
+<document>
+    <title>Delete Protein Pair</title>
+    <card>
+        <title>Description</title>
+        <content>
+            With this button you can
+
+            - delete a selected protein pair.
+        </content>
+    </card>
+    <description></description>
+    <getting_started_guides>
+        <guide>
+            <title>Delete a selected protein pair</title>
+            <steps>
+                <step>Select a protein pair from the tree.</step>
+                <step>Click on :google_material-scan_delete_w200:, to delete the protein pair from the project.</step>
+            </steps>
+        </guide>
+    </getting_started_guides>
+    <details></details>
+    <toctree maxdepth="1">
+        <item></item>
+    </toctree>
+</document>
