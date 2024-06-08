@@ -25,18 +25,6 @@ __docformat__ = "google"
 from src.pyssa.util import exception
 
 
-# @dataclass
-# class CurrentSession:
-#     """Holds information about the current pymol session.
-#
-#     DO NOT USE THIS CLASS ANYMORE IN PRODUCTION!
-#     """
-#
-#     type: str  # noqa: A003
-#     name: str
-#     session: str
-
-
 class CurrentPymolSession:
   """Holds information about the current pymol session."""
 

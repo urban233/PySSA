@@ -209,6 +209,10 @@ class HelpManager:
     """Opens the help dialog on the results summary page."""
     self.change_url(str(pathlib.Path(self.docs_help_html_path, "results", "summary.html")))
 
+  def open_distance_data_visualizer_page(self) -> None:
+    """Opens the help dialog on the distance data visualizer page."""
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "results", "distance_data_visualizer.html")))
+
   def open_pyssa_settings_page(self) -> None:
     """Opens the help dialog on the pyssa settings page."""
     self.change_url(str(pathlib.Path(self.docs_help_html_path, "settings", "pyssa_settings.html")))

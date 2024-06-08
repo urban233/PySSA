@@ -278,6 +278,7 @@ class ResultsViewController(QtCore.QObject):
         self._protein_pair,
         self._interface_manager.get_current_project(),
         self._protein_pair,
+        self._interface_manager.help_manager
     )
     self._distance_data_visualizer.show()
 

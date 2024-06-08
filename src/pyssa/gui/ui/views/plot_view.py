@@ -35,6 +35,7 @@ from matplotlib.backend_bases import MouseButton
 from matplotlib.figure import Figure
 from matplotlib import ticker
 
+from src.pyssa.controller import help_manager
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.gui.ui.views import histogram_properties_view
 from src.pyssa.internal.data_structures import protein_pair
@@ -101,6 +102,7 @@ class PlotView(QtWidgets.QDialog):
       protein_pair_from_project: "protein_pair.ProteinPair",
       a_project: "project.Project",
       the_protein_pair: "protein_pair.ProteinPair",
+      the_help_manager: "help_manager.HelpManager",
       parent=None,
   ) -> None:  # noqa: ANN001
     """Constructor.
@@ -130,6 +132,7 @@ class PlotView(QtWidgets.QDialog):
     QtWidgets.QDialog.__init__(self, parent)
     self._protein_pair = the_protein_pair
     self._current_project = a_project
+    self._help_manager = the_help_manager
     self.clicked_point_scatter = None
     self.highlighted_bin_index = None
     self.active_row_information = None
@@ -529,41 +532,13 @@ class PlotView(QtWidgets.QDialog):
     self.change_selection_color()
 
   # <editor-fold desc="Help related methods">
-  def open_help(self, a_page_name: str) -> None:
-    """Opens the pyssa documentation window if it's not already open.
-
-    Args:
-        a_page_name (str): a name of a documentation page to display
-
-    Raises:
-        exception.IllegalArgumentError: If `a_page_name` is None.
-    """
-    # <editor-fold desc="Checks">
-    if a_page_name is None:
-      logger.error("a_page_name is None.")
-      raise exception.IllegalArgumentError("a_page_name is None.")
-
-    # </editor-fold>
-
-    self._active_task = tasks.LegacyTask(
-        target=util_async.open_documentation_on_certain_page,
-        args=(a_page_name, 0),
-        post_func=self.__await_open_help,
-    )
-    self._active_task.start()
-
-  @staticmethod
-  def __await_open_help() -> None:
-    """Logs that the help center opened."""
-    constants.PYSSA_LOGGER.info("Opening help center finished.")
-
   def _open_help_center(self) -> None:
     """Opens the help dialog."""
-    self.open_help("help/")
+    self._help_manager.open_general_help_page()
 
   def _open_distance_data_visualizer_help(self) -> None:
     """Opens the help dialog on the distance_data_visualizer page."""
-    self.open_help("help/results/distance_data_visualizer")
+    self._help_manager.open_distance_data_visualizer_page()
 
   # </editor-fold>
 
@@ -955,7 +930,7 @@ class PlotView(QtWidgets.QDialog):
     self._ax_hist.bar_label(self.bars, padding=4)
     # Extra canvas and figure settings
     tmp_histogram_width = self.scroll_area.width() - 20
-    tmp_histogram_height = ((5 / 6) * len(self.bars)) * 100
+    tmp_histogram_height = int(((5 / 6) * len(self.bars)) * 100)
     self.plot_widget_dhistogram.resize(
         tmp_histogram_width, tmp_histogram_height
     )
