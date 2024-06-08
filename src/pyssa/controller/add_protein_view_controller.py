@@ -218,10 +218,6 @@ class AddProteinViewController(QtCore.QObject):
           "Protein already exists in current project!"
       )
       self._view.ui.btn_add_protein.setEnabled(False)
-    else:
-      self._view.ui.txt_add_protein.setStyleSheet(
-          """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
-      )
       self._view.ui.lbl_status.setText("")
       self._view.ui.btn_add_protein.setEnabled(True)
     QtWidgets.QApplication.restoreOverrideCursor()

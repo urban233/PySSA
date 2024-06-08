@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\pyssa\gui\ui\forms\dlgAbout.ui'
+# Form implementation generated from reading ui file '.\src\pyssa\gui\ui\forms\dlgAbout.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -12,211 +12,161 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_Dialog(object):
+    def setupUi(self, Dialog):
+        Dialog.setObjectName("Dialog")
+        Dialog.resize(668, 713)
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout(Dialog)
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.label = QtWidgets.QLabel(Dialog)
+        font = QtGui.QFont()
+        font.setPointSize(16)
+        font.setBold(False)
+        font.setWeight(50)
+        self.label.setFont(font)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setObjectName("label")
+        self.verticalLayout_3.addWidget(self.label)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.label_2 = QtWidgets.QLabel(Dialog)
+        self.label_2.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_2.setObjectName("label_2")
+        self.verticalLayout_2.addWidget(self.label_2)
+        self.label_12 = QtWidgets.QLabel(Dialog)
+        self.label_12.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_12.setObjectName("label_12")
+        self.verticalLayout_2.addWidget(self.label_12)
+        self.label_16 = QtWidgets.QLabel(Dialog)
+        self.label_16.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_16.setObjectName("label_16")
+        self.verticalLayout_2.addWidget(self.label_16)
+        self.label_13 = QtWidgets.QLabel(Dialog)
+        self.label_13.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_13.setObjectName("label_13")
+        self.verticalLayout_2.addWidget(self.label_13)
+        self.label_14 = QtWidgets.QLabel(Dialog)
+        self.label_14.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_14.setObjectName("label_14")
+        self.verticalLayout_2.addWidget(self.label_14)
+        self.label_15 = QtWidgets.QLabel(Dialog)
+        self.label_15.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_15.setObjectName("label_15")
+        self.verticalLayout_2.addWidget(self.label_15)
+        self.horizontalLayout.addLayout(self.verticalLayout_2)
+        self.lbl_pyssa_logo = QtWidgets.QLabel(Dialog)
+        self.lbl_pyssa_logo.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lbl_pyssa_logo.setAlignment(QtCore.Qt.AlignCenter)
+        self.lbl_pyssa_logo.setObjectName("lbl_pyssa_logo")
+        self.horizontalLayout.addWidget(self.lbl_pyssa_logo)
+        self.verticalLayout_3.addLayout(self.horizontalLayout)
+        self.verticalLayout_4.addLayout(self.verticalLayout_3)
+        self.toolBox = QtWidgets.QToolBox(Dialog)
+        self.toolBox.setObjectName("toolBox")
+        self.page = QtWidgets.QWidget()
+        self.page.setGeometry(QtCore.QRect(0, 0, 650, 210))
+        self.page.setObjectName("page")
+        self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.page)
+        self.verticalLayout_5.setObjectName("verticalLayout_5")
+        self.text_license = QtWidgets.QTextBrowser(self.page)
+        self.text_license.setObjectName("text_license")
+        self.verticalLayout_5.addWidget(self.text_license)
+        self.toolBox.addItem(self.page, "")
+        self.page_2 = QtWidgets.QWidget()
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 650, 210))
+        self.page_2.setObjectName("page_2")
+        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.page_2)
+        self.verticalLayout_6.setObjectName("verticalLayout_6")
+        self.text_acknowledgment = QtWidgets.QTextBrowser(self.page_2)
+        self.text_acknowledgment.setObjectName("text_acknowledgment")
+        self.verticalLayout_6.addWidget(self.text_acknowledgment)
+        self.toolBox.addItem(self.page_2, "")
+        self.verticalLayout_4.addWidget(self.toolBox)
+        self.verticalLayout = QtWidgets.QVBoxLayout()
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.label_5 = QtWidgets.QLabel(Dialog)
+        self.label_5.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_5.setObjectName("label_5")
+        self.verticalLayout.addWidget(self.label_5)
+        self.tableView = QtWidgets.QTableView(Dialog)
+        self.tableView.setObjectName("tableView")
+        self.verticalLayout.addWidget(self.tableView)
+        self.verticalLayout_4.addLayout(self.verticalLayout)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem)
+        self.btn_ok = QtWidgets.QPushButton(Dialog)
+        self.btn_ok.setObjectName("btn_ok")
+        self.horizontalLayout_2.addWidget(self.btn_ok)
+        self.verticalLayout_4.addLayout(self.horizontalLayout_2)
 
-  def setupUi(self, Dialog):
-    Dialog.setObjectName("Dialog")
-    Dialog.resize(634, 713)
-    self.verticalLayout_4 = QtWidgets.QVBoxLayout(Dialog)
-    self.verticalLayout_4.setObjectName("verticalLayout_4")
-    self.verticalLayout_3 = QtWidgets.QVBoxLayout()
-    self.verticalLayout_3.setObjectName("verticalLayout_3")
-    self.label = QtWidgets.QLabel(Dialog)
-    font = QtGui.QFont()
-    font.setPointSize(16)
-    font.setBold(False)
-    font.setWeight(50)
-    self.label.setFont(font)
-    self.label.setAlignment(QtCore.Qt.AlignCenter)
-    self.label.setObjectName("label")
-    self.verticalLayout_3.addWidget(self.label)
-    self.horizontalLayout = QtWidgets.QHBoxLayout()
-    self.horizontalLayout.setObjectName("horizontalLayout")
-    self.verticalLayout_2 = QtWidgets.QVBoxLayout()
-    self.verticalLayout_2.setObjectName("verticalLayout_2")
-    self.label_2 = QtWidgets.QLabel(Dialog)
-    self.label_2.setAlignment(
-        QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-    )
-    self.label_2.setObjectName("label_2")
-    self.verticalLayout_2.addWidget(self.label_2)
-    self.label_12 = QtWidgets.QLabel(Dialog)
-    self.label_12.setAlignment(
-        QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-    )
-    self.label_12.setObjectName("label_12")
-    self.verticalLayout_2.addWidget(self.label_12)
-    self.label_16 = QtWidgets.QLabel(Dialog)
-    self.label_16.setAlignment(
-        QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-    )
-    self.label_16.setObjectName("label_16")
-    self.verticalLayout_2.addWidget(self.label_16)
-    self.label_13 = QtWidgets.QLabel(Dialog)
-    self.label_13.setAlignment(
-        QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-    )
-    self.label_13.setObjectName("label_13")
-    self.verticalLayout_2.addWidget(self.label_13)
-    self.label_14 = QtWidgets.QLabel(Dialog)
-    self.label_14.setAlignment(
-        QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-    )
-    self.label_14.setObjectName("label_14")
-    self.verticalLayout_2.addWidget(self.label_14)
-    self.label_15 = QtWidgets.QLabel(Dialog)
-    self.label_15.setAlignment(
-        QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-    )
-    self.label_15.setObjectName("label_15")
-    self.verticalLayout_2.addWidget(self.label_15)
-    self.horizontalLayout.addLayout(self.verticalLayout_2)
-    self.lbl_pyssa_logo = QtWidgets.QLabel(Dialog)
-    self.lbl_pyssa_logo.setLayoutDirection(QtCore.Qt.LeftToRight)
-    self.lbl_pyssa_logo.setAlignment(QtCore.Qt.AlignCenter)
-    self.lbl_pyssa_logo.setObjectName("lbl_pyssa_logo")
-    self.horizontalLayout.addWidget(self.lbl_pyssa_logo)
-    self.verticalLayout_3.addLayout(self.horizontalLayout)
-    self.verticalLayout_4.addLayout(self.verticalLayout_3)
-    self.toolBox = QtWidgets.QToolBox(Dialog)
-    self.toolBox.setObjectName("toolBox")
-    self.page = QtWidgets.QWidget()
-    self.page.setGeometry(QtCore.QRect(0, 0, 616, 200))
-    self.page.setObjectName("page")
-    self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.page)
-    self.verticalLayout_5.setObjectName("verticalLayout_5")
-    self.text_license = QtWidgets.QTextBrowser(self.page)
-    self.text_license.setObjectName("text_license")
-    self.verticalLayout_5.addWidget(self.text_license)
-    self.toolBox.addItem(self.page, "")
-    self.page_2 = QtWidgets.QWidget()
-    self.page_2.setGeometry(QtCore.QRect(0, 0, 616, 185))
-    self.page_2.setObjectName("page_2")
-    self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.page_2)
-    self.verticalLayout_6.setObjectName("verticalLayout_6")
-    self.text_acknowledgment = QtWidgets.QTextBrowser(self.page_2)
-    self.text_acknowledgment.setObjectName("text_acknowledgment")
-    self.verticalLayout_6.addWidget(self.text_acknowledgment)
-    self.toolBox.addItem(self.page_2, "")
-    self.verticalLayout_4.addWidget(self.toolBox)
-    self.verticalLayout = QtWidgets.QVBoxLayout()
-    self.verticalLayout.setObjectName("verticalLayout")
-    self.label_5 = QtWidgets.QLabel(Dialog)
-    self.label_5.setAlignment(
-        QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-    )
-    self.label_5.setObjectName("label_5")
-    self.verticalLayout.addWidget(self.label_5)
-    self.tableView = QtWidgets.QTableView(Dialog)
-    self.tableView.setObjectName("tableView")
-    self.verticalLayout.addWidget(self.tableView)
-    self.verticalLayout_4.addLayout(self.verticalLayout)
-    self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-    self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-    spacerItem = QtWidgets.QSpacerItem(
-        40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
-    )
-    self.horizontalLayout_2.addItem(spacerItem)
-    self.btn_ok = QtWidgets.QPushButton(Dialog)
-    self.btn_ok.setObjectName("btn_ok")
-    self.horizontalLayout_2.addWidget(self.btn_ok)
-    self.verticalLayout_4.addLayout(self.horizontalLayout_2)
+        self.retranslateUi(Dialog)
+        self.toolBox.setCurrentIndex(0)
+        QtCore.QMetaObject.connectSlotsByName(Dialog)
 
-    self.retranslateUi(Dialog)
-    self.toolBox.setCurrentIndex(0)
-    QtCore.QMetaObject.connectSlotsByName(Dialog)
-
-  def retranslateUi(self, Dialog):
-    _translate = QtCore.QCoreApplication.translate
-    Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-    self.label.setText(
-        _translate(
-            "Dialog",
-            "PySSA - Python plugin for protein Sequence to Structure Analysis",
-        )
-    )
-    self.label_2.setText(_translate("Dialog", "Version: 0.1.0"))
-    self.label_12.setText(
-        _translate("Dialog", "Authors: Martin Urban & Hannah Kullik")
-    )
-    self.label_16.setText(
-        _translate(
-            "Dialog",
-            "Contact: martin.urban@studmail.w-hs.de & hannah.kullik@studmail.w-hs.de",
-        )
-    )
-    self.label_13.setText(
-        _translate(
-            "Dialog", "Institute for Bioinformatics and Chemoinformatics"
-        )
-    )
-    self.label_14.setText(
-        _translate("Dialog", "Westphalian University of Applied Sciences")
-    )
-    self.label_15.setText(_translate("Dialog", "Germany"))
-    self.lbl_pyssa_logo.setText(_translate("Dialog", "pyssa_logo_abtract"))
-    self.text_license.setHtml(
-        _translate(
-            "Dialog",
-            '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
-            '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
-            "p, li { white-space: pre-wrap; }\n"
-            "</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">PySSA - Python plugin for protein Sequence to Structure Analysis</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Copyright (C) 2024 Martin Urban, Hannah Kullik</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">(martin.urban@studmail.w-hs.de, hannah.kullik@studmail.w-hs.de)</p>\n'
-            '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Source code is available at &lt;https://github.com/urban233/PySSA&gt;</p>\n'
-            '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">This program is free software: you can redistribute it and/or modify</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">it under the terms of the GNU General Public License as published by</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">the Free Software Foundation, either version 3 of the License, or</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">(at your option) any later version.</p>\n'
-            '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">This program is distributed in the hope that it will be useful,</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">but WITHOUT ANY WARRANTY; without even the implied warranty of</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">GNU General Public License for more details.</p>\n'
-            '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">You should have received a copy of the GNU General Public License</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.</p></body></html>',
-        )
-    )
-    self.toolBox.setItemText(
-        self.toolBox.indexOf(self.page), _translate("Dialog", "License")
-    )
-    self.text_acknowledgment.setHtml(
-        _translate(
-            "Dialog",
-            '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
-            '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
-            "p, li { white-space: pre-wrap; }\n"
-            "</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Developers:</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">    Martin Urban</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">    Hannah Kullik</p>\n'
-            '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Database design and GUI framework establishment:</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Uwe Urban</p>\n'
-            '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Initialization, conceptualization, and supervision:</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Achim Zielesny und Angelika Loidl-Stahlhofen</p>\n'
-            '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">PySSA was developed at:</p>\n'
-            '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Zielesny Research Group</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Westphalian University of Applied Sciences</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">August-Schmidt-Ring 10</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">D-45665 Recklinghausen Germany</p>\n'
-            '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The PySSA project team would like to thank the communities</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">behind the open software libraries the application employs for</p>\n'
-            '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">their amazing work.</p>\n'
-            '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>',
-        )
-    )
-    self.toolBox.setItemText(
-        self.toolBox.indexOf(self.page_2),
-        _translate("Dialog", "Acknowledgement"),
-    )
-    self.label_5.setText(_translate("Dialog", "Depends on following packages"))
-    self.btn_ok.setText(_translate("Dialog", "OK"))
+    def retranslateUi(self, Dialog):
+        _translate = QtCore.QCoreApplication.translate
+        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        self.label.setText(_translate("Dialog", "PySSA - Python rich client for protein Sequence to Structure Analysis"))
+        self.label_2.setText(_translate("Dialog", "Version: 0.1.0"))
+        self.label_12.setText(_translate("Dialog", "Authors: Martin Urban & Hannah Kullik"))
+        self.label_16.setText(_translate("Dialog", "Contact: martin.urban@studmail.w-hs.de & hannah.kullik@studmail.w-hs.de"))
+        self.label_13.setText(_translate("Dialog", "Institute for Bioinformatics and Chemoinformatics"))
+        self.label_14.setText(_translate("Dialog", "Westphalian University of Applied Sciences"))
+        self.label_15.setText(_translate("Dialog", "Germany"))
+        self.lbl_pyssa_logo.setText(_translate("Dialog", "pyssa_logo_abtract"))
+        self.text_license.setHtml(_translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">PySSA - Python rich client for protein Sequence to Structure Analysis</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Copyright (C) 2024 Martin Urban, Hannah Kullik</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">(martin.urban@studmail.w-hs.de, hannah.kullik@studmail.w-hs.de)</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Source code is available at &lt;https://github.com/zielesny/PySSA&gt;</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">This program is free software: you can redistribute it and/or modify</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">it under the terms of the GNU General Public License as published by</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">the Free Software Foundation, either version 3 of the License, or</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">(at your option) any later version.</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">This program is distributed in the hope that it will be useful,</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">but WITHOUT ANY WARRANTY; without even the implied warranty of</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">GNU General Public License for more details.</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">You should have received a copy of the GNU General Public License</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.</p></body></html>"))
+        self.toolBox.setItemText(self.toolBox.indexOf(self.page), _translate("Dialog", "License"))
+        self.text_acknowledgment.setHtml(_translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Developers:</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    Martin Urban</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    Hannah Kullik</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Database design and GUI framework establishment:</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Uwe Urban</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Initialization, conceptualization, and supervision:</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Achim Zielesny und Angelika Loidl-Stahlhofen</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">PySSA was developed at:</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Zielesny Research Group</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Westphalian University of Applied Sciences</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">August-Schmidt-Ring 10</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">D-45665 Recklinghausen Germany</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">The PySSA project team would like to thank the communities</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">behind the open software libraries the application employs for</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">their amazing work.</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
+        self.toolBox.setItemText(self.toolBox.indexOf(self.page_2), _translate("Dialog", "Acknowledgement"))
+        self.label_5.setText(_translate("Dialog", "Depends on following packages"))
+        self.btn_ok.setText(_translate("Dialog", "OK"))

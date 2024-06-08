@@ -75,7 +75,8 @@ def validate_add_protein_view_input(
       tmp_filepath: str = str(
           pathlib.Path(f"{constants.SCRATCH_DIR}/{pdb_id}.pdb")
       )
-      bio_data.download_pdb_file(pdb_id, tmp_filepath)
+      if not bio_data.download_pdb_file(pdb_id, tmp_filepath):
+        return 1, False, pdb_id
       if os.path.exists(tmp_filepath):
         os.remove(tmp_filepath)
         return 1, True, pdb_id

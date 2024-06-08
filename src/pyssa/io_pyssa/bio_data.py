@@ -37,12 +37,12 @@ logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = 'google'
 
 
-def download_pdb_file(pdb_id: str, save_path: str) -> None:
+def download_pdb_file(pdb_id: str, save_path: str) -> bool:
   """Downloads a pdb file with a given pdb_id and saves it to a given path.
 
   Args:
       pdb_id (str): A string representing the PDB ID of the file to be downloaded.
-      save_path (str): A string representing the path to save the downloaded file.  # TODO: find out if the path is a filepath
+      save_path (str): A string representing the path to save the downloaded file.  # TODO: find out if the path is a filepath object
 
   Raises:
       exception.IllegalArgumentError: If either `pdb_id` or `save_path` is None.")
@@ -64,7 +64,8 @@ def download_pdb_file(pdb_id: str, save_path: str) -> None:
     response.raise_for_status()  # Check for errors
     with open(save_path, 'w') as pdb_file:
       pdb_file.write(response.text)
-    logger.error(f'PDB file {pdb_id} downloaded successfully to {save_path}')
+    logger.info(f'PDB file {pdb_id} downloaded successfully to {save_path}')
+    return True
   except requests.exceptions.HTTPError as errh:
     logger.error(f'HTTP Error: {errh}')
   except requests.exceptions.ConnectionError as errc:
@@ -73,6 +74,7 @@ def download_pdb_file(pdb_id: str, save_path: str) -> None:
     logger.error(f'Timeout Error: {errt}')
   except requests.exceptions.RequestException as err:
     logger.error(f'Error: {err}')
+  return False
 
 
 def convert_pdb_data_list_to_pdb_file(
