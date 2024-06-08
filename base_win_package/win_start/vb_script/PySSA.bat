@@ -21,4 +21,3 @@ REM along with this program.  If not, see <http://www.gnu.org/licenses/>.
 REM
 REM Command to start PySSA
 C:\ProgramData\IBCI\PySSA\bin\.venv\Scripts\python.exe C:\ProgramData\IBCI\PySSA\bin\PySSA\src\pyssa\main.py
-REM C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\python.exe C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Lib\site-packages\pymol\pymol_path\data\startup\PySSA\pyssa\main.py
