@@ -132,3 +132,4 @@ dmypy.json
 testing_area
 .idea
 /docs/pyssa-documentation/site/
+_build

@@ -1,2 +1,0 @@
-C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\python.exe C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Lib\site-packages\pymol\pymol_path\data\startup\PySSA\pyssa\main.py
-REM C:\Users\martin\Miniforge3\envs\pyssa_dev\python.exe C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Lib\site-packages\pymol\pymol_path\data\startup\PySSA\pyssa\main.py

@@ -1,3 +1,4 @@
+import os
 import pathlib
 import shutil
 
@@ -86,6 +87,9 @@ class Directory:
   def purge(a_path: str | pathlib.Path) -> bool:
     """Deletes a directory and all its contents.
 
+    This function can also be used if the directory might not exist because
+    it checks the existence before purging.
+
     Args:
       a_path: The path to the directory to be deleted.
 
@@ -102,8 +106,41 @@ class Directory:
       tmp_path = pathlib.Path(a_path)
       if tmp_path.exists():
         shutil.rmtree(tmp_path)
-      else:
-        print("Nothing to do. The given path does not exist.")
+    except Exception as e:
+      return False
+    return True
+
+
+class File:
+  """Container for common filesystem file-based operations."""
+
+  @staticmethod
+  def copy(a_source_file_name: str | pathlib.Path, a_dest_file_name: str | pathlib.Path, overwrite: bool = False) -> bool:
+    """Copies a file to a new location.
+
+    Args:
+      a_source_file_name: The path of the file to copy.
+      a_dest_file_name: The destination path of the file to copy.
+      overwrite: A boolean indicating whether the file should be overwritten.
+
+    Returns:
+      A boolean indicating the success of the operation.
+    """
+    # <editor-fold desc="Checks">
+    if a_source_file_name is None or a_source_file_name == "":
+      return False
+    if a_dest_file_name is None or a_dest_file_name == "":
+      return False
+    if overwrite is None:
+      return False
+
+    # </editor-fold>
+
+    try:
+      if overwrite:
+        if pathlib.Path(a_dest_file_name).exists():
+          os.remove(a_dest_file_name)
+      shutil.copy(a_source_file_name, pathlib.Path(a_dest_file_name))
     except Exception as e:
       return False
     return True
