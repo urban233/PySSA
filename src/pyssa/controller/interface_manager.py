@@ -46,7 +46,7 @@ from src.pyssa.gui.ui.views import create_project_view, open_project_view, delet
 from src.pyssa.gui.ui.views import main_view, distance_analysis_view, results_view, add_protein_view
 from src.pyssa.gui.ui.views import hotspots_protein_regions_view
 from src.pyssa.gui.ui.styles import styles
-from src.pyssa.internal.data_structures import project
+from src.pyssa.internal.data_structures import project, protein_pair
 from src.pyssa.internal.data_structures.data_classes import current_session
 from src.pyssa.internal.thread import tasks
 from src.pyssa.internal.thread.async_pyssa import custom_signals
@@ -1854,7 +1854,12 @@ class InterfaceManager:
           self._main_view.ui.action_simple_image.setEnabled(True)
           # Hotspots
           self._main_view.ui.menuHotspots.setEnabled(True)
-          self._main_view.ui.action_protein_regions.setEnabled(True)
+          if self._main_view.ui.proteins_tree_view.model().data(
+                  self._main_view.ui.proteins_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
+          ) == "chain":
+            self._main_view.ui.action_protein_regions.setEnabled(True)
+          else:
+            self._main_view.ui.action_protein_regions.setEnabled(False)
 
         try:
           if self.get_current_active_scene_name() == "base":
@@ -1879,6 +1884,18 @@ class InterfaceManager:
               self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(False)
           except ValueError:
             pass  # Is necessary because tree view selection might be something else than a scene.
+          # Check for any possible protein region menu activation
+          if self.pymol_session_manager.is_the_current_session_empty():
+            self._main_view.ui.action_protein_regions.setEnabled(False)
+          else:
+            tmp_current_protein_pairs_tree_type = self._main_view.ui.protein_pairs_tree_view.model().data(
+                    self._main_view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
+            )
+            tmp_current_protein_pairs_tree_object: "protein_pair.ProteinPair" = self.get_current_active_protein_pair_object()
+            if tmp_current_protein_pairs_tree_type == "chain" and self.pymol_session_manager.is_the_current_protein_pair_in_session(tmp_current_protein_pairs_tree_object.name):
+              self._main_view.ui.action_protein_regions.setEnabled(True)
+            else:
+              self._main_view.ui.action_protein_regions.setEnabled(False)
         else:
           # A project has no protein pair(s)
           # Protein Pairs tab
@@ -2507,6 +2524,7 @@ class InterfaceManager:
         self._main_view.ui.lbl_info.setText(
             "Please load the PyMOL session of the selected protein."
         )
+      self._main_view.ui.action_protein_regions.setEnabled(False)
 
     elif an_object_type == "scene":
       self._main_view.ui.btn_save_protein.setEnabled(False)
@@ -2529,6 +2547,7 @@ class InterfaceManager:
         self._main_view.ui.lbl_info.setText(
             "Please load the PyMOL session of the selected protein."
         )
+      self._main_view.ui.action_protein_regions.setEnabled(False)
 
     elif an_object_type == "chain":
       self._main_view.ui.btn_save_protein.setEnabled(False)
@@ -2536,8 +2555,10 @@ class InterfaceManager:
 
       if tmp_is_protein_in_session_flag:
         self.show_protein_pymol_scene_configuration()
+        self._main_view.ui.action_protein_regions.setEnabled(True)
       else:
         self.hide_protein_pymol_scene_configuration()
+        self._main_view.ui.action_protein_regions.setEnabled(False)
       self.manage_coloring_by_element_option_for_protein_chain()
 
     elif an_object_type == "header":
@@ -2553,6 +2574,7 @@ class InterfaceManager:
         self._main_view.ui.lbl_info.setText(
             "Please load the PyMOL session of the selected protein."
         )
+      self._main_view.ui.action_protein_regions.setEnabled(False)
 
     else:
       constants.PYSSA_LOGGER.warning(
@@ -2562,11 +2584,9 @@ class InterfaceManager:
     if tmp_is_protein_in_session_flag:
       self._main_view.ui.btn_create_protein_scene.setEnabled(True)
       self._main_view.ui.btn_update_protein_scene.setEnabled(True)
-      self._main_view.ui.action_protein_regions.setEnabled(True)
     else:
       self._main_view.ui.btn_create_protein_scene.setEnabled(False)
       self._main_view.ui.btn_update_protein_scene.setEnabled(False)
-      self._main_view.ui.action_protein_regions.setEnabled(False)
 
   def manage_coloring_by_element_option_for_protein_chain(self) -> None:
     """Manages coloring options for protein chain based on element selection."""
@@ -3164,6 +3184,7 @@ class InterfaceManager:
         self._main_view.ui.lbl_info_3.setText(
             "Please load the PyMOL session of the\nselected protein pair."
         )
+      self._main_view.ui.action_protein_regions.setEnabled(False)
 
     elif an_object_type == "protein":
       self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
@@ -3178,6 +3199,7 @@ class InterfaceManager:
         self._main_view.ui.lbl_info_3.setText(
             "Please load the PyMOL session of the\nselected protein pair."
         )
+      self._main_view.ui.action_protein_regions.setEnabled(False)
 
     elif an_object_type == "scene":
       self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
@@ -3207,14 +3229,17 @@ class InterfaceManager:
         self._main_view.ui.lbl_info_3.setText(
             "Please load the PyMOL session of the \nselected protein pair."
         )
+      self._main_view.ui.action_protein_regions.setEnabled(False)
 
     elif an_object_type == "chain":
       self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
       self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
       if tmp_is_protein_pair_in_session_flag:
         self.show_protein_pair_pymol_scene_configuration()
+        self._main_view.ui.action_protein_regions.setEnabled(True)
       else:
         self.hide_protein_pair_pymol_scene_configuration()
+        self._main_view.ui.action_protein_regions.setEnabled(False)
 
     elif an_object_type == "header":
       self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
@@ -3228,10 +3253,12 @@ class InterfaceManager:
         self._main_view.ui.lbl_info_3.setText(
             "Please load the PyMOL session of the \nselected protein pair."
         )
+      self._main_view.ui.action_protein_regions.setEnabled(False)
     else:
       constants.PYSSA_LOGGER.warning(
           "Unknown object type on proteins tab selected."
       )
+      self._main_view.ui.action_protein_regions.setEnabled(False)
 
     # if tmp_is_protein_pair_in_session_flag and tmp_current_scene_name == "base":
     #     self._main_view.ui.btn_delete_protein_scene.setEnabled(False)
@@ -3245,12 +3272,10 @@ class InterfaceManager:
     if tmp_is_protein_pair_in_session_flag:
       self._main_view.ui.btn_create_protein_pair_scene.setEnabled(True)
       self._main_view.ui.btn_update_protein_pair_scene.setEnabled(True)
-      self._main_view.ui.action_protein_regions.setEnabled(True)
     else:
       self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)
       self._main_view.ui.btn_update_protein_pair_scene.setEnabled(False)
       self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(False)
-      self._main_view.ui.action_protein_regions.setEnabled(False)
 
   def manage_coloring_by_element_option_for_protein_pair_chain(self) -> None:
     """Manages coloring by element option for protein pair chain."""
