@@ -1,10 +1,21 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "pyssa"
 description = "A PyMOL plugin for protein structure prediction and analysis."
-license = "GPL v3"
-authors = ["Martin Urban <martin.urban@studmail.w-hs.de>", "Hannah Kullik <hannah.kullik@studmail.w-hs.de>"]
-maintainers = ["Martin Urban <martin.urban@studmail.w-hs.de>", "Hannah Kullik <hannah.kullik@studmail.w-hs.de>"]
-requires-python = '>=3.9'
+license = { text = "GPL-3.0-only" }
+authors = [
+  {name = "Martin Urban", email =  "martin.urban@studmail.w-hs.de"},
+  {name = "Hannah Kullik", email =  "hannah.kullik@studmail.w-hs.de"}
+]
+maintainers = [
+  {name = "Martin Urban", email =  "martin.urban@studmail.w-hs.de"},
+  {name = "Hannah Kullik", email =  "hannah.kullik@studmail.w-hs.de"}
+]
+requires-python = '>=3.11'
+version = "0.10.23"
 
 [tool.pyink]
 pyink-indentation = 2
