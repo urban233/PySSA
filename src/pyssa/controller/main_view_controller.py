@@ -254,9 +254,9 @@ class MainViewController:
     self._view.ui.action_predict_multimer.triggered.connect(
       self.__slot_predict_multimer
     )
-    self._view.ui.action_abort_prediction.triggered.connect(
-      self.__slot_abort_prediction
-    )
+    # self._view.ui.action_abort_prediction.triggered.connect(
+    #   self.__slot_abort_prediction
+    # )
     self._view.ui.action_distance_analysis.triggered.connect(
       self.__slot_distance_analysis
     )
@@ -763,36 +763,7 @@ class MainViewController:
     # </editor-fold>
 
     _, tmp_event = return_value
-    logger.info("Check if any jobs are running before closing PySSA.")
-    if self._interface_manager.job_manager.there_are_jobs_running():
-      logger.info("Running jobs found!")
-      tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
-        "There are still jobs running!\n\nAre you sure you want to close PySSA?\nThis could lead to data loss and a damaged project!",
-        "Close PySSA",
-        custom_message_box.CustomMessageBoxIcons.WARNING.value,
-      )
-      tmp_dialog.exec_()
-      if not tmp_dialog.response:
-        logger.info("PySSA should not be closed.")
-        tmp_event.ignore()
-        return
-      logger.info(
-        "There are jobs running but PySSA will closed! (Requested by the user)"
-      )
-    # Closes the documentation browser if it is still open
-    if (
-            len(
-              pygetwindow.getWindowsWithTitle(
-                constants.WINDOW_TITLE_OF_HELP_CENTER
-              )
-            )
-            == 1
-    ):
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
-        0
-      ].close()
-    self._interface_manager.job_manager.stop_auxiliary_pymol()
-    self._interface_manager.app_process_manager.close_manager()
+    self.__slot_close_all()
     tmp_event.accept()
 
   def _force_close_all(self) -> None:
@@ -864,28 +835,29 @@ class MainViewController:
     If the user confirms, the method initiates the process of closing the application by saving any open projects and terminating any running tasks.
     """
     try:
+      self._view.blockSignals(True)
       logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
         "Menu entry 'Project/Exit Application' clicked.",
       )
-      tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
-        "Are you sure you want to close PySSA?",
-        "Close PySSA",
-        custom_message_box.CustomMessageBoxIcons.WARNING.value,
-      )
+      if self._interface_manager.job_manager.there_are_jobs_running():
+        tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+          "There are still jobs running.\nAre you sure you want to close PySSA?\n\n The progress of the running job(s) are lost!",
+          "Close PySSA",
+          custom_message_box.CustomMessageBoxIcons.WARNING.value,
+        )
+      else:
+        tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+          "Are you sure you want to close PySSA?",
+          "Close PySSA",
+          custom_message_box.CustomMessageBoxIcons.WARNING.value,
+        )
       tmp_dialog.exec_()
       if tmp_dialog.response:
         # PySSA should be closed
+        self.__slot_abort_prediction()
+        self._interface_manager.app_process_manager.close_manager()
         if not self._view.ui.lbl_logo.isVisible():
-          # self._active_task = tasks.LegacyTask(
-          #     target=project_async.close_project,
-          #     args=(
-          #         self._database_thread,
-          #         self._interface_manager.pymol_session_manager,
-          #     ),
-          #     post_func=self.__await_close_project_for_closing_app,
-          # )
-
           self._interface_manager.get_task_manager().append_task_result(
             task_result_factory.TaskResultFactory.run_task_result(
               a_task_result=task_result.TaskResult.from_action(
@@ -905,8 +877,6 @@ class MainViewController:
           logger.info(
             "A project is currently opened. It will now be saved and the application exists afterwards."
           )
-          # self._active_task.start()
-          # self.__slot_close_project()
         else:
           self.__await_close_project_for_closing_app()
     except Exception as e:
@@ -937,7 +907,7 @@ class MainViewController:
     tmp_number_of_pymol_windows = len(
       pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)
     )
-    self._interface_manager.app_process_manager.close_manager()
+
     # PyMOL windows
     if tmp_number_of_pymol_windows == 1:
       logger.info("PyMOL will be closed now.")
@@ -1011,7 +981,7 @@ class MainViewController:
 
     tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
     if tmp_result[0] is True and tmp_result[1] == "ColabFold Prediction":
-      self.__slot_abort_prediction()
+      self.__slot_abort_prediction(a_prediction_task_was_aborted=True)
 
   def _update_main_view_ui(
           self, refresh_after_job_finished_signal_values: tuple
@@ -3181,7 +3151,7 @@ class MainViewController:
     finally:
       self._interface_manager.refresh_main_view()
 
-  def __slot_abort_prediction(self) -> None:
+  def __slot_abort_prediction(self, a_prediction_task_was_aborted: bool = False) -> None:
     """Aborts the running prediction."""
     try:
       logger.log(
@@ -3201,12 +3171,13 @@ class MainViewController:
         "An unknown error occurred!"
       )
     else:
-      tmp_dialog = custom_message_box.CustomMessageBoxOk(
-        "The structure prediction was aborted.",
-        "Abort Structure Prediction",
-        custom_message_box.CustomMessageBoxIcons.INFORMATION.value,
-      )
-      tmp_dialog.exec_()
+      if a_prediction_task_was_aborted is True:
+        tmp_dialog = custom_message_box.CustomMessageBoxOk(
+          "The structure prediction was aborted.",
+          "Abort Structure Prediction",
+          custom_message_box.CustomMessageBoxIcons.INFORMATION.value,
+        )
+        tmp_dialog.exec_()
     finally:
       self._interface_manager.status_bar_manager.hide_progress_bar()
       self._interface_manager.refresh_main_view()

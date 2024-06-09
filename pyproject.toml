@@ -43,7 +43,7 @@ select = [
 #  "D212",  #  Multi-line docstring summary should start at the first line
   "A003",  # builtin-attribute-shadowing
   "W291",  # trailing-whitespace
-  "PTH110",  # `os.path.exists()` should be replaced by `Path.exists()`
+  "PTH110",  # `os.path.exists()` should be replaced by `pathlib.Path.exists()`
   "Q000",   # Single quotes found but double quotes preferred
 ]
 ignore = []

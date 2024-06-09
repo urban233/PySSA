@@ -21,6 +21,7 @@
 #
 """Module for handling filesystem operations."""
 import os
+import pathlib
 import shutil
 import logging
 from src.pyssa.logging_pyssa import log_handlers
@@ -40,7 +41,9 @@ class FilesystemCleaner:
   @staticmethod
   def clean_prediction_scratch_folder() -> None:
     """Deletes the scratch folder for fasta and pdb files and creates new ones."""
-    shutil.rmtree(constants.PREDICTION_FASTA_DIR)
-    os.mkdir(constants.PREDICTION_FASTA_DIR)
-    shutil.rmtree(constants.PREDICTION_PDB_DIR)
-    os.mkdir(constants.PREDICTION_PDB_DIR)
+    if pathlib.Path(constants.PREDICTION_FASTA_DIR).exists():
+      shutil.rmtree(constants.PREDICTION_FASTA_DIR)
+    pathlib.Path(constants.PREDICTION_FASTA_DIR).mkdir(parents=True)
+    if pathlib.Path(constants.PREDICTION_PDB_DIR).exists():
+      shutil.rmtree(constants.PREDICTION_PDB_DIR)
+    pathlib.Path(constants.PREDICTION_PDB_DIR).mkdir(parents=True)
