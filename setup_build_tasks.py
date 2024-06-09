@@ -138,3 +138,88 @@ class MakeSphinxDocs(IBuildTask):
       subprocess.run(['powershell', '-Command', combined_cmd])
     except Exception as e:
       print(e)
+
+
+class MakeVenvForDeployment(IBuildTask):
+  """Generates venv for deployment."""
+
+  # <editor-fold desc="Class attributes">
+  project_root_path = pathlib.Path(__file__).parent.absolute()
+  """The root path of the project."""
+
+  venv_activate_bat_filepath = pathlib.Path(project_root_path, ".venv_deployment", "Scripts", "activate.bat")
+  """The path to the .venv activate.bat file."""
+
+  deployment_requirements_filepath = pathlib.Path(project_root_path, "base_win_package", "bin", "setup_python_for_pyssa", "requirements.txt")
+  """The path to the requirements.txt file in the base windows package."""
+
+  project_requirements_filepath = pathlib.Path(project_root_path, "requirements.txt")
+  """The path to the project requirements.txt file."""
+
+  deployment_wheelfile_path = pathlib.Path(project_root_path, "base_win_package", "bin", "setup_python_for_pyssa", "wheelfiles")
+  """The path to the wheel files in the base windows package."""
+
+  deployment_sub_wheelfile_path = pathlib.Path(project_root_path, "base_win_package", "bin", "setup_python_for_pyssa",
+                                               "sub_wheelfiles")
+  """The path to the substitute wheel files in the base windows package."""
+
+  pygetwindow_tar_gz_filename = 'PyGetWindow-0.0.9.tar.gz'
+  """The filename of the pygetwindow .tar.gz file"""
+
+  pyrect_tar_gz_filename = 'PyRect-0.2.0.tar.gz'
+  """The filename of the pyrect .tar.gz file"""
+
+  pygetwindow_whl_filename = 'PyGetWindow-0.0.9-py3-none-any.whl'
+  """The filename of the pygetwindow .whl file"""
+
+  pyrect_whl_filename = 'PyRect-0.2.0-py3-none-any.whl'
+  """The filename of the pyrect .whl file"""
+
+  # </editor-fold>
+
+  def execute_task(self) -> None:
+    try:
+      # Export requirements.txt from venv_deployment
+      print("Export requirements.txt from venv_deployment ...")
+      activate_venv = f'& "{self.venv_activate_bat_filepath}"'
+      export_requirements = "pip freeze > requirements.txt"
+      combined_cmd = f'{activate_venv} ; {export_requirements}'
+      subprocess.run(['powershell', '-Command', combined_cmd])
+
+      # Filesystem operations for requirements.txt file
+      print("Doing filesystem operations for requirements.txt file ...")
+      if not setup_util.File.copy(self.project_requirements_filepath, self.deployment_requirements_filepath):
+        print("Copying the requirements.txt file failed!")
+        return
+      if not setup_util.Directory.purge(self.deployment_wheelfile_path):
+        print(f"Deleting the {self.deployment_wheelfile_path} directory failed!")
+        return
+
+      # Download all wheel files
+      print("Downloading all wheel files ...")
+      activate_venv = f'& "{self.venv_activate_bat_filepath}"'
+      export_requirements = f'pip download -r requirements.txt -d {self.deployment_wheelfile_path}'
+      combined_cmd = f'{activate_venv} ; {export_requirements}'
+      subprocess.run(['powershell', '-Command', combined_cmd])
+
+      # Deleting tar.gz files and substitute them by wheel files
+      print("Deleting tar.gz files and substitute them by their wheel files ...")
+      if not setup_util.File.delete(pathlib.Path(self.deployment_wheelfile_path, self.pygetwindow_tar_gz_filename)):
+        print(f"Deleting the {pathlib.Path(self.deployment_wheelfile_path, self.pygetwindow_tar_gz_filename)} file failed!")
+      if not setup_util.File.delete(pathlib.Path(self.deployment_wheelfile_path, self.pyrect_tar_gz_filename)):
+        print(f"Deleting the {pathlib.Path(self.deployment_wheelfile_path, self.pyrect_tar_gz_filename)} file failed!")
+      if not setup_util.File.copy(
+        pathlib.Path(self.deployment_sub_wheelfile_path, self.pygetwindow_whl_filename),
+        pathlib.Path(self.deployment_wheelfile_path, self.pygetwindow_whl_filename)
+      ):
+        print(f"Copying the {pathlib.Path(self.deployment_sub_wheelfile_path, self.pygetwindow_whl_filename)} file failed!")
+      if not setup_util.File.copy(
+        pathlib.Path(self.deployment_sub_wheelfile_path, self.pyrect_whl_filename),
+        pathlib.Path(self.deployment_wheelfile_path, self.pyrect_whl_filename)
+      ):
+        print(
+          f"Copying the {pathlib.Path(self.deployment_sub_wheelfile_path, self.pyrect_whl_filename)} file failed!")
+    except Exception as e:
+      print(e)
+    else:
+      print("Make venv finished without errors.")

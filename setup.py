@@ -41,9 +41,29 @@ class MakeDocs(Command):
         tmp_build_task.execute_task()
 
 
+class MakeVenv(Command):
+    """Build command for creating sphinx documentation."""
+    description = 'Export the .venv information into a deployable format.'
+    user_options = []
+
+    def initialize_options(self):
+        """Override the default initialization options."""
+        pass
+
+    def finalize_options(self):
+        """Override the default finalization options."""
+        pass
+
+    def run(self):
+        """Override the default run method."""
+        tmp_build_task = setup_build_tasks.MakeVenvForDeployment()
+        tmp_build_task.execute_task()
+
+
 setup(
     cmdclass={
         'create_win_package': CreateWinPackage,
         'make_docs': MakeDocs,
+        'make_venv': MakeVenv,
     },
 )

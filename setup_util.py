@@ -144,3 +144,26 @@ class File:
     except Exception as e:
       return False
     return True
+
+  @staticmethod
+  def delete(a_filepath: str | pathlib.Path) -> bool:
+    """Deletes a file.
+
+    Args:
+      a_filepath: The path of the file to delete.
+
+    Returns:
+      A boolean indicating the success of the operation.
+    """
+    # <editor-fold desc="Checks">
+    if a_filepath is None or a_filepath == "":
+      return False
+
+    # </editor-fold>
+
+    try:
+      os.remove(a_filepath)
+    except Exception as e:
+      print(e)
+      return False
+    return True
