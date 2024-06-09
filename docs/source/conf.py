@@ -22,7 +22,8 @@ extensions = ["sphinx.ext.napoleon",
               "sphinx.ext.autodoc",
               "sphinx.ext.autosummary",
               "sphinx_design",
-              'autoapi.extension']
+              #'autoapi.extension',
+              ]
 
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -38,4 +39,4 @@ html_css_files = [
 ]
 pygments_style = "sphinx"
 
-autoapi_dirs = ['../../src']
+# autoapi_dirs = ['../../src']

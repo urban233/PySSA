@@ -22,6 +22,7 @@
 """Module for the settings view controller."""
 import os
 import subprocess
+from typing import TYPE_CHECKING
 import logging
 
 import pygetwindow
@@ -33,6 +34,9 @@ from src.pyssa.util import exception
 from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_handlers, log_levels
 from src.pyssa.util import constants
+
+if TYPE_CHECKING:
+  from src.pyssa.controller import interface_manager
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -64,12 +68,16 @@ class SettingsViewController(QtCore.QObject):
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager = the_interface_manager
+    self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
     self._settings_manager = the_interface_manager.get_settings_manager()
     self._view = the_interface_manager.get_settings_view()
     self._initialize_ui()
     self.restore_ui()
     self._connect_all_ui_elements_to_slot_functions()
+    if self._interface_manager.job_manager.there_are_jobs_running():
+      self._view.ui.btn_workspace_dir.setEnabled(False)
+    else:
+      self._view.ui.btn_workspace_dir.setEnabled(True)
 
   # <editor-fold desc="Util methods">
   def _open_help_for_dialog(self) -> None:

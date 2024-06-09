@@ -28,10 +28,12 @@ from typing import Optional
 
 __docformat__ = "google"
 
+from src.pyssa.util import exception
+
 
 def setup_logger(
     a_name: str, level: int = logging.DEBUG
-) -> Optional[logging.Logger]:
+) -> logging.Logger:
   """Sets up a logger with a FileHandler directing output to the specified file.
 
   Args:
@@ -40,10 +42,14 @@ def setup_logger(
 
   Returns:
       A logger object or None if a_name is None or an empty string.
+
+  Raises:
+    exception.IllegalArgumentError: If `a_name` is either None or an empty string.
+    exception.DirectoryNotFoundError: If `USER_DOT_PATH` does not exist.
   """
   # <editor-fold desc="Checks">
   if a_name is None or a_name == "":
-    return None
+    raise exception.IllegalArgumentError("a_name is either None or an empty string.")
 
   # </editor-fold>
 
@@ -52,7 +58,7 @@ def setup_logger(
   USER_PYMOL_PATH = f"{USER_DOT_PATH}\\user_pymol"
   USER_PYMOL_LOG_PATH = f"{USER_PYMOL_PATH}\\logs"
   if not os.path.exists(USER_DOT_PATH):
-    return None
+    raise exception.DirectoryNotFoundError("USER_DOT_PATH does not exist.")
   if not os.path.exists(USER_PYMOL_PATH):
     os.mkdir(USER_PYMOL_PATH)
   if not os.path.exists(USER_PYMOL_LOG_PATH):

@@ -54,3 +54,7 @@ unfixable = []
 
 [tool.ruff.format]
 indent-style = "space"
+
+[tool.mypy]
+python_version = "3.11"
+exclude = '''(src/pyssa/pyssa_colabfold/* )'''

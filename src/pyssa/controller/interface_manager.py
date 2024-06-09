@@ -1885,17 +1885,19 @@ class InterfaceManager:
           except ValueError:
             pass  # Is necessary because tree view selection might be something else than a scene.
           # Check for any possible protein region menu activation
-          if self.pymol_session_manager.is_the_current_session_empty():
-            self._main_view.ui.action_protein_regions.setEnabled(False)
-          else:
-            tmp_current_protein_pairs_tree_type = self._main_view.ui.protein_pairs_tree_view.model().data(
-                    self._main_view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
-            )
-            tmp_current_protein_pairs_tree_object: "protein_pair.ProteinPair" = self.get_current_active_protein_pair_object()
-            if tmp_current_protein_pairs_tree_type == "chain" and self.pymol_session_manager.is_the_current_protein_pair_in_session(tmp_current_protein_pairs_tree_object.name):
-              self._main_view.ui.action_protein_regions.setEnabled(True)
-            else:
+          if self._main_view.ui.project_tab_widget.currentIndex() == 2:
+            # User is on the protein pairs tab
+            if self.pymol_session_manager.is_the_current_session_empty():
               self._main_view.ui.action_protein_regions.setEnabled(False)
+            else:
+              tmp_current_protein_pairs_tree_type = self._main_view.ui.protein_pairs_tree_view.model().data(
+                      self._main_view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
+              )
+              tmp_current_protein_pairs_tree_object: "protein_pair.ProteinPair" = self.get_current_active_protein_pair_object()
+              if tmp_current_protein_pairs_tree_type == "chain" and self.pymol_session_manager.is_the_current_protein_pair_in_session(tmp_current_protein_pairs_tree_object.name):
+                self._main_view.ui.action_protein_regions.setEnabled(True)
+              else:
+                self._main_view.ui.action_protein_regions.setEnabled(False)
         else:
           # A project has no protein pair(s)
           # Protein Pairs tab

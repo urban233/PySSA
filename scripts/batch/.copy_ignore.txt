@@ -1,5 +1,6 @@
 \.git\
 \.venv\
+\.mypy_cache\
 \base_win_package\
 \config\
 \demo_projects\

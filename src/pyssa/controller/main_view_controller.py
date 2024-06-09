@@ -4420,7 +4420,7 @@ class MainViewController:
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
         "'Open protein pymol session' button on the 'Proteins Tab' was clicked.",
       )
-      self._view.tg_protein_white_bg.toggle_button.setCheckState(False)
+      self._view.tg_protein_white_bg.toggle_button.setChecked(False)
       tmp_protein: "protein.Protein" = (
         self._interface_manager.get_current_active_protein_object()
       )
