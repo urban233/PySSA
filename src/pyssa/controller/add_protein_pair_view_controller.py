@@ -26,6 +26,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from src.pyssa.controller import interface_manager, watcher
+from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.internal.data_structures import chain, protein
 from src.pyssa.logging_pyssa import log_levels, log_handlers
 from src.pyssa.model import proteins_model
@@ -94,14 +95,24 @@ class AddProteinPairViewController(QtCore.QObject):
     self._existing_protein_pairs = the_protein_pairs
     self._number_of_prot_1_selected_chains: int = 1
     self.restore_ui()
+    self.temporary_model_is_valid = False
 
     self._view.ui.tree_prot_1.setModel(self._temporary_model)
     self._view.ui.tree_prot_2.setModel(self._temporary_model)
     if a_list_of_extra_proteins is not None:
       self._add_additional_proteins_to_model(a_list_of_extra_proteins)
-    self._hide_scenes_nodes()
-    self._hide_non_protein_chains()
-    self._connect_all_ui_elements_to_slot_functions()
+    if self._temporary_model.rowCount() == 0:
+      tmp_dialog = custom_message_box.CustomMessageBoxOk(
+        "All proteins in the project have only non-protein chains!",
+        "No Protein Chains",
+        custom_message_box.CustomMessageBoxIcons.ERROR.value,
+      )
+      tmp_dialog.exec_()
+    else:
+      self.temporary_model_is_valid = True
+      self._hide_scenes_nodes()
+      self._hide_non_protein_chains()
+      self._connect_all_ui_elements_to_slot_functions()
 
   def restore_ui(self) -> None:
     """Restores the UI."""

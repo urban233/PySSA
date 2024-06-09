@@ -946,25 +946,27 @@ class MainViewController:
         tmp_number_of_exact_pyssa_match_windows += 1
     logger.info(tmp_number_of_exact_pyssa_match_windows)
     # PySSA windows
-    if tmp_number_of_exact_pyssa_match_windows == 1:
-      logger.info("PySSA will be closed now.")
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
-        0
-      ].close()
-    elif tmp_number_of_exact_pyssa_match_windows > 1:
-      tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
-        "There are multiple windows open which contain PySSA as window title.\nDo you want to close all?",
-        "Close PySSA",
-        custom_message_box.CustomMessageBoxIcons.WARNING.value,
-      )
-      tmp_dialog.exec_()
-      if tmp_dialog.response:
-        for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
-          pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
-            tmp_window_index
-          ].close()
-    else:
-      logger.error("No PySSA window found.")
+    QtWidgets.QApplication.quit()
+
+    # if tmp_number_of_exact_pyssa_match_windows == 1:
+    #   logger.info("PySSA will be closed now.")
+    #   pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
+    #     0
+    #   ].close()
+    # elif tmp_number_of_exact_pyssa_match_windows > 1:
+    #   tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+    #     "There are multiple windows open which contain PySSA as window title.\nDo you want to close all?",
+    #     "Close PySSA",
+    #     custom_message_box.CustomMessageBoxIcons.WARNING.value,
+    #   )
+    #   tmp_dialog.exec_()
+    #   if tmp_dialog.response:
+    #     for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
+    #       pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
+    #         tmp_window_index
+    #       ].close()
+    # else:
+    #   logger.error("No PySSA window found.")
 
   def _abort_task(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
     """Aborts a task.
@@ -3293,6 +3295,9 @@ class MainViewController:
     try:
       self._interface_manager.refresh_workspace_model()
       self._interface_manager.refresh_main_view()
+      self._interface_manager.status_bar_manager.show_temporary_message(
+        "Settings successfully saved."
+      )
       try:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
       except AttributeError:
@@ -3799,7 +3804,7 @@ class MainViewController:
             .data(enums.ModelEnum.OBJECT_ROLE)
             .seq
           )
-          tmp_seqs = tmp_seq.split(",")
+          tmp_seqs = str(tmp_seq).split(",")
           tmp_seq = ",\n\n".join(tmp_seqs)
           self.tmp_txt_browser.setText(tmp_seq)
         except AttributeError:

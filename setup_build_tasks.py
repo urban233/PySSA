@@ -47,7 +47,7 @@ class CreateWinPackageBuildTask(IBuildTask):
   scripts_path: pathlib.Path = pathlib.Path(project_root_path, "scripts")
   """The path to the scripts directory."""
 
-  temp_scripts_path: pathlib.Path = pathlib.Path(project_root_path, "scripts")
+  temp_scripts_path: pathlib.Path = pathlib.Path(temp_pyssa_path, "scripts")
   """The temporary path to the scripts directory."""
 
   src_path: pathlib.Path = pathlib.Path(project_root_path, "src")

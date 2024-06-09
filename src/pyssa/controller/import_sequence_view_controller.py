@@ -72,6 +72,7 @@ class ImportSequenceViewController(QtCore.QObject):
     self._view.ui.btn_choose_fasta_file.clicked.connect(self.load_model)
     self._view.ui.btn_preview.clicked.connect(self._open_preview)
     self._view.ui.btn_import_sequence.clicked.connect(self.import_sequence)
+    self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
 
   def restore_ui(self) -> None:
     """Restores the UI."""
@@ -79,6 +80,13 @@ class ImportSequenceViewController(QtCore.QObject):
     self._view.ui.lbl_status.setText("")
     self._view.ui.btn_preview.setEnabled(False)
     self._view.ui.btn_import_sequence.setEnabled(False)
+
+  def _open_help_for_dialog(self) -> None:
+    """Opens the help dialog for the corresponding dialog."""
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
+    )
+    self._interface_manager.help_manager.open_sequence_import_page()
 
   # @SLOT
   def _open_preview(self) -> None:

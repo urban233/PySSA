@@ -35,9 +35,9 @@ class HotspotsProteinRegionsView(QtWidgets.QDialog):
   # Define a custom signal
   dialogClosed = QtCore.pyqtSignal(tuple)
 
-  def __init__(self) -> None:
+  def __init__(self, parent=None) -> None:
     """Constructor."""
-    QtWidgets.QDialog.__init__(self)
+    QtWidgets.QDialog.__init__(self, parent)
     # build ui object
     self.ui = auto_hotspots_protein_regions_view.Ui_Dialog()
     self.ui.setupUi(self)

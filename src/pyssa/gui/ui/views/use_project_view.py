@@ -36,9 +36,9 @@ from src.pyssa.util import constants
 class UseProjectView(QtWidgets.QDialog):
   """Class representing the use project dialog."""
 
-  def __init__(self) -> None:
+  def __init__(self, parent=None) -> None:
     """Constructor."""
-    QtWidgets.QDialog.__init__(self)
+    QtWidgets.QDialog.__init__(self, parent)
     # build ui object
     self.ui = auto_use_project_view.Ui_Dialog()
     self.ui.setupUi(self)

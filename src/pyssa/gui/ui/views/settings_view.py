@@ -36,9 +36,9 @@ class SettingsView(QtWidgets.QDialog):
   dialogClosed = QtCore.pyqtSignal(tuple)
   """A signal indicating that the dialog is closed."""
 
-  def __init__(self) -> None:
+  def __init__(self, parent=None) -> None:
     """Constructor."""
-    QtWidgets.QDialog.__init__(self)
+    QtWidgets.QDialog.__init__(self, parent)
     # build ui object
     self.ui = auto_settings_view.Ui_Dialog()
     self.ui.setupUi(self)

@@ -176,8 +176,9 @@ class DistanceAnalysisViewController(QtCore.QObject):
             self._get_all_current_protein_pair_names(),
         )
     )
-    self._external_controller.user_input.connect(self._post_add_protein_pair)
-    self._interface_manager.get_add_protein_pair_view().show()
+    if self._external_controller.temporary_model_is_valid is True:
+      self._external_controller.user_input.connect(self._post_add_protein_pair)
+      self._interface_manager.get_add_protein_pair_view().show()
 
   def _post_add_protein_pair(self, return_value: tuple) -> None:
     """Adds the protein pair to the list widget and updates the UI.

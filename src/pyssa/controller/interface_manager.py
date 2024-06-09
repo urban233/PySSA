@@ -164,36 +164,36 @@ class InterfaceManager:
     """Constructor."""
     # View definitions
     self._main_view = main_view.MainView()
-    self._settings_view = settings_view.SettingsView()
+    self._settings_view = settings_view.SettingsView(self._main_view)
     # self._predict_monomer_view = predict_monomer_view.PredictMonomerView()
     # self._predict_multimer_view = predict_multimer_view.PredictMultimerView()
-    self._predict_protein_view = predict_protein_view.PredictProteinView()
-    self._distance_analysis_view = distance_analysis_view.DistanceAnalysisView()
-    self._create_project_view = create_project_view.CreateProjectView()
-    self._open_project_view = open_project_view.OpenProjectView()
-    self._delete_project_view = delete_project_view.DeleteProjectView()
+    self._predict_protein_view = predict_protein_view.PredictProteinView(self._main_view)
+    self._distance_analysis_view = distance_analysis_view.DistanceAnalysisView(self._main_view)
+    self._create_project_view = create_project_view.CreateProjectView(self._main_view)
+    self._open_project_view = open_project_view.OpenProjectView(self._main_view)
+    self._delete_project_view = delete_project_view.DeleteProjectView(self._main_view)
     self._hotspots_protein_regions_view = (
-        hotspots_protein_regions_view.HotspotsProteinRegionsView()
+        hotspots_protein_regions_view.HotspotsProteinRegionsView(self._main_view)
     )
-    self._results_view = results_view.ResultsView()
-    self._add_protein_view = add_protein_view.AddProteinView()
+    self._results_view = results_view.ResultsView(self._main_view)
+    self._add_protein_view = add_protein_view.AddProteinView(self._main_view)
     self._import_sequence_view: "import_sequence_view.ImportSequenceView" = (
-        import_sequence_view.ImportSequenceView()
+        import_sequence_view.ImportSequenceView(self._main_view)
     )
     self._fasta_file_import_preview_view = (
-        fasta_file_import_preview_view.FastaFileImportPreviewView()
+        fasta_file_import_preview_view.FastaFileImportPreviewView(self._import_sequence_view)
     )
     self._add_sequence_view = add_sequence_view.AddSequenceView(self._main_view)
-    self._rename_protein_view = rename_protein_view.RenameProteinView()
-    self._rename_sequence_view = rename_sequence_view.RenameSequenceView()
-    self._use_project_view = use_project_view.UseProjectView()
-    self._add_scene_view = add_scene_view.AddSceneView()
-    self._add_protein_pair_view = add_protein_pair_view.AddProteinPairView()
+    self._rename_protein_view = rename_protein_view.RenameProteinView(self._main_view)
+    self._rename_sequence_view = rename_sequence_view.RenameSequenceView(self._main_view)
+    self._use_project_view = use_project_view.UseProjectView(self._main_view)
+    self._add_scene_view = add_scene_view.AddSceneView(self._main_view)
+    self._add_protein_pair_view = add_protein_pair_view.AddProteinPairView(self._main_view)
     self._restart_user_pymol_view = (
-        restart_user_pymol_view.RestartUserPyMOLView()
+        restart_user_pymol_view.RestartUserPyMOLView(self._main_view)
     )
     self._advanced_prediction_configurations = (
-        advanced_prediction_configurations.AdvancedPredictionConfigurationsView()
+        advanced_prediction_configurations.AdvancedPredictionConfigurationsView(self._predict_protein_view)
     )
     self.help_manager = help_manager.HelpManager()
     self.app_process_manager = (
@@ -2091,9 +2091,6 @@ class InterfaceManager:
     """
     self._workspace_model.clear()
     self._build_workspace_model()
-    self.status_bar_manager.show_temporary_message(
-      "Workspace changed successfully."
-    )
 
   def refresh_sequence_model(self) -> None:
     """Refreshes the sequence model.

@@ -36,9 +36,9 @@ class DeleteProjectView(QtWidgets.QDialog):
   dialogClosed = QtCore.pyqtSignal()
   """A signal indicating that the dialog is closed."""
 
-  def __init__(self) -> None:
+  def __init__(self, parent=None) -> None:
     """Constructor."""
-    QtWidgets.QDialog.__init__(self)
+    QtWidgets.QDialog.__init__(self, parent)
     # build ui object
     self.ui = auto_delete_project_view.Ui_Dialog()
     self.ui.setupUi(self)

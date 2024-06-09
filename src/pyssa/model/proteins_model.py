@@ -379,6 +379,7 @@ class ProteinsModel(QtGui.QStandardItemModel):
     tmp_scenes_item = tmp_chain_item.parent()
     tmp_scenes_item.removeRow(tmp_chain_item.row())
 
+
 class TemporaryProteinsModel(ProteinsModel):
   """Models a possible future ProteinModel."""
 
@@ -406,31 +407,33 @@ class TemporaryProteinsModel(ProteinsModel):
 
     tmp_root_item = self.invisibleRootItem()
     for tmp_protein in the_protein_objects:
-      # protein node (type = protein)
-      tmp_protein_item = QtGui.QStandardItem(tmp_protein.get_molecule_object())
-      tmp_protein_item.setData("protein", enums.ModelEnum.TYPE_ROLE)
-      tmp_protein_item.setData(tmp_protein, enums.ModelEnum.OBJECT_ROLE)
-      self.appendRow(tmp_protein_item)
-      # Scenes node (type = header)
-      tmp_scenes_item = QtGui.QStandardItem("Scenes")
-      tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
-      tmp_protein_item.appendRow(tmp_scenes_item)
-      # scene nodes (type = scene)
-      # a_protein.load_protein_pymol_session()
-      # for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
-      tmp_scene_item = QtGui.QStandardItem("generic")
-      tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
-      tmp_scenes_item.appendRow(tmp_scene_item)
-      # Chains node (type = header)
-      tmp_chains_item = QtGui.QStandardItem("Chains")
-      tmp_chains_item.setData("header", enums.ModelEnum.TYPE_ROLE)
-      tmp_protein_item.appendRow(tmp_chains_item)
-      # chain nodes (type = chain)
-      for tmp_chain in tmp_protein.chains:
-        tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
-        tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
-        tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
-        tmp_chains_item.appendRow(tmp_chain_item)
+      # Add protein to temporary model
+      if self.check_if_protein_has_protein_chains(tmp_protein) is True:
+        # protein node (type = protein)
+        tmp_protein_item = QtGui.QStandardItem(tmp_protein.get_molecule_object())
+        tmp_protein_item.setData("protein", enums.ModelEnum.TYPE_ROLE)
+        tmp_protein_item.setData(tmp_protein, enums.ModelEnum.OBJECT_ROLE)
+        self.appendRow(tmp_protein_item)
+        # Scenes node (type = header)
+        tmp_scenes_item = QtGui.QStandardItem("Scenes")
+        tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
+        tmp_protein_item.appendRow(tmp_scenes_item)
+        # scene nodes (type = scene)
+        # a_protein.load_protein_pymol_session()
+        # for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
+        tmp_scene_item = QtGui.QStandardItem("generic")
+        tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
+        tmp_scenes_item.appendRow(tmp_scene_item)
+        # Chains node (type = header)
+        tmp_chains_item = QtGui.QStandardItem("Chains")
+        tmp_chains_item.setData("header", enums.ModelEnum.TYPE_ROLE)
+        tmp_protein_item.appendRow(tmp_chains_item)
+        # chain nodes (type = chain)
+        for tmp_chain in tmp_protein.chains:
+          tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
+          tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
+          tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
+          tmp_chains_item.appendRow(tmp_chain_item)
 
   def add_temporary_protein(self, a_protein: "protein.Protein") -> None:
     """Adds a temporary protein to the model.
@@ -448,27 +451,54 @@ class TemporaryProteinsModel(ProteinsModel):
 
     # </editor-fold>
 
-    tmp_protein_item = QtGui.QStandardItem(a_protein.get_molecule_object())
-    tmp_protein_item.setData("protein", enums.ModelEnum.TYPE_ROLE)
-    tmp_protein_item.setData(a_protein, enums.ModelEnum.OBJECT_ROLE)
-    self.appendRow(tmp_protein_item)
-    # Scenes node (type = header)
-    tmp_scenes_item = QtGui.QStandardItem("Scenes")
-    tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
-    tmp_protein_item.appendRow(tmp_scenes_item)
-    # scene nodes (type = scene)
-    # a_protein.load_protein_pymol_session()
-    # for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
-    tmp_scene_item = QtGui.QStandardItem("generic")
-    tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
-    tmp_scenes_item.appendRow(tmp_scene_item)
-    # Chains node (type = header)
-    tmp_chains_item = QtGui.QStandardItem("Chains")
-    tmp_chains_item.setData("header", enums.ModelEnum.TYPE_ROLE)
-    tmp_protein_item.appendRow(tmp_chains_item)
-    # chain nodes (type = chain)
-    for tmp_chain in a_protein.chains:
-      tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
-      tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
-      tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
-      tmp_chains_item.appendRow(tmp_chain_item)
+    if self.check_if_protein_has_protein_chains(a_protein) is True:
+      tmp_protein_item = QtGui.QStandardItem(a_protein.get_molecule_object())
+      tmp_protein_item.setData("protein", enums.ModelEnum.TYPE_ROLE)
+      tmp_protein_item.setData(a_protein, enums.ModelEnum.OBJECT_ROLE)
+      self.appendRow(tmp_protein_item)
+      # Scenes node (type = header)
+      tmp_scenes_item = QtGui.QStandardItem("Scenes")
+      tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
+      tmp_protein_item.appendRow(tmp_scenes_item)
+      # scene nodes (type = scene)
+      # a_protein.load_protein_pymol_session()
+      # for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
+      tmp_scene_item = QtGui.QStandardItem("generic")
+      tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
+      tmp_scenes_item.appendRow(tmp_scene_item)
+      # Chains node (type = header)
+      tmp_chains_item = QtGui.QStandardItem("Chains")
+      tmp_chains_item.setData("header", enums.ModelEnum.TYPE_ROLE)
+      tmp_protein_item.appendRow(tmp_chains_item)
+      # chain nodes (type = chain)
+      for tmp_chain in a_protein.chains:
+        tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
+        tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
+        tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
+        tmp_chains_item.appendRow(tmp_chain_item)
+
+  def check_if_protein_has_protein_chains(self, a_protein: "protein.Protein") -> bool:
+    """Checks if at least one chain in the protein is an actual protein chain.
+
+    If all chains are non-protein, the protein does not get added to the
+    temporary model.
+
+    Args:
+      a_protein: A protein object to check the chains for.
+
+    Returns:
+      A boolean with true, if there is at least one protein chain, false if
+      no chains are a protein chain or `a_protein` is None.
+    """
+    # <editor-fold desc="Checks">
+    if a_protein is None:
+      logger.error("a_protein is None.")
+      return False
+
+    # </editor-fold>
+
+    tmp_has_protein_chain = False
+    for tmp_chain_in_protein in a_protein.chains:
+      if tmp_chain_in_protein.chain_type == "protein_chain":
+        tmp_has_protein_chain = True
+    return tmp_has_protein_chain
