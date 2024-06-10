@@ -52,7 +52,7 @@ class RestartUserPyMOLView(QtWidgets.QDialog):
     self.ui.setupUi(self)
     self.ui.btn_close_pyssa.clicked.connect(self._close_pyssa)
     pixmap = QtGui.QPixmap(
-        r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Lib\site-packages\pymol\pymol_path\data\startup\PySSA\assets\images\splash_screen_logo_002.png"
+        r"C:\ProgramData\IBCI\PySSA\bin\PySSA\assets\images\splash_screen_logo_002.png"
     )
     scaled_pixmap = pixmap.scaled(
         600,
