@@ -22,7 +22,7 @@ Getting Started
 Run a protein structure prediction
 **********************************
 1. [Add](../sequences/sequence_add.md) or [import](../sequences/sequence_import.md) at least one sequence.
-2. Under the _Prediction_ menu, click on **Monomer** or **Multimer** depending on the type of sequence.
+2. Under the *Prediction* menu, click on **Monomer** or **Multimer** depending on the type of sequence.
 3. Click on **Predict**.
 
 
@@ -30,8 +30,8 @@ Run a protein structure prediction with a subsequent distance analysis
 **********************************************************************
 1. [Add](../sequences/sequence_add.md) or [import](../sequences/sequence_import.md) at least one sequence.
 2. [Import](../proteins/protein_import.md) a protein structure that you want to compare to the predicted structure.
-3. Under the _Prediction_ menu, click on **Monomer** or **Multimer** depending on the type of sequence.
-4. Tick the checkbox besides _Add Analysis_.
+3. Under the *Prediction* menu, click on **Monomer** or **Multimer** depending on the type of sequence.
+4. Tick the checkbox besides *Add Analysis*.
 5. Click on **Go**, to set up the analysis run.
 6. Click on **Add**.
 7. Choose a first protein structure from the tree.

@@ -16,7 +16,7 @@
                     <step>Select a protein from the tree.</step>
                     <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.</step>
                     <step>Change the view point.</step>
-                    <step>Under the _Images_ menu, click on **Simple**.</step>
+                    <step>Under the *Images* menu, click on **Simple**.</step>
                     <step>Enter a filename for the image.</step>
                     <step>Click on **Save**.</step>
                     <step>Wait for the rendering process to finish before using PyMOL.</step>

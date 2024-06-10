@@ -27,7 +27,7 @@ Details
 - If the prediction fails due to an unknown error, it may be helpful to turn off the force field.
 - ColabFold can use pdb files as template.
 - The default is that ColabFold uses the pdb70 database.
-- If the prediction fails due to an unknown error, it may be helpful to switch _None_.
+- If the prediction fails due to an unknown error, it may be helpful to switch *None*.
 
 See Also
 --------

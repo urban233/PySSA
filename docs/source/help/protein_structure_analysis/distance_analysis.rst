@@ -21,7 +21,7 @@ Getting Started
 Run a distance analysis with two imported proteins
 **************************************************
 1. Import at least two protein structures that you want to compare.
-2. Under the _Analysis_ menu, click on **Distance**.
+2. Under the *Analysis* menu, click on **Distance**.
 3. Click on **Add**.
 4. Choose a first protein structure from the tree.
 5. Click on **Next**.

@@ -15,7 +15,7 @@
             <title>Open a project from your workspace</title>
             <steps>
                 <step>Select a project from the list.</step>
-                <step>`Optional:` Check the text box under _Selected Project_ to see if the selected name is displayed.</step>
+                <step>`Optional:` Check the text box under *Selected Project* to see if the selected name is displayed.</step>
                 <step>Click on **Open**.</step>
             </steps>
         </guide>

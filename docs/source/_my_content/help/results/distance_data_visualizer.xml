@@ -16,13 +16,13 @@
         <guide>
             <title>Hide the residue pair no. column</title>
             <steps>
-                <step>Under the _Table_ menu, select **Hide Column** and then click on **Residue Pair No.**</step>
+                <step>Under the *Table* menu, select **Hide Column** and then click on **Residue Pair No.**</step>
             </steps>
         </guide>
         <guide>
             <title>Show all columns of the distance table</title>
             <steps>
-                <step>Under the _Table_ menu, select **Show Column** and then click on **All Columns**.</step>
+                <step>Under the *Table* menu, select **Show Column** and then click on **All Columns**.</step>
             </steps>
         </guide>
         <guide>
@@ -44,7 +44,6 @@
     </getting_started_guides>
     <details>
         <item>Every column in the distance table can be hidden. This can be done through the menu or the context-menu.</item>
-        <item>The distance histogram can be customized with the _Properties_ dialog window. The _Properties_ dialog can be accessed through the context-menu.</item>
     </details>
     <toctree maxdepth="1">
         <item></item>

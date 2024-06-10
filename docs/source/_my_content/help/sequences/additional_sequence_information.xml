@@ -3,7 +3,7 @@
     <card>
         <title>Overview</title>
         <content>
-            With the _Additional Information_ table you can ...
+            With the *Additional Information* table you can ...
 
             - rename stored sequences.
             - display the sequence of a stored sequence.
@@ -21,7 +21,7 @@
             <title>Rename a selected sequence</title>
             <steps>
                 <step>Select a sequence from the list.</step>
-                <step>Edit the name in the _Name_ field in the table on the right. (The application automatically saves any changes made.)</step>
+                <step>Edit the name in the *Name* field in the table on the right. (The application automatically saves any changes made.)</step>
             </steps>
         </guide>
         <guide>

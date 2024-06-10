@@ -22,7 +22,7 @@ Getting Started
 Export the currently active project
 ***********************************
 1. Under the Project menu, click on **Export**.
-2. Choose a location to save your _Project Database File_ on your computer in the file dialog.
+2. Choose a location to save your *Project Database File* on your computer in the file dialog.
 3. Click on **Save**.
 4. Wait for the export process to finish.
 
@@ -30,13 +30,13 @@ Export the currently active project
 Share your work with others
 ***************************
 1. Export your project.
-2. Send the _Project Database File_ to others.
+2. Send the *Project Database File* to others.
 
 
 
 Details
 -------
-- The _Project Database File_ is a SQLite3 database file. To ensure a successful import, the project must have been exported through the PySSA application.
+- The *Project Database File* is a SQLite3 database file. To ensure a successful import, the project must have been exported through the PySSA application.
 
 See Also
 --------

@@ -7,7 +7,7 @@ Additional Information table
 .. card:: Overview
 
      
-            With the _Additional Information_ table you can ...
+            With the *Additional Information* table you can ...
 
             - rename stored sequences.
             - display the sequence of a stored sequence.
@@ -27,7 +27,7 @@ To obtain more information about a sequence from the list
 Rename a selected sequence
 **************************
 1. Select a sequence from the list.
-2. Edit the name in the _Name_ field in the table on the right. (The application automatically saves any changes made.)
+2. Edit the name in the *Name* field in the table on the right. (The application automatically saves any changes made.)
 
 
 Display the full sequence of a selected sequence

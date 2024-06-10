@@ -18,7 +18,7 @@
                 <steps>
                     <step>Select a protein from the tree.</step>
                     <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.</step>
-                    <step>Under the _Hotspots_ menu, click on **Protein Regions**.</step>
+                    <step>Under the *Hotspots* menu, click on **Protein Regions**.</step>
                     <step>The _Protein Regions_ panel appears under the tree.</step>
                 </steps>
         </guide>
@@ -27,10 +27,10 @@
                 <steps>
                     <step>Select a protein from the tree.</step>
                     <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.</step>
-                    <step>Under the _Hotspots_ menu, click on **Protein Regions**.</step>
-                    <step>The _Protein Regions_ panel appears under the tree.</step>
+                    <step>Under the *Hotspots* menu, click on **Protein Regions**.</step>
+                    <step>The *Protein Regions* panel appears under the tree.</step>
                     <step>Click on the atoms in PyMOL's sequence view that should be displayed as sticks.</step>
-                    <step>Click in the _Protein Regions_ panel on **Show** besides _Sticks_.</step>
+                    <step>Click in the *Protein Regions* panel on **Show** besides *Sticks*.</step>
                 </steps>
         </guide>
     </getting_started_guides>

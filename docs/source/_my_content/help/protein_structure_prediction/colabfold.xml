@@ -15,7 +15,7 @@
             <title>Run a protein structure prediction</title>
             <steps>
                 <step>[Add](../sequences/sequence_add.md) or [import](../sequences/sequence_import.md) at least one sequence.</step>
-                <step>Under the _Prediction_ menu, click on **Monomer** or **Multimer** depending on the type of sequence.</step>
+                <step>Under the *Prediction* menu, click on **Monomer** or **Multimer** depending on the type of sequence.</step>
                 <step>Click on **Predict**.</step>
             </steps>
             <note>
@@ -27,8 +27,8 @@
             <steps>
                 <step>[Add](../sequences/sequence_add.md) or [import](../sequences/sequence_import.md) at least one sequence.</step>
                 <step>[Import](../proteins/protein_import.md) a protein structure that you want to compare to the predicted structure.</step>
-                <step>Under the _Prediction_ menu, click on **Monomer** or **Multimer** depending on the type of sequence.</step>
-                <step>Tick the checkbox besides _Add Analysis_.</step>
+                <step>Under the *Prediction* menu, click on **Monomer** or **Multimer** depending on the type of sequence.</step>
+                <step>Tick the checkbox besides *Add Analysis*.</step>
                 <step>Click on **Go**, to set up the analysis run.</step>
                 <step>Click on **Add**.</step>
                 <step>Choose a first protein structure from the tree.</step>

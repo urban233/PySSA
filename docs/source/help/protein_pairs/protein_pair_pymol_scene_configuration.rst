@@ -7,7 +7,7 @@ Protein Pair PyMOL Scene Configuration
 .. card:: Overview
 
      
-            With the _Protein Pair PyMOL Scene Configuration_ you can ...
+            With the *Protein Pair PyMOL Scene Configuration* you can ...
 
             - change the color of the selected protein chain.
             - color atoms by element color.
@@ -43,8 +43,8 @@ Color the atoms of a protein chain by their element
 1. Select a protein pair from the tree.
 2. Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein pair.
 3. Select a chain from the tree.
-4. Choose a representation other than _Cartoon_ or _Ribbon_.
-5. Click on **Color** besides _Atoms by Element_. (Click on **Reset** to return to the previous color.)
+4. Choose a representation other than *Cartoon* or *Ribbon*.
+5. Click on **Color** besides *Atoms by Element*. (Click on **Reset** to return to the previous color.)
 
 
 Change the background color of the current session
@@ -52,7 +52,7 @@ Change the background color of the current session
 1. Select a protein pair from the tree.
 2. Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein pair.
 3. Select a chain from the tree.
-4. Toggle the _White Background_ button to _On_.
+4. Toggle the *White Background* button to *On*.
 
 
 Show or hide all hydrogen atoms of a protein chain
@@ -66,7 +66,7 @@ Show or hide all hydrogen atoms of a protein chain
 
 Details
 -------
-- Cartoon and Ribbon representation cannot be used to color _Atoms by Element_.
+- Cartoon and Ribbon representation cannot be used to color *Atoms by Element*.
 - Every PyMOL session has a black background by default. The background can be changed to white using the toggle.
 - **Show** always adds hydrogen atoms to the current active representations. This means that some representations may show hydrogen atoms while others may not.
 

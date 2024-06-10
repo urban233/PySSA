@@ -3,7 +3,7 @@
     <card>
         <title>Overview</title>
         <content>
-            With the _Protein PyMOL Scene Configuration_ you can ...
+            With the *Protein PyMOL Scene Configuration* you can ...
 
             - change the color of the selected protein chain.
             - color atoms by element color.
@@ -37,11 +37,11 @@
                 <step>Select a protein from the tree.</step>
                 <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.</step>
                 <step>Select a chain from the tree.</step>
-                <step>Choose a representation other than _Cartoon_ or _Ribbon_.</step>
-                <step>Click on **Color** besides _Atoms by Element_. (Click on **Reset** to return to the previous color.)</step>
+                <step>Choose a representation other than *Cartoon* or *Ribbon*.</step>
+                <step>Click on **Color** besides *Atoms by Element*. (Click on **Reset** to return to the previous color.)</step>
             </steps>
             <note>
-                <step>Cartoon and Ribbon representation cannot be used to color _Atoms by Element_.</step>
+                <step>Cartoon and Ribbon representation cannot be used to color *Atoms by Element*.</step>
             </note>
         </guide>
         <guide>
@@ -50,7 +50,7 @@
                 <step>Select a protein from the tree.</step>
                 <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.</step>
                 <step>Select a chain from the tree.</step>
-                <step>Toggle the _White Background_ button to _On_.</step>
+                <step>Toggle the *White Background* button to *On*.</step>
             </steps>
             <note>
                 <step>Every PyMOL session has a black background by default. The background can be changed to white using the toggle.</step>

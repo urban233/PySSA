@@ -23,12 +23,12 @@ Getting Started
 
 Hide the residue pair no. column
 ********************************
-1. Under the _Table_ menu, select **Hide Column** and then click on **Residue Pair No.**
+1. Under the *Table* menu, select **Hide Column** and then click on **Residue Pair No.**
 
 
 Show all columns of the distance table
 **************************************
-1. Under the _Table_ menu, select **Show Column** and then click on **All Columns**.
+1. Under the *Table* menu, select **Show Column** and then click on **All Columns**.
 
 
 Customize the distance interval of the distance histogram
@@ -49,7 +49,6 @@ Restore defaults for the distance histogram
 Details
 -------
 - Every column in the distance table can be hidden. This can be done through the menu or the context-menu.
-- The distance histogram can be customized with the _Properties_ dialog window. The _Properties_ dialog can be accessed through the context-menu.
 
 See Also
 --------

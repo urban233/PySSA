@@ -22,7 +22,7 @@ Getting Started
 Open a project from your workspace
 **********************************
 1. Select a project from the list.
-2. `Optional:` Check the text box under _Selected Project_ to see if the selected name is displayed.
+2. `Optional:` Check the text box under *Selected Project* to see if the selected name is displayed.
 3. Click on **Open**.
 
 

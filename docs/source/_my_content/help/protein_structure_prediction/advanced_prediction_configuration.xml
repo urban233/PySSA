@@ -17,7 +17,7 @@
         <item>If the prediction fails due to an unknown error, it may be helpful to turn off the force field.</item>
         <item>ColabFold can use pdb files as template.</item>
         <item>The default is that ColabFold uses the pdb70 database.</item>
-        <item>If the prediction fails due to an unknown error, it may be helpful to switch _None_.</item>
+        <item>If the prediction fails due to an unknown error, it may be helpful to switch *None*.</item>
     </details>
     <toctree maxdepth="1">
         <item></item>

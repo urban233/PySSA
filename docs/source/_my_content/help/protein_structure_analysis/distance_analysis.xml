@@ -14,7 +14,7 @@
             <title>Run a distance analysis with two imported proteins</title>
             <steps>
                 <step>Import at least two protein structures that you want to compare.</step>
-                <step>Under the _Analysis_ menu, click on **Distance**.</step>
+                <step>Under the *Analysis* menu, click on **Distance**.</step>
                 <step>Click on **Add**.</step>
                 <step>Choose a first protein structure from the tree.</step>
                 <step>Click on **Next**.</step>
@@ -23,7 +23,7 @@
                 <step>Click on **Start**.</step>
             </steps>
             <note>
-                <step>[Import](../proteins/protein_import.md) at least two protein structures that you want to compare.</step>
+                <step>Import at least two protein structures that you want to compare.</step>
             </note>
         </guide>
     </getting_started_guides>

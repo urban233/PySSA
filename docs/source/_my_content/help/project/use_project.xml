@@ -16,8 +16,8 @@
             <steps>
                 <step>Enter a new project name (1)</step>
                 <annotation>The project name must have 20 characters or fewer. Moreover, the only characters that can be used are 0-9, a-z, A-Z, -, _.</annotation>
-                <step>`Optional:` Select a protein structure and click on _Add_ to include the protein in the new project.</step>
-                <step>Click on _Create_.</step>
+                <step>`Optional:` Select a protein structure and click on *Add* to include the protein in the new project.</step>
+                <step>Click on *Create*.</step>
             </steps>
         </guide>
     </getting_started_guides>

@@ -23,7 +23,7 @@ Create a simple image of a certain view point
 1. Select a protein from the tree.
 2. Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.
 3. Change the view point.
-4. Under the _Images_ menu, click on **Simple**.
+4. Under the *Images* menu, click on **Simple**.
 5. Enter a filename for the image.
 6. Click on **Save**.
 7. Wait for the rendering process to finish before using PyMOL.

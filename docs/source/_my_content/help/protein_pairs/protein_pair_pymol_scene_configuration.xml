@@ -3,7 +3,7 @@
     <card>
         <title>Overview</title>
         <content>
-            With the _Protein Pair PyMOL Scene Configuration_ you can ...
+            With the *Protein Pair PyMOL Scene Configuration* you can ...
 
             - change the color of the selected protein chain.
             - color atoms by element color.
@@ -37,8 +37,8 @@
                 <step>Select a protein pair from the tree.</step>
                 <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein pair.</step>
                 <step>Select a chain from the tree.</step>
-                <step>Choose a representation other than _Cartoon_ or _Ribbon_.</step>
-                <step>Click on **Color** besides _Atoms by Element_. (Click on **Reset** to return to the previous color.)</step>
+                <step>Choose a representation other than *Cartoon* or *Ribbon*.</step>
+                <step>Click on **Color** besides *Atoms by Element*. (Click on **Reset** to return to the previous color.)</step>
             </steps>
         </guide>
         <guide>
@@ -47,7 +47,7 @@
                 <step>Select a protein pair from the tree.</step>
                 <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein pair.</step>
                 <step>Select a chain from the tree.</step>
-                <step>Toggle the _White Background_ button to _On_.</step>
+                <step>Toggle the *White Background* button to *On*.</step>
             </steps>
         </guide>
         <guide>
@@ -61,7 +61,7 @@
         </guide>
     </getting_started_guides>
     <details>
-        <item>Cartoon and Ribbon representation cannot be used to color _Atoms by Element_.</item>
+        <item>Cartoon and Ribbon representation cannot be used to color *Atoms by Element*.</item>
         <item>Every PyMOL session has a black background by default. The background can be changed to white using the toggle.</item>
         <item>**Show** always adds hydrogen atoms to the current active representations. This means that some representations may show hydrogen atoms while others may not.</item>
     </details>
