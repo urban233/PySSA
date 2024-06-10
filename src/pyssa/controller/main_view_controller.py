@@ -3203,18 +3203,6 @@ class MainViewController:
       if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
         return
 
-      if self._interface_manager.current_tab_index == 1:
-        self._cut_representation_to_selected_protein_region(
-          self._interface_manager.get_current_protein_representation_states(),
-        )
-      elif self._interface_manager.current_tab_index == 2:
-        self._cut_representation_to_selected_protein_region(
-          self._interface_manager.get_current_protein_pair_representation_states(),
-        )
-      self._interface_manager.pymol_session_manager.user_pymol_connector.set_custom_setting(
-        "valence",
-        0,
-      )
       self._interface_manager.pymol_session_manager.zoom_to_residue_in_protein_position(
         "sele"
       )
@@ -3223,42 +3211,6 @@ class MainViewController:
       self._interface_manager.status_bar_manager.show_error_message(
         "An unknown error occurred!"
       )
-
-  def _cut_representation_to_selected_protein_region(
-          self,
-          all_representation_toggle_states: list[
-            tuple[enums.PyMOLRepresentation, bool]
-          ],
-  ) -> None:
-    """Removes the representation to the selected protein region based on the given toggle states.
-
-    Args:
-        all_representation_toggle_states (list[tuple[enums.PyMOLRepresentation, bool]]): A list of tuples containing the representation and toggle states for all representations.
-
-    Raises:
-        exception.IllegalArgumentError: If `all_representation_toggle_states` is None.
-    """
-    if all_representation_toggle_states is None:
-      logger.error("all_representation_toggle_states is None.")
-      raise exception.IllegalArgumentError(
-        "all_representation_toggle_states is None."
-      )
-
-    self._interface_manager.pymol_session_manager.user_pymol_connector.select(
-      "sele",
-      "sele and not hydrogens",
-    )
-    for tmp_toggle_state in all_representation_toggle_states:
-      tmp_representation, tmp_toggle_check_state = tmp_toggle_state
-      if tmp_toggle_check_state:
-        self._interface_manager.pymol_session_manager.hide_specific_representation(
-          tmp_representation.value,
-          "not sele",
-        )
-        self._interface_manager.pymol_session_manager.show_specific_representation(
-          tmp_representation.value,
-          "sele and not hydrogens",
-        )
 
   # </editor-fold>
 
