@@ -194,13 +194,13 @@ QFrame#frame_protein_pair_protein_regions {
 QTreeView::branch:has-children:!has-siblings:closed,
 QTreeView::branch:closed:has-children:has-siblings{
     border-image: none;
-    image: url(C:/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA/assets/icons/keyboard_arrow_right_w400.png)
+    image: url(C:/ProgramData/IBCI/PySSA/bin/PySSA/assets/icons/keyboard_arrow_right_w400.svg)
 }
 
 QTreeView::branch:open:has-children:!has-siblings,
 QTreeView::branch:open:has-children:has-siblings{
     border-image: none;
-    image: url(C:/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA/assets/icons/keyboard_arrow_down_w400.png)
+    image: url(C:/ProgramData/IBCI/PySSA/bin/PySSA/assets/icons/keyboard_arrow_down_w400.svg)
 }
 
 QMainWindow {

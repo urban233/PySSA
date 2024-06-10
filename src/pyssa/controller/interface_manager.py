@@ -29,7 +29,7 @@ import shutil
 import subprocess
 import sys
 import time
-
+from typing import TYPE_CHECKING
 from Bio import SeqRecord
 from PyQt5 import QtGui, QtCore
 from PyQt5 import QtWidgets
@@ -57,6 +57,9 @@ from src.pyssa.util import enums, constants, main_window_util, ui_util, exceptio
 from src.pyssa.util.void import rvoid
 from src.pyssa.internal.thread import thread_util
 from src.tea.thread import task_manager, task_scheduler
+
+if TYPE_CHECKING:
+  from src.pyssa.internal.data_structures import chain
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
