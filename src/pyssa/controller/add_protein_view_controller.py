@@ -89,6 +89,7 @@ class AddProteinViewController(QtCore.QObject):
     self._view.ui.txt_add_protein.textChanged.connect(
         self.__slot_validate_input
     )
+    self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
 
   def restore_ui(self) -> None:
     """Restores the UI."""
@@ -99,6 +100,13 @@ class AddProteinViewController(QtCore.QObject):
     self._view.ui.lbl_status.setText("")
     self._view.ui.btn_add_protein.setEnabled(False)
     self._view.setMinimumWidth(500)
+
+  def _open_help_for_dialog(self) -> None:
+    """Opens the help dialog for the corresponding dialog."""
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
+    )
+    self._interface_manager.help_manager.open_protein_import_page()
 
   # @SLOT
   def __slot_validate_input(self, the_entered_text: str) -> None:

@@ -24,7 +24,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
-
+from PyQt5.QtCore import Qt
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.forms.auto_generated.auto_dialog_add_model import Ui_Dialog
 from src.pyssa.gui.ui.styles import styles
@@ -67,4 +67,4 @@ class AddProteinView(QtWidgets.QDialog):
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
-    self.setModal(True)
+    self.setWindowModality(Qt.WindowModal)
