@@ -102,6 +102,9 @@ def clean_protein_update(
         a_protein.get_id(), a_protein.get_pdb_data()
       )
       a_protein.set_pdb_data([])
+      for i, tmp_chain in enumerate(a_protein.chains, start=0):
+        if tmp_chain.chain_type == enums.ChainTypeEnum.NON_PROTEIN_CHAIN.value:
+          db_manager.delete_specific_chain(a_protein.get_id(), tmp_chain.get_id())
     constants.PYSSA_LOGGER.info(
       "The protein %s has been cleaned.", a_protein.get_molecule_object()
     )

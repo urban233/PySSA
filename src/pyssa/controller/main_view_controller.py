@@ -6837,11 +6837,11 @@ class MainViewController:
       for i, tmp_chain in enumerate(tmp_protein.chains, start=0):
         if tmp_chain.chain_type == enums.ChainTypeEnum.NON_PROTEIN_CHAIN.value:
           tmp_non_protein_chain_indexes.append(i)
-          tmp_database_operation = database_operation.DatabaseOperation(
-            enums.SQLQueryType.DELETE_SPECIFIC_CHAIN, (tmp_protein.get_id(), tmp_chain.get_id())
-          )
-          tmp_database_operation_to_execute = copy.deepcopy(tmp_database_operation)
-          self._database_thread.put_database_operation_into_queue(tmp_database_operation_to_execute)
+          # tmp_database_operation = database_operation.DatabaseOperation(
+          #   enums.SQLQueryType.DELETE_SPECIFIC_CHAIN, (tmp_protein.get_id(), tmp_chain.get_id())
+          # )
+          # tmp_database_operation_to_execute = copy.deepcopy(tmp_database_operation)
+          # self._database_thread.put_database_operation_into_queue(tmp_database_operation_to_execute)
 
       tmp_non_protein_chain_indexes.reverse()
       for tmp_non_protein_chain_index in tmp_non_protein_chain_indexes:

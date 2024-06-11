@@ -27,6 +27,7 @@ from src.pyssa.controller import database_manager
 from src.pyssa.internal.thread import tasks
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import constants, enums, exception
+from src.tea.thread import task_manager, task_result_factory, task_result, action, task_scheduler
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -62,6 +63,9 @@ class DatabaseThread(QtCore.QObject):
     self._stop_thread = False
     self._setup_operations_mapping()
     self._thread = None
+
+    self._task_manager = task_manager.TaskManager()
+    self._task_scheduler = task_scheduler.TaskScheduler()
 
   def _setup_operations_mapping(self) -> None:
     """Sets up the operations mapping for the class."""
@@ -116,16 +120,29 @@ class DatabaseThread(QtCore.QObject):
 
     # </editor-fold>
 
-    if self._is_queue_running:
-      self._queue.put(a_database_operation)
-    else:
-      self._queue.put(a_database_operation)
-      self._thread = tasks.LegacyTask(
-          target=self._execute_queue,
-          args=(0, 0),
-          post_func=self._queue_finished,
+    # if self._is_queue_running:
+    #   self._queue.put(a_database_operation)
+    # else:
+    #   self._queue.put(a_database_operation)
+    #   self._thread = tasks.LegacyTask(
+    #       target=self._execute_queue,
+    #       args=(0, 0),
+    #       post_func=self._queue_finished,
+    #   )
+    #   self._thread.start()
+    self._queue.put(a_database_operation)
+    self._task_manager.append_task_result(
+      task_result_factory.TaskResultFactory.run_task_result(
+        a_task_result=task_result.TaskResult.from_action(
+          an_action=action.Action(
+            a_target=self._execute_queue,
+            args=(0, 0),
+          ),
+          an_await_function=self._queue_finished,
+        ),
+        a_task_scheduler=self._task_scheduler,
       )
-      self._thread.start()
+    )
 
   def queue_is_running(self) -> bool:
     """Check if the queue is currently running.

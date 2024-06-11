@@ -71,7 +71,7 @@ class DialogAbout(QtWidgets.QDialog):
         ["Material Design 3 Icons", "4.0.0", "Apache License 2.0"],
         ["Matplotlib", "3.8.0", "Python Software Foundation License (PSF)"],
         ["Numpy", "1.26.2", "BSD 3-Clause 'New' or 'Revised' License"],
-        ["PyMOL Open-Source", "2.5.0", "BSD-like license"],
+        ["PyMOL Open-Source", "3.0.0", "BSD-like license"],
         ["Pandas", "2.1.1", "BSD 3-Clause 'New' or 'Revised' License"],
         ["PyQt5", "5.15.10", "GNU General Public License (GPL)"],
         ["SQLite", "3.41.2", "Public Domain"],

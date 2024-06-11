@@ -42,10 +42,11 @@ class TaskScheduler:
   """The threadpool which is used for running tasks."""
   # </editor-fold>
 
-  def __init__(self) -> None:
+  def __init__(self, use_cpu_count: bool = True) -> None:
     """Constructor."""
     self.threadpool = QtCore.QThreadPool()
-    self.threadpool.setMaxThreadCount(os.cpu_count())
+    if use_cpu_count is True:
+      self.threadpool.setMaxThreadCount(os.cpu_count())
 
   def schedule_task(self, a_task: "task.Task") -> None:
     """Schedule task.
