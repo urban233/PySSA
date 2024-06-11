@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the main view controller."""
+import collections
 import copy
 import logging
 import os
@@ -4334,6 +4335,7 @@ class MainViewController:
         tmp_is_protein_in_any_pair_flag,
         tmp_is_protein_in_session_flag,
         tmp_is_protein_expanded_flag,
+        self._database_thread.queue_is_running()
       )
       tmp_context_menu.exec_(
         self._view.ui.proteins_tree_view.viewport().mapToGlobal(position)
@@ -6831,14 +6833,20 @@ class MainViewController:
     try:
       # remove non_protein chains from database
       tmp_protein = self._interface_manager.get_current_active_protein_object()
-      for tmp_chain in tmp_protein.chains:
+      tmp_non_protein_chain_indexes: collections.deque = collections.deque()
+      for i, tmp_chain in enumerate(tmp_protein.chains, start=0):
         if tmp_chain.chain_type == enums.ChainTypeEnum.NON_PROTEIN_CHAIN.value:
+          tmp_non_protein_chain_indexes.append(i)
           tmp_database_operation = database_operation.DatabaseOperation(
             enums.SQLQueryType.DELETE_SPECIFIC_CHAIN, (tmp_protein.get_id(), tmp_chain.get_id())
           )
           tmp_database_operation_to_execute = copy.deepcopy(tmp_database_operation)
           self._database_thread.put_database_operation_into_queue(tmp_database_operation_to_execute)
-          tmp_protein.chains.remove(tmp_chain)
+
+      tmp_non_protein_chain_indexes.reverse()
+      for tmp_non_protein_chain_index in tmp_non_protein_chain_indexes:
+        tmp_protein.chains.pop(tmp_non_protein_chain_index)
+
       # remove non_protein chains from model
       self._interface_manager.remove_non_protein_chain_from_protein()
 

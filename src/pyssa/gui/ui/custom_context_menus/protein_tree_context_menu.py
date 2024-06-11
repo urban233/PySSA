@@ -189,6 +189,7 @@ class ProteinTreeContextMenu:
       is_protein_in_any_pair_flag: bool,
       is_protein_in_session_flag: bool,
       is_protein_expanded: bool,
+      is_database_thread_running: bool,
   ) -> QtWidgets.QMenu:
     """Gets the context menu for the current situation.
 
@@ -198,6 +199,7 @@ class ProteinTreeContextMenu:
         is_protein_in_any_pair_flag (bool): Flag indicating if the selected protein is in any protein pair.
         is_protein_in_session_flag (bool): Flag indicating if the selected protein is in the session.
         is_protein_expanded (bool): Flag indicating if the selected protein is expanded.
+        is_database_thread_running (bool): Flag indicating if the database thread is running.
 
     Returns:
         QMenu: The context menu that should be displayed.
@@ -222,6 +224,9 @@ class ProteinTreeContextMenu:
     if is_protein_expanded is None:
       logger.error("is_protein_expanded is None.")
       raise exception.IllegalArgumentError("is_protein_expanded is None.")
+    if is_database_thread_running is None:
+      logger.error("is_database_thread_running is None.")
+      raise exception.IllegalArgumentError("is_database_thread_running is None.")
 
     if len(the_selected_indexes) > 0:
       level = 0
@@ -251,6 +256,10 @@ class ProteinTreeContextMenu:
         self._expand_protein_action.setVisible(True)
         self._collapse_protein_action.setVisible(False)
       self._clean_protein_action.setVisible(True)
+      if is_database_thread_running is True:
+        self._clean_protein_action.setEnabled(False)
+      else:
+        self._clean_protein_action.setEnabled(True)
       self._rename_protein_action.setVisible(False)
       self._show_sequence_action.setVisible(False)
 

@@ -152,10 +152,10 @@ class DatabaseThread(QtCore.QObject):
           self._database_filepath, "database_thread"
       ) as tmp_database_manager:
         while self._stop_thread is False:
-          self._is_queue_running = True
           tmp_database_operation: "database_operation.DatabaseOperation" = (
               self._queue.get()
           )
+          self._is_queue_running = True
           if (
               tmp_database_operation.sql_query_type
               is enums.SQLQueryType.CLOSE_PROJECT
@@ -173,6 +173,7 @@ class DatabaseThread(QtCore.QObject):
           self._queue.task_done()
           if self._queue.empty():
             logger.info("The queue is empty and will now end execution.")
+            self._is_queue_running = False
       self._is_queue_running = False
       self._stop_thread = False
     except Exception as e:
