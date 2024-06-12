@@ -152,5 +152,6 @@ class ApplicationProcessManager:
         self._is_crashed = True
       else:
         time.sleep(2)
-    print("Closing check_process method.")  # TODO: change to logger message
+    print("check_process (in class ApplicationProcessManager) method finished.")  # TODO: change to logger message
+    subprocess.run(["powershell", "-Command", "TASKKILL /IM pymol.exe /F"])
     return "", ""  # These two empty strings are needed for the task class

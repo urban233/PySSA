@@ -65,6 +65,8 @@ def send_request_to_auxiliary_pymol(
     the_main_socket.send_string("Check availability ...")
     the_main_socket.recv_string()
     the_main_socket.send_json(a_job_description.get_dict())
+    if a_job_description.get_dict()["job_type"] == "abort":
+        return {"result": "", "data": "Auxiliary PyMOL will now exit."}
     the_main_socket.recv_string()
     # Send a json message to activate the socket
     if a_job_description.type == enums.JobType.PREDICTION:
@@ -95,6 +97,13 @@ def send_request_to_auxiliary_pymol(
                 "job_short_description": "generic",
             },
         )
-
+    elif a_job_description.type == enums.JobType.ABORT:
+        the_main_socket.send_json(
+            {
+                "job_type": enums.JobType.ABORT.value,
+                "job_short_description": "generic",
+            },
+        )
+        return the_main_socket.recv_json()
     # Receive results
     return a_socket.recv_json()

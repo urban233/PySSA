@@ -371,6 +371,7 @@ class JobType(enum.Enum):
   PREDICTION_AND_DISTANCE_ANALYSIS = "prediction and distance analysis"
   RAY_TRACING = "ray-tracing"
   GENERAL_PURPOSE = "general-purpose"
+  ABORT = "abort"
 
 
 class JobProgress(enum.Enum):
@@ -429,3 +430,4 @@ class JobShortDescription(enum.Enum):
       "Consolidate molecule object to first state."
   )
   CLEAN_PROTEIN_UPDATE_STRUCTURE = "Clean the existing protein structure."
+  ABORT = "abort"

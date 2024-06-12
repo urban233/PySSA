@@ -27,6 +27,7 @@ import os
 import pathlib
 import shutil
 import subprocess
+import time
 from typing import Optional, Any
 
 import pygetwindow
@@ -38,6 +39,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 
+from src.auxiliary_pymol import auxiliary_pymol_client
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.custom_context_menus import protein_tree_context_menu, protein_pair_tree_context_menu, \
   sequence_list_context_menu
@@ -769,14 +771,12 @@ class MainViewController:
 
   def _force_close_all(self) -> None:
     """Forcefully closes all open windows and processes related to PySSA."""
+    self._interface_manager.app_process_manager.close_manager()
+
+    # Help windows
     tmp_number_of_help_windows = len(
       pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)
     )
-    # PySSA should be closed
-    # if not self._view.ui.lbl_logo.isVisible():
-    #     logger.info("A project is currently opened. It will now be saved and the application exists afterwards.")
-    #     self.__slot_close_project()
-    # Help windows
     if tmp_number_of_help_windows == 1:
       logger.info("The documentation window is open. It will be closed now.")
       pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
@@ -787,46 +787,24 @@ class MainViewController:
         pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
           tmp_window_index
         ].close()
+    else:
+      logger.info("No documentation window is open. Nothing to do.")
 
-    tmp_number_of_pymol_windows = len(
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)
+    tmp_main_socket, tmp_socket = self._interface_manager.job_manager.get_general_purpose_socket_pair()
+    tmp_job_description = job.GeneralPurposeJobDescription(enums.JobShortDescription.ABORT)
+    tmp_job_description.type = enums.JobType.ABORT
+    tmp_job_description.job_information["job_type"] = enums.JobType.ABORT.value
+    tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+      tmp_main_socket,
+      tmp_socket,
+      tmp_job_description,
     )
-    self._interface_manager.app_process_manager.close_manager()
-    # PyMOL windows
-    if tmp_number_of_pymol_windows == 1:
-      logger.info("PyMOL will be closed now.")
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[
-        0
-      ].close()
-    elif tmp_number_of_pymol_windows > 1:
-      for tmp_window_index in range(tmp_number_of_help_windows + 1):
-        pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[
-          tmp_window_index
-        ].close()
-
-    tmp_number_of_pyssa_windows = len(
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)
-    )
-    tmp_number_of_exact_pyssa_match_windows = 0
-    for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
-      if (
-              pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
-                tmp_window_index
-              ].title
-              == "PySSA"
-      ):
-        tmp_number_of_exact_pyssa_match_windows += 1
-    # PySSA windows
-    if tmp_number_of_exact_pyssa_match_windows == 1:
-      logger.info("PySSA will be closed now.")
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
-        0
-      ].close()
-    elif tmp_number_of_exact_pyssa_match_windows > 1:
-      for tmp_window_index in range(tmp_number_of_help_windows + 1):
-        pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
-          tmp_window_index
-        ].close()
+    if tmp_reply["data"] == "Auxiliary PyMOL will now exit.":
+      logger.info("Auxiliary PyMOL will now exit.")
+    else:
+      logger.warning("Auxiliary PyMOL was not able to exit correctly!")
+    time.sleep(3)
+    QtWidgets.QApplication.quit()
 
   def __slot_close_all(self) -> None:
     """Close all open slots.
@@ -905,48 +883,20 @@ class MainViewController:
     else:
       logger.info("No documentation window is open. Nothing to do.")
 
-    tmp_number_of_pymol_windows = len(
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)
+    tmp_main_socket, tmp_socket = self._interface_manager.job_manager.get_general_purpose_socket_pair()
+    tmp_job_description = job.GeneralPurposeJobDescription(enums.JobShortDescription.ABORT)
+    tmp_job_description.type = enums.JobType.ABORT
+    tmp_job_description.job_information["job_type"] = enums.JobType.ABORT.value
+    tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+      tmp_main_socket,
+      tmp_socket,
+      tmp_job_description,
     )
-
-    # PyMOL windows
-    if tmp_number_of_pymol_windows == 1:
-      logger.info("PyMOL will be closed now.")
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[
-        0
-      ].close()
-    elif tmp_number_of_pymol_windows > 1:
-      tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
-        "There are multiple windows open which contain PyMOL as window title.\nDo you want to close all?",
-        "Close PySSA",
-        custom_message_box.CustomMessageBoxIcons.WARNING.value,
-      )
-      tmp_dialog.exec_()
-      if tmp_dialog.response:
-        for tmp_window_index in range(tmp_number_of_pymol_windows + 1):
-          pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[
-            tmp_window_index
-          ].close()
-
-    tmp_number_of_pyssa_windows = len(
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)
-    )
-    tmp_number_of_exact_pyssa_match_windows = 0
-    for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
-      logger.info(
-        pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
-          tmp_window_index
-        ].title
-      )
-      if (
-              pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
-                tmp_window_index
-              ].title
-              == "PySSA"
-      ):
-        tmp_number_of_exact_pyssa_match_windows += 1
-    logger.info(tmp_number_of_exact_pyssa_match_windows)
-    # PySSA windows
+    if tmp_reply["data"] == "Auxiliary PyMOL will now exit.":
+      logger.info("Auxiliary PyMOL will now exit.")
+    else:
+      logger.warning("Auxiliary PyMOL was not able to exit correctly!")
+    time.sleep(4)
     QtWidgets.QApplication.quit()
 
     # if tmp_number_of_exact_pyssa_match_windows == 1:

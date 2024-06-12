@@ -125,9 +125,9 @@ if __name__ == "__main__":
             print(data)
             task_type = data["job_type"]
             print(task_type)
-            if task_type == "Abort":
-                main_socket.send_string("Auxiliary PyMOL will now exit.")
+            if task_type == "abort":
                 tmp_auxiliary_pymol_should_be_closed = True
+                print("Auxiliary PyMOL should be closed.")
             else:
                 queues[task_type].put(data)
                 main_socket.send_string("Received data and added job to queue.")
@@ -135,4 +135,5 @@ if __name__ == "__main__":
         print("Caught general exception.")
         response = {"result": "error", "data": str(e)}
         main_socket.send_json(response)  # Send JSON-encoded response
+    main_socket.send_json({"result": "", "data": "Auxiliary PyMOL will now exit."})  # Send JSON-encoded response
     exit(0)
