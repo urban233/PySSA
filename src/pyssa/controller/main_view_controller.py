@@ -1079,7 +1079,7 @@ class MainViewController:
                   tmp_job_base_information.project_name,
                 ),
               ),
-              an_await_function=self._post_update_project_and_model,
+              an_await_function=self._post_close_project_automatically,
             ),
             a_task_scheduler=self._interface_manager.get_task_scheduler(),
           )
@@ -1120,8 +1120,8 @@ class MainViewController:
     # </editor-fold>
 
     try:
-      self._interface_manager.documentation_window = return_value[2]
-      tmp_project_name = return_value[0]
+      tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
+      tmp_project_name = tmp_result[0]
       self._interface_manager.status_bar_manager.show_temporary_message(
         enums.StatusMessages.OPENING_PROJECT.value,
         False,
@@ -1163,7 +1163,7 @@ class MainViewController:
                 self._interface_manager.watcher,
               ),
             ),
-            an_await_function=self.__await_open_help,
+            an_await_function=self.__await_open_project,
           ),
           a_task_scheduler=self._interface_manager.get_task_scheduler(),
         )

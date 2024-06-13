@@ -3771,11 +3771,17 @@ class InterfaceManager:
 
     # </editor-fold>
 
-    if (
-        a_job_entry_widget.job_base_information.project_name
-        == self._current_project.get_project_name()
-    ):
-      tmp_job_is_from_current_project = True
+    logger.debug(f"The project of the job is: {a_job_entry_widget.job_base_information.project_name}")
+    if self._main_view.ui.lbl_project_name.text().find("Project Name") != -1:
+      tmp_current_project_name = self._main_view.ui.lbl_project_name.text().replace("Project Name: ", "")
+      logger.debug(f"The current project name, extracted from the GUI is {tmp_current_project_name}")
+      if (
+          a_job_entry_widget.job_base_information.project_name
+          == tmp_current_project_name
+      ):
+        tmp_job_is_from_current_project = True
+      else:
+        tmp_job_is_from_current_project = False
     else:
       tmp_job_is_from_current_project = False
 
