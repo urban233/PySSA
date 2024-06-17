@@ -74,6 +74,12 @@ class CreateWinPackageBuildTask(IBuildTask):
   temp_readme_filepath: pathlib.Path = pathlib.Path(temp_pyssa_path, "README.md")
   """The temporary filepath to the README file."""
 
+  version_history_filepath: pathlib.Path = pathlib.Path(project_root_path, "version_history.json")
+  """The filepath to the version history file."""
+
+  temp_version_history_filepath: pathlib.Path = pathlib.Path(temp_pyssa_path, "version_history.json")
+  """The temporary filepath to the version history file."""
+
   build_output_path: pathlib.Path = pathlib.Path(project_root_path, "_build", "output")
   """The path to the build output directory."""
 
@@ -101,6 +107,10 @@ class CreateWinPackageBuildTask(IBuildTask):
       setup_util.Directory.copy_directory(self.winbatch_path, self.temp_winbatch_path)
       setup_util.File.copy(self.license_filepath, self.temp_license_filepath, overwrite=True)
       setup_util.File.copy(self.readme_filepath, self.temp_readme_filepath, overwrite=True)
+      # TODO: Add automated way of updating the version number project wide
+      # Note: Until now there are different locations where the versions are stored
+      # (1) constants.py (2) pyproject.toml (3) version_history.json => TODO: This has to change for better maintenance!
+      setup_util.File.copy(self.version_history_filepath, self.temp_version_history_filepath, overwrite=True)
       # Construct the PowerShell command
       setup_util.Directory.create_directory(self.build_output_path)
       powershell_command = f"Compress-Archive -Path {self.temp_base_win_package_path}\\* -DestinationPath {self.win_package_zip_filepath} -Force"
