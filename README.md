@@ -10,7 +10,7 @@
 
 
 ![PySSA_logo](https://github.com/urban233/PySSA/blob/main/assets/images/graphical_abstract_pyssa.png)
-# Python plugin for protein Sequence to Structure Analysis (PySSA)
+# Python rich client for visual protein Sequence to Structure Analysis (PySSA)
 
 ## Contents of this document
 * [Description](#Description)
@@ -27,7 +27,7 @@
 * [Acknowledgements](#Acknowledgements)
 
 ## Description
-PySSA ('Python plugin for protein Sequence to Structure Analysis') is an open software project that 
+PySSA ('Python rich client for visual protein Sequence to Structure Analysis') is an open software project that 
 aims to integrate PyMOL and ColabFold to enable the prediction and analysis of 
 3D protein structures for the scientific end-user. 
 PySSA allows the creation of managed and shareable projects with defined workflows for 

@@ -133,4 +133,4 @@ testing_area
 .idea
 /docs/pyssa-documentation/site/
 _build
-base_win_package/bin/Doc/
+base_win_package/bin.zip

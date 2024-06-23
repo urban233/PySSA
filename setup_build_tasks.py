@@ -95,9 +95,21 @@ class CreateWinPackageBuildTask(IBuildTask):
       if setup_util.Directory.exists(self.temp_path):
         setup_util.Directory.purge(self.temp_path)
       setup_util.Directory.create_directory(self.temp_path)
+      # Download bin.zip if not available offline
+      if not pathlib.Path.exists(pathlib.Path(f"{self.base_win_package_path}\\bin.zip")):
+        print("Downloading bin.zip ...")
+        if not setup_util.download_file("https://w-hs.sciebo.de/s/nX5TklMAdRNnyoC/download", f"{self.base_win_package_path}\\bin.zip"):
+          print("Unable to download bin.zip, build process exists.")
+          return
+        print("Finished downloading bin.zip.")
       # Copy base windows package from resources to tmp directory
       print("Copy base windows package from resources to temp directory ...")
       setup_util.Directory.copy_directory(self.base_win_package_path, self.temp_base_win_package_path)
+      # Expand-Archive bin.zip
+      powershell_command = f"Expand-Archive -Path {self.temp_base_win_package_path}\\bin.zip -DestinationPath {self.temp_base_win_package_path}\\bin"
+      print("Expand-Archive bin.zip ...")
+      subprocess.run(["powershell", "-Command", powershell_command], shell=True)
+      setup_util.File.delete(f"{self.temp_base_win_package_path}\\bin.zip")
       # Copy new PySSA src files from GitHub repo to tmp/offline_win_package directory
       print("Copy relevant PySSA files and directories into bin directory of base windows package ...")
       setup_util.Directory.copy_directory(self.assets_path, self.temp_assets_path)

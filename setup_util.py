@@ -1,6 +1,7 @@
 import os
 import pathlib
 import shutil
+from urllib import request
 
 
 class Directory:
@@ -167,3 +168,21 @@ class File:
       print(e)
       return False
     return True
+
+
+def download_file(an_url: str, a_filepath: str) -> bool:
+  """Downloads a single file of the given URL.
+
+  Args:
+    an_url: The URL to download.
+    a_filepath: The path to the file to download.
+
+  Returns:
+    True if the download was successful, False otherwise.
+  """
+  try:
+    request.urlretrieve(an_url, a_filepath)
+    return True
+  except Exception as e:
+    print(e)
+    return False
