@@ -753,8 +753,8 @@ class MainView(QtWidgets.QMainWindow):
     self._create_all_tooltips()
     pixmap = QtGui.QPixmap(str(constants.PLUGIN_LOGO_WITH_CAPTION_FILEPATH))
     scaled_pixmap = pixmap.scaled(
-        700,
-        700,
+        450,
+        450,
         aspectRatioMode=Qt.KeepAspectRatio,
         transformMode=Qt.SmoothTransformation,
     )

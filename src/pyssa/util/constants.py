@@ -29,7 +29,7 @@ from src.pyssa.util import globals, enums
 
 # General
 PLUGIN_NAME = 'PySSA'
-VERSION_NUMBER = "v0.10.23"  # The version number MUST be in double quotes
+VERSION_NUMBER = "v0.11.1"  # The version number MUST be in double quotes
 SETTINGS_FILE_NAME = 'settings'
 SETTINGS_FILENAME = 'settings.json'
 
@@ -49,7 +49,7 @@ PLUGIN_LOGO_FILEPATH = str(
     pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/assets/images/pyssa_logo.png')
 )
 PLUGIN_LOGO_WITH_CAPTION_FILEPATH = str(
-    pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/assets/images/logo_type_2.tiff')
+    pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/assets/images/app_home_logo.png')
 )
 SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
 SETTINGS_FULL_FILEPATH = pathlib.Path(f'{SETTINGS_DIR}/{SETTINGS_FILENAME}')

@@ -1,5 +1,5 @@
-\.venv\
 \.venv_deployment\
+\.venv_dev\
 \.git\
 \.mypy_cache\
 \base_win_package\
