@@ -143,13 +143,16 @@ TODO: Add any references or useful links here.
 **Initialization, conceptualization, and supervision:**
 * Achim Zielesny and Angelika Loidl-Stahlhofen
 
+**The PySSA project team would like to thank
+the communities behind the open software libraries and especially Warren L. DeLano
+for their amazing work.**
+
+<!--
 **PySSA was developed at:**
 <br>
 <br>Zielesny Research Group
 <br>Westphalian University of Applied Sciences
 <br>August-Schmidt-Ring 10
 <br>D-45665 Recklinghausen Germany
+--!>
 
-**The PySSA project team would like to thank
-the communities behind the open software libraries and especially Warren L. DeLano
-for their amazing work.**
