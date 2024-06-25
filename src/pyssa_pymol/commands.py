@@ -605,8 +605,9 @@ def show_custom_representation(
   logger.info("Executing command.")
   try:
     cmd.show(representation=a_representation, selection=a_selection_string)
-    # Hide all hydrogens
-    cmd.hide(a_representation, "h.")
+    # The missing hydrogen atoms only make problems in surface repr
+    if a_representation != "surface":
+      cmd.hide(a_representation, "h.")
   except CmdException as e:
     logger.error(f"Command failed with error: {e}")
     return False, e.message

@@ -5924,7 +5924,6 @@ class MainViewController:
       tmp_selection.set_selection_for_a_single_chain(
         self._interface_manager.get_current_active_chain_object().chain_letter
       )
-
       if self._view.tg_protein_surface.toggle_button.isChecked():
         self._interface_manager.get_task_manager().append_task_result(
           task_result_factory.TaskResultFactory.run_task_result(
