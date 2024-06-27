@@ -60,3 +60,6 @@ class CommandEnum(enum.Enum):
   RAY = "ray"
   DRAW = "draw"
   PNG = "png"
+
+  # Session commands
+  RESET = "reset"

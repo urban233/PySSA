@@ -91,6 +91,7 @@ class UserPyMOLConnector:
       pymol_enums.CommandEnum.RAY: self.ray,
       pymol_enums.CommandEnum.DRAW: self.draw,
       pymol_enums.CommandEnum.PNG: self.png,
+      pymol_enums.CommandEnum.RESET: self.reset,
     }
     
     context = zmq.Context()
@@ -1125,6 +1126,27 @@ class UserPyMOLConnector:
     try:
       tmp_reply = self.send_command_to_pymol(
           tmp_pymol_command, self._poller, self._app_process_manager
+      )
+    except pyssa_exception.PyMOLNotRespondingError as e:
+      logger.error(e)
+      return {}
+    else:
+      return tmp_reply
+
+  def reset(self):
+    """Wrapper for the reset command.
+
+    Returns:
+        A tuple with two elements:
+            - A boolean indicating whether the command was executed successfully (True) or not (False).
+            - A string providing additional error information in case the command failed or an empty string if the command was successfully executed.
+    """
+    tmp_pymol_command = pymol_command.PyMOLCommand(
+      pymol_enums.CommandEnum.RESET, (0, 0),
+    )
+    try:
+      tmp_reply = self.send_command_to_pymol(
+        tmp_pymol_command, self._poller, self._app_process_manager
       )
     except pyssa_exception.PyMOLNotRespondingError as e:
       logger.error(e)
