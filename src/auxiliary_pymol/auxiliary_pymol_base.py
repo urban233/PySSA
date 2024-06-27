@@ -101,8 +101,9 @@ class AuxiliaryPyMOL:
                 auxiliary_pymol.cmd.color(local_constants.DEFAULT_COLOR_PROTEIN_2, tmp_protein_2_name)
 
                 auxiliary_pymol.cmd.zoom("all")
-                auxiliary_pymol.cmd.reset()
                 auxiliary_pymol.cmd.scene("base", action="store")
+                # auxiliary_pymol.cmd.reset()
+                # auxiliary_pymol.cmd.scene("base", action="update")
 
                 auxiliary_pymol.cmd.bg_color(local_constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
                 auxiliary_pymol.cmd.set("valence", 0)
