@@ -47,6 +47,7 @@ class ProteinPairTreeContextMenu:
         "Open Results Summary"
     )
     self._color_based_on_rmsd_action = QtWidgets.QAction("Color Based On RMSD")
+    self._reset_origin_of_rotation = QtWidgets.QAction("Reset Origin Of Rotation")
     self._help_action = QtWidgets.QAction("Get Help")
 
     self._context_menu.addAction(self._expand_protein_pair_action)
@@ -54,12 +55,14 @@ class ProteinPairTreeContextMenu:
     self._context_menu.addSeparator()
     self._context_menu.addAction(self._open_results_summary_action)
     self._context_menu.addAction(self._color_based_on_rmsd_action)
+    self._context_menu.addAction(self._reset_origin_of_rotation)
     self._context_menu.addAction(self._help_action)
 
     self._expand_protein_pair_action.triggered.connect(self._generic_action)
     self._collapse_protein_pair_action.triggered.connect(self._generic_action)
     self._open_results_summary_action.triggered.connect(self._generic_action)
     self._color_based_on_rmsd_action.triggered.connect(self._generic_action)
+    self._reset_origin_of_rotation.triggered.connect(self._generic_action)
     self._help_action.triggered.connect(self._generic_action)
 
   # <editor-fold desc="Connect actions from outside">
@@ -149,6 +152,27 @@ class ProteinPairTreeContextMenu:
     self._color_based_on_rmsd_action.triggered.disconnect()
     self._color_based_on_rmsd_action.triggered.connect(the_function_to_connect)
 
+  def connect_reset_origin_of_rotation(
+      self, the_function_to_connect: Callable
+  ) -> None:
+    """Connects the `_reset_origin_of_rotation` triggered signal to a given callable.
+
+    Args:
+        the_function_to_connect: A callable object that will be connected to the triggered signal of the `_reset_origin_of_rotation` attribute.
+
+    Raises:
+        exception.IllegalArgumentError: If the_function_to_connect is None.
+    """
+    # <editor-fold desc="Checks">
+    if the_function_to_connect is None:
+      logger.error("the_function_to_connect is None.")
+      raise exception.IllegalArgumentError("the_function_to_connect is None.")
+
+    # </editor-fold>
+
+    self._reset_origin_of_rotation.triggered.disconnect()
+    self._reset_origin_of_rotation.triggered.connect(the_function_to_connect)
+
   def connect_help_action(self, the_function_to_connect: Callable) -> None:
     """Connects the `_help_action` triggered signal to a given callable.
 
@@ -237,11 +261,14 @@ class ProteinPairTreeContextMenu:
       if is_protein_pair_in_current_session_flag:
         self._color_based_on_rmsd_action.setEnabled(True)
         self._expand_protein_pair_action.setVisible(True)
+        self._reset_origin_of_rotation.setVisible(True)
       else:
         self._color_based_on_rmsd_action.setEnabled(False)
+        self._reset_origin_of_rotation.setVisible(False)
     else:
       self._open_results_summary_action.setVisible(False)
       self._color_based_on_rmsd_action.setVisible(False)
+      self._reset_origin_of_rotation.setVisible(False)
       self._expand_protein_pair_action.setVisible(False)
       self._collapse_protein_pair_action.setVisible(False)
     return self._context_menu

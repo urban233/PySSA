@@ -68,7 +68,8 @@ class UserPyMOLInterface(QtCore.QObject):
         pymol_enums.CommandEnum.RAY: commands.ray,
         pymol_enums.CommandEnum.DRAW: commands.draw,
         pymol_enums.CommandEnum.PNG: commands.png,
-    }
+        pymol_enums.CommandEnum.RESET: commands.reset,
+    }  # Is not used!! Add new commands to method _run_command_in_main_thread!
     self._should_restart_service = False
     self._command_info.connect(self._run_command_in_main_thread)
 
@@ -580,6 +581,13 @@ class UserPyMOLInterface(QtCore.QObject):
       tmp_result: tuple[bool, str] = commands.png(
           tmp_image_filepath, tmp_dpi_value
       )
+      logger.info(f"Command result: {tmp_result}")
+      self._sender_socket.send_json(
+          {"success": tmp_result[0], "message": str(tmp_result[1])},
+      )
+    elif tmp_command_name == pymol_enums.CommandEnum.RESET.value:
+      logger.info("Running command: reset")
+      tmp_result: tuple[bool, str] = commands.reset()
       logger.info(f"Command result: {tmp_result}")
       self._sender_socket.send_json(
           {"success": tmp_result[0], "message": str(tmp_result[1])},

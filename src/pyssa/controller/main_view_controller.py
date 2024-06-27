@@ -737,6 +737,9 @@ class MainViewController:
     self._protein_pair_tree_context_menu.connect_color_based_on_rmsd_action(
       self.__slot_color_protein_pair_by_rmsd
     )
+    self._protein_pair_tree_context_menu.connect_reset_origin_of_rotation(
+      self.__slot_reset_center_of_rotation_protein_pair
+    )
     self._protein_pair_tree_context_menu.connect_help_action(
       self._open_protein_pairs_tab_help
     )
@@ -10169,6 +10172,16 @@ class MainViewController:
         self._interface_manager.pymol_session_manager,
       )
       self._interface_manager.get_results_view().show()
+    except Exception as e:
+      logger.error(f"An error occurred: {e}")
+      self._interface_manager.status_bar_manager.show_error_message(
+        "An unknown error occurred!"
+      )
+
+  def __slot_reset_center_of_rotation_protein_pair(self):
+    """Resets the center of rotation for a selected protein pair"""
+    try:
+      self._interface_manager.pymol_session_manager.user_pymol_connector.reset()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(

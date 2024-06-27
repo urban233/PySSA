@@ -101,8 +101,9 @@ class AuxiliaryPyMOL:
                 auxiliary_pymol.cmd.color(local_constants.DEFAULT_COLOR_PROTEIN_2, tmp_protein_2_name)
 
                 auxiliary_pymol.cmd.zoom("all")
-                auxiliary_pymol.cmd.origin()
                 auxiliary_pymol.cmd.scene("base", action="store")
+                # auxiliary_pymol.cmd.reset()
+                # auxiliary_pymol.cmd.scene("base", action="update")
 
                 auxiliary_pymol.cmd.bg_color(local_constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
                 auxiliary_pymol.cmd.set("valence", 0)
@@ -224,7 +225,7 @@ class AuxiliaryPyMOL:
                 # if selection != "":
                 #     auxiliary_pymol.cmd.hide("cartoon", selection)
                 auxiliary_pymol.cmd.hide("cgo", "all")
-                auxiliary_pymol.cmd.orient()
+                auxiliary_pymol.cmd.reset()
                 auxiliary_pymol.cmd.zoom("all")
                 auxiliary_pymol.cmd.scene(
                     key=f"{tmp_protein_1_name}-{tmp_protein_2_name}",
@@ -404,7 +405,6 @@ class AuxiliaryPyMOL:
                 auxiliary_pymol.cmd.unset("depth_cue")
                 auxiliary_pymol.cmd.color("green", tmp_protein_name)
                 auxiliary_pymol.cmd.reset()
-                auxiliary_pymol.cmd.origin()
                 auxiliary_pymol.cmd.scene("base", action="store")
                 session_filepath: pathlib.Path = pathlib.Path(
                     f"{local_constants.SCRATCH_DIR}/{tmp_protein_name}_session.pse",

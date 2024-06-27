@@ -963,3 +963,22 @@ def png(an_image_filepath: str, a_dpi_value: int) -> tuple[bool, str]:
   else:
     logger.info("Command executed successfully.")
     return True, ""
+
+
+def reset():
+  """Wrapper for the reset command.
+
+  Returns:
+      A tuple with two elements:
+          - A boolean indicating whether the command was executed successfully (True) or not (False).
+          - A string providing additional error information in case the command failed or an empty string if the command was successfully executed.
+  """
+  logger.info("Executing command.")
+  try:
+    cmd.reset()
+  except CmdException as e:
+    logger.error(f"Command failed with error: {e}")
+    return False, e.message
+  else:
+    logger.info("Command executed successfully.")
+    return True, ""
