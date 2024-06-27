@@ -296,6 +296,9 @@ DEFAULT_HISTOGRAM_PROPERTIES = {
 # possible setting parameters
 STATUS_MESSAGE_TIMEOUT = 5000  # value in msec
 
+# Plotting
+MIN_HISTOGRAM_FIGURE_HEIGHT = 300
+
 # pymol parameters
 PYMOL_COLORS = [
     'red',

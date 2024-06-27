@@ -931,6 +931,8 @@ class PlotView(QtWidgets.QDialog):
     # Extra canvas and figure settings
     tmp_histogram_width = self.scroll_area.width() - 20
     tmp_histogram_height = int(((5 / 6) * len(self.bars)) * 100)
+    if tmp_histogram_height < constants.MIN_HISTOGRAM_FIGURE_HEIGHT:
+      tmp_histogram_height = constants.MIN_HISTOGRAM_FIGURE_HEIGHT
     self.plot_widget_dhistogram.resize(
         tmp_histogram_width, tmp_histogram_height
     )
