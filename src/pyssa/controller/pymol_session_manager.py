@@ -514,6 +514,7 @@ class PymolSessionManager:
     self.session_object_type = "protein_pair"
     self.session_objects = [a_protein_pair]
     self._load_pymol_session(a_protein_pair.pymol_session)
+    self.user_pymol_connector.scene("base", an_action="recall")
     self.user_pymol_connector.reset()
     self.user_pymol_connector.scene("base", an_action="update")
 
