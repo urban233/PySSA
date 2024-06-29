@@ -1,22 +1,24 @@
 # PySSA
 <!-- [![DOI](https://zenodo.org/badge/220207097.svg)](https://zenodo.org/badge/latestdoi/220207097) -->
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-blue.svg)](https://GitHub.com/zielesny/PySSA/graphs/commit-activity)
-[![GitHub issues](https://img.shields.io/github/issues/zielesny/PySSA)](https://GitHub.com/zielesny/PySSA/issues/)
-[![GitHub contributors](https://img.shields.io/github/contributors/zielesny/PySSA.svg)](https://GitHub.com/zielesny/PySSA/graphs/contributors/)
-[![GitHub release](https://img.shields.io/github/release/zielesny/PySSA.svg)](https://github.com/urban233/PySSA/releases/)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-blue.svg)](https://GitHub.com/urban233/PySSA/graphs/commit-activity)
+[![GitHub issues](https://img.shields.io/github/issues/urban233/PySSA)](https://GitHub.com/urban233/PySSA/issues/)
+[![GitHub contributors](https://img.shields.io/github/contributors/urban233/PySSA.svg)](https://GitHub.com/urban233/PySSA/graphs/contributors/)
+[![GitHub release](https://img.shields.io/github/release/urban233/PySSA.svg)](https://github.com/urban233/PySSA/releases/)
 
 [![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/pylint-dev/pylint)
 
+<div id='header' align='center'>
+  <img src='assets/images/title_logo.png' width='450'/>
+</div>
 
-![PySSA_logo](assets/images/title_logo.png)
 # Python rich client for visual protein Sequence to Structure Analysis (PySSA)
 
 ## Contents of this document
 * [Description](#Description)
 * [Contents of this repository](#Contents-of-this-repository)
   * [Sources](#Sources)
-  * [Tutorial](#Tutorial)
+  * [Documentation](#Documentation)
   * [Images](#Images)
 * [Installation](#Installation)
     * [Windows](#Windows)
@@ -72,7 +74,7 @@ PySSA is tested and available for Windows 10 and 11.
 ### Windows
 For a convenient and user-friendly installation, 
 the <a href="https://github.com/urban233/ComponentInstaller">"PySSA-Installer"</a> is available
-(click <a href="https://github.com/urban233/ComponentInstaller">here</a> to
+(click <a href="https://github.com/urban233/ComponentInstaller/releases/">here</a> to
 automatically download the setup.exe of the latest version).
 Download the installer executable, start, and follow the instructions to install the PySSA-Installer.
 After that, open the installer and install each component (WSL2, LocalColabfold and PySSA) one after the other.
@@ -85,13 +87,16 @@ The WSL2 needs to be setup beforehand.
 To update ColabFold or PySSA it is necessary to download a new offline setup.
 
 ### Source code
-PySSA should be build using the provided setup.py script with different 
-build tasks.
+This is a Python project based on a virtual environment. 
+To modify the source code, download or clone the repository 
+and open it in an IDE that supports virtual environments (e.g. PyCharm).
+Finally, run `pip install -r requirements_dev.txt` to set up the virtual environment used for development.
 
-To build the package that is used by the PySSA-Installer to install PySSA, run
-`python setup.py create_win_package`.
+The project supports using a setup.py file to create a package that works with the PySSA Component Installer.
+To build the package run `python setup.py create_win_package`.
 
-To generate only the user docs, use `python setup.py make_docs`.
+The setup.py also supports building the documentation using the command:
+`python setup.py make_docs`.
 
 ## Dependencies
 **Managed by PySSA-Installer:**
@@ -101,8 +106,6 @@ To generate only the user docs, use `python setup.py make_docs`.
 * Colabfold
   * [LocalColabfold](https://github.com/YoshitakaMo/localcolabfold)
   * License: MIT License
-* [Mamba](https://github.com/mamba-org/mamba)
-  * License: BSD 3-Clause "New" or "Revised" License
 * [PyQt5](https://riverbankcomputing.com/software/pyqt/intro)
   * License: GNU General Public License (GPL)
 * [NumPy](https://numpy.org/)
@@ -119,13 +122,22 @@ To generate only the user docs, use `python setup.py make_docs`.
   * License: [Public Domain](https://www.sqlite.org/copyright.html)
 
 ## Architecture
-![PySSA_logo](assets/images/architecture.png)
+<div id='header' align='center'>
+  <img src='assets/images/architecture.png' width='650'/>
+</div>
 
 ## Citation
-TODO: Add citation here.
+You can cite this software or this repository as it is defined in the CITATION.cff file.
 
 ## References and useful links
-TODO: Add any references or useful links here.
+**ColabFold**
+* [ColabFold GitHub repository](https://github.com/sokrypton/ColabFold)
+* [Localcolabfold GitHub repository](https://github.com/YoshitakaMo/localcolabfold)
+* [Mirdita, M., Schütze, K., Moriwaki, Y. et al. ColabFold: making protein folding accessible to all. Nat Methods 19, 679–682 (2022). https://doi.org/10.1038/s41592-022-01488-1](https://doi.org/10.1038/s41592-022-01488-1)
+
+**PyMOL**
+* [Open-source GitHub repository](https://github.com/schrodinger/pymol-open-source)
+* [Open-source Windows Python wheelfiles](https://github.com/cgohlke/pymol-open-source-wheels)
 
 ## Acknowledgements
 **Developers:**
