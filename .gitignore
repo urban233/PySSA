@@ -132,7 +132,6 @@ dmypy.json
 testing_area
 .idea
 .mypy_cache
-__pycache__
 /docs/pyssa-documentation/site/
 _build
 base_win_package/bin.zip
