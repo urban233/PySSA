@@ -24,6 +24,7 @@
     * [Windows](#Windows)
     * [Source code](#Source-code)
 * [Dependencies](#Dependencies)
+* [Architecture](#Architecture)
 * [Citation](#Citation)
 * [References and useful links](#References-and-useful-links)
 * [Acknowledgements](#Acknowledgements)
