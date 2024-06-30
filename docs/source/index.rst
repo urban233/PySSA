@@ -103,5 +103,3 @@ PySSA
    :maxdepth: 1
 
    help/help
-   getting_started/getting_started
-   development/development

@@ -13,7 +13,7 @@
         <guide>
             <title>Save a selected protein as .fasta file</title>
             <steps>
-                <step>Click on :google_material-file_save_w200:, to open a file dialog window.</step>
+                <step>Click on |file_save_w200|, to open a file dialog window.</step>
                 <step>Enter a name for the .pdb file.</step>
                 <step>Click on **Save**.</step>
             </steps>

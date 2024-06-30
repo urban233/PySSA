@@ -13,7 +13,7 @@
         <guide>
             <title>Add a protein sequence string</title>
             <steps>
-                <step>Click on :google_material-note_add_w200:, to open a new dialog window.</step>
+                <step>Click on |note_add_w200|, to open a new dialog window.</step>
                 <step>Enter a new sequence name and click on **Next**.</step>
                 <step>Paste the protein sequence in the large text box.</step>
                 <step>Click **Add**.</step>

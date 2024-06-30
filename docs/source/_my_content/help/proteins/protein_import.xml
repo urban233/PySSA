@@ -14,7 +14,7 @@
         <guide>
             <title>Import a protein structure from an existing .pdb file</title>
             <steps>
-                <step>Click on :google_material-upload_file_w200:, to open a new dialog window.</step>
+                <step>Click on |upload_file_w200|, to open a new dialog window.</step>
                 <step>In the new dialog, click on the three dots.</step>
                 <step>In the file dialog choose an existing .pdb file from your computer.</step>
                 <step>Click on **Open**.</step>
@@ -24,7 +24,7 @@
         <guide>
             <title>Import a protein structure using a PDB id</title>
             <steps>
-                <step>Click on :google_material-upload_file_w200:, to open a new dialog window.</step>
+                <step>Click on |upload_file_w200|, to open a new dialog window.</step>
                 <step>In the new dialog, enter the PDB id into the text field.</step>
                 <step>Click on **Import**.</step>
             </steps>

@@ -1,5 +1,5 @@
-PySSA Help
-==========
+Help
+====
 
 .. toctree::
     :maxdepth: 1

@@ -14,7 +14,7 @@
             <title>Delete a selected sequence</title>
             <steps>
                 <step>Select a sequence from the list.</step>
-                <step>Click on :google_material-scan_delete_w200:, to delete the sequence from the project.</step>
+                <step>Click on |scan_delete_w200|, to delete the sequence from the project.</step>
             </steps>
         </guide>
     </getting_started_guides>

@@ -18,7 +18,7 @@
             <title>Color protein pair by RMSD value</title>
             <steps>
                 <step>Select a protein pair from the tree.</step>
-                <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein pair.</step>
+                <step>Click on |open_in_new_w200|, to load the pymol session of the selected protein pair.</step>
                 <step>Under the *Results* menu, click on **Summary**.</step>
                 <step>Choose **By RMSD** in the combobox besides *Color Protein Pair*.</step>
             </steps>

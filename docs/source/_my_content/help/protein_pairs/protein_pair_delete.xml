@@ -14,7 +14,7 @@
             <title>Delete a selected protein pair</title>
             <steps>
                 <step>Select a protein pair from the tree.</step>
-                <step>Click on :google_material-scan_delete_w200:, to delete the protein pair from the project.</step>
+                <step>Click on |scan_delete_w200|, to delete the protein pair from the project.</step>
             </steps>
         </guide>
     </getting_started_guides>

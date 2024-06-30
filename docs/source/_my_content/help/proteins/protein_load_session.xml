@@ -14,7 +14,7 @@
             <title>Open a PyMOL session</title>
             <steps>
                 <step>Select a protein from the tree.</step>
-                <step>Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.</step>
+                <step>Click on |open_in_new_w200|, to load the pymol session of the selected protein.</step>
             </steps>
         </guide>
     </getting_started_guides>
