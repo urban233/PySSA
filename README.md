@@ -19,7 +19,7 @@
 * [Contents of this repository](#Contents-of-this-repository)
   * [Sources](#Sources)
   * [Documentation](#Documentation)
-  * [Images](#Images)
+  * [Assets](#Assets)
 * [Installation](#Installation)
     * [Windows](#Windows)
     * [Source code](#Source-code)
