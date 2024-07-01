@@ -1889,6 +1889,9 @@ class InterfaceManager:
         else:
           # A project has no protein pair(s)
           # Protein Pairs tab
+          self._main_view.ui.lbl_info_3.setText(
+            "Get protein pairs by running a distance analysis."
+          )
           self._main_view.ui.btn_protein_pair_tree_view_expand.setEnabled(False)
           self._main_view.ui.btn_protein_pair_tree_view_collapse.setEnabled(
               False
@@ -1903,6 +1906,9 @@ class InterfaceManager:
       else:
         # A project has no protein(s)
         # Proteins tab
+        self._main_view.ui.lbl_info.setText(
+          "Get proteins by running a structure prediction\nor importing an existing pdb file."
+        )
         self._main_view.ui.btn_protein_tree_view_expand.setEnabled(False)
         self._main_view.ui.btn_protein_tree_view_collapse.setEnabled(False)
         self._main_view.ui.btn_delete_protein.setEnabled(False)
@@ -2512,7 +2518,6 @@ class InterfaceManager:
             "Please load the PyMOL session of the selected protein."
         )
 
-
     elif an_object_type == "scene":
       self._main_view.ui.btn_save_protein.setEnabled(False)
       self._main_view.ui.btn_open_protein_session.setEnabled(False)
@@ -2534,7 +2539,6 @@ class InterfaceManager:
         self._main_view.ui.lbl_info.setText(
             "Please load the PyMOL session of the selected protein."
         )
-
 
     elif an_object_type == "chain":
       self._main_view.ui.btn_save_protein.setEnabled(False)
@@ -2561,7 +2565,6 @@ class InterfaceManager:
         self._main_view.ui.lbl_info.setText(
             "Please load the PyMOL session of the selected protein."
         )
-
 
     else:
       constants.PYSSA_LOGGER.warning(

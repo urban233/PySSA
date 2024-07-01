@@ -65,7 +65,7 @@ from src.pyssa.controller import interface_manager, distance_analysis_view_contr
   create_project_view_controller, open_project_view_controller, database_manager
 from src.pyssa.util import globals
 from src.pyssa_pymol import pymol_enums
-from src.tea.thread import task_result
+from src.pyssa.internal.thread import thread_util
 from src.tea.thread import tasks, task_result_factory, task_result, action
 
 logger = logging.getLogger(__file__)
@@ -1239,29 +1239,29 @@ class MainViewController:
             and self._interface_manager.current_tab_index == 2
     ):
       self._interface_manager.hide_protein_pair_pymol_scene_configuration()
-      self._view.ui.lbl_info_3.setText(
-        "Please load the PyMOL session of the \nselected protein pair."
-      )
+      # self._view.ui.lbl_info_3.setText(
+      #   "Please load the PyMOL session of the \nselected protein pair."
+      # )
     elif (
             self._interface_manager.pymol_session_manager.session_object_type
             == "protein_pair"
             and self._interface_manager.current_tab_index == 1
     ):
       self._interface_manager.hide_protein_pymol_scene_configuration()
-      self._view.ui.lbl_info.setText(
-        "Please load the PyMOL session of the selected protein."
-      )
+      # self._view.ui.lbl_info.setText(
+      #   "Please load the PyMOL session of the selected protein."
+      # )
     elif (
             self._interface_manager.pymol_session_manager.is_the_current_session_empty()
     ):
       self._interface_manager.hide_protein_pymol_scene_configuration()
       self._interface_manager.hide_protein_pair_pymol_scene_configuration()
-      self._view.ui.lbl_info.setText(
-        "Please load the PyMOL session of the selected protein."
-      )
-      self._view.ui.lbl_info_3.setText(
-        "Please load the PyMOL session of the \nselected protein pair."
-      )
+      # self._view.ui.lbl_info.setText(
+      #   "Please load the PyMOL session of the selected protein."
+      # )
+      # self._view.ui.lbl_info_3.setText(
+      #   "Please load the PyMOL session of the \nselected protein pair."
+      # )
 
   def _setup_statusbar(self) -> None:
     """Sets up the status bar and fills it with the current workspace."""
@@ -2751,6 +2751,7 @@ class MainViewController:
       self._interface_manager.add_job_entry_to_job_overview_layout(
         tmp_distance_analysis_entry_widget
       )
+      self.__slot_open_job_overview_panel()
 
     # tmp_distance_analysis_task = tasks.Task(
     #     target=main_tasks_async.run_distance_analysis,
@@ -3104,6 +3105,7 @@ class MainViewController:
       self._interface_manager.add_job_entry_to_job_overview_layout(
         tmp_job_widget
       )
+      self.__slot_open_job_overview_panel()
     finally:
       self._interface_manager.refresh_main_view()
 
@@ -3127,7 +3129,7 @@ class MainViewController:
         "An unknown error occurred!"
       )
     else:
-      if a_prediction_task_was_aborted is True:
+      if a_prediction_task_was_aborted is True and thread_util.is_main_thread():
         tmp_dialog = custom_message_box.CustomMessageBoxOk(
           "The structure prediction was aborted.",
           "Abort Structure Prediction",
@@ -3135,8 +3137,11 @@ class MainViewController:
         )
         tmp_dialog.exec_()
     finally:
-      self._interface_manager.status_bar_manager.hide_progress_bar()
-      self._interface_manager.refresh_main_view()
+      if thread_util.is_main_thread():
+        self._interface_manager.status_bar_manager.hide_progress_bar()
+        self._interface_manager.refresh_main_view()
+      else:
+        logger.error("Non main thread wants to invoke refresh_main_view() in __slot_abort_prediction() method.")
 
   # </editor-fold>
 
@@ -3645,6 +3650,7 @@ class MainViewController:
       self._interface_manager.add_job_entry_to_job_overview_layout(
         tmp_ray_tracing_entry_widget
       )
+      self.__slot_open_job_overview_panel()
 
   def __slot_create_drawn_image(self) -> None:
     """Starts to create a drawn image."""

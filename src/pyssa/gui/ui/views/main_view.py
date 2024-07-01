@@ -841,6 +841,7 @@ class MainView(QtWidgets.QMainWindow):
     """Creates all tooltips for the gui elements."""
     # Sequence Tab
     # self.ui.seqs_list_view.setToolTip("A list of all sequences in the project")
+    self.ui.seqs_list_view.setToolTip("Import or add sequences to do structure predictions")  # fixme: is this a useful tooltip?
     self.ui.seqs_table_widget.setToolTip(
         "A table with additional information about the selected sequence"
     )
@@ -860,6 +861,7 @@ class MainView(QtWidgets.QMainWindow):
     # self.ui.proteins_table_widget.setToolTip(
     #     "A table with changeable PyMOL parameters for the currently active session"
     # )
+    self.ui.proteins_tree_view.setToolTip("Get proteins by running a structure prediction or importing an existing pdb file")  # fixme: is this a useful tooltip?
     self.ui.btn_protein_tree_view_expand.setToolTip("Expand All")
     self.ui.btn_protein_tree_view_collapse.setToolTip("Collapse All")
     self.ui.btn_import_protein.setToolTip("Import an existing .pdb file")
@@ -883,6 +885,7 @@ class MainView(QtWidgets.QMainWindow):
     # self.ui.protein_pairs_table_widget.setToolTip(
     #     "A table with changeable PyMOL parameters for the currently active session"
     # )
+    self.ui.protein_pairs_tree_view.setToolTip("Get protein pairs by running a distance analysis")  # fixme: is this a useful tooltip?
     self.ui.btn_protein_pair_tree_view_expand.setToolTip("Expand All")
     self.ui.btn_protein_pair_tree_view_collapse.setToolTip("Collapse All")
     self.ui.btn_delete_protein_pair.setToolTip(
