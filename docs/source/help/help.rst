@@ -14,3 +14,4 @@ Help
     hotspots/hotspots
     images/images
     settings/settings
+    pymol/pymol

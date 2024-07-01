@@ -32,28 +32,28 @@ PySSA
     .. grid-item-card::  :material-outlined:`folder_shared;2em` Project Management
         :img-background: _static/pyssa_blue-32.png
         :class-card: sd-text-white
-        :link: https://example.com
+        :link: help/project/project.html
 
         Import, export, create and delete projects.
 
     .. grid-item-card:: :material-outlined:`memory;2em` 3D Structure Prediction
         :img-background: _static/pyssa_blue-32.png
         :class-card: sd-text-white
-        :link: https://example.com
+        :link: help/protein_structure_prediction/protein_structure_prediction.html
 
         Monomeric and multimeric protein predictions.
 
     .. grid-item-card:: :material-outlined:`compare;2em` Structure Analysis
         :img-background: _static/pyssa_blue-32.png
         :class-card: sd-text-white
-        :link: https://example.com
+        :link: help/protein_structure_analysis/protein_structure_analysis.html
 
         Distance analysis of protein pairs.
 
     .. grid-item-card:: :material-outlined:`image;2em` Images
         :img-background: _static/pyssa_blue-32.png
         :class-card: sd-text-white
-        :link: https://example.com
+        :link: help/images/images.html
 
         Creation of ray-traced or simple images.
 

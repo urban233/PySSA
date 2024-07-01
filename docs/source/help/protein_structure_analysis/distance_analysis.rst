@@ -35,8 +35,7 @@ Run a distance analysis with two imported proteins
 
 Details
 -------
-- During the distance analysis it is **not** possible to use PyMOL.
-- Everything that does not require PyMOL can still be used normally.
+- During the distance analysis, PySSA automatically generates scenes for residue pairs where the distance exceeds the configured cutoff. The cutoff value can be specified in the settings.
 - It is not possible to run another prediction or analysis while a distance analysis is running.
 - You can perform a distance analysis once. If you need to repeat the analysis, delete the corresponding protein pair first.
 
