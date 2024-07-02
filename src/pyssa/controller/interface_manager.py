@@ -3881,6 +3881,7 @@ class InterfaceManager:
       # signal_tuple = (job_type, job_entry_widget, job object, protein_prediction_infos)
       for tmp_protein_info in signal_tuple[3]:
         self.watcher.remove_protein(tmp_protein_info.name)
+      self.job_manager.current_prediction_job = None
       if signal_tuple[1].parent():
         signal_tuple[1].setParent(None)
       signal_tuple[1].deleteLater()

@@ -21,6 +21,7 @@
 #
 """Module for the job manager class."""
 import logging
+import multiprocessing
 import queue
 import subprocess
 import time
@@ -285,7 +286,6 @@ class JobManager:
     """Stops the prediction queue."""
     # Stop the active queue
     logger.info("Stopping prediction queue.")
-    self._prediction_queue_thread = None
     self._is_prediction_queue_running = False
     # Restart queue if it is not empty
     if not self._prediction_queue.empty():
@@ -474,8 +474,8 @@ class JobManager:
       # Waiting for a prediction and distance analysis combi job to finish.
       time.sleep(60)
 
-    while True:  # TODO: this needs to be removed soon!
-      self._is_prediction_queue_running = True
+    self._is_prediction_queue_running = True
+    while self._is_prediction_queue_running is True:
       self._prediction_queue_lock.lock()
       tmp_prediction_job: "job.PredictionJob" = self._prediction_queue.get()
       self._prediction_queue_lock.unlock()
@@ -677,26 +677,27 @@ class JobManager:
         A tuple containing a status message ("Finished.") and a status code (0).
     """
     logger.debug("Starting distance analysis queue ...")
-    while True:  # TODO: this needs to be removed soon!
-      self._is_distance_analysis_queue_running = True
+
+    self._is_distance_analysis_queue_running = True
+    while self._is_distance_analysis_queue_running is True:
       tmp_distance_analysis_job: "job.DistanceAnalysisJob" = (
-          self._distance_analysis_queue.get()
+        self._distance_analysis_queue.get()
       )
       if tmp_distance_analysis_job is None:
         self._is_distance_analysis_queue_running = False
         break
       self.current_distance_analysis_job = (
-          job_summary.DistanceAnalysisJobSummary(
-              tmp_distance_analysis_job.list_with_analysis_names,
-          )
+        job_summary.DistanceAnalysisJobSummary(
+          tmp_distance_analysis_job.list_with_analysis_names,
+        )
       )
       tmp_distance_analysis_job.job_entry_widget.job_base_information.job_progress = (
-          enums.JobProgress.RUNNING
+        enums.JobProgress.RUNNING
       )
       tmp_distance_analysis_job.run_job()
       if self._distance_analysis_queue.empty():
         logger.info(
-            "The distance analysis queue is empty and will now end execution."
+          "The distance analysis queue is empty and will now end execution."
         )
         break
       self._distance_analysis_queue.task_done()
@@ -801,10 +802,10 @@ class JobManager:
     while self._is_prediction_queue_running:
       time.sleep(60)
 
-    while True:  # TODO: this needs to be removed soon!
-      self._is_prediction_and_distance_analysis_queue_running = True
+    self._is_prediction_and_distance_analysis_queue_running = True
+    while self._is_prediction_and_distance_analysis_queue_running is True:
       tmp_prediction_and_distance_analysis_job: (
-          "job.PredictionAndDistanceAnalysisJob"
+        "job.PredictionAndDistanceAnalysisJob"
       ) = self._prediction_and_distance_analysis_queue.get()
       if tmp_prediction_and_distance_analysis_job is None:
         self._is_prediction_and_distance_analysis_queue_running = False
@@ -815,7 +816,7 @@ class JobManager:
       tmp_prediction_and_distance_analysis_job.run_job()
       if self._prediction_and_distance_analysis_queue.empty():
         logger.info(
-            "The prediction and distance analysis queue is empty and will now end execution."
+          "The prediction and distance analysis queue is empty and will now end execution."
         )
         break
       self._prediction_and_distance_analysis_queue.task_done()
@@ -976,8 +977,9 @@ class JobManager:
         A tuple containing a status message ("Finished.") and a status code (0).
     """
     logger.debug("Starting ray-tracing queue ...")
-    while True:  # TODO: this needs to be removed soon!
-      self._is_ray_tracing_queue_running = True
+
+    self._is_ray_tracing_queue_running = True
+    while self._is_ray_tracing_queue_running is True:
       tmp_ray_tracing_job: "job.RayTracingJob" = self._ray_tracing_queue.get()
       if tmp_ray_tracing_job is None:
         self._is_ray_tracing_queue_running = False
@@ -986,7 +988,7 @@ class JobManager:
       tmp_ray_tracing_job.run_job()
       if self._ray_tracing_queue.empty():
         logger.info(
-            "The ray-tracing queue is empty and will now end execution."
+          "The ray-tracing queue is empty and will now end execution."
         )
         break
       self._ray_tracing_queue.task_done()

@@ -88,6 +88,8 @@ class JobEntryWidget(QtWidgets.QWidget):
     self.ui.btn_cancel_job.setIconSize(
         tmp_cancel_job_icon.actualSize(QtCore.QSize(24, 24))
     )
+    self.ui.btn_cancel_job.setEnabled(False)
+    self.ui.btn_cancel_job.hide()
 
     self.ui.lbl_job_description.setStyleSheet(
         """
@@ -149,6 +151,10 @@ class JobEntryWidget(QtWidgets.QWidget):
     )
 
     self.ui.progress_bar_job.setFormat("")
+
+  def enable_abort_button(self):
+    """Disables the abort button."""
+    self.ui.btn_cancel_job.setEnabled(True)
 
 
 class JobNotificationWidget(QtWidgets.QWidget):
