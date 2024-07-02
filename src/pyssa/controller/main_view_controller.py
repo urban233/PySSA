@@ -173,10 +173,10 @@ class MainViewController:
       self._update_main_view_ui
     )
     self._view.btn_open_job_overview.clicked.connect(
-      self.__slot_open_job_overview_panel
+      self.__slot_toggle_job_overview_panel
     )
     self._view.btn_open_job_notification.clicked.connect(
-      self.__slot_open_notification_panel
+      self.__slot_toggle_notification_panel
     )
 
     # <editor-fold desc="Menu">
@@ -2005,15 +2005,19 @@ class MainViewController:
   # </editor-fold>
 
   # <editor-fold desc="Job panels">
-  def __slot_open_job_overview_panel(self) -> None:
+  def __slot_toggle_job_overview_panel(self) -> None:
     """Hides or shows the job overview panel based on its current state."""
     if self._view.ui.frame_job_overview.isVisible():
       self._view.ui.frame_job_overview.hide()
     elif not self._view.ui.frame_job_overview.isVisible():
-      self._view.ui.frame_job_notification.hide()
-      self._view.ui.frame_job_overview.show()
+      self.open_job_overview_panel()
 
-  def __slot_open_notification_panel(self) -> None:
+  def open_job_overview_panel(self):
+    """Shows the job overview panel."""
+    self._view.ui.frame_job_notification.hide()
+    self._view.ui.frame_job_overview.show()
+
+  def __slot_toggle_notification_panel(self) -> None:
     """Hides or shows the job notification panel based on its current state."""
     if self._view.ui.frame_job_notification.isVisible():
       self._view.ui.frame_job_notification.hide()
@@ -2751,7 +2755,7 @@ class MainViewController:
       self._interface_manager.add_job_entry_to_job_overview_layout(
         tmp_distance_analysis_entry_widget
       )
-      self.__slot_open_job_overview_panel()
+      self.open_job_overview_panel()
 
     # tmp_distance_analysis_task = tasks.Task(
     #     target=main_tasks_async.run_distance_analysis,
@@ -3105,7 +3109,7 @@ class MainViewController:
       self._interface_manager.add_job_entry_to_job_overview_layout(
         tmp_job_widget
       )
-      self.__slot_open_job_overview_panel()
+      self.open_job_overview_panel()
     finally:
       self._interface_manager.refresh_main_view()
 
@@ -3650,7 +3654,7 @@ class MainViewController:
       self._interface_manager.add_job_entry_to_job_overview_layout(
         tmp_ray_tracing_entry_widget
       )
-      self.__slot_open_job_overview_panel()
+      self.open_job_overview_panel()
 
   def __slot_create_drawn_image(self) -> None:
     """Starts to create a drawn image."""

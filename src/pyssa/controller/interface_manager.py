@@ -1909,6 +1909,9 @@ class InterfaceManager:
         self._main_view.ui.lbl_info.setText(
           "Get proteins by running a structure prediction\nor importing an existing pdb file."
         )
+        self._main_view.ui.lbl_info_3.setText(
+          "Get protein pairs by running a distance analysis."
+        )
         self._main_view.ui.btn_protein_tree_view_expand.setEnabled(False)
         self._main_view.ui.btn_protein_tree_view_collapse.setEnabled(False)
         self._main_view.ui.btn_delete_protein.setEnabled(False)
@@ -3737,7 +3740,10 @@ class InterfaceManager:
     a_job_entry_widget: "job_entry.JobEntryWidget" = (
         update_job_entry_signal_values[0]
     )  # Unpack of 0 because of type annotation need
-    a_job_entry_widget.ui.progress_bar_job.setValue(a_value)
+    try:
+      a_job_entry_widget.ui.progress_bar_job.setValue(a_value)
+    except RuntimeError as e:
+      logger.error(e)
     if a_value == 100:
       tmp_type = a_job_entry_widget.job_base_information.job_type
       tmp_progress = a_job_entry_widget.job_base_information.job_progress
@@ -3889,5 +3895,8 @@ class InterfaceManager:
         self.job_manager.stop_prediction_queue()
       else:
         self.job_manager.pop_job_from_queue(signal_tuple[2])
+    self._main_view.btn_open_job_overview.setIcon(
+      self._main_view.icon_jobs
+    )
 
   # </editor-fold>
