@@ -74,18 +74,28 @@ If you are using PySSA for your own projects, you are welcome to give credit to 
 PySSA is tested and available for Windows 10 and 11.
 ### Windows
 For a convenient and user-friendly installation, 
-the <a href="https://github.com/urban233/ComponentInstaller">"PySSA-Installer"</a> is available
+the <a href="https://github.com/urban233/ComponentInstaller">"PySSA Component Installer"</a> is available
 (click <a href="https://github.com/urban233/ComponentInstaller/releases/">here</a> to
 automatically download the setup.exe of the latest version).
 Download the installer executable, start, and follow the instructions to install the PySSA-Installer.
-After that, open the installer and install each component (WSL2, LocalColabfold and PySSA) one after the other.
+After that, open the installer and install each component (WSL2, ColabFold and PySSA) one after the other.
 To start PySSA, double-click the created shortcut on the desktop.
 To uninstall PySSA, open the PySSA-Installer and uninstall the components which should get removed.
 
-To install PySSA in an offline environment the offline setup needs to be downloaded (available [here]()).
-This setup contains the PySSA-Installer together with all necessary files that are needed for installing ColabFold and PySSA without an internet connection. 
-The WSL2 needs to be setup beforehand. 
+**Important:**
+* WSL2 cannot be uninstalled, once it is installed! Windows will integrate the WSL2 as a system component.
+* Be aware that the computer needs to be restarted after installing WSL2.
+* A stable internet connection is required (if this is not available use the offline setup, see below).
+
+
+To install PySSA in an **offline** environment the offline setup needs to be downloaded (available [here]()).
+This setup contains the PySSA Component Installer together with all necessary files that are needed for installing ColabFold and PySSA without an internet connection. 
+The offline setup is distributed as a zip archive. Therefore, it must be extracted to run the setup.
+The WSL2 needs to be setup beforehand.<br>
 To update ColabFold or PySSA it is necessary to download a new offline setup.
+
+The PySSA Component Installer user guide is available in the installer's menu under _Help_.
+If WSL2 or ColabFold installation fails, consult the user guide and read the troubleshooting section.
 
 ### Source code
 This is a Python project based on a virtual environment. 
