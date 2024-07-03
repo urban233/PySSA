@@ -39,7 +39,7 @@ class SequenceListContextMenu:
   def __init__(self) -> None:
     """Constructor."""
     self._context_menu = QtWidgets.QMenu()
-    self._rename_sequence_action = QtWidgets.QAction("Rename Selected Protein")
+    self._rename_sequence_action = QtWidgets.QAction("Rename Selected Sequence")
     self._help_action = QtWidgets.QAction("Get Help")
 
     self._context_menu.addAction(self._rename_sequence_action)
