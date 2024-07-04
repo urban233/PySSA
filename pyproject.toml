@@ -15,7 +15,7 @@ maintainers = [
   {name = "Hannah Kullik", email =  "hannah.kullik@studmail.w-hs.de"}
 ]
 requires-python = '>=3.11'
-version = "0.11.4"
+version = "1.0.0"
 
 [tool.pyink]
 pyink-indentation = 2

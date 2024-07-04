@@ -15,3 +15,4 @@ Help
     images/images
     settings/settings
     pymol/pymol
+    known_bugs/known_bugs
