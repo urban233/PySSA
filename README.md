@@ -78,7 +78,7 @@ PySSA is tested and available for Windows 10 and 11.
 ### Windows
 For a convenient and user-friendly installation, 
 the <a href="https://github.com/urban233/ComponentInstaller">"PySSA Component Installer"</a> is available
-(click <a href="https://w-hs.sciebo.de/s/aiVqQjCEIvy7NOY">here</a> to automatically download the _full_pyssa_installer_1.0.1_setup.zip_).
+(click <a href="https://zenodo.org/records/12666581/files/full_pyssa_installer_2024.07.1_setup.zip?download=1">here</a> to automatically download the _full_pyssa_installer_2024.07.1_setup.zip_).
 
 **Important:**
 * WSL2 **cannot** be uninstalled, once it is installed! Windows will integrate the WSL2 as a system component.
@@ -86,9 +86,9 @@ the <a href="https://github.com/urban233/ComponentInstaller">"PySSA Component In
 
 #### Normal installation
 **Installation steps:**
-1. Download the full PySSA Component Installer package (click [here](https://w-hs.sciebo.de/s/aiVqQjCEIvy7NOY) to download).
+1. Download the full PySSA Component Installer package (click [here](https://zenodo.org/records/12666581/files/full_pyssa_installer_2024.07.1_setup.zip?download=1) to download).
 2. Go to the _Downloads_ folder and extract the downloaded ZIP file.
-3. Open the extracted folder and run _full_pyssa_installer_1.0.1_setup.exe_, then follow the instructions.
+3. Open the extracted folder and run _full_pyssa_installer_2024.07.1_setup.exe_, then follow the instructions.
 4. To open the PySSA Component Installer, click on the newly created desktop icon.
 5. Install all missing components.
 6. After installing all components, open PySSA by double-clicking the created shortcut on the desktop.
@@ -127,7 +127,7 @@ This **is normal**. To resolve this, click OK and either exit the application
 </div>
 
 #### Offline Environment
-If no internet connection is available, download the _full_pyssa_installer_1.0.1_setup.zip_ on a computer 
+If no internet connection is available, download the _full_pyssa_installer_2024.07.1_setup.zip_ on a computer 
 with a working internet connection and then move the zip file to the target machine.
 Be aware that the WSL2 installation needs an internet connection and can therefore be not installed 
 through the installer and must be set up beforehand.
@@ -135,7 +135,7 @@ This means an installed WSL2 environment is for an offline installation a prereq
 
 
 #### Online Installation (For experts)
-Go to [Releases](https://github.com/urban233/PySSA/releases) to download the _only_pyssa_installer_1.0.1.exe_ file. 
+Go to [Releases](https://github.com/urban233/PySSA/releases) to download the _only_pyssa_installer_1.0.2.exe_ file. 
 This will download a setup that installs the PySSA Component Installer but does not include ColabFold and PySSA. 
 These components will be downloaded automatically during the installation process.
 This installation approach could lead to errors due to an unstable internet connection. 
