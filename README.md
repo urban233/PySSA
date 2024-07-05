@@ -1,5 +1,5 @@
 # PySSA
-<!-- [![DOI](https://zenodo.org/badge/220207097.svg)](https://zenodo.org/badge/latestdoi/220207097) -->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12667158.svg)](https://doi.org/10.5281/zenodo.12667158)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-blue.svg)](https://GitHub.com/urban233/PySSA/graphs/commit-activity)
 [![GitHub issues](https://img.shields.io/github/issues/urban233/PySSA)](https://GitHub.com/urban233/PySSA/issues/)
