@@ -14,9 +14,7 @@
 
 # Python rich client for visual protein Sequence to Structure Analysis (PySSA)
 
-## <img src='https://github.com/primer/octicons/blob/main/icons/download-24.svg' width='32'/> [Quick Installation](https://github.com/urban233/PySSA/wiki/Normal-Installation)
-
-
+## <img src='https://github.com/primer/octicons/blob/main/icons/download-24.svg' width='32'/> [Quick Installation](https://github.com/urban233/PySSA/wiki/Installation-for-Windows-Operating-System)
 
 ## Contents of this document
 * [Description](#Description)
@@ -26,7 +24,7 @@
   * [Assets](#Assets)
 * [Installation](#Installation)
     * [Windows](#Windows)
-      * [Normal installation](#normal-installation)
+      * [Installation for Windows OS](#installation-for-windows-os)
       * [Offline environment](#offline-environment)
       * [Online installation (For experts)](#online-installation-for-experts)
     * [Source code](#Source-code)
@@ -86,12 +84,11 @@ For a convenient and user-friendly installation, the <a href="https://github.com
 * WSL2 **cannot** be uninstalled, once it is installed! Windows will integrate the WSL2 as a system component.
 * Be aware that the computer needs to be **restarted** after installing WSL2.
 
-#### Normal installation
-A step-by-step guide can be found in the Wiki (click [here](https://github.com/urban233/PySSA/wiki/Normal-Installation) to go to the guide).
+#### Installation for Windows OS
+A step-by-step guide can be found in the Wiki (click [here](https://github.com/urban233/PySSA/wiki/Installation-for-Windows-Operating-System) to go to the guide).
 
 #### Offline Environment
 A short guide on how to install PySSA in an offline environment can be found [here](https://github.com/urban233/PySSA/wiki/Advanced-Installation#offline-environment).
-
 
 #### Online Installation (For experts)
 A short guide on how to install PySSA by downloading ColabFold and PySSA during installation (i.e. online) can be found [here](https://github.com/urban233/PySSA/wiki/Advanced-Installation#online-installation-for-experts).
