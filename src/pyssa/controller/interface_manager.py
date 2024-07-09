@@ -30,6 +30,8 @@ import subprocess
 import sys
 import time
 from typing import TYPE_CHECKING
+from urllib import request
+
 from Bio import SeqRecord
 from PyQt5 import QtGui, QtCore
 from PyQt5 import QtWidgets
@@ -231,25 +233,17 @@ class InterfaceManager:
       constants.PYSSA_LOGGER.info(
           "Settings file not found, open configuration dialog."
       )
-      # Configuration dialog to setup setting file
-      dialog = dialog_startup.DialogStartup()
-      dialog.exec_()
-
-      # checks if the cancel button was pressed
-      if dialog_startup.global_var_terminate_app == 1:
-        os.remove(constants.SETTINGS_FULL_FILEPATH)
-        constants.PYSSA_LOGGER.info(
-            "Configuration dialog closed, and removed new settings file."
-        )
-        sys.exit()
-
       self._settings_manager.settings.app_launch = 1
-      self._settings_manager.settings.workspace_path = pathlib.Path(
-          dialog_startup.global_var_startup_workspace
-      )
-      # self._application_settings.app_launch = 1
-      # self._application_settings.workspace_path = pathlib.Path(dialog_startup.global_var_startup_workspace)
+      self._settings_manager.settings.workspace_path = constants.DEFAULT_WORKSPACE_PATH
 
+      if not os.path.exists(pathlib.Path(f"{constants.SCRATCH_DIR}")):
+        os.mkdir(pathlib.Path(f"{constants.SCRATCH_DIR}"))
+      if not os.path.exists(pathlib.Path(f"{constants.CACHE_DIR}")):
+        os.mkdir(pathlib.Path(f"{constants.CACHE_DIR}"))
+      request.urlretrieve(
+        constants.DEMO_PROJECT_SCIEBO_URL,
+        str(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")),
+      )
       constants.PYSSA_LOGGER.info("Demo projects are getting extracted ...")
       import zipfile
 
@@ -280,10 +274,8 @@ class InterfaceManager:
       constants.PYSSA_LOGGER.info("Import process of demo projects finished.")
       constants.PYSSA_LOGGER.info("Serialize settings ...")
       self._settings_manager.settings.serialize_settings()
-      # self._application_settings.serialize_settings()
       constants.PYSSA_LOGGER.info("Serialize settings finished.")
 
-      QtWidgets.QApplication.restoreOverrideCursor()
     self._settings_manager.settings = main_window_util.setup_app_settings(
         self._settings_manager.settings
     )

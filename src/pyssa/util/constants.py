@@ -29,7 +29,7 @@ from src.pyssa.util import globals, enums
 
 # General
 PLUGIN_NAME = 'PySSA'
-VERSION_NUMBER = "v1.0.0"  # The version number MUST be in double quotes
+VERSION_NUMBER = "v1.0.1"  # The version number MUST be in double quotes
 SETTINGS_FILE_NAME = 'settings'
 SETTINGS_FILENAME = 'settings.json'
 

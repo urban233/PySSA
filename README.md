@@ -14,6 +14,8 @@
 
 # Python rich client for visual protein Sequence to Structure Analysis (PySSA)
 
+## <img src='https://github.com/primer/octicons/blob/main/icons/download-24.svg' width='32'/> [Quick Installation](https://github.com/urban233/PySSA/wiki/Installation-for-Windows-Operating-System)
+
 ## Contents of this document
 * [Description](#Description)
 * [Contents of this repository](#Contents-of-this-repository)
@@ -22,7 +24,7 @@
   * [Assets](#Assets)
 * [Installation](#Installation)
     * [Windows](#Windows)
-      * [Normal installation](#normal-installation)
+      * [Installation for Windows OS](#installation-for-windows-os)
       * [Offline environment](#offline-environment)
       * [Online installation (For experts)](#online-installation-for-experts)
     * [Source code](#Source-code)
@@ -70,76 +72,26 @@ Use cases describing specific workflows can be found here (Available soon).
 
 ### Assets
 The <a href="https://github.com/urban233/PySSA/tree/main/assets">"assets"</a> folder consists of
-the subfolder <a href="https://github.com/urban233/PySSA/tree/main/assets">"images"</a> which contains the PySSA logo.
+the subfolder <a href="https://github.com/urban233/PySSA/tree/main/assets/images">"images"</a> which contains the PySSA logo.
 If you are using PySSA for your own projects, you are welcome to give credit to PySSA by using the logo in your presentations, etc.
 
 ## Installation
 PySSA is tested and available for Windows 10 and 11.
 ### Windows
-For a convenient and user-friendly installation, 
-the <a href="https://github.com/urban233/ComponentInstaller">"PySSA Component Installer"</a> is available
-(click <a href="https://zenodo.org/records/12666581/files/full_pyssa_installer_2024.07.1_setup.zip?download=1">here</a> to automatically download the _full_pyssa_installer_2024.07.1_setup.zip_).
+For a convenient and user-friendly installation, the <a href="https://github.com/urban233/ComponentInstaller">"PySSA Component Installer"</a> is available.
 
 **Important:**
 * WSL2 **cannot** be uninstalled, once it is installed! Windows will integrate the WSL2 as a system component.
 * Be aware that the computer needs to be **restarted** after installing WSL2.
 
-#### Normal installation
-**Installation steps:**
-1. Download the full PySSA Component Installer package (click [here](https://zenodo.org/records/12666581/files/full_pyssa_installer_2024.07.1_setup.zip?download=1) to download).
-2. Go to the _Downloads_ folder and extract the downloaded ZIP file.
-3. Open the extracted folder and run _full_pyssa_installer_2024.07.1_setup.exe_, then follow the instructions.
-4. To open the PySSA Component Installer, click on the newly created desktop icon.
-5. Install all missing components.
-6. After installing all components, open PySSA by double-clicking the created shortcut on the desktop.
-
-**Important note:**
-
-If you are installing PySSA for the first time, you need to specify a workspace directory. 
-This means that the window arrangement (the underlying WinBatch) will fail and show an error message. 
-This **is normal**. To resolve this, click OK and either exit the application 
-(via Project > Exit Application) or rearrange the windows using the menu Help > Rearrange Windows.
-
-**How to extract a ZIP file**
-1. Open the context menu (right-click) on the downloaded ZIP file.
-<div id='header' align='center'>
-  <img src='assets/images/unzip_pyssa_installer_1.png' width='700'/>
-</div>
-
-2. Click on _Extract_ to unzip the file to the default location.
-<div id='header' align='center'>
-  <img src='assets/images/unzip_pyssa_installer_2.png' width='700'/>
-</div>
-
-3. Wait until the extraction process finishes.
-<div id='header' align='center'>
-  <img src='assets/images/unzip_pyssa_installer_3.png' width='300'/>
-</div>
-
-4. If you are in the Downloads folder after the extraction, open this folder.
-<div id='header' align='center'>
-  <img src='assets/images/unzip_pyssa_installer_4.png' width='800'/>
-</div>
-
-5. Double-click on the .exe file to start the installation process of the PySSA Component Installer.
-<div id='header' align='center'>
-  <img src='assets/images/unzip_pyssa_installer_5.png' width='800'/>
-</div>
+#### Installation for Windows OS
+A step-by-step guide can be found in the Wiki (click [here](https://github.com/urban233/PySSA/wiki/Installation-for-Windows-Operating-System) to go to the guide).
 
 #### Offline Environment
-If no internet connection is available, download the _full_pyssa_installer_2024.07.1_setup.zip_ on a computer 
-with a working internet connection and then move the zip file to the target machine.
-Be aware that the WSL2 installation needs an internet connection and can therefore be not installed 
-through the installer and must be set up beforehand.
-This means an installed WSL2 environment is for an offline installation a prerequiste.
-
+A short guide on how to install PySSA in an offline environment can be found [here](https://github.com/urban233/PySSA/wiki/Advanced-Installation#offline-environment).
 
 #### Online Installation (For experts)
-Go to [Releases](https://github.com/urban233/PySSA/releases) to download the _only_pyssa_installer_1.0.2.exe_ file. 
-This will download a setup that installs the PySSA Component Installer but does not include ColabFold and PySSA. 
-These components will be downloaded automatically during the installation process.
-This installation approach could lead to errors due to an unstable internet connection. 
-It is advised to download the full package (which includes ColabFold and PySSA) for a more reliable installation.
+A short guide on how to install PySSA by downloading ColabFold and PySSA during installation (i.e. online) can be found [here](https://github.com/urban233/PySSA/wiki/Advanced-Installation#online-installation-for-experts).
 
 The PySSA Component Installer [user guide](https://github.com/urban233/ComponentInstaller/blob/v1.0.1/deployment/inno_setup/PySSA-Component-Installer-User-Guide.pdf) is available in the installer's menu under _Help_.
 If WSL2 or ColabFold installation fails, consult the user guide and read the troubleshooting section.
