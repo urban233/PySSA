@@ -74,7 +74,7 @@ Use cases describing specific workflows can be found here (Available soon).
 
 ### Assets
 The <a href="https://github.com/urban233/PySSA/tree/main/assets">"assets"</a> folder consists of
-the subfolder <a href="https://github.com/urban233/PySSA/tree/main/assets">"images"</a> which contains the PySSA logo.
+the subfolder <a href="https://github.com/urban233/PySSA/tree/main/assets/images">"images"</a> which contains the PySSA logo.
 If you are using PySSA for your own projects, you are welcome to give credit to PySSA by using the logo in your presentations, etc.
 
 ## Installation
