@@ -6365,6 +6365,10 @@ class MainViewController:
     # </editor-fold>
 
     try:
+      if not os.path.exists(constants.CACHE_DIR):
+        os.mkdir(constants.CACHE_DIR)
+      if not os.path.exists(constants.CACHE_PROTEIN_DIR):
+        os.mkdir(constants.CACHE_PROTEIN_DIR)
       tmp_protein_name, tmp_name_len = return_value
       if tmp_name_len == 4:
         self._interface_manager.get_task_manager().append_task_result(
