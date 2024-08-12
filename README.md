@@ -6,8 +6,9 @@
 [![GitHub contributors](https://img.shields.io/github/contributors/urban233/PySSA.svg)](https://GitHub.com/urban233/PySSA/graphs/contributors/)
 [![GitHub release](https://img.shields.io/github/release/urban233/PySSA.svg)](https://github.com/urban233/PySSA/releases/)
 [![Software Article - JChemInf](https://img.shields.io/badge/Software_Article_Preprint-ChemRxiv-blue)](https://doi.org/10.26434/chemrxiv-2024-srx5d)
+[![Application Example - Use Cases](https://img.shields.io/badge/Application%20Example-Use%20Cases-blue)](https://github.com/urban233/PySSA/wiki/Use-Cases)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-[![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/pylint-dev/pylint)
 
 <div id='header' align='center'>
   <img src='assets/images/title_logo.png' width='450'/>
@@ -16,6 +17,7 @@
 # Python rich client for visual protein Sequence to Structure Analysis (PySSA)
 
 ## <img src='https://github.com/primer/octicons/blob/main/icons/download-24.svg' width='32'/> [Quick Installation](https://github.com/urban233/PySSA/wiki/Installation-for-Windows-Operating-System)
+## <img src='https://github.com/primer/octicons/blob/main/icons/video-24.svg' width='32'/> [Use Cases](https://github.com/urban233/PySSA/wiki/Use-Cases)
 
 ## Contents of this document
 * [Description](#Description)
@@ -31,6 +33,7 @@
     * [Source code](#Source-code)
 * [Dependencies](#Dependencies)
 * [Architecture](#Architecture)
+* [Use cases](#Use-cases)
 * [Citation](#Citation)
 * [References and useful links](#References-and-useful-links)
 * [Acknowledgements](#Acknowledgements)
@@ -69,7 +72,7 @@ The <a href="https://github.com/urban233/PySSA/tree/main/docs">"docs"</a> folder
 contains the end-user documentation in the form of markdown and HTML files. 
 The subfolder <a href="https://github.com/urban233/PySSA/tree/main/docs/dev-notes">"dev-notes"</a>, contains development notes.
 
-Use cases describing specific workflows can be found here (Available soon). 
+Use cases describing specific workflows can be found [here](https://github.com/urban233/PySSA/wiki/Use-Cases). 
 
 ### Assets
 The <a href="https://github.com/urban233/PySSA/tree/main/assets">"assets"</a> folder consists of
@@ -136,6 +139,14 @@ The setup.py also supports building the documentation using the command:
 <div id='header' align='center'>
   <img src='assets/images/architecture.png' width='650'/>
 </div>
+
+## Use cases
+Three distinct use cases are presented to illustrate the functionality of PySSA. 
+Each use case builds upon the preceding one, 
+and it is therefore recommended to view all three in order to gain 
+a comprehensive understanding of the software's capabilities.
+
+The use cases can be found under this wiki page: [Use Cases](https://github.com/urban233/PySSA/wiki/Use-Cases)
 
 ## Citation
 You can cite this software or this repository as it is defined in the CITATION.cff file.
