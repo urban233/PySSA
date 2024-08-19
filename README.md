@@ -18,6 +18,8 @@
 
 ## <img src='https://github.com/primer/octicons/blob/main/icons/download-24.svg' width='32'/> [Quick Installation](https://github.com/urban233/PySSA/wiki/Installation-for-Windows-Operating-System)
 ## <img src='https://github.com/primer/octicons/blob/main/icons/video-24.svg' width='32'/> [Use Cases](https://github.com/urban233/PySSA/wiki/Use-Cases)
+A "Use Case" refers to a specific scenario that demonstrates how the software can be used to accomplish a particular task or objective.
+There are three interconnected use cases that progressively demonstrate the capabilities of PySSA: the first use case illustrates how to use PySSA to validate the ColabFold prediction method, the second involves comparing the wild-type protein to a mutated protein to determine if the amino acids crucial for receptor interaction remain in the same position, and the third showcases how to generate a high-quality, ray-traced image of a specific amino acid.
 
 ## Contents of this document
 * [Description](#Description)
