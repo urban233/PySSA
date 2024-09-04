@@ -137,7 +137,7 @@ COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT = f'/mnt/c/Users/{os.getlogin()}
 COLABFOLD_LOG_FILE_PATH = pathlib.Path(f'{PREDICTION_PDB_DIR}/log.txt')
 NOTEBOOK_RESULTS_ZIP_NAME = 'prediction'
 
-    current_time = datetime.datetime.now()
+current_time = datetime.datetime.now()
 LOG_FILENAME = f'{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log'  # noqa: E501
 LOG_FILEPATH = pathlib.Path(f'{SETTINGS_DIR}/logs/{LOG_FILENAME}')
 LOG_PATH = pathlib.Path(f'{SETTINGS_DIR}/logs')
