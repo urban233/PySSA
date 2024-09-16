@@ -1,0 +1,55 @@
+Setup ChimeraX-PyDDAdapter for development
+------------------------------------------
+
+- Pull code (in PyCharm) to get the bundle.xml for the adapter_tool
+- Download and install the new ChimeraX-1.8 version using the script install.bat in the PyDD deployment directory.
+	- https://www.cgl.ucsf.edu/chimerax/cgi-bin/secure/chimerax-get.py?file=1.8/windows/ChimeraX-1.8.exe
+	- After downloading, move the 'ChimeraX-1.8.exe' to the directory C:\ProgramData\IBCI\PyDD\temp and create all necessary folders
+	- After moving, create the folder C:\ProgramData\IBCI\PyDD\bin
+	- After creating, open a PowerShell and run C:\Users\<YOUR_USERNAME>\github_repos\PyDD_Prototype\deployment\src\install.bat
+- Install tea for ChimeraX using its own pip tool
+	- Either try to build the tea wheel file yourself, or just use the wheel file from pCloud ("P:\tmp_exchange\task_event_based_async-0.1.6-py3-none-any.whl")
+	- Run (from C:\ProgramData\IBCI\PyDD\bin\ChimeraX\bin\Scripts as cwd): ..\python.exe .\pip.exe install C:\Users\<YOUR_USERNAME>\github_repos\TEA\dist\task_event_based_async-0.1.6-py3-none-any.whl
+	- Run (from C:\ProgramData\IBCI\PyDD\bin\ChimeraX\bin\Scripts as cwd) to check if the package is installed: ..\python.exe .\pip.exe list 
+		Then search in the console output for: Task-Event-based-Async          0.1.6
+- Install PyDDAdapter (ChimeraX bundle) using the new ChimeraX installation
+	- Open ChimeraX from the Windows Search, NOT from PyCharm
+	- Run (from the ChimeraX command line): devel install C:\Users\<YOUR_USERNAME>\github_repos\PyDD_Prototype\adapter_bundle
+
+==============
+IMPORTANT NOTE
+==============
+To start developing the bundle and other functionalities related to PyDD with ChimeraX, you should follow this:
+Create two PyCharm run configurations
+(1) main: that config only starts PyDD which automatically starts ChimeraX
+(2) PyDD+ChimeraXBundle Update: that config must have a pre-launch
+task (batch config that runs copy_bundle_srcs.bat) and also runs the main.py script of PyDD
+This means everytime you change something in the adapter_bundle you must run the (2) configuration.
+If you just change something in the PyDD sources you could also run (1) but running (2) will not break something.
+
+Extra tips:
+-----------
+- If you over-install (devel install) a bundle, assure that you deleted the build files (build folder, ChimeraX_PyDDAdapter.egg-info and dist)
+- You can uninstall ChimeraX bundles using toolshed
+	- Run: toolshed uninstall <YOUR_BUNDLE_NAME>
+- You can refresh the toolshed cache
+	- Run: toolshed reload
+
+
+
+Rebuild venv for TEA:
+---------------------
+1. Delete old .venv
+2. Remove interpreter from PyCharm
+3. Create new .venv
+	- Run (from C:\Users\<YOUR_USERNAME>\github_repos\TEA): python -m venv .venv 
+4. Activate new venv
+	- Run (from C:\Users\<YOUR_USERNAME>\github_repos\TEA): .\.venv\bin\activate 
+5. Install all requirements
+	- Run (from C:\Users\<YOUR_USERNAME>\github_repos\TEA, with activated venv): pip install -r requirements.txt
+6. Install invoke
+	- Run (from C:\Users\<YOUR_USERNAME>\github_repos\TEA, with activated venv): pip install invoke
+7. Install hatch
+	- Install hatch
+	- Run (from C:\Users\<YOUR_USERNAME>\github_repos\TEA\hatch_wheels, with activated venv): pip install --no-index --find-links=. .\hatch-1.12.0-py3-none-any.whl
+	- If the command fails, you are out of luck (I don't find a way how to fix this)

@@ -1,0 +1,4 @@
+toolshed uninstall PyDDAdapter
+toolshed reload
+devel install C:\Users\student\github_repos\PyDD_Prototype\adapter_bundle
+exit

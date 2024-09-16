@@ -1,0 +1,14 @@
+﻿<Window x:Class="WslCheck.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WslCheck"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="250" Width="380">
+    <Grid Background="#fbfbfb">
+        <Label Content="WSL2 Check" FontFamily="Segoe UI Variable Display" FontSize="26" HorizontalAlignment="Left" Margin="10,0,0,0"/>
+        <TextBlock Name="ProgressTextBlock" Text="Checking if WSL2 is installed ..." FontFamily="Segoe UI Variable Display" FontSize="16" HorizontalAlignment="Center" Margin="0,60,0,0"/>
+        <Button x:Name="btnEnableWsl" Click="BtnEnableWsl_OnClick" Content="Enable" Width="100" Height="20" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0, 140,0,0" TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType"/>
+    </Grid>
+</Window>

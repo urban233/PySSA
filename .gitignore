@@ -135,3 +135,13 @@ testing_area
 /docs/pyssa-documentation/site/
 _build
 base_win_package/bin.zip
+src/c_sharp/PostInstallationRunner/bin
+src/c_sharp/PostInstallationRunner/obj
+src/c_sharp/WslCheck/bin
+src/c_sharp/WslCheck/obj
+
+deployment/base_win_package/Pmw-2.1.1.tar.gz
+deployment/base_win_package/pymol-3.0.0-cp311-cp311-win_amd64.whl
+deployment/src/offline_resources/windows_package
+deployment/src/offline_resources/windows_package.zip
+deployment/src/offline_resources/*.exe
