@@ -1,5 +1,5 @@
 #
-# PySSA - Python-Plugin for Sequence-to-Structure Analysis
+# PyDD - Python rich client for Drug Discovery
 # Copyright (C) 2024
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
@@ -19,25 +19,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the settings manager."""
-import logging
-from src.pyssa.internal.data_structures import settings
-from src.pyssa.logging_pyssa import log_handlers
-from src.pyssa.util import constants
+"""
+This module contains a description of the package "adapter".
 
-logger = logging.getLogger(__file__)
-logger.addHandler(log_handlers.log_file_handler)
-__docformat__ = "google"
+The package contains the logic to connect PyDD with
+a molecular visualization tool like ChimeraX or PyMOL.
 
+In the case of ChimeraX, a bundle is needed to connect PyDD with ChimeraX.
+The bundle should be structured as a PyQt gui tool.
+The contents of this package will be used as bundle and
+therefore be copied into the correct ChimeraX directory, if installed
+with Toolshed.
 
-class SettingsManager:
-  """Manager class for the settings data structure."""
-
-  settings: "settings.Settings"
-  """The instance of the settings data structure."""
-
-  def __init__(self) -> None:
-    """Constructor."""
-    self.settings = settings.Settings(
-        constants.SETTINGS_DIR, constants.SETTINGS_FILENAME
-    )
+In the case of PyMOL, a plugin is needed to connect PyDD with PyMOL.
+The plugin should be structured as a PyQt gui plugin.
+The contents of this package will be used as plugin and
+therefore need to be copied into the plugin directory of PyMOL.
+"""
