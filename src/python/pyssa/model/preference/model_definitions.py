@@ -12,7 +12,9 @@ class ModelDefinitions:
   PROGRAM_ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.parent.parent.parent.parent.parent.parent
   PROGRAM_BIN_ROOT_PATH = "C:\\ProgramData\\IBCI\\PyDD\\bin\\PyDD"  # Until now, it's only valid for windows
   """Path to the root of the program."""
-  PROGRAM_SRC_PATH = pathlib.Path(__file__).parent.parent.parent.parent.parent.parent.parent.parent # TODO: Must be switched to if ready for first tests f"{PROGRAM_BIN_ROOT_PATH}\\src"
+  #PROGRAM_SRC_PATH = pathlib.Path(__file__).parent.parent.parent.parent.parent.parent.parent.parent # TODO: Must be switched to if ready for first tests f"{PROGRAM_BIN_ROOT_PATH}\\src"
+  PROGRAM_SRC_PATH = pathlib.Path(
+    __file__).parent.parent.parent.parent.parent  # TODO: Must be switched to if ready for first tests f"{PROGRAM_BIN_ROOT_PATH}\\src"
   """Path to the root of the program sources."""
   DEFAULT_WORKSPACE_PATH: pathlib.Path = pathlib.Path(
     f"{os.path.expanduser('~')}/.pydd/default_workspace"

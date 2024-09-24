@@ -83,7 +83,7 @@ def set_stylesheet(self) -> None:  # noqa: ANN001
   #logger.info("Using the 'in-project' stylesheet.")
   with open(
           pathlib.Path(
-            f"{model_definitions.ModelDefinitions.PROGRAM_SRC_PATH}/python/pydd/components/internal/core/util/gui_style/style.css"
+            f"{model_definitions.ModelDefinitions.PROGRAM_SRC_PATH}/python/pyssa/model/util/gui_style/style.css"
           ),
           "r",
           encoding="utf-8",

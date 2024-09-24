@@ -73,11 +73,11 @@ logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 
-class MainViewController:
+class MainFrameController:
   """Class for main presenter of the pyssa plugin."""
 
   # <editor-fold desc="Class attributes">
-  _view: "main_view.MainView"
+  _view: "main_view.MainFrame"
   """The main view of the pyssa plugin."""
 
   _application_settings: "settings.Settings"
@@ -118,7 +118,7 @@ class MainViewController:
 
     # </editor-fold>
 
-    self._view: "main_view.MainView" = the_interface_manager.get_main_view()
+    self._view: "main_view.MainFrame" = the_interface_manager.get_main_view()
     self._interface_manager: "interface_manager.InterfaceManager" = (
       the_interface_manager
     )

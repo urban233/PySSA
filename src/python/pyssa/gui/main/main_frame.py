@@ -22,25 +22,28 @@
 """Module for the main view of the PySSA plugin."""
 import logging
 
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAbstractItemView
-from src.pyssa.gui.ui.custom_widgets import custom_line_edit, toggle_button, color_grid
-from src.pyssa.gui.ui.forms.auto_generated import auto_main_view
-from src.pyssa.gui.ui.styles import styles
-from src.pyssa.logging_pyssa import log_handlers
-from src.pyssa.util import constants
-from src.pyssa.util import gui_utils
-from src.pyssa.util import exception
+from PyQt6 import QtWidgets
+from PyQt6 import QtGui
+from PyQt6 import QtCore
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QAbstractItemView
+# from pyssa.gui.custom_widgets import custom_line_edit
+# from pyssa.gui.custom_widgets import toggle_button
+from pyssa.gui.custom_widgets import color_grid
+from pyssa.gui.main.forms.auto import auto_main_view
+from pyssa.model.util.gui_style import styles_utils
+#from pyssa.util import constants
+#from pyssa.util import gui_utils
 
-logger = logging.getLogger(__file__)
-logger.addHandler(log_handlers.log_file_handler)
+from pyssa.model.util import exception
+from pyssa.model.pyssa_logging import default_logging
+
+logger = default_logging.setup_logger(__file__)
+
 __docformat__ = "google"
 
 
-class MainView(QtWidgets.QMainWindow):
+class MainFrame(QtWidgets.QMainWindow):
   """This class represents the main view of the application."""
 
   dialogClosed = QtCore.pyqtSignal(tuple)
@@ -56,13 +59,13 @@ class MainView(QtWidgets.QMainWindow):
     self.progress_bar = QtWidgets.QProgressBar()
     self.status_bar.addWidget(self.progress_bar)
     self.progress_bar.hide()
-    self.add_custom_widgets()
+    #self.add_custom_widgets()
     self.initialize_ui()
     self.add_custom_job_panels()
-    gui_utils.fill_combo_box(self.ui.box_protein_color, constants.PYMOL_COLORS)
-    gui_utils.fill_combo_box(
-        self.ui.box_protein_pair_color, constants.PYMOL_COLORS
-    )
+    # gui_utils.fill_combo_box(self.ui.box_protein_color, constants.PYMOL_COLORS)
+    # gui_utils.fill_combo_box(
+    #     self.ui.box_protein_pair_color, constants.PYMOL_COLORS
+    # )
 
   def closeEvent(self, event) -> None:  # noqa: ANN001
     """Overrides the closeEvent of the QMainWindow class.
@@ -178,13 +181,13 @@ class MainView(QtWidgets.QMainWindow):
         0, self.lbl_job_overview
     )  # After inserting the widget count is 2
     self.ui.job_overview_layout.setAlignment(
-        self.lbl_job_overview, QtCore.Qt.AlignHCenter
+        self.lbl_job_overview, QtCore.Qt.AlignmentFlag.AlignHCenter
     )
     self.ui.job_notification_layout.insertWidget(
         0, self.lbl_job_notification
     )  # After inserting the widget count is 2
     self.ui.job_notification_layout.setAlignment(
-        self.lbl_job_notification, QtCore.Qt.AlignHCenter
+        self.lbl_job_notification, QtCore.Qt.AlignmentFlag.AlignHCenter
     )
 
   def add_custom_widgets(self) -> None:
@@ -284,7 +287,7 @@ class MainView(QtWidgets.QMainWindow):
     self.ui.btn_save_sequence.setEnabled(False)
     self.ui.btn_delete_sequence.setEnabled(False)
     self.ui.seqs_list_view.setEditTriggers(
-        QtWidgets.QAbstractItemView.NoEditTriggers
+        QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
     )
 
     # Proteins tab
@@ -297,7 +300,7 @@ class MainView(QtWidgets.QMainWindow):
     self.ui.btn_update_protein_scene.setEnabled(False)
     self.ui.btn_delete_protein_scene.setEnabled(False)
     self.ui.proteins_tree_view.setEditTriggers(
-        QtWidgets.QAbstractItemView.NoEditTriggers
+        QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
     )
     self.ui.lbl_pymol_protein_scene.setText("PyMOL Scene: No Scene Loaded")
 
@@ -333,14 +336,14 @@ class MainView(QtWidgets.QMainWindow):
     self.ui.cb_protein_mesh.hide()
     self.ui.cb_protein_surface.hide()
     # toggle buttons
-    self.tg_protein_cartoon.hide()
-    self.tg_protein_sticks.hide()
-    self.tg_protein_ribbon.hide()
-    self.tg_protein_lines.hide()
-    self.tg_protein_spheres.hide()
-    self.tg_protein_dots.hide()
-    self.tg_protein_mesh.hide()
-    self.tg_protein_surface.hide()
+    # self.tg_protein_cartoon.hide()
+    # self.tg_protein_sticks.hide()
+    # self.tg_protein_ribbon.hide()
+    # self.tg_protein_lines.hide()
+    # self.tg_protein_spheres.hide()
+    # self.tg_protein_dots.hide()
+    # self.tg_protein_mesh.hide()
+    # self.tg_protein_surface.hide()
 
     self.ui.btn_protein_hide_all_representations.hide()
 
@@ -356,7 +359,7 @@ class MainView(QtWidgets.QMainWindow):
     self.ui.btn_update_protein_pair_scene.setEnabled(False)
     self.ui.btn_delete_protein_pair_scene.setEnabled(False)
     self.ui.protein_pairs_tree_view.setEditTriggers(
-        QtWidgets.QAbstractItemView.NoEditTriggers
+        QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
     )
     self.ui.lbl_pymol_protein_pair_scene.setText("PyMOL Scene: No Scene Loaded")
 
@@ -397,14 +400,14 @@ class MainView(QtWidgets.QMainWindow):
     self.ui.cb_protein_pair_surface.hide()
     # toggle buttons
     # self.tg_protein_pair_color_atoms.hide()
-    self.tg_protein_pair_cartoon.hide()
-    self.tg_protein_pair_sticks.hide()
-    self.tg_protein_pair_ribbon.hide()
-    self.tg_protein_pair_lines.hide()
-    self.tg_protein_pair_spheres.hide()
-    self.tg_protein_pair_dots.hide()
-    self.tg_protein_pair_mesh.hide()
-    self.tg_protein_pair_surface.hide()
+    # self.tg_protein_pair_cartoon.hide()
+    # self.tg_protein_pair_sticks.hide()
+    # self.tg_protein_pair_ribbon.hide()
+    # self.tg_protein_pair_lines.hide()
+    # self.tg_protein_pair_spheres.hide()
+    # self.tg_protein_pair_dots.hide()
+    # self.tg_protein_pair_mesh.hide()
+    # self.tg_protein_pair_surface.hide()
 
     self.ui.lbl_info_3.setText("Please select a protein pair.")
     self.ui.lbl_info_4.hide()
@@ -414,7 +417,7 @@ class MainView(QtWidgets.QMainWindow):
     self.cb_chain_representation = QtWidgets.QComboBox()
     self.cb_chain_color_protein_pair = QtWidgets.QComboBox()
     self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
-    self.line_edit_seq_name = custom_line_edit.CustomLineEdit()
+    #self.line_edit_seq_name = custom_line_edit.CustomLineEdit()
     self.ui.lbl_pymol_protein_pair_scene.setWordWrap(False)
 
     self.build_sequence_table()
@@ -422,15 +425,15 @@ class MainView(QtWidgets.QMainWindow):
     # self.build_protein_pairs_table()
 
     # Main tree views
-    self.ui.seqs_list_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
-    self.ui.seqs_list_view.setContextMenuPolicy(Qt.CustomContextMenu)
-    self.ui.proteins_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
-    self.ui.protein_pairs_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
+    self.ui.seqs_list_view.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+    self.ui.seqs_list_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+    self.ui.proteins_tree_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+    self.ui.protein_pairs_tree_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     self.setMinimumWidth(700)
     self.setMinimumHeight(900)
 
     # <editor-fold desc="Set icons">
-    pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
+    pixmapi = QtWidgets.QStyle.StandardPixmap.SP_MessageBoxQuestion
     # <editor-fold desc="Help">
     icon = self.style().standardIcon(pixmapi)
     self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
@@ -751,23 +754,23 @@ class MainView(QtWidgets.QMainWindow):
     # </editor-fold>
 
     self._create_all_tooltips()
-    pixmap = QtGui.QPixmap(str(constants.PLUGIN_LOGO_WITH_CAPTION_FILEPATH))
-    scaled_pixmap = pixmap.scaled(
-        450,
-        450,
-        aspectRatioMode=Qt.KeepAspectRatio,
-        transformMode=Qt.SmoothTransformation,
-    )
-    # Set the scaled pixmap to the QLabel
-    self.ui.lbl_logo.setPixmap(scaled_pixmap)
-    self.ui.lbl_logo.setAlignment(Qt.AlignCenter)
-    styles.set_stylesheet_homepage(self)
-    self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-    self.setWindowTitle("PySSA")
-    constants.PYSSA_LOGGER.info(
-        f"PySSA started with version {constants.VERSION_NUMBER}."
-    )
-    constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
+    #pixmap = QtGui.QPixmap(str(constants.PLUGIN_LOGO_WITH_CAPTION_FILEPATH))
+    # scaled_pixmap = pixmap.scaled(
+    #     450,
+    #     450,
+    #     aspectRatioMode=Qt.KeepAspectRatio,
+    #     transformMode=Qt.SmoothTransformation,
+    # )
+    # # Set the scaled pixmap to the QLabel
+    # self.ui.lbl_logo.setPixmap(scaled_pixmap)
+    self.ui.lbl_logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    #styles_utils.set_stylesheet_homepage(self)
+    # self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    # self.setWindowTitle("PySSA")
+    # constants.PYSSA_LOGGER.info(
+    #     f"PySSA started with version {constants.VERSION_NUMBER}."
+    # )
+    # constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
 
   def disable_menu_bar_without_exit_application(self) -> None:
     """Disables the menu entries but not 'Exit Application'."""
