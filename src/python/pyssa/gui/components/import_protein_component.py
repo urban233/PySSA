@@ -6,10 +6,10 @@ from Bio.PDB import PDBParser
 from tea.concurrent import task_result
 from tea.concurrent import action
 
-from src.python.pydd.components.internal.abstract_interfaces import icomponent
+from pyssa.gui.abstract_interfaces import icomponent
 from pyssa.model.central_objects import protein
-from .gui import dialog_import_protein
-from .control import import_protein_controller
+from pyssa.gui.dialog import dialog_import_protein
+from pyssa.gui.control import import_protein_controller
 from pyssa.model.util import exception
 from pyssa.model.pyssa_logging import default_logging
 

@@ -31,27 +31,27 @@ class DialogCreateProject(base_dialog.BaseDialog):
     #styles_util.color_bottom_frame_button(self.ui.btn_new_create_project)
     #styles_utils.set_stylesheet(self)
     #self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-    self.setStyleSheet(
-      """
-      QDialog { background: white; }
-      QFrame#frame_bottom {
-          background-color: #f7f8fa;
-          border-style: solid;
-          border-width: 1px;
-          border-radius: 6px;
-          border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
-          border-top-color: #ebecf0;
-          border-top-left-radius: 0px;
-          border-top-right-radius: 0px;
-      }
-      QLabel#lbl_description {
-          color: #367AF6;
-          font: bold;
-          font-size: 16px;
-          font-family: "Segoe UI Variable";
-      }
-      """
-    )
+    # self.setStyleSheet(
+    #   """
+    #   QDialog { background: white; }
+    #   QFrame#frame_bottom {
+    #       background-color: #f7f8fa;
+    #       border-style: solid;
+    #       border-width: 1px;
+    #       border-radius: 6px;
+    #       border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+    #       border-top-color: #ebecf0;
+    #       border-top-left-radius: 0px;
+    #       border-top-right-radius: 0px;
+    #   }
+    #   QLabel#lbl_description {
+    #       color: #367AF6;
+    #       font: bold;
+    #       font-size: 16px;
+    #       font-family: "Segoe UI Variable";
+    #   }
+    #   """
+    # )
     self.setWindowTitle(" ")
     self.setWindowFlags(
       self.windowFlags() & ~QtCore.Qt.WindowType.WindowContextHelpButtonHint

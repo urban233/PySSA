@@ -40,7 +40,7 @@ class DialogImportSequence(base_dialog.BaseDialog):
     )
     self.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
     icons.set_icon(self.ui.btn_help, model_definitions.IconsEnum.HELP)
-    styles_utils.set_stylesheet(self)
+    #styles_utils.set_stylesheet(self)
     #styles_utils.color_bottom_frame_button(self.ui.btn_import_sequence)
 
   def closeEvent(self, event) -> None:

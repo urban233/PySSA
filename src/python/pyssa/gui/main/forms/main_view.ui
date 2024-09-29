@@ -908,8 +908,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>295</width>
-                        <height>258</height>
+                        <width>291</width>
+                        <height>275</height>
                        </rect>
                       </property>
                       <property name="styleSheet">
@@ -935,13 +935,6 @@
                         <layout class="QHBoxLayout" name="protein_cartoon_layout">
                          <item>
                           <widget class="QLabel" name="lbl_protein_cartoon">
-                           <property name="text">
-                            <string>Cartoon</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="cb_protein_cartoon">
                            <property name="text">
                             <string>Cartoon</string>
                            </property>
@@ -986,13 +979,6 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QCheckBox" name="cb_protein_sticks">
-                           <property name="text">
-                            <string>Sticks</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
                           <spacer name="horizontalSpacer_11">
                            <property name="orientation">
                             <enum>Qt::Horizontal</enum>
@@ -1025,13 +1011,6 @@
                         <layout class="QHBoxLayout" name="protein_ribbon_layout">
                          <item>
                           <widget class="QLabel" name="lbl_protein_ribbon">
-                           <property name="text">
-                            <string>Ribbon</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="cb_protein_ribbon">
                            <property name="text">
                             <string>Ribbon</string>
                            </property>
@@ -1076,13 +1055,6 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QCheckBox" name="cb_protein_lines">
-                           <property name="text">
-                            <string>Lines</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
                           <spacer name="horizontalSpacer_25">
                            <property name="orientation">
                             <enum>Qt::Horizontal</enum>
@@ -1095,19 +1067,26 @@
                            </property>
                           </spacer>
                          </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_show_lines">
+                           <property name="text">
+                            <string>Show</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_hide_lines">
+                           <property name="text">
+                            <string>Hide</string>
+                           </property>
+                          </widget>
+                         </item>
                         </layout>
                        </item>
                        <item>
                         <layout class="QHBoxLayout" name="protein_spheres_layout">
                          <item>
                           <widget class="QLabel" name="lbl_protein_spheres">
-                           <property name="text">
-                            <string>Spheres</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="cb_protein_spheres">
                            <property name="text">
                             <string>Spheres</string>
                            </property>
@@ -1126,19 +1105,26 @@
                            </property>
                           </spacer>
                          </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_show_spheres">
+                           <property name="text">
+                            <string>Show</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_hide_spheres">
+                           <property name="text">
+                            <string>Hide</string>
+                           </property>
+                          </widget>
+                         </item>
                         </layout>
                        </item>
                        <item>
                         <layout class="QHBoxLayout" name="protein_dots_layout">
                          <item>
                           <widget class="QLabel" name="lbl_protein_dots">
-                           <property name="text">
-                            <string>Dots</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="cb_protein_dots">
                            <property name="text">
                             <string>Dots</string>
                            </property>
@@ -1157,19 +1143,26 @@
                            </property>
                           </spacer>
                          </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_show_dots">
+                           <property name="text">
+                            <string>Show</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_hide_dots">
+                           <property name="text">
+                            <string>Hide</string>
+                           </property>
+                          </widget>
+                         </item>
                         </layout>
                        </item>
                        <item>
                         <layout class="QHBoxLayout" name="protein_mesh_layout">
                          <item>
                           <widget class="QLabel" name="lbl_protein_mesh">
-                           <property name="text">
-                            <string>Mesh</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="cb_protein_mesh">
                            <property name="text">
                             <string>Mesh</string>
                            </property>
@@ -1188,19 +1181,26 @@
                            </property>
                           </spacer>
                          </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_show_mesh">
+                           <property name="text">
+                            <string>Show</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_hide_mesh">
+                           <property name="text">
+                            <string>Hide</string>
+                           </property>
+                          </widget>
+                         </item>
                         </layout>
                        </item>
                        <item>
                         <layout class="QHBoxLayout" name="protein_surface_layout">
                          <item>
                           <widget class="QLabel" name="lbl_protein_surface">
-                           <property name="text">
-                            <string>Surface</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="cb_protein_surface">
                            <property name="text">
                             <string>Surface</string>
                            </property>
@@ -1218,6 +1218,20 @@
                             </size>
                            </property>
                           </spacer>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_show_surface">
+                           <property name="text">
+                            <string>Show</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_hide_surface">
+                           <property name="text">
+                            <string>Hide</string>
+                           </property>
+                          </widget>
                          </item>
                         </layout>
                        </item>
@@ -1275,6 +1289,19 @@
                           </item>
                          </layout>
                         </widget>
+                       </item>
+                       <item>
+                        <spacer name="verticalSpacer_4">
+                         <property name="orientation">
+                          <enum>Qt::Vertical</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>20</width>
+                           <height>40</height>
+                          </size>
+                         </property>
+                        </spacer>
                        </item>
                       </layout>
                      </widget>
@@ -1924,9 +1951,9 @@
                       <property name="geometry">
                        <rect>
                         <x>0</x>
-                        <y>0</y>
+                        <y>-203</y>
                         <width>295</width>
-                        <height>258</height>
+                        <height>275</height>
                        </rect>
                       </property>
                       <property name="sizePolicy">
@@ -1946,13 +1973,6 @@
                         <layout class="QHBoxLayout" name="protein_pair_cartoon_layout">
                          <item>
                           <widget class="QLabel" name="lbl_protein_pair_cartoon">
-                           <property name="text">
-                            <string>Cartoon</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="cb_protein_pair_cartoon">
                            <property name="text">
                             <string>Cartoon</string>
                            </property>
@@ -1997,13 +2017,6 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QCheckBox" name="cb_protein_pair_sticks">
-                           <property name="text">
-                            <string>Sticks</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
                           <spacer name="horizontalSpacer_29">
                            <property name="orientation">
                             <enum>Qt::Horizontal</enum>
@@ -2036,13 +2049,6 @@
                         <layout class="QHBoxLayout" name="protein_pair_ribbon_layout">
                          <item>
                           <widget class="QLabel" name="lbl_protein_pair_ribbon">
-                           <property name="text">
-                            <string>Ribbon</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="cb_protein_pair_ribbon">
                            <property name="text">
                             <string>Ribbon</string>
                            </property>
@@ -2087,13 +2093,6 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QCheckBox" name="cb_protein_pair_lines">
-                           <property name="text">
-                            <string>Lines</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
                           <spacer name="horizontalSpacer_33">
                            <property name="orientation">
                             <enum>Qt::Horizontal</enum>
@@ -2106,19 +2105,26 @@
                            </property>
                           </spacer>
                          </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_pair_show_lines">
+                           <property name="text">
+                            <string>Show</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_pair_hide_lines">
+                           <property name="text">
+                            <string>Hide</string>
+                           </property>
+                          </widget>
+                         </item>
                         </layout>
                        </item>
                        <item>
                         <layout class="QHBoxLayout" name="protein_pair_spheres_layout">
                          <item>
                           <widget class="QLabel" name="lbl_protein_pair_spheres">
-                           <property name="text">
-                            <string>Spheres</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="cb_protein_pair_spheres">
                            <property name="text">
                             <string>Spheres</string>
                            </property>
@@ -2137,19 +2143,26 @@
                            </property>
                           </spacer>
                          </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_pair_show_spheres">
+                           <property name="text">
+                            <string>Show</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_pair_hide_spheres">
+                           <property name="text">
+                            <string>Hide</string>
+                           </property>
+                          </widget>
+                         </item>
                         </layout>
                        </item>
                        <item>
                         <layout class="QHBoxLayout" name="protein_pair_dots_layout">
                          <item>
                           <widget class="QLabel" name="lbl_protein_pair_dots">
-                           <property name="text">
-                            <string>Dots</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="cb_protein_pair_dots">
                            <property name="text">
                             <string>Dots</string>
                            </property>
@@ -2168,19 +2181,26 @@
                            </property>
                           </spacer>
                          </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_pair_show_dots">
+                           <property name="text">
+                            <string>Show</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_pair_hide_dots">
+                           <property name="text">
+                            <string>Hide</string>
+                           </property>
+                          </widget>
+                         </item>
                         </layout>
                        </item>
                        <item>
                         <layout class="QHBoxLayout" name="protein_pair_mesh_layout">
                          <item>
                           <widget class="QLabel" name="lbl_protein_pair_mesh">
-                           <property name="text">
-                            <string>Mesh</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="cb_protein_pair_mesh">
                            <property name="text">
                             <string>Mesh</string>
                            </property>
@@ -2199,19 +2219,26 @@
                            </property>
                           </spacer>
                          </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_pair_show_mesh">
+                           <property name="text">
+                            <string>Show</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_pair_hide_mesh">
+                           <property name="text">
+                            <string>Hide</string>
+                           </property>
+                          </widget>
+                         </item>
                         </layout>
                        </item>
                        <item>
                         <layout class="QHBoxLayout" name="protein_pair_surface_layout">
                          <item>
                           <widget class="QLabel" name="lbl_protein_pair_surface">
-                           <property name="text">
-                            <string>Surface</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="cb_protein_pair_surface">
                            <property name="text">
                             <string>Surface</string>
                            </property>
@@ -2229,6 +2256,20 @@
                             </size>
                            </property>
                           </spacer>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_pair_show_surface">
+                           <property name="text">
+                            <string>Show</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btn_protein_pair_hide_surface">
+                           <property name="text">
+                            <string>Hide</string>
+                           </property>
+                          </widget>
                          </item>
                         </layout>
                        </item>
@@ -2289,6 +2330,19 @@
                           </item>
                          </layout>
                         </widget>
+                       </item>
+                       <item>
+                        <spacer name="verticalSpacer_5">
+                         <property name="orientation">
+                          <enum>Qt::Vertical</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>20</width>
+                           <height>40</height>
+                          </size>
+                         </property>
+                        </spacer>
                        </item>
                       </layout>
                      </widget>

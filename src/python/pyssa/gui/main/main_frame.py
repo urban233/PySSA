@@ -31,7 +31,8 @@ from PyQt6.QtWidgets import QAbstractItemView
 # from pyssa.gui.custom_widgets import toggle_button
 from pyssa.gui.custom_widgets import color_grid
 from pyssa.gui.main.forms.auto import auto_main_view
-from pyssa.model.util.gui_style import styles_utils
+from pyssa.model.preference import model_definitions
+from pyssa.model.util.gui_style import styles_utils, icons
 #from pyssa.util import constants
 #from pyssa.util import gui_utils
 
@@ -55,17 +56,13 @@ class MainFrame(QtWidgets.QMainWindow):
     # build ui object
     self.ui = auto_main_view.Ui_MainWindow()
     self.ui.setupUi(self)
-    self.status_bar = QtWidgets.QStatusBar()
     self.progress_bar = QtWidgets.QProgressBar()
+    self.status_bar = QtWidgets.QStatusBar()
     self.status_bar.addWidget(self.progress_bar)
     self.progress_bar.hide()
-    #self.add_custom_widgets()
+    self.add_custom_widgets()
     self.initialize_ui()
     self.add_custom_job_panels()
-    # gui_utils.fill_combo_box(self.ui.box_protein_color, constants.PYMOL_COLORS)
-    # gui_utils.fill_combo_box(
-    #     self.ui.box_protein_pair_color, constants.PYMOL_COLORS
-    # )
 
   def closeEvent(self, event) -> None:  # noqa: ANN001
     """Overrides the closeEvent of the QMainWindow class.
@@ -192,66 +189,9 @@ class MainFrame(QtWidgets.QMainWindow):
 
   def add_custom_widgets(self) -> None:
     """Add custom widgets to the UI for controlling protein and protein pair representations."""
-    # Protein
-    self.tg_protein_white_bg = toggle_button.ToggleWidget()
-    self.ui.protein_white_bg_layout.addWidget(self.tg_protein_white_bg)
-    self.tg_protein_color_atoms = toggle_button.ToggleWidget()
-    self.ui.protein_atoms_layout.addWidget(self.tg_protein_color_atoms)
-    # fixme: this code could become useful
-    # self.tg_protein_hydrogen_atoms = toggle_button.ToggleWidget()
-    # self.ui.protein_hydrogen_layout.addWidget(self.tg_protein_hydrogen_atoms)
-    # representations
-    self.tg_protein_cartoon = toggle_button.ToggleWidget()
-    self.ui.protein_cartoon_layout.addWidget(self.tg_protein_cartoon)
-    self.tg_protein_sticks = toggle_button.ToggleWidget()
-    self.ui.protein_sticks_layout.addWidget(self.tg_protein_sticks)
-    self.tg_protein_ribbon = toggle_button.ToggleWidget()
-    self.ui.protein_ribbon_layout.addWidget(self.tg_protein_ribbon)
-    self.tg_protein_lines = toggle_button.ToggleWidget()
-    self.ui.protein_lines_layout.addWidget(self.tg_protein_lines)
-    self.tg_protein_spheres = toggle_button.ToggleWidget()
-    self.ui.protein_spheres_layout.addWidget(self.tg_protein_spheres)
-    self.tg_protein_dots = toggle_button.ToggleWidget()
-    self.ui.protein_dots_layout.addWidget(self.tg_protein_dots)
-    self.tg_protein_mesh = toggle_button.ToggleWidget()
-    self.ui.protein_mesh_layout.addWidget(self.tg_protein_mesh)
-    self.tg_protein_surface = toggle_button.ToggleWidget()
-    self.ui.protein_surface_layout.addWidget(self.tg_protein_surface)
-
-    self.color_grid_proteins = color_grid.PyMOLColorGrid()
+    self.color_grid_proteins = color_grid.ColorGrid()
     self.ui.verticalLayout_6.insertWidget(2, self.color_grid_proteins)
-
-    # Protein Pair
-    self.tg_protein_pair_white_bg = toggle_button.ToggleWidget()
-    self.ui.protein_pair_white_bg_layout.addWidget(
-        self.tg_protein_pair_white_bg
-    )
-    self.tg_protein_pair_color_atoms = toggle_button.ToggleWidget()
-    self.ui.protein_pair_atoms_layout.addWidget(
-        self.tg_protein_pair_color_atoms
-    )
-    # fixme: this code could become useful
-    # self.tg_protein_pair_hydrogen_atoms = toggle_button.ToggleWidget()
-    # self.ui.protein_pair_hydrogen_layout.addWidget(self.tg_protein_pair_hydrogen_atoms)
-    # representations
-    self.tg_protein_pair_cartoon = toggle_button.ToggleWidget()
-    self.ui.protein_pair_cartoon_layout.addWidget(self.tg_protein_pair_cartoon)
-    self.tg_protein_pair_sticks = toggle_button.ToggleWidget()
-    self.ui.protein_pair_sticks_layout.addWidget(self.tg_protein_pair_sticks)
-    self.tg_protein_pair_ribbon = toggle_button.ToggleWidget()
-    self.ui.protein_pair_ribbon_layout.addWidget(self.tg_protein_pair_ribbon)
-    self.tg_protein_pair_lines = toggle_button.ToggleWidget()
-    self.ui.protein_pair_lines_layout.addWidget(self.tg_protein_pair_lines)
-    self.tg_protein_pair_spheres = toggle_button.ToggleWidget()
-    self.ui.protein_pair_spheres_layout.addWidget(self.tg_protein_pair_spheres)
-    self.tg_protein_pair_dots = toggle_button.ToggleWidget()
-    self.ui.protein_pair_dots_layout.addWidget(self.tg_protein_pair_dots)
-    self.tg_protein_pair_mesh = toggle_button.ToggleWidget()
-    self.ui.protein_pair_mesh_layout.addWidget(self.tg_protein_pair_mesh)
-    self.tg_protein_pair_surface = toggle_button.ToggleWidget()
-    self.ui.protein_pair_surface_layout.addWidget(self.tg_protein_pair_surface)
-
-    self.color_grid_protein_pairs = color_grid.PyMOLColorGrid()
+    self.color_grid_protein_pairs = color_grid.ColorGrid()
     self.ui.verticalLayout_10.insertWidget(2, self.color_grid_protein_pairs)
 
   def initialize_ui(self) -> None:
@@ -259,17 +199,6 @@ class MainFrame(QtWidgets.QMainWindow):
     self.ui.lbl_project_name.hide()
     self.ui.lbl_session_name.hide()
     self.ui.project_tab_widget.hide()
-    self.ui.action_use_project.setEnabled(False)
-    self.ui.action_export_project.setEnabled(False)
-    self.ui.action_close_project.setEnabled(False)
-    self.ui.action_predict_monomer.setEnabled(False)
-    self.ui.action_predict_multimer.setEnabled(False)
-    self.ui.action_distance_analysis.setEnabled(False)
-    self.ui.action_results_summary.setEnabled(False)
-    self.ui.action_preview_image.setEnabled(False)
-    self.ui.action_ray_tracing_image.setEnabled(False)
-    self.ui.action_simple_image.setEnabled(False)
-    self.ui.action_protein_regions.setEnabled(False)
 
     # fixme: the tutorial action of the menubar IS HIDDEN!!!
     self.ui.action_tutorials.setVisible(False)
@@ -284,139 +213,36 @@ class MainFrame(QtWidgets.QMainWindow):
     self.ui.lbl_session_name.setText("Session Name: No Session Loaded")
 
     # Sequences tab
-    self.ui.btn_save_sequence.setEnabled(False)
-    self.ui.btn_delete_sequence.setEnabled(False)
     self.ui.seqs_list_view.setEditTriggers(
         QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
     )
 
     # Proteins tab
-    self.ui.btn_protein_tree_view_expand.setEnabled(False)
-    self.ui.btn_protein_tree_view_collapse.setEnabled(False)
-    self.ui.btn_save_protein.setEnabled(False)
-    self.ui.btn_delete_protein.setEnabled(False)
-    self.ui.btn_open_protein_session.setEnabled(False)
-    self.ui.btn_create_protein_scene.setEnabled(False)
-    self.ui.btn_update_protein_scene.setEnabled(False)
-    self.ui.btn_delete_protein_scene.setEnabled(False)
     self.ui.proteins_tree_view.setEditTriggers(
         QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
     )
     self.ui.lbl_pymol_protein_scene.setText("PyMOL Scene: No Scene Loaded")
 
-    # Hides all ui elements for the scene modifications
-    self.ui.lbl_protein_color.hide()
-    self.ui.lbl_protein_atoms.hide()
-    self.ui.lbl_protein_cartoon.hide()
-    self.ui.lbl_protein_sticks.hide()
-    self.ui.lbl_protein_ribbon.hide()
-    self.ui.lbl_protein_all_representations.hide()
-
-    self.ui.frame_protein_color.hide()
-    self.ui.frame_protein_repr.hide()
     self.ui.box_protein_color.hide()
-    self.ui.lbl_protein_current_color.hide()
     self.ui.lbl_protein_current_color.setText("")
-    # old
-    self.ui.btn_protein_color_atoms.hide()
-    self.ui.btn_protein_reset_atoms.hide()
-    self.ui.btn_protein_show_cartoon.hide()
-    self.ui.btn_protein_hide_cartoon.hide()
-    self.ui.btn_protein_show_sticks.hide()
-    self.ui.btn_protein_hide_sticks.hide()
-    self.ui.btn_protein_show_ribbon.hide()
-    self.ui.btn_protein_hide_ribbon.hide()
-    # checkboxes
-    self.ui.cb_protein_cartoon.hide()
-    self.ui.cb_protein_sticks.hide()
-    self.ui.cb_protein_ribbon.hide()
-    self.ui.cb_protein_lines.hide()
-    self.ui.cb_protein_spheres.hide()
-    self.ui.cb_protein_dots.hide()
-    self.ui.cb_protein_mesh.hide()
-    self.ui.cb_protein_surface.hide()
-    # toggle buttons
-    # self.tg_protein_cartoon.hide()
-    # self.tg_protein_sticks.hide()
-    # self.tg_protein_ribbon.hide()
-    # self.tg_protein_lines.hide()
-    # self.tg_protein_spheres.hide()
-    # self.tg_protein_dots.hide()
-    # self.tg_protein_mesh.hide()
-    # self.tg_protein_surface.hide()
-
-    self.ui.btn_protein_hide_all_representations.hide()
 
     self.ui.lbl_info.setText("Please select a protein.")
     self.ui.lbl_info_2.hide()
 
     # Protein Pairs tab
-    self.ui.btn_protein_pair_tree_view_expand.setEnabled(False)
-    self.ui.btn_protein_pair_tree_view_collapse.setEnabled(False)
-    self.ui.btn_delete_protein_pair.setEnabled(False)
-    self.ui.btn_open_protein_pair_session.setEnabled(False)
-    self.ui.btn_create_protein_pair_scene.setEnabled(False)
-    self.ui.btn_update_protein_pair_scene.setEnabled(False)
-    self.ui.btn_delete_protein_pair_scene.setEnabled(False)
     self.ui.protein_pairs_tree_view.setEditTriggers(
         QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
     )
     self.ui.lbl_pymol_protein_pair_scene.setText("PyMOL Scene: No Scene Loaded")
 
     # Hides all ui elements for the scene modifications
-    self.ui.lbl_protein_pair_current_color.hide()
     self.ui.lbl_protein_pair_current_color.setText("")
-    self.ui.lbl_protein_pair_pymol_colors.hide()
-    self.ui.lbl_protein_pair_color.hide()
-    self.ui.lbl_protein_pair_atoms.hide()
-    self.ui.lbl_protein_pair_cartoon.hide()
-    self.ui.lbl_protein_pair_sticks.hide()
-    self.ui.lbl_protein_pair_ribbon.hide()
-    self.ui.lbl_protein_pair_lines.hide()
-    self.ui.lbl_protein_pair_spheres.hide()
-    self.ui.lbl_protein_pair_dots.hide()
-    self.ui.lbl_protein_pair_mesh.hide()
-    self.ui.lbl_protein_pair_surface.hide()
-    self.ui.lbl_protein_pair_all_representations.hide()
-
     self.ui.box_protein_pair_color.hide()
-    self.ui.btn_protein_pair_color_atoms.hide()
-    self.ui.btn_protein_pair_reset_atoms.hide()
-    self.ui.btn_protein_pair_show_cartoon.hide()
-    self.ui.btn_protein_pair_hide_cartoon.hide()
-    self.ui.btn_protein_pair_show_sticks.hide()
-    self.ui.btn_protein_pair_hide_sticks.hide()
-    self.ui.btn_protein_pair_show_ribbon.hide()
-    self.ui.btn_protein_pair_hide_ribbon.hide()
-    self.ui.btn_protein_pair_hide_all_representations.hide()
-    # checkboxes
-    self.ui.cb_protein_pair_cartoon.hide()
-    self.ui.cb_protein_pair_sticks.hide()
-    self.ui.cb_protein_pair_ribbon.hide()
-    self.ui.cb_protein_pair_lines.hide()
-    self.ui.cb_protein_pair_spheres.hide()
-    self.ui.cb_protein_pair_dots.hide()
-    self.ui.cb_protein_pair_mesh.hide()
-    self.ui.cb_protein_pair_surface.hide()
-    # toggle buttons
-    # self.tg_protein_pair_color_atoms.hide()
-    # self.tg_protein_pair_cartoon.hide()
-    # self.tg_protein_pair_sticks.hide()
-    # self.tg_protein_pair_ribbon.hide()
-    # self.tg_protein_pair_lines.hide()
-    # self.tg_protein_pair_spheres.hide()
-    # self.tg_protein_pair_dots.hide()
-    # self.tg_protein_pair_mesh.hide()
-    # self.tg_protein_pair_surface.hide()
 
     self.ui.lbl_info_3.setText("Please select a protein pair.")
     self.ui.lbl_info_4.hide()
 
     # Extra UI elements
-    self.cb_chain_color = QtWidgets.QComboBox()
-    self.cb_chain_representation = QtWidgets.QComboBox()
-    self.cb_chain_color_protein_pair = QtWidgets.QComboBox()
-    self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
     #self.line_edit_seq_name = custom_line_edit.CustomLineEdit()
     self.ui.lbl_pymol_protein_pair_scene.setWordWrap(False)
 
@@ -432,345 +258,159 @@ class MainFrame(QtWidgets.QMainWindow):
     self.setMinimumWidth(700)
     self.setMinimumHeight(900)
 
-    # <editor-fold desc="Set icons">
-    pixmapi = QtWidgets.QStyle.StandardPixmap.SP_MessageBoxQuestion
-    # <editor-fold desc="Help">
-    icon = self.style().standardIcon(pixmapi)
-    self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-    self.ui.btn_help.setIconSize(
-        self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
-    )
-    self.ui.btn_help.setText("")
-    self.ui.btn_help_2.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-    self.ui.btn_help_2.setIconSize(
-        self.ui.btn_help_2.icon().actualSize(QtCore.QSize(30, 30))
-    )
-    self.ui.btn_help_2.setText("")
-    self.ui.btn_help_3.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
-    self.ui.btn_help_3.setIconSize(
-        self.ui.btn_help_3.icon().actualSize(QtCore.QSize(30, 30))
-    )
-    self.ui.btn_help_3.setText("")
-    # </editor-fold>
-
-    # <editor-fold desc="Sequence">
-    # add
-    add_sequence_icon = QtGui.QIcon(QtGui.QPixmap(":icons/note_add_w200.png"))
-    add_sequence_icon.addPixmap(
-        QtGui.QPixmap(":icons/note_add_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_add_sequence.setIcon(add_sequence_icon)
-    self.ui.btn_add_sequence.setText("")
-    self.ui.btn_add_sequence.setIconSize(
-        add_sequence_icon.actualSize(QtCore.QSize(30, 30))
-    )
-    # self.ui.btn_add_sequence.setIcon(
-    #     QtGui.QIcon(":/icons/note_add_w200.png")
-    # )
-    # self.ui.btn_add_sequence.setText("")
-    # self.ui.btn_add_sequence.setIconSize(self.ui.btn_add_sequence.icon().actualSize(QtCore.QSize(30, 30)))
-
-    # import
-    import_sequence_icon = QtGui.QIcon(
-        QtGui.QPixmap(":icons/upload_file_w200.png")
-    )
-    import_sequence_icon.addPixmap(
-        QtGui.QPixmap(":icons/upload_file_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_import_seq.setIcon(import_sequence_icon)
-    self.ui.btn_import_seq.setText("")
-    self.ui.btn_import_seq.setIconSize(
-        import_sequence_icon.actualSize(QtCore.QSize(30, 30))
-    )
-    # self.ui.btn_import_seq.setIcon(
-    #     QtGui.QIcon(":/icons/upload_file_w200.png")
-    # )
-    # self.ui.btn_import_seq.setText("")
-    # self.ui.btn_import_seq.setIconSize(self.ui.btn_import_seq.icon().actualSize(QtCore.QSize(30, 30)))
-
-    # save
-    save_seq_icon = QtGui.QIcon(QtGui.QPixmap(":icons/file_save_w200.png"))
-    save_seq_icon.addPixmap(
-        QtGui.QPixmap(":icons/file_save_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_save_sequence.setIcon(save_seq_icon)
-    self.ui.btn_save_sequence.setText("")
-    self.ui.btn_save_sequence.setIconSize(
-        save_seq_icon.actualSize(QtCore.QSize(30, 30))
-    )
-    # save_icon = QtGui.QIcon(":/icons/file_save_w200.png")
-    # save_icon.addPixmap(QtGui.QPixmap(":icons/file_save_disabled_w200.png"), mode=QtGui.QIcon.Mode.Disabled)
-    # self.ui.btn_save_sequence.setIcon(save_icon)
-    # self.ui.btn_save_sequence.setText("")
-    # self.ui.btn_save_sequence.setIconSize(self.ui.btn_save_sequence.icon().actualSize(QtCore.QSize(30, 30)))
-    # self.ui.btn_save_sequence.setIcon(QtGui.QIcon(":/icons/file_save_w200.png"))
-
-    # delete
-    delete_seq_icon = QtGui.QIcon(QtGui.QPixmap(":icons/scan_delete_w200.png"))
-    delete_seq_icon.addPixmap(
-        QtGui.QPixmap(":icons/scan_delete_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_delete_sequence.setIcon(delete_seq_icon)
-    self.ui.btn_delete_sequence.setText("")
-    self.ui.btn_delete_sequence.setIconSize(
-        delete_seq_icon.actualSize(QtCore.QSize(30, 30))
-    )
-    # self.ui.btn_delete_sequence.setIcon(
-    #     QtGui.QIcon(":/icons/scan_deletew200.png"))
-    # self.ui.btn_delete_sequence.setText("")
-    # self.ui.btn_delete_sequence.setIconSize(self.ui.btn_delete_sequence.icon().actualSize(QtCore.QSize(30, 30)))
-    # </editor-fold>
-
-    # <editor-fold desc="Proteins Tab">
-    # expand all
-    expand_all_protein_icon = QtGui.QIcon(
-        QtGui.QPixmap(":icons/expand_all_w200.png")
-    )
-    self.ui.btn_protein_tree_view_expand.setIcon(expand_all_protein_icon)
-    self.ui.btn_protein_tree_view_expand.setText("")
-    self.ui.btn_protein_tree_view_expand.setIconSize(
-        expand_all_protein_icon.actualSize(QtCore.QSize(14, 14))
-    )
-
-    # collapse all
-    collapse_all_protein_icon = QtGui.QIcon(
-        QtGui.QPixmap(":icons/collapse_all_w200.png")
-    )
-    self.ui.btn_protein_tree_view_collapse.setIcon(collapse_all_protein_icon)
-    self.ui.btn_protein_tree_view_collapse.setText("")
-    self.ui.btn_protein_tree_view_collapse.setIconSize(
-        collapse_all_protein_icon.actualSize(QtCore.QSize(18, 18))
-    )
-
-    # import
-    import_protein_icon = QtGui.QIcon(
-        QtGui.QPixmap(":icons/upload_file_w200.png")
-    )
-    import_protein_icon.addPixmap(
-        QtGui.QPixmap(":icons/upload_file_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_import_protein.setIcon(import_protein_icon)
-    self.ui.btn_import_protein.setText("")
-    self.ui.btn_import_protein.setIconSize(
-        import_protein_icon.actualSize(QtCore.QSize(30, 30))
-    )
-
-    # save
-    save_protein_icon = QtGui.QIcon(QtGui.QPixmap(":icons/file_save_w200.png"))
-    save_protein_icon.addPixmap(
-        QtGui.QPixmap(":icons/file_save_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_save_protein.setIcon(save_protein_icon)
-    self.ui.btn_save_protein.setText("")
-    self.ui.btn_save_protein.setIconSize(
-        save_protein_icon.actualSize(QtCore.QSize(30, 30))
-    )
-
-    # delete
-    delete_protein_icon = QtGui.QIcon(
-        QtGui.QPixmap(":icons/scan_delete_w200.png")
-    )
-    delete_protein_icon.addPixmap(
-        QtGui.QPixmap(":icons/scan_delete_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_delete_protein.setIcon(delete_protein_icon)
-    self.ui.btn_delete_protein.setText("")
-    self.ui.btn_delete_protein.setIconSize(
-        delete_protein_icon.actualSize(QtCore.QSize(30, 30))
-    )
-
-    # </editor-fold>
-
-    # <editor-fold desc="Protein Session">
-    # open
-    open_protein_session_icon = QtGui.QIcon(
-        QtGui.QPixmap(":/icons/open_in_new_w200.png")
-    )
-    open_protein_session_icon.addPixmap(
-        QtGui.QPixmap(":/icons/open_in_new_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_open_protein_session.setIcon(open_protein_session_icon)
-    self.ui.btn_open_protein_session.setText("")
-    self.ui.btn_open_protein_session.setIconSize(
-        open_protein_session_icon.actualSize(QtCore.QSize(30, 30))
-    )
-
-    # create
-    create_protein_session_icon = QtGui.QIcon(
-        QtGui.QPixmap(":/icons/add_circle_w200.png")
-    )
-    create_protein_session_icon.addPixmap(
-        QtGui.QPixmap(":/icons/add_circle_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_create_protein_scene.setIcon(create_protein_session_icon)
-    self.ui.btn_create_protein_scene.setText("")
-    self.ui.btn_create_protein_scene.setIconSize(
-        create_protein_session_icon.actualSize(QtCore.QSize(30, 30))
-    )
-
-    # refresh
-    update_protein_session_icon = QtGui.QIcon(
-        QtGui.QPixmap(":/icons/change_circle_w200.png")
-    )
-    update_protein_session_icon.addPixmap(
-        QtGui.QPixmap(":/icons/change_circle_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_update_protein_scene.setIcon(update_protein_session_icon)
-    self.ui.btn_update_protein_scene.setText("")
-    self.ui.btn_update_protein_scene.setIconSize(
-        update_protein_session_icon.actualSize(QtCore.QSize(30, 30))
-    )
-
-    # delete scene
-    delete_protein_session_icon = QtGui.QIcon(
-        QtGui.QPixmap(":icons/cancel_w200.png")
-    )
-    delete_protein_session_icon.addPixmap(
-        QtGui.QPixmap(":icons/cancel_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_delete_protein_scene.setIcon(delete_protein_session_icon)
-    self.ui.btn_delete_protein_scene.setText("")
-    self.ui.btn_delete_protein_scene.setIconSize(
-        delete_protein_session_icon.actualSize(QtCore.QSize(30, 30))
-    )
-    # </editor-fold>
-
-    # <editor-fold desc="Protein Pairs Tab">
-    # expand all
-    expand_all_protein_pair_icon = QtGui.QIcon(
-        QtGui.QPixmap(":icons/expand_all_w200.png")
-    )
-    self.ui.btn_protein_pair_tree_view_expand.setIcon(
-        expand_all_protein_pair_icon
-    )
-    self.ui.btn_protein_pair_tree_view_expand.setText("")
-    self.ui.btn_protein_pair_tree_view_expand.setIconSize(
-        expand_all_protein_pair_icon.actualSize(QtCore.QSize(14, 14)),
-    )
-
-    # collapse all
-    collapse_all_protein_pair_icon = QtGui.QIcon(
-        QtGui.QPixmap(":icons/collapse_all_w200.png")
-    )
-    self.ui.btn_protein_pair_tree_view_collapse.setIcon(
-        collapse_all_protein_pair_icon
-    )
-    self.ui.btn_protein_pair_tree_view_collapse.setText("")
-    self.ui.btn_protein_pair_tree_view_collapse.setIconSize(
-        collapse_all_protein_pair_icon.actualSize(QtCore.QSize(18, 18)),
-    )
-    # </editor-fold>
-
-    # <editor-fold desc="Protein Pair Session">
-    # open
-    open_protein_pair_session_icon = QtGui.QIcon(
-        QtGui.QPixmap(":/icons/open_in_new_w200.png")
-    )
-    open_protein_pair_session_icon.addPixmap(
-        QtGui.QPixmap(":/icons/open_in_new_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_open_protein_pair_session.setIcon(
-        open_protein_pair_session_icon
-    )
-    self.ui.btn_open_protein_pair_session.setText("")
-    self.ui.btn_open_protein_pair_session.setIconSize(
-        open_protein_pair_session_icon.actualSize(QtCore.QSize(30, 30))
-    )
-
-    # create
-    create_protein_pair_session_icon = QtGui.QIcon(
-        QtGui.QPixmap(":/icons/add_circle_w200.png")
-    )
-    create_protein_pair_session_icon.addPixmap(
-        QtGui.QPixmap(":/icons/add_circle_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_create_protein_pair_scene.setIcon(
-        create_protein_pair_session_icon
-    )
-    self.ui.btn_create_protein_pair_scene.setText("")
-    self.ui.btn_create_protein_pair_scene.setIconSize(
-        create_protein_pair_session_icon.actualSize(QtCore.QSize(30, 30))
-    )
-
-    # refresh
-    update_protein_pair_session_icon = QtGui.QIcon(
-        QtGui.QPixmap(":/icons/change_circle_w200.png")
-    )
-    update_protein_pair_session_icon.addPixmap(
-        QtGui.QPixmap(":/icons/change_circle_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_update_protein_pair_scene.setIcon(
-        update_protein_pair_session_icon
-    )
-    self.ui.btn_update_protein_pair_scene.setText("")
-    self.ui.btn_update_protein_pair_scene.setIconSize(
-        update_protein_pair_session_icon.actualSize(QtCore.QSize(30, 30))
-    )
-
-    # delete
-    delete_protein_pair_icon = QtGui.QIcon(
-        QtGui.QPixmap(":icons/scan_delete_w200.png")
-    )
-    delete_protein_pair_icon.addPixmap(
-        QtGui.QPixmap(":icons/scan_delete_disabled_w200.png"),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_delete_protein_pair.setIcon(delete_protein_pair_icon)
-    self.ui.btn_delete_protein_pair.setText("")
-    self.ui.btn_delete_protein_pair.setIconSize(
-        delete_protein_pair_icon.actualSize(QtCore.QSize(40, 40))
-    )
-
-    # delete scene
-    delete_protein_pair_session_icon = QtGui.QIcon(
-        QtGui.QPixmap(":icons/cancel_w200.png")
-    )
-    delete_protein_pair_session_icon.addPixmap(
-        QtGui.QPixmap(":icons/cancel_disabled_w200.png" ""),
-        mode=QtGui.QIcon.Mode.Disabled,
-    )
-    self.ui.btn_delete_protein_pair_scene.setIcon(
-        delete_protein_pair_session_icon
-    )
-    self.ui.btn_delete_protein_pair_scene.setText("")
-    self.ui.btn_delete_protein_pair_scene.setIconSize(
-        delete_protein_pair_session_icon.actualSize(QtCore.QSize(30, 30))
-    )
-    # </editor-fold>
-    # </editor-fold>
-
     self._create_all_tooltips()
-    #pixmap = QtGui.QPixmap(str(constants.PLUGIN_LOGO_WITH_CAPTION_FILEPATH))
-    # scaled_pixmap = pixmap.scaled(
-    #     450,
-    #     450,
-    #     aspectRatioMode=Qt.KeepAspectRatio,
-    #     transformMode=Qt.SmoothTransformation,
-    # )
-    # # Set the scaled pixmap to the QLabel
-    # self.ui.lbl_logo.setPixmap(scaled_pixmap)
+    self.set_icons()
+    pixmap = QtGui.QPixmap(str(model_definitions.ModelDefinitions.PLUGIN_LOGO_WITH_CAPTION_FILEPATH))
+    scaled_pixmap = pixmap.scaled(
+        450,
+        450,
+        aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio,
+        transformMode=Qt.TransformationMode.SmoothTransformation,
+    )
+    # Set the scaled pixmap to the QLabel
+    self.ui.lbl_logo.setPixmap(scaled_pixmap)
     self.ui.lbl_logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    #styles_utils.set_stylesheet_homepage(self)
-    # self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-    # self.setWindowTitle("PySSA")
+    self.setWindowIcon(QtGui.QIcon(model_definitions.ModelDefinitions.PLUGIN_LOGO_FILEPATH))
+    self.setWindowTitle("PySSA")
     # constants.PYSSA_LOGGER.info(
     #     f"PySSA started with version {constants.VERSION_NUMBER}."
     # )
     # constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
+
+  def set_icons(self) -> None:
+    """Sets all icons for the main frame."""
+    # <editor-fold desc="Help">
+    icons.set_icon(self.ui.btn_help, model_definitions.IconsEnum.HELP)
+    icons.set_icon(self.ui.btn_help_2, model_definitions.IconsEnum.HELP)
+    icons.set_icon(self.ui.btn_help_3, model_definitions.IconsEnum.HELP)
+    # </editor-fold>
+    # <editor-fold desc="Sequence tab">
+    # import
+    icons.set_icon(
+      self.ui.btn_import_seq,
+      model_definitions.IconsEnum.IMPORT_SEQUENCE,
+      model_definitions.IconsEnum.IMPORT_SEQUENCE_DISABLED,
+    )
+    # add
+    icons.set_icon(
+      self.ui.btn_add_sequence,
+      model_definitions.IconsEnum.ADD_SEQUENCE,
+      model_definitions.IconsEnum.ADD_SEQUENCE_DISABLED,
+    )
+    # save sequence
+    icons.set_icon(
+      self.ui.btn_save_sequence,
+      model_definitions.IconsEnum.SAVE_SEQUENCE,
+      model_definitions.IconsEnum.SAVE_SEQUENCE_DISABLED,
+    )
+
+    # delete sequence
+    icons.set_icon(
+      self.ui.btn_delete_sequence,
+      model_definitions.IconsEnum.DELETE_SEQUENCE,
+      model_definitions.IconsEnum.DELETE_SEQUENCE_DISABLED,
+    )
+    # </editor-fold>
+    # <editor-fold desc="Proteins tab">
+    # expand all
+    icons.set_icon(
+      self.ui.btn_protein_tree_view_expand,
+      model_definitions.IconsEnum.EXPAND_ALL,
+      size=QtCore.QSize(20, 20)
+    )
+    # collapse all
+    icons.set_icon(
+      self.ui.btn_protein_tree_view_collapse,
+      model_definitions.IconsEnum.COLLAPSE_ALL,
+      size=QtCore.QSize(20, 20)
+    )
+    # import
+    icons.set_icon(
+      self.ui.btn_import_protein,
+      model_definitions.IconsEnum.IMPORT_PROTEIN,
+      model_definitions.IconsEnum.IMPORT_PROTEIN_DISABLED,
+    )
+    # save
+    icons.set_icon(
+      self.ui.btn_save_protein,
+      model_definitions.IconsEnum.SAVE_PROTEIN,
+      model_definitions.IconsEnum.SAVE_PROTEIN_DISABLED,
+    )
+    # delete
+    icons.set_icon(
+      self.ui.btn_delete_protein,
+      model_definitions.IconsEnum.DELETE_PROTEIN,
+      model_definitions.IconsEnum.DELETE_PROTEIN_DISABLED,
+    )
+    # open
+    icons.set_icon(
+      self.ui.btn_open_protein_session,
+      model_definitions.IconsEnum.OPEN_SESSION,
+      model_definitions.IconsEnum.OPEN_SESSION_DISABLED,
+    )
+    # create
+    icons.set_icon(
+      self.ui.btn_create_protein_scene,
+      model_definitions.IconsEnum.CREATE_SESSION_SCENE,
+      model_definitions.IconsEnum.CREATE_SESSION_SCENE_DISABLED,
+    )
+    # update
+    icons.set_icon(
+      self.ui.btn_update_protein_scene,
+      model_definitions.IconsEnum.UPDATE_SESSION_SCENE,
+      model_definitions.IconsEnum.UPDATE_SESSION_SCENE_DISABLED,
+    )
+    # delete scene
+    icons.set_icon(
+      self.ui.btn_delete_protein_scene,
+      model_definitions.IconsEnum.DELETE_SESSION_SCENE,
+      model_definitions.IconsEnum.DELETE_SESSION_SCENE_DISABLED,
+    )
+    # </editor-fold>
+    # <editor-fold desc="Protein-Protein complex tab">
+    # expand all
+    icons.set_icon(
+      self.ui.btn_protein_pair_tree_view_expand,
+      model_definitions.IconsEnum.EXPAND_ALL,
+      size=QtCore.QSize(20, 20)
+    )
+    # collapse all
+    icons.set_icon(
+      self.ui.btn_protein_pair_tree_view_collapse,
+      model_definitions.IconsEnum.COLLAPSE_ALL,
+      size=QtCore.QSize(20, 20)
+    )
+    # delete
+    icons.set_icon(
+      self.ui.btn_delete_protein_pair,
+      model_definitions.IconsEnum.DELETE_PROTEIN_PAIR,
+      model_definitions.IconsEnum.DELETE_PROTEIN_PAIR_DISABLED,
+    )
+    # open
+    icons.set_icon(
+      self.ui.btn_open_protein_pair_session,
+      model_definitions.IconsEnum.OPEN_SESSION,
+      model_definitions.IconsEnum.OPEN_SESSION_DISABLED,
+    )
+    # create
+    icons.set_icon(
+      self.ui.btn_create_protein_pair_scene,
+      model_definitions.IconsEnum.CREATE_SESSION_SCENE,
+      model_definitions.IconsEnum.CREATE_SESSION_SCENE_DISABLED,
+    )
+    # update
+    icons.set_icon(
+      self.ui.btn_update_protein_pair_scene,
+      model_definitions.IconsEnum.UPDATE_SESSION_SCENE,
+      model_definitions.IconsEnum.UPDATE_SESSION_SCENE_DISABLED,
+    )
+    # delete scene
+    icons.set_icon(
+      self.ui.btn_delete_protein_pair_scene,
+      model_definitions.IconsEnum.DELETE_SESSION_SCENE,
+      model_definitions.IconsEnum.DELETE_SESSION_SCENE_DISABLED,
+    )
+    # </editor-fold>
 
   def disable_menu_bar_without_exit_application(self) -> None:
     """Disables the menu entries but not 'Exit Application'."""
@@ -789,10 +429,6 @@ class MainFrame(QtWidgets.QMainWindow):
     self.ui.menuHotspots.setEnabled(False)
     self.ui.menuSettings.setEnabled(False)
     self.ui.menuAbout.setEnabled(False)
-
-  def disable_tab_widget(self) -> None:
-    """Disables the tab widget in the user interface."""
-    self.ui.project_tab_widget.setEnabled(False)
 
   def disable_job_panels(self) -> None:
     """Disables the job overview panel, job notification panel, and corresponding buttons."""
@@ -842,8 +478,7 @@ class MainFrame(QtWidgets.QMainWindow):
 
   def _create_all_tooltips(self) -> None:
     """Creates all tooltips for the gui elements."""
-    # Sequence Tab
-    # self.ui.seqs_list_view.setToolTip("A list of all sequences in the project")
+    # <editor-fold desc="Sequence tab">
     self.ui.seqs_list_view.setToolTip("Import or add sequences to do structure predictions")  # fixme: is this a useful tooltip?
     self.ui.seqs_table_widget.setToolTip(
         "A table with additional information about the selected sequence"
@@ -858,12 +493,8 @@ class MainFrame(QtWidgets.QMainWindow):
     self.ui.btn_delete_sequence.setToolTip(
         "Delete the selected sequence from the project"
     )
-
-    # Proteins Tab
-    # self.ui.proteins_tree_view.setToolTip("A tree of all proteins in the project")
-    # self.ui.proteins_table_widget.setToolTip(
-    #     "A table with changeable PyMOL parameters for the currently active session"
-    # )
+    # </editor-fold>
+    # <editor-fold desc="Proteins tab">
     self.ui.proteins_tree_view.setToolTip("Get proteins by running a structure prediction or importing an existing pdb file")  # fixme: is this a useful tooltip?
     self.ui.btn_protein_tree_view_expand.setToolTip("Expand All")
     self.ui.btn_protein_tree_view_collapse.setToolTip("Collapse All")
@@ -882,12 +513,8 @@ class MainFrame(QtWidgets.QMainWindow):
     self.ui.btn_delete_protein_scene.setToolTip(
         "Delete the current scene in PyMOL"
     )
-
-    # Protein Pairs Tab
-    # self.ui.protein_pairs_tree_view.setToolTip("A tree of all protein pairs in the project")
-    # self.ui.protein_pairs_table_widget.setToolTip(
-    #     "A table with changeable PyMOL parameters for the currently active session"
-    # )
+    # </editor-fold>
+    # <editor-fold desc="Protein pairs tab">
     self.ui.protein_pairs_tree_view.setToolTip("Get protein pairs by running a distance analysis")  # fixme: is this a useful tooltip?
     self.ui.btn_protein_pair_tree_view_expand.setToolTip("Expand All")
     self.ui.btn_protein_pair_tree_view_collapse.setToolTip("Collapse All")
@@ -904,45 +531,4 @@ class MainFrame(QtWidgets.QMainWindow):
     self.ui.btn_delete_protein_pair_scene.setToolTip(
         "Delete the current scene in PyMOL"
     )
-
-  #     self.status_bar.setToolTip("Status information: Current process")
-  #     # new project page
-  #     self.ui.btn_new_choose_reference.setToolTip("Click to add a .pdb file")
-  #     # sidebar
-  #     self.ui.lbl_current_project_name.setToolTip("Name of the current project")
-  #     # edit page
-  #     self.ui.btn_edit_project_save.setToolTip("Save as a .pdb file")
-  #     # view page
-  #     # fixme: is this important? self.ui.list_view_project_proteins.setToolTip("Proteins of the current project")
-  #     self.ui.txtedit_view_sequence.setToolTip("Protein sequence of the selected protein")
-  #     # use page
-  #     self.ui.txt_use_search.setToolTip("Enter a protein name to search in your current workspace")
-  #     # prediction Monomer
-  #     self.ui.table_pred_mono_prot_to_predict.setToolTip("Protein monomers which get predicted")
-  #     self.ui.btn_pred_mono_seq_to_predict.setToolTip("Set up a protein which can be used for a prediction")
-  #     self.ui.table_pred_analysis_mono_prot_to_predict.setToolTip("Protein monomers which get predicted")
-  #     self.ui.list_pred_analysis_mono_overview.setToolTip("Protein pairs which get analyzed")
-  #     self.ui.btn_pred_analysis_mono_seq_to_predict.setToolTip("Set up a protein which can be used for a prediction")
-  #     # prediction Multimer
-  #     self.ui.table_pred_multi_prot_to_predict.setToolTip("Protein multimers which get predicted")
-  #     self.ui.btn_pred_multi_prot_to_predict_add.setToolTip("Set up a protein which can be used for a prediction")
-  #     self.ui.table_pred_analysis_multi_prot_to_predict.setToolTip("Protein multimers which get predicted")
-  #     self.ui.list_pred_analysis_multi_overview.setToolTip("Protein pairs which get analyzed")
-  #     self.ui.btn_pred_analysis_multi_prot_to_predict_add.setToolTip(
-  #         "Set up a protein which can be used for a prediction",
-  #     )
-  #     # image page
-  #     self.ui.btn_save_scene.setToolTip("Create new PyMOL scene")
-  #     self.ui.btn_update_scene.setToolTip("Overwrite current scene")
-  #     self.ui.btn_preview_image.setToolTip("Preview current viewpoint")
-  #     self.ui.btn_save_image.setToolTip("Save current viewpoint as png file")
-  #     self.ui.cb_ray_tracing.setToolTip("Enable ray-tracing")
-  #     self.ui.cb_transparent_bg.setToolTip("Enable transparent background")
-  #     self.ui.box_representation.setToolTip("Choose a representation")
-  #     self.ui.box_bg_color.setToolTip("Choose a background color")
-  #     self.ui.box_renderer.setToolTip("Choose a ray-tracing renderer")
-  #     self.ui.box_ray_trace_mode.setToolTip("Choose a ray-trace mode")
-  #
-  # def quit_app(self) -> None:
-  #     """Closes the entire plugin."""
-  #     self.close()
+    # </editor-fold>

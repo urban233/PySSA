@@ -8,7 +8,7 @@ logger = default_logging.setup_logger(__file__)
 __docformat__ = "google"
 
 if TYPE_CHECKING:
-  from src.python.pydd.components.internal.abstract_interfaces import icomponent
+  from pyssa.gui.abstract_interfaces import icomponent
 
 
 class ComponentManager:

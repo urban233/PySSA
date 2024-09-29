@@ -3,10 +3,10 @@ from typing import Callable, Optional
 from tea.concurrent import task_result
 from tea.concurrent import action
 
-from src.python.pydd.components.internal.abstract_interfaces import icomponent
+from pyssa.gui.abstract_interfaces import icomponent
 from pyssa.model.central_objects import sequence
-from .gui import dialog_import_sequence
-from .control import import_sequence_controller
+from pyssa.gui.dialog import dialog_import_sequence
+from pyssa.gui.control import import_sequence_controller
 from pyssa.model.util import exception
 from pyssa.model.pyssa_logging import default_logging
 

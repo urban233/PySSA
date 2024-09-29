@@ -73,3 +73,9 @@ class ProjectModel(base_tree_model.BaseTreeModel):
         tmp_workspace_project,  # Object role
       )
     return tmp_project_model
+
+  @staticmethod
+  def dummy_method():
+    """A dummy method used for the building of the project model in PySSA v1."""
+    default_logging.append_to_log_file(logger, "Dummy for building project model", logging.DEBUG)
+    pass

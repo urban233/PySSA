@@ -9,13 +9,23 @@ class ModelDefinitions:
 
   Should be used as singleton class!
   """
-  PROGRAM_ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.parent.parent.parent.parent.parent.parent
+  PROGRAM_ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.parent.parent.parent
+  print(PROGRAM_ROOT_PATH)
   PROGRAM_BIN_ROOT_PATH = "C:\\ProgramData\\IBCI\\PyDD\\bin\\PyDD"  # Until now, it's only valid for windows
   """Path to the root of the program."""
   #PROGRAM_SRC_PATH = pathlib.Path(__file__).parent.parent.parent.parent.parent.parent.parent.parent # TODO: Must be switched to if ready for first tests f"{PROGRAM_BIN_ROOT_PATH}\\src"
   PROGRAM_SRC_PATH = pathlib.Path(
     __file__).parent.parent.parent.parent.parent  # TODO: Must be switched to if ready for first tests f"{PROGRAM_BIN_ROOT_PATH}\\src"
+  print(PROGRAM_SRC_PATH)
   """Path to the root of the program sources."""
+  PLUGIN_LOGO_FILEPATH = str(
+    pathlib.Path(f'{PROGRAM_ROOT_PATH}/assets/images/pyssa_logo.png')
+  )
+  """Filepath to the logo."""
+  PLUGIN_LOGO_WITH_CAPTION_FILEPATH = str(
+    pathlib.Path(f'{PROGRAM_ROOT_PATH}/assets/images/app_home_logo.png')
+  )
+  """Filepath to the logo displayed on the homepage."""
   DEFAULT_WORKSPACE_PATH: pathlib.Path = pathlib.Path(
     f"{os.path.expanduser('~')}/.pydd/default_workspace"
   )

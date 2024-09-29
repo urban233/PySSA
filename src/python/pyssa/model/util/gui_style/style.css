@@ -20,586 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #*/
 /* This is the currently used style sheet for PySSA. */
-QWidget {
-    font-family: "Segoe UI";
-    font-size: 12px;
-}
 
-QLabel#lbl_project_name {
-    background: #367AF6;
-    color: #ffffff;
-    font-size: 15px;
-    font-family: "Segoe UI";
-    font: bold;
-    padding: 3px;
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-}
-
-QLabel#lbl_project_page_welcome {
-    color: #242424;
-    font-size: 18px;
-    font-family: "Segoe UI";
-    font: bold;
-    padding-bottom: 10px;
-}
-
-QLabel#lbl_project_page_recent {
-    color: #242424;
-    font-size: 14px;
-    font-family: "Segoe UI";
-}
-
-QLabel#lbl_project_page_new {
-    color: #242424;
-    font-size: 18px;
-    font-family: "Segoe UI";
-    font: bold;
-    padding-bottom: 10px;
-}
-
-QLabel#lbl_project_page_open {
-    color: #242424;
-    font-size: 18px;
-    font-family: "Segoe UI";
-    font: bold;
-    padding-bottom: 10px;
-}
-
-QLabel#lbl_project_page_delete {
-    color: #242424;
-    font-size: 18px;
-    font-family: "Segoe UI";
-    font: bold;
-    padding-bottom: 10px;
-}
-
-
-/*<editor-fold desc="Bottom frames">*/
-QFrame#frame_bottom {
-    background-color: #f7f8fa;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 6px;
-    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
-    border-top-color: #ebecf0;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
-QFrame#frame_bottom_2 {
-    background-color: #f7f8fa;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 6px;
-    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
-    border-top-color: #ebecf0;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
-QFrame#frame_bottom_3 {
-    background-color: #f7f8fa;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 6px;
-    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
-    border-top-color: #ebecf0;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
-QFrame#frame_bottom_4 {
-    background-color: #f7f8fa;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 6px;
-    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
-    border-top-color: #ebecf0;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
-QFrame#frame_bottom_5 {
-    background-color: #f7f8fa;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 6px;
-    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
-    border-top-color: #ebecf0;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
-QFrame#frame_bottom_6 {
-    background-color: #f7f8fa;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 6px;
-    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
-    border-top-color: #ebecf0;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
-QFrame#frame_bottom_home_project_page {
-    background-color: #f7f8fa;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 6px;
-    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
-    border-top-color: #ebecf0;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
-QFrame#frame_bottom_new_project_page {
-    background-color: #f7f8fa;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 6px;
-    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
-    border-top-color: #ebecf0;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
-QFrame#frame_bottom_open_project_page {
-    background-color: #f7f8fa;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 6px;
-    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
-    border-top-color: #ebecf0;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
-QFrame#frame_bottom_delete_project_page {
-    background-color: #f7f8fa;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 6px;
-    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
-    border-top-color: #ebecf0;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
-/*<editor-fold desc="Help button styles">*/
-QPushButton#btn_help {
-    background-color: white;
-    /*border-style: outset;*/
-    border: none;
-    border-width: 2px;
-    border-radius: 10px;
-    padding: 2px;
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px
-}
-
-QPushButton#btn_help_2 {
-    background-color: white;
-    /*border-style: outset;*/
-    border: none;
-    border-width: 2px;
-    border-radius: 10px;
-    padding: 2px;
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px
-}
-
-QPushButton#btn_help_3 {
-    background-color: white;
-    /*border-style: outset;*/
-    border: none;
-    border-width: 2px;
-    border-radius: 10px;
-    padding: 2px;
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px
-}
-
-QPushButton#btn_help_4 {
-    background-color: white;
-    /*border-style: outset;*/
-    border: none;
-    border-width: 2px;
-    border-radius: 10px;
-    padding: 2px;
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px
-}
-
-QPushButton#btn_help_5 {
-    background-color: white;
-    /*border-style: outset;*/
-    border: none;
-    border-width: 2px;
-    border-radius: 10px;
-    padding: 2px;
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px
-}
-
-QPushButton#btn_help_6 {
-    background-color: white;
-    /*border-style: outset;*/
-    border: none;
-    border-width: 2px;
-    border-radius: 10px;
-    padding: 2px;
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px
-}
-
-QPushButton#btn_help_7 {
-    background-color: white;
-    /*border-style: outset;*/
-    border: none;
-    border-width: 2px;
-    border-radius: 10px;
-    padding: 2px;
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px
-}
-
-QPushButton#btn_help_8 {
-    background-color: white;
-    /*border-style: outset;*/
-    border: none;
-    border-width: 2px;
-    border-radius: 10px;
-    padding: 2px;
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px
-}
-
-QPushButton#btn_help_info {
-    background-color: white;
-    /*border-style: outset;*/
-    border: none;
-    border-width: 2px;
-    border-radius: 10px;
-    padding: 2px;
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px
-}
-
-QPushButton#btn_help_session {
-    background-color: white;
-    /*border-style: outset;*/
-    border: none;
-    border-width: 2px;
-    border-radius: 10px;
-    padding: 2px;
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px
-}
-
-QPushButton::hover#btn_help {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-    stop: 0 #4B91F7, stop: 0.4 #367AF6,
-    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-    background: white;
-    color: white;
-    color: #4B91F7;
-    border: 2px solid #DCDBE3;
-}
-
-QPushButton::hover#btn_help_2 {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-    stop: 0 #4B91F7, stop: 0.4 #367AF6,
-    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-    background: white;
-    color: white;
-    color: #4B91F7;
-    border: 2px solid #DCDBE3;
-}
-
-QPushButton::hover#btn_help_3 {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-    stop: 0 #4B91F7, stop: 0.4 #367AF6,
-    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-    background: white;
-    color: white;
-    color: #4B91F7;
-    border: 2px solid #DCDBE3;
-}
-
-QPushButton::hover#btn_help_4 {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-    stop: 0 #4B91F7, stop: 0.4 #367AF6,
-    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-    background: white;
-    color: white;
-    color: #4B91F7;
-    border: 2px solid #DCDBE3;
-}
-
-QPushButton::hover#btn_help_5 {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-    stop: 0 #4B91F7, stop: 0.4 #367AF6,
-    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-    background: white;
-    color: white;
-    color: #4B91F7;
-    border: 2px solid #DCDBE3;
-}
-
-QPushButton::hover#btn_help_6 {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-    stop: 0 #4B91F7, stop: 0.4 #367AF6,
-    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-    background: white;
-    color: white;
-    color: #4B91F7;
-    border: 2px solid #DCDBE3;
-}
-
-QPushButton::hover#btn_help_7 {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-    stop: 0 #4B91F7, stop: 0.4 #367AF6,
-    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-    background: white;
-    color: white;
-    color: #4B91F7;
-    border: 2px solid #DCDBE3;
-}
-
-QPushButton::hover#btn_help_8 {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-    stop: 0 #4B91F7, stop: 0.4 #367AF6,
-    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-    background: white;
-    color: white;
-    color: #4B91F7;
-    border: 2px solid #DCDBE3;
-}
-
-QPushButton::hover#btn_help_info {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-    stop: 0 #4B91F7, stop: 0.4 #367AF6,
-    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-    background: white;
-    color: white;
-    color: #4B91F7;
-    border: 2px solid #DCDBE3;
-}
-
-QPushButton::hover#btn_help_session {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-    stop: 0 #4B91F7, stop: 0.4 #367AF6,
-    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-    background: white;
-    color: white;
-    color: #4B91F7;
-    border: 2px solid #DCDBE3;
-}
-/*</editor-fold>*/
-/*</editor-fold>*/
-
-/*QLabel#lbl_session_name {*/
-/*    !*background: #367AF6;*!*/
-/*    background: #EFEFEF;*/
-/*    color: #367AF6;*/
-/*    !*color: #ffffff;*!*/
-/*    font-size: 15px;*/
-/*    font-family: "Segoe UI";*/
-/*    font: bold;*/
-/*    padding: 3px;*/
-/*    border-style: solid;*/
-/*    border-width: 2px;*/
-/*    border-radius: 4px;*/
-/*    border-color: #DCDBE3;*/
-/*}*/
-
-QListView {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-}
-
-QListView#seqs_list_view {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: white;
-}
-
-QTableView {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-}
-
-QTableWidget {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: white;
-}
-
-QTreeView {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-}
-
-/*<editor-fold desc="Override tree view border with white">*/
-QTreeView#proteins_tree_view {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: white;
-}
-
-QTreeView:disabled#proteins_tree_view {
-    background-color: white;
-}
-
-QTreeView#ligand_tree_view {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: white;
-}
-
-QTreeView:disabled#ligand_tree_view {
-    background-color: white;
-}
-
-QTreeView#prot_prot_complex_tree_view {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: white;
-}
-
-QTreeView:disabled#prot_prot_complex_tree_view {
-    background-color: white;
-}
-
-QTreeView#prot_lig_complex_tree_view {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: white;
-}
-
-QTreeView:disabled#prot_lig_complex_tree_view {
-    background-color: white;
-}
-/*</editor-fold>*/
-
-/*<editor-fold desc="Define new border for views">*/
-QFrame#frame_seq_list_view {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-    background-color: white;
-}
-
-QFrame#frame_proteins_tree_view {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-    background-color: white;
-}
-
-QFrame#frame_ligand_tree_view {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-    background-color: white;
-}
-
-QFrame#frame_prot_prot_complex_tree_view {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-    background-color: white;
-}
-
-QFrame#frame_prot_lig_complex_tree_view {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-    background-color: white;
-}
-
-/*</editor-fold>*/
-
-QFrame#frame_protein_protein_regions {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-    background-color: white;
-}
-
-QFrame#frame_information_table_widget {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-    background-color: white;
-}
-
-QFrame#frame_protein_pair_protein_regions {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-    background-color: white;
-}
-
-QTreeView::branch:has-children:!has-siblings:closed,
-QTreeView::branch:closed:has-children:has-siblings{
-    border-image: none;
-    image: url(C:/ProgramData/IBCI/PySSA/bin/PySSA/assets/icons/keyboard_arrow_right_w400.svg)
-}
-
-QTreeView::branch:open:has-children:!has-siblings,
-QTreeView::branch:open:has-children:has-siblings{
-    border-image: none;
-    image: url(C:/ProgramData/IBCI/PySSA/bin/PySSA/assets/icons/keyboard_arrow_down_w400.svg)
-}
-
+/*<editor-fold desc="General definitions">*/
 QMainWindow {
-    /*background-color: #fcfcfc;*/
+    background-color: #f2f2f2;
     /*background-color: #E6E6E6;*/
-    background: #f0f0f0;
 }
 
 QDialog {
@@ -626,6 +51,95 @@ QTextEdit {
     padding: 1px;
 }
 
+QWidget {
+    font-family: "Segoe UI";
+    font-size: 12px;
+}
+
+QListView {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QTableView {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QTableWidget {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: white;
+}
+
+QTreeView {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QFrame {
+    background: none;
+    border: none;
+}
+
+/*<editor-fold desc="QStatusBar">*/
+QStatusBar {
+    background-color: #F2F2F2;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QStatusBar::item {
+    border: none;
+}
+
+QStatusBar QLabel {
+    color: black;
+    border-style: none;
+}
+/*</editor-fold>*/
+
+/*<editor-fold desc="QProgressBar">*/
+QProgressBar {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    background-color: #efefef;
+    max-height: 17px;
+    max-width: 80px;
+    text-align: center;
+    color: black;
+}
+QProgressBar::chunk {
+    background-color: #367af6;
+    width: 10px;
+}
+/*</editor-fold>*/
+
+/*<editor-fold desc="QTreeView branches">*/
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings{
+    border-image: none;
+    image: url(C:/ProgramData/IBCI/PySSA/bin/PySSA/assets/icons/keyboard_arrow_right_w400.svg)
+}
+
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings{
+    border-image: none;
+    image: url(C:/ProgramData/IBCI/PySSA/bin/PySSA/assets/icons/keyboard_arrow_down_w400.svg)
+}
+/*</editor-fold>*/
+
 /*<editor-fold desc="QTabWidget style">*/
 QTabWidget::pane { /* The tab widget frame */
     border-top: 2px solid #DCDBE3;
@@ -644,8 +158,8 @@ QTabWidget::tab-bar {
 
 QTabBar::tab {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                stop: 0 #E1E1E1, stop: 0.4 #DDDDDD,
-                                stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);
+    stop: 0 #E1E1E1, stop: 0.4 #DDDDDD,
+    stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);
     border: 2px solid #DCDBE3;
     border-bottom-color: #DCDBE3; /* same as the pane color */
     border-top-left-radius: 4px;
@@ -657,8 +171,8 @@ QTabBar::tab {
 
 QTabBar::tab:selected, QTabBar::tab:hover {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                stop: 0 #fafafa, stop: 0.4 #f4f4f4,
-                                stop: 0.5 #e7e7e7, stop: 1.0 #fafafa);
+    stop: 0 #fafafa, stop: 0.4 #f4f4f4,
+    stop: 0.5 #e7e7e7, stop: 1.0 #fafafa);
 }
 
 QTabBar::tab:selected {
@@ -710,67 +224,170 @@ QMenu::separator {
 }
 /*</editor-fold>*/
 
-QPushButton#btn_session_name {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
+/*<editor-fold desc="Normal QPushButton style">*/
+QPushButton {
+    background-color: #fff;
+    color: black;
+    font-family: "Segoe UI";
+    font-size: 12px;
+    border: solid;
+    border-width: 1px;
     border-radius: 4px;
-    min-width: 150px;
-    max-width: 150px;
-    text-align: left;
-    /*min-height: 36px;*/
-    /*max-height: 36px;*/
-}
-QPushButton::hover#btn_session_name {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    /*min-width: 100px;*/
-    /*max-width: 100px;*/
-    /*min-height: 40px;*/
-    /*max-height: 40px;*/
+    border-color: #DCDCDC;
+    padding: 2px;
+    min-width: 65px;
+    max-width: 65px;
+    min-height: 15px;
 }
 
-QPushButton#btn_scene_name {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
+QPushButton:disabled {
+    background-color: #fff;
+    color: #B0B0B0;
+    font-family: "Segoe UI";
+    font-size: 12px;
+    border: solid;
+    border-width: 1px;
     border-radius: 4px;
-    min-width: 150px;
-    max-width: 150px;
-    text-align: left;
-    /*min-height: 36px;*/
-    /*max-height: 36px;*/
-}
-QPushButton::hover#btn_scene_name {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    /*min-width: 100px;*/
-    /*max-width: 100px;*/
-    /*min-height: 40px;*/
-    /*max-height: 40px;*/
+    border-color: #DCDCDC;
+    padding: 2px;
+    min-width: 65px;
+    max-width: 65px;
+    min-height: 15px;
 }
 
-QPushButton#btn_new_blank_project {
-    color: white;
-    background: #367AF6;
-    font-size: 14px;
-    font: bold;
-    border: 2px solid #367AF6;
-    border-radius: 4px;
-    padding: 3px;
-}
-
-QPushButton::hover#btn_new_blank_project {
-    background: #185abd;
-    border-color: #185abd;
-}
-
-QPushButton::pressed#btn_new_blank_project {
-    background: #1859bc;
-    border-color: black;
+QPushButton::pressed {
+    background-color: #fff;
+    color: black;
+    font-family: "Segoe UI";
+    font-size: 12px;
+    border: solid;
     border-width: 2px;
+    border-radius: 4px;
+    border-color: #367AF6;
+    padding: 2px;
+    min-width: 65px;
+    max-width: 65px;
+    min-height: 15px;
 }
+/*</editor-fold>*/
+
+QToolButton {
+    background-color: #DCDBE3;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    min-width: 1.5em;
+    padding: 1px;
+}
+
+QToolButton::hover {
+    /*background: qlineargradient(x1:0, y1: 0, x2: 0, y2: 1,*/
+    /*stop: 0 #4B91F7, stop: 0.4 #367AF6, stop: 0.5 #367AF6, stop: 1.0 #4B91F7);*/
+    color: #4B91F7;
+    border-color: #4B91F7;
+    border-style: solid;
+}
+
+QToolTip {
+    font: bold;
+    font-size: 12px;
+}
+
+QSplitter::handle {
+    background: #e0e0e0;
+    border: 2px solid #e0e0e0;
+    width: 15px;
+    margin: 1px;
+    border-radius: 4px;
+}
+/*</editor-fold>*/
+
+/*<editor-fold desc="Main Frame">*/
+QLabel#lbl_project_name {
+    background: #367AF6;
+    color: #ffffff;
+    font-size: 15px;
+    font-family: "Segoe UI";
+    font: bold;
+    padding: 3px;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QLabel#lbl_session_name {
+    /*background: #367AF6;*/
+    background: #EFEFEF;
+    color: #367AF6;
+    /*color: #ffffff;*/
+    font-size: 15px;
+    font-family: "Segoe UI";
+    font: bold;
+    padding: 3px;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+/*<editor-fold desc="Job overview">*/
+QScrollArea#scroll_area_job_overview {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QScrollArea#scroll_area_job_notification {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+/*</editor-fold>*/
+
+/*<editor-fold desc="Sequences tab">*/
+QListView#seqs_list_view {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: white;
+}
+
+/*<editor-fold desc="Frame overrides">*/
+QFrame#frame_seq_list_view {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    background-color: white;
+}
+
+QFrame#frame_seq_table_widget {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    background-color: white;
+}
+
+QFrame#frame_bottom {
+    background-color: #f7f8fa;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 6px;
+    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+    border-top-color: #ebecf0;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+/*</editor-fold>*/
 
 /*<editor-fold desc="Icon buttons">*/
-/*<editor-fold desc="Sequence tab">*/
 QPushButton#btn_import_seq {
     background-color: rgba(220, 219, 227, 0.01);
     border: none;
@@ -843,8 +460,21 @@ QPushButton::hover#btn_delete_sequence {
     max-height: 40px;
 }
 /*</editor-fold>*/
+/*</editor-fold>*/
 
-/*<editor-fold desc="Protein tab">*/
+/*<editor-fold desc="Proteins tab">*/
+QTreeView#proteins_tree_view {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: white;
+}
+
+QTreeView:disabled#proteins_tree_view {
+    background-color: white;
+}
+
+/*<editor-fold desc="Icon buttons">*/
 QPushButton#btn_protein_tree_view_expand {
     background-color: rgba(220, 219, 227, 0.01);
     border: none;
@@ -873,6 +503,42 @@ QPushButton#btn_protein_tree_view_collapse {
     max-height: 14px;
 }
 QPushButton::hover#btn_protein_tree_view_collapse {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    /*min-width: 40px;*/
+    /*max-width: 40px;*/
+    /*min-height: 40px;*/
+    /*max-height: 40px;*/
+}
+
+QPushButton#btn_protein_pair_tree_view_expand {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 14px;
+    max-width: 14px;
+    min-height: 14px;
+    max-height: 14px;
+}
+QPushButton::hover#btn_protein_pair_tree_view_expand {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    /*min-width: 40px;*/
+    /*max-width: 40px;*/
+    /*min-height: 40px;*/
+    /*max-height: 40px;*/
+}
+
+QPushButton#btn_protein_pair_tree_view_collapse {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 14px;
+    max-width: 14px;
+    min-height: 14px;
+    max-height: 14px;
+}
+QPushButton::hover#btn_protein_pair_tree_view_collapse {
     background-color: rgba(220, 219, 227, 0.5);
     border: none;
     /*min-width: 40px;*/
@@ -934,46 +600,8 @@ QPushButton::hover#btn_delete_protein {
     min-height: 40px;
     max-height: 40px;
 }
-/*</editor-fold>*/
 
-/*<editor-fold desc="Ligand tab">*/
-QPushButton#btn_ligand_tree_view_expand {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
-    border-radius: 4px;
-    min-width: 14px;
-    max-width: 14px;
-    min-height: 14px;
-    max-height: 14px;
-}
-QPushButton::hover#btn_ligand_tree_view_expand {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    /*min-width: 40px;*/
-    /*max-width: 40px;*/
-    /*min-height: 40px;*/
-    /*max-height: 40px;*/
-}
-
-QPushButton#btn_ligand_tree_view_collapse {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
-    border-radius: 4px;
-    min-width: 14px;
-    max-width: 14px;
-    min-height: 14px;
-    max-height: 14px;
-}
-QPushButton::hover#btn_ligand_tree_view_collapse {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    /*min-width: 40px;*/
-    /*max-width: 40px;*/
-    /*min-height: 40px;*/
-    /*max-height: 40px;*/
-}
-
-QPushButton#btn_import_ligand {
+QPushButton#btn_delete_protein_scene {
     background-color: rgba(220, 219, 227, 0.01);
     border: none;
     border-radius: 4px;
@@ -982,7 +610,7 @@ QPushButton#btn_import_ligand {
     min-height: 36px;
     max-height: 36px;
 }
-QPushButton::hover#btn_import_ligand {
+QPushButton::hover#btn_delete_protein_scene {
     background-color: rgba(220, 219, 227, 0.5);
     border: none;
     min-width: 40px;
@@ -991,7 +619,7 @@ QPushButton::hover#btn_import_ligand {
     max-height: 40px;
 }
 
-QPushButton#btn_save_ligand {
+QPushButton#btn_open_protein_session {
     background-color: rgba(220, 219, 227, 0.01);
     border: none;
     border-radius: 4px;
@@ -1000,7 +628,7 @@ QPushButton#btn_save_ligand {
     min-height: 36px;
     max-height: 36px;
 }
-QPushButton::hover#btn_save_ligand {
+QPushButton::hover#btn_open_protein_session {
     background-color: rgba(220, 219, 227, 0.5);
     border: none;
     min-width: 40px;
@@ -1009,7 +637,7 @@ QPushButton::hover#btn_save_ligand {
     max-height: 40px;
 }
 
-QPushButton#btn_delete_ligand {
+QPushButton#btn_create_protein_scene {
     background-color: rgba(220, 219, 227, 0.01);
     border: none;
     border-radius: 4px;
@@ -1018,7 +646,25 @@ QPushButton#btn_delete_ligand {
     min-height: 36px;
     max-height: 36px;
 }
-QPushButton::hover#btn_delete_ligand {
+QPushButton::hover#btn_create_protein_scene {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_update_protein_scene {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_update_protein_scene {
     background-color: rgba(220, 219, 227, 0.5);
     border: none;
     min-width: 40px;
@@ -1028,323 +674,24 @@ QPushButton::hover#btn_delete_ligand {
 }
 /*</editor-fold>*/
 
-/*<editor-fold desc="Protein-Protein complex tab">*/
-QPushButton#btn_prot_prot_complex_expand {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
-    border-radius: 4px;
-    min-width: 14px;
-    max-width: 14px;
-    min-height: 14px;
-    max-height: 14px;
-}
-QPushButton::hover#btn_prot_prot_complex_expand {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    /*min-width: 40px;*/
-    /*max-width: 40px;*/
-    /*min-height: 40px;*/
-    /*max-height: 40px;*/
-}
-
-QPushButton#btn_prot_prot_complex_collapse {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
-    border-radius: 4px;
-    min-width: 14px;
-    max-width: 14px;
-    min-height: 14px;
-    max-height: 14px;
-}
-QPushButton::hover#btn_prot_prot_complex_collapse {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    /*min-width: 40px;*/
-    /*max-width: 40px;*/
-    /*min-height: 40px;*/
-    /*max-height: 40px;*/
-}
-
-QPushButton#btn_delete_prot_prot_complex {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
-    border-radius: 4px;
-    min-width: 36px;
-    max-width: 36px;
-    min-height: 36px;
-    max-height: 36px;
-}
-QPushButton::hover#btn_delete_prot_prot_complex {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    min-width: 40px;
-    max-width: 40px;
-    min-height: 40px;
-    max-height: 40px;
-}
-/*</editor-fold>*/
-
-/*<editor-fold desc="Protein-Ligand complex tab">*/
-QPushButton#btn_prot_lig_complex_expand {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
-    border-radius: 4px;
-    min-width: 14px;
-    max-width: 14px;
-    min-height: 14px;
-    max-height: 14px;
-}
-QPushButton::hover#btn_prot_lig_complex_expand {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    /*min-width: 40px;*/
-    /*max-width: 40px;*/
-    /*min-height: 40px;*/
-    /*max-height: 40px;*/
-}
-
-QPushButton#btn_prot_lig_complex_collapse {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
-    border-radius: 4px;
-    min-width: 14px;
-    max-width: 14px;
-    min-height: 14px;
-    max-height: 14px;
-}
-QPushButton::hover#btn_prot_lig_complex_collapse {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    /*min-width: 40px;*/
-    /*max-width: 40px;*/
-    /*min-height: 40px;*/
-    /*max-height: 40px;*/
-}
-
-QPushButton#btn_delete_prot_lig_complex {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
-    border-radius: 4px;
-    min-width: 36px;
-    max-width: 36px;
-    min-height: 36px;
-    max-height: 36px;
-}
-QPushButton::hover#btn_delete_prot_lig_complex {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    min-width: 40px;
-    max-width: 40px;
-    min-height: 40px;
-    max-height: 40px;
-}
-/*</editor-fold>*/
-
-/*<editor-fold desc="Session tab">*/
-QPushButton#btn_open_session {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
-    border-radius: 4px;
-    min-width: 36px;
-    max-width: 36px;
-    min-height: 36px;
-    max-height: 36px;
-}
-QPushButton::hover#btn_open_session {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    min-width: 40px;
-    max-width: 40px;
-    min-height: 40px;
-    max-height: 40px;
-}
-
-QPushButton#btn_create_scene {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
-    border-radius: 4px;
-    min-width: 36px;
-    max-width: 36px;
-    min-height: 36px;
-    max-height: 36px;
-}
-QPushButton::hover#btn_create_scene {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    min-width: 40px;
-    max-width: 40px;
-    min-height: 40px;
-    max-height: 40px;
-}
-
-QPushButton#btn_update_scene {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
-    border-radius: 4px;
-    min-width: 36px;
-    max-width: 36px;
-    min-height: 36px;
-    max-height: 36px;
-}
-QPushButton::hover#btn_update_scene {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    min-width: 40px;
-    max-width: 40px;
-    min-height: 40px;
-    max-height: 40px;
-}
-
-QPushButton#btn_delete_scene {
-    background-color: rgba(220, 219, 227, 0.01);
-    border: none;
-    border-radius: 4px;
-    min-width: 36px;
-    max-width: 36px;
-    min-height: 36px;
-    max-height: 36px;
-}
-QPushButton::hover#btn_delete_scene {
-    background-color: rgba(220, 219, 227, 0.5);
-    border: none;
-    min-width: 40px;
-    max-width: 40px;
-    min-height: 40px;
-    max-height: 40px;
-}
-/*</editor-fold>*/
-/*</editor-fold>*/
-
-/*<editor-fold desc="Normal QPushButton style">*/
-/*QPushButton {*/
-/*    background-color: #fff;*/
-/*    color: black;*/
-/*    font-family: "Segoe UI";*/
-/*    font-size: 12px;*/
-/*    border: solid;*/
-/*    border-width: 1px;*/
-/*    border-radius: 4px;*/
-/*    border-color: #DCDCDC;*/
-/*    padding: 2px;*/
-/*    min-width: 65px;*/
-/*    max-width: 65px;*/
-/*    min-height: 15px;*/
-/*}*/
-
-/*QPushButton:disabled {*/
-/*    background-color: #fff;*/
-/*    color: #B0B0B0;*/
-/*    font-family: "Segoe UI";*/
-/*    font-size: 12px;*/
-/*    border: solid;*/
-/*    border-width: 1px;*/
-/*    border-radius: 4px;*/
-/*    border-color: #DCDCDC;*/
-/*    padding: 2px;*/
-/*    min-width: 65px;*/
-/*    max-width: 65px;*/
-/*    min-height: 15px;*/
-/*}*/
-
-/*QPushButton::pressed {*/
-/*    background-color: #fff;*/
-/*    color: black;*/
-/*    font-family: "Segoe UI";*/
-/*    font-size: 12px;*/
-/*    border: solid;*/
-/*    border-width: 2px;*/
-/*    border-radius: 4px;*/
-/*    border-color: #367AF6;*/
-/*    padding: 2px;*/
-/*    min-width: 65px;*/
-/*    max-width: 65px;*/
-/*    min-height: 15px;*/
-/*}*/
-/*</editor-fold>*/
-
-QToolButton {
-    background-color: #DCDBE3;
+/*<editor-fold desc="Frame overrides">*/
+QFrame#frame_proteins_tree_view {
     border-style: solid;
     border-width: 2px;
     border-radius: 4px;
     border-color: #DCDBE3;
-    min-width: 1.5em;
-    padding: 1px;
+    background-color: white;
 }
 
-QToolButton::hover {
-    /*background: qlineargradient(x1:0, y1: 0, x2: 0, y2: 1,*/
-    /*stop: 0 #4B91F7, stop: 0.4 #367AF6, stop: 0.5 #367AF6, stop: 1.0 #4B91F7);*/
-    color: #4B91F7;
-    border-color: #4B91F7;
-    border-style: solid;
-}
-
-QToolTip {
-    font: bold;
-    font-size: 12px;
-}
-
-QSplitter::handle {
-    background: #e0e0e0;
-    border: 2px solid #e0e0e0;
-    width: 15px;
-    margin: 1px;
-    border-radius: 4px;
-}
-
-QFrame#frame_x_axis {
+QFrame#frame_protein_protein_regions {
     border-style: solid;
     border-width: 2px;
     border-radius: 4px;
     border-color: #DCDBE3;
-    padding: 1px;
+    background-color: white;
 }
 
-QFrame#frame_y_axis {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-    padding: 1px;
-}
-
-QFrame#line_x_axis {
-    border-style: solid;
-    border-width: 1.5px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-}
-
-QFrame#line_y_axis {
-    border-style: solid;
-    border-width: 1.5px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-}
-
-QFrame#frame_settings_general {
-    border-style: solid;
-    border-width: 1.5px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-}
-
-QFrame#frame_settings_distance_parameters {
-    border-style: solid;
-    border-width: 1.5px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-}
-
-QFrame#frame_settings_image_parameters {
-    border-style: solid;
-    border-width: 1.5px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-}
-
-QFrame#frame_session_color_repr {
+QFrame#frame_protein_pymol_scene {
     background-color: white;
     border-style: solid;
     border-width: 2px;
@@ -1352,7 +699,7 @@ QFrame#frame_session_color_repr {
     border-color: #DCDBE3;
 }
 
-QFrame#frame_session_color {
+QFrame#frame_protein_color {
     background-color: white;
     border-style: solid;
     border-width: 1px;
@@ -1368,7 +715,7 @@ QFrame#frame_session_color {
 /*    border-color: #DCDBE3;*/
 /*}*/
 
-QScrollArea#scroll_area_session_repr {
+QScrollArea#scroll_area_protein_repr {
     background-color: white;
     border-style: solid;
     border-width: 1px;
@@ -1376,36 +723,138 @@ QScrollArea#scroll_area_session_repr {
     border-color: #DCDBE3;
 }
 
-QScrollArea#scroll_area_home_project {
-    background: #f5f5f5;
+QFrame#frame_bottom_2 {
+    background-color: #f7f8fa;
     border-style: solid;
     border-width: 1px;
+    border-radius: 6px;
+    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+    border-top-color: #ebecf0;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+/*</editor-fold>*/
+/*</editor-fold>*/
+
+/*<editor-fold desc="Protein pairs tab">*/
+QTreeView#protein_pairs_tree_view {
+    border-style: solid;
+    border-width: 2px;
     border-radius: 4px;
-    border-color: #DCDBE3;
+    border-color: white;
 }
 
-QScrollArea#scroll_area_new_project {
-    background: #f5f5f5;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
+QTreeView:disabled#protein_pairs_tree_view {
+    background-color: white;
 }
 
-QScrollArea#scroll_area_open_project {
-    background: #f5f5f5;
-    border-style: solid;
-    border-width: 1px;
+/*<editor-fold desc="Icon buttons">*/
+QPushButton#btn_delete_protein_pair {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
     border-radius: 4px;
-    border-color: #DCDBE3;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_delete_protein_pair {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
 }
 
-QScrollArea#scroll_area_delete_project {
-    background: #f5f5f5;
+QPushButton#btn_delete_protein_pair_scene {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_delete_protein_pair_scene {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_open_protein_pair_session {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_open_protein_pair_session {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_create_protein_pair_scene {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_create_protein_pair_scene {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_update_protein_pair_scene {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_update_protein_pair_scene {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+/*</editor-fold>*/
+
+/*<editor-fold desc="Frame overrides">*/
+QFrame#frame_protein_pairs_tree_view {
     border-style: solid;
-    border-width: 1px;
+    border-width: 2px;
     border-radius: 4px;
     border-color: #DCDBE3;
+    background-color: white;
+}
+
+QFrame#frame_protein_pair_protein_regions {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    background-color: white;
 }
 
 QFrame#frame_protein_pair_pymol_scene {
@@ -1440,52 +889,150 @@ QScrollArea#scroll_area_protein_pair_repr {
     border-color: #DCDBE3;
 }
 
-QScrollArea#scroll_area_job_overview {
+QFrame#frame_bottom_3 {
+    background-color: #f7f8fa;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 6px;
+    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+    border-top-color: #ebecf0;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+/*</editor-fold>*/
+/*</editor-fold>*/
+
+/*<editor-fold desc="Help button styles">*/
+QPushButton#btn_help {
     background-color: white;
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-}
-
-QScrollArea#scroll_area_job_notification {
-    background-color: white;
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-}
-
-QStatusBar {
-    background-color: #F2F2F2;
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: #DCDBE3;
-}
-
-
-QStatusBar::item {
+    /*border-style: outset;*/
     border: none;
+    border-width: 2px;
+    border-radius: 10px;
+    padding: 2px;
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px
 }
 
-QStatusBar QLabel {
-    color: black;
-    border-style: none;
+QPushButton#btn_help_2 {
+    background-color: white;
+    /*border-style: outset;*/
+    border: none;
+    border-width: 2px;
+    border-radius: 10px;
+    padding: 2px;
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px
 }
 
-QProgressBar {
+QPushButton#btn_help_3 {
+    background-color: white;
+    /*border-style: outset;*/
+    border: none;
+    border-width: 2px;
+    border-radius: 10px;
+    padding: 2px;
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px
+}
+
+QPushButton::hover#btn_help {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #4B91F7, stop: 0.4 #367AF6,
+    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    background: white;
+    color: white;
+    color: #4B91F7;
+    border: 2px solid #DCDBE3;
+}
+
+QPushButton::hover#btn_help_2 {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #4B91F7, stop: 0.4 #367AF6,
+    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    background: white;
+    color: white;
+    color: #4B91F7;
+    border: 2px solid #DCDBE3;
+}
+
+QPushButton::hover#btn_help_3 {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #4B91F7, stop: 0.4 #367AF6,
+    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    background: white;
+    color: white;
+    color: #4B91F7;
+    border: 2px solid #DCDBE3;
+}
+/*</editor-fold>*/
+/*</editor-fold>*/
+
+/*<editor-fold desc="Settings dialog">*/
+QFrame#frame_settings_general {
+    border-style: solid;
+    border-width: 1.5px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QFrame#frame_settings_distance_parameters {
+    border-style: solid;
+    border-width: 1.5px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QFrame#frame_settings_image_parameters {
+    border-style: solid;
+    border-width: 1.5px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+/*</editor-fold>*/
+
+/*<editor-fold desc="Open project dialog">*/
+QFrame#frame_open_project_list {
     border-style: solid;
     border-width: 2px;
     border-radius: 4px;
     border-color: #DCDBE3;
-    background-color: #efefef;
-    max-height: 17px;
-    max-width: 80px;
-    text-align: center;
-    color: black;
+    background-color: white;
 }
-QProgressBar::chunk {
-    background-color: #367af6;
-    width: 10px;
+/*</editor-fold>*/
+
+QFrame#frame_x_axis {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    padding: 1px;
+}
+
+QFrame#frame_y_axis {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    padding: 1px;
+}
+
+QFrame#line_x_axis {
+    border-style: solid;
+    border-width: 1.5px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QFrame#line_y_axis {
+    border-style: solid;
+    border-width: 1.5px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
 }
