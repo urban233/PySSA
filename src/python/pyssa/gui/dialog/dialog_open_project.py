@@ -1,7 +1,7 @@
 from PyQt6 import QtCore
 from PyQt6 import QtWidgets
+from PyQt6 import QtGui
 from PyQt6.QtCore import Qt
-
 from pyssa.gui.base_classes import base_dialog
 from .forms.auto import auto_dialog_open_project
 from pyssa.model.preference import model_definitions
@@ -38,7 +38,7 @@ class DialogOpenProject(base_dialog.BaseDialog):
     icons.set_icon(self.ui.btn_help, model_definitions.IconsEnum.HELP)
     #styles_util.color_bottom_frame_button(self.ui.btn_new_create_project)
     # styles_utils.set_stylesheet(self)
-    #self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    self.setWindowIcon(QtGui.QIcon(model_definitions.ModelDefinitions.PLUGIN_LOGO_FILEPATH))
     self.setWindowTitle("Open Project")
     self.setWindowFlags(
       self.windowFlags() & ~QtCore.Qt.WindowType.WindowContextHelpButtonHint

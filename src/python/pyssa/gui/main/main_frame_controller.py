@@ -57,9 +57,6 @@ class MainFrameController:
       raise exception.NoneValueError("a_main_frame is None.")
     # </editor-fold>
     self.main_frame: "main_frame.MainFrame" = a_main_frame
-    self.basic_controllers: dict = {
-      "New": create_project_controller.CreateProjectController(dialog_create_project.DialogCreateProject())
-    }
     self.status_bar_manager = status_bar_manager.StatusBarManager(self.main_frame)
     self.mv_client: Optional["imv_client.IMvClient"] = None
     # <editor-fold desc="Tasks">

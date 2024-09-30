@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from PyQt6 import QtWidgets
 from PyQt6 import QtCore
 from pyssa.gui.base_classes import base_controller
+from pyssa.gui.util import ui_util
 from pyssa.model.util import exception
 from pyssa.model.pyssa_logging import default_logging
 
@@ -47,6 +48,9 @@ class OpenProjectController(base_controller.BaseController):
   def connect_all_signals(self):
     """Connects all signals with their appropriate slots."""
     self._dialog.dialogClosed.connect(self.set_dialog_close_as_canceled)
+    self._dialog.ui.txt_open_search.textChanged.connect(
+      self._validate_open_search
+    )
     self._dialog.ui.projects_list_view.clicked.connect(self.__slot_project_selected)
     self._dialog.ui.projects_list_view.doubleClicked.connect(self.__slot_open_project)
     self._dialog.ui.btn_open_project.clicked.connect(self.__slot_open_project)
@@ -58,6 +62,26 @@ class OpenProjectController(base_controller.BaseController):
   def restore_ui(self) -> None:
     """Restores the UI to default values."""
     self._dialog.setup_ui()
+
+  def _validate_open_search(self, the_entered_text: str) -> None:
+    """Validates the input of the project name in real-time.
+
+    Args:
+      the_entered_text: The text entered by the user for the open search.
+
+    Raises:
+      exception.IllegalArgumentError: If `the_entered_text` is None.
+    """
+    # <editor-fold desc="Checks">
+    if the_entered_text is None:
+      logger.error("the_entered_text is None.")
+      raise exception.IllegalArgumentError("the_entered_text is None.")
+    # </editor-fold>
+    ui_util.select_matching_string_in_q_list_view(
+      self._dialog.ui.txt_open_search.text(),
+      self._dialog.ui.projects_list_view,
+      self._dialog.ui.txt_open_selected_project,
+    )
 
   def set_dialog_close_as_canceled(self) -> None:
     """Sets the was_canceled flag to true."""
