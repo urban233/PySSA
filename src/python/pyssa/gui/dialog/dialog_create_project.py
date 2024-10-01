@@ -1,11 +1,11 @@
-from PyQt6 import QtCore
+from PyQt6 import QtCore, QtGui
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt
 
 from pyssa.gui.base_classes import base_dialog
 from pyssa.model.preference import model_definitions
 from pyssa.model.util.gui_style import icons
-from pyssa.gui.dialog.forms.auto import auto_create_project_dialog
+from pyssa.gui.dialog.forms.auto import auto_dialog_create_project
 
 
 class DialogCreateProject(base_dialog.BaseDialog):
@@ -17,7 +17,7 @@ class DialogCreateProject(base_dialog.BaseDialog):
   def __init__(self) -> None:
     """Constructor."""
     super().__init__()
-    self.ui = auto_create_project_dialog.Ui_Dialog()
+    self.ui = auto_dialog_create_project.Ui_Dialog()
     self.ui.setupUi(self)
     self.setup_ui()
     self.ui.btn_cancel.clicked.connect(self.close)
@@ -25,12 +25,12 @@ class DialogCreateProject(base_dialog.BaseDialog):
 
   def setup_ui(self) -> None:
     """Sets up the initial ui."""
-    self.ui.txt_project_name.clear()
+    self.ui.txt_new_project_name.clear()
     icons.set_icon(self.ui.btn_help, model_definitions.IconsEnum.HELP)
-    self.ui.btn_create.setEnabled(False)
+    self.ui.btn_new_create_project.setEnabled(False)
+    self.setWindowIcon(QtGui.QIcon(model_definitions.ModelDefinitions.PLUGIN_LOGO_FILEPATH))
     #styles_util.color_bottom_frame_button(self.ui.btn_new_create_project)
     #styles_utils.set_stylesheet(self)
-    #self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     # self.setStyleSheet(
     #   """
     #   QDialog { background: white; }
@@ -52,7 +52,7 @@ class DialogCreateProject(base_dialog.BaseDialog):
     #   }
     #   """
     # )
-    self.setWindowTitle(" ")
+    self.setWindowTitle("Create Project")
     self.setWindowFlags(
       self.windowFlags() & ~QtCore.Qt.WindowType.WindowContextHelpButtonHint
     )

@@ -1007,6 +1007,16 @@ QFrame#frame_open_project_list {
 }
 /*</editor-fold>*/
 
+/*<editor-fold desc="Create project dialog">*/
+QFrame#frame_create_project_list {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    background-color: white;
+}
+/*</editor-fold>*/
+
 QFrame#frame_x_axis {
     border-style: solid;
     border-width: 2px;

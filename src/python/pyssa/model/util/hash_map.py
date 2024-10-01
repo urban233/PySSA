@@ -1,13 +1,20 @@
-from typing import Optional
+from typing import Optional, Any, TypeVar, Generic, Deque
 
 import numpy as np
 import collections
 
+# Define generic types for key and value
+TYPE_KEY = TypeVar('TYPE_KEY')
+TYPE_VALUE = TypeVar('TYPE_VALUE')
 
-class HashMap:
+
+class HashMap(Generic[TYPE_KEY, TYPE_VALUE]):
   """Implementation of a non automatically resizable hash map."""
 
-  def __init__(self, a_size: int):
+  def __init__(
+          self,
+          a_size: int,
+  ) -> None:
     """Constructor.
 
     Args:
@@ -21,7 +28,7 @@ class HashMap:
       raise ValueError("'a_size' must have a positive integer value!")
     # </editor-fold>
     self.size = int(a_size + a_size * 0.25)
-    self.table: np.ndarray[collections.deque] = np.empty(self.size, dtype=object)
+    self.table: np.ndarray[Deque[tuple[TYPE_KEY, TYPE_VALUE]]] = np.empty(self.size, dtype=object)
     for i in range(self.size):
       self.table[i] = collections.deque()  # Each index will store a linked list (for chaining)
 
@@ -29,11 +36,11 @@ class HashMap:
     """Defines the string representation of the hash map."""
     return repr(self.table)
 
-  def _hash_index(self, key) -> int:
+  def _hash_index(self, key: TYPE_KEY) -> int:
     """Compute the hash index for a given key"""
     return hash(key) % self.size
 
-  def insert(self, a_key: object, a_value: object) -> bool:
+  def insert(self, a_key: TYPE_KEY, a_value: TYPE_VALUE) -> bool:
     """Insert a key-value pair into the hash table"""
     bucket = self.table[self._hash_index(a_key)]
     for i, (tmp_key, tmp_value) in enumerate(bucket):
@@ -43,7 +50,7 @@ class HashMap:
     bucket.append((a_key, a_value))
     return True
 
-  def update(self, a_key: object, a_value: object) -> bool:
+  def update(self, a_key: TYPE_KEY, a_value: TYPE_VALUE) -> bool:
     """Updates a key-value pair into the hash table """
     bucket = self.table[self._hash_index(a_key)]
     # Check if the key exists in the bucket and update it
@@ -53,21 +60,21 @@ class HashMap:
         return True
     return False  # If key is not found, return False
 
-  def get(self, key) -> Optional[object]:
+  def get(self, a_key: TYPE_KEY) -> Optional[TYPE_VALUE]:
     """ Search for a key in the hash table and return its value """
-    index = self._hash_index(key)
+    index = self._hash_index(a_key)
     bucket = self.table[index]
     for k, v in bucket:
-      if k == key:
+      if k == a_key:
         return v  # Key found, return value
     return None  # Key not found
 
-  def remove(self, key) -> bool:
+  def remove(self, a_key: TYPE_KEY) -> bool:
     """ Remove a key-value pair from the hash table """
-    index = self._hash_index(key)
+    index = self._hash_index(a_key)
     bucket = self.table[index]
     for i, (k, v) in enumerate(bucket):
-      if k == key:
+      if k == a_key:
         del bucket[i]  # Remove the key-value pair
         return True
     return False  # Key not found

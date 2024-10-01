@@ -33,8 +33,6 @@ from pyssa.gui.custom_widgets import color_grid
 from pyssa.gui.main.forms.auto import auto_main_view
 from pyssa.model.preference import model_definitions
 from pyssa.model.util.gui_style import styles_utils, icons
-#from pyssa.util import constants
-#from pyssa.util import gui_utils
 
 from pyssa.model.util import exception
 from pyssa.model.pyssa_logging import default_logging
@@ -76,7 +74,6 @@ class MainFrame(QtWidgets.QMainWindow):
       raise exception.IllegalArgumentError("event is None.")
 
     # </editor-fold>
-
     # Emit the custom signal when the window is closed
     self.dialogClosed.emit(("", event))
 
@@ -90,21 +87,9 @@ class MainFrame(QtWidgets.QMainWindow):
     self.lbl_job_overview = QtWidgets.QLabel("No running jobs.")
     self.btn_open_job_notification = QtWidgets.QPushButton()
     self.lbl_job_notification = QtWidgets.QLabel("No new notifications.")
-    self.icon_jobs = QtGui.QIcon(QtGui.QPixmap(":icons/play_circle_w200.png"))
-    self.icon_jobs_running = QtGui.QIcon(
-        QtGui.QPixmap(":icons/play_circle_run_w200_blue.png")
-    )
-    self.icon_notify = QtGui.QIcon(
-        QtGui.QPixmap(":icons/notifications_w200.png")
-    )
-    self.icon_notify_unread = QtGui.QIcon(
-        QtGui.QPixmap(":icons/notifications_unread_w200.png")
-    )
-    self.btn_open_job_overview.setIcon(self.icon_jobs)
-    self.btn_open_job_overview.setText("")
-    self.btn_open_job_overview.setIconSize(
-        self.icon_jobs.actualSize(QtCore.QSize(30, 30))
-    )
+    icons.set_icon(self.btn_open_job_overview, model_definitions.IconsEnum.JOBS)
+    icons.set_icon(self.btn_open_job_notification, model_definitions.IconsEnum.NOTIFY)
+    # <editor-fold desc="Custom stylesheets">
     self.btn_open_job_overview.setStyleSheet(
         """
             QPushButton {
@@ -127,11 +112,6 @@ class MainFrame(QtWidgets.QMainWindow):
         """
     )
     self.lbl_job_overview.setStyleSheet("""padding-top: 30px;""")
-    self.btn_open_job_notification.setIcon(self.icon_notify)
-    self.btn_open_job_notification.setText("")
-    self.btn_open_job_notification.setIconSize(
-        self.icon_notify.actualSize(QtCore.QSize(24, 24))
-    )
     self.btn_open_job_notification.setStyleSheet(
         """
             QPushButton {
@@ -174,6 +154,7 @@ class MainFrame(QtWidgets.QMainWindow):
                 border: 2px solid #DCDBE3;
             }"""
     self.lbl_job_notification.setStyleSheet("""padding-top: 30px;""")
+    # </editor-fold>
     self.ui.job_overview_layout.insertWidget(
         0, self.lbl_job_overview
     )  # After inserting the widget count is 2

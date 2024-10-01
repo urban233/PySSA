@@ -14,12 +14,10 @@ class DatabasesManager:
 
   def __init__(self) -> None:
     """Constructor."""
-    #self.handlers: dict[str, "database_handler.DatabaseHandler"] = {}
-    self.handlers: "hash_map.HashMap" = hash_map.HashMap(50)
+    self.handlers: "hash_map.HashMap[str, 'database_handler.DatabaseHandler']" = hash_map.HashMap(50)
 
   def add_handler(self, a_key, a_database_handler: "database_handler.DatabaseHandler") -> None:
     """Adds a database handler to the dict."""
-    #self.handlers[a_key] = a_database_handler
     self.handlers.insert(a_key, a_database_handler)
     default_logging.append_to_log_file(
       logger,
@@ -29,7 +27,6 @@ class DatabasesManager:
 
   def remove_handler(self, a_key) -> None:
     """Removes a database handler from the dict."""
-    #del self.handlers[a_key]
     self.handlers.remove(a_key)
 
   def remove_unused_handlers(self) -> None:
@@ -37,8 +34,7 @@ class DatabasesManager:
     for a_key in self.handlers.keys():
       if self.handlers.get(a_key).is_current_project == False and self.handlers.get(a_key).is_working == False:
         default_logging.append_to_log_file(logger, f"Remove unused database handler {a_key}.", logging.INFO)
-        self.handlers.remove(a_key)
-
+        self.remove_handler(a_key)
     # for a_key in self.handlers.keys():
     #   if self.handlers[a_key].is_current_project == False and self.handlers[a_key].is_working == False:
     #     default_logging.append_to_log_file(logger, f"Remove unused database handler {a_key}.", logging.INFO)

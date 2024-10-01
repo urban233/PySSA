@@ -34,19 +34,21 @@ class CreateProjectController(base_controller.BaseController):
       raise exception.NoneValueError("a_dialog is None.")
     # </editor-fold>
     super().__init__()
+    # <editor-fold desc="Instance attributes">
     self._dialog: "dialog_create_project.DialogCreateProject" = a_dialog
     """The dialog that the controller should work with."""
     self.was_canceled: bool = False
     """Flag to indicate whether the dialog was cancelled."""
     self.entered_project_name: str = ""
     """The project name that was entered in the line edit."""
+    # </editor-fold>
     self.connect_all_signals()
 
   def connect_all_signals(self):
     """Connects all signals with their appropriate slots."""
     self._dialog.dialogClosed.connect(self.set_dialog_close_as_canceled)
-    self._dialog.ui.txt_project_name.textChanged.connect(self.__slot_check_project_name_input)
-    self._dialog.ui.btn_create.clicked.connect(self.__slot_create_project)
+    self._dialog.ui.txt_new_project_name.textChanged.connect(self.__slot_check_project_name_input)
+    self._dialog.ui.btn_new_create_project.clicked.connect(self.__slot_create_project)
 
   def get_dialog(self) -> QtWidgets.QDialog:
     """Gets the dialog of the controller."""
@@ -68,7 +70,7 @@ class CreateProjectController(base_controller.BaseController):
     """
     tmp_project_name: str = ""
     try:
-      tmp_project_name: str = self._dialog.ui.txt_project_name.text()
+      tmp_project_name: str = self._dialog.ui.txt_new_project_name.text()
     except Exception as e:
       default_logging.append_to_log_file(logger, f"An error occurred while accessing the project name. {e}", logging.ERROR)
     finally:
@@ -76,10 +78,10 @@ class CreateProjectController(base_controller.BaseController):
 
   def __slot_check_project_name_input(self) -> None:
     """Checks if the project name is valid or not."""
-    self._dialog.ui.btn_create.setEnabled(True)
+    self._dialog.ui.btn_new_create_project.setEnabled(True)
 
   def __slot_create_project(self) -> None:
     """Slot method for the create project button."""
-    self.entered_project_name = self._dialog.ui.txt_project_name.text()
+    self.entered_project_name = self._dialog.ui.txt_new_project_name.text()
     self._dialog.close()  # This triggers the close event
     self.was_canceled = False

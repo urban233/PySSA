@@ -117,7 +117,6 @@ class MainFrameController:
     self.main_frame.ui.btn_import_protein.clicked.connect(self.slot_import_protein_dialog)
     # </editor-fold>
 
-
   def temp_project_setup(self) -> None:
     """Sets up a temporary project."""
     self.project: "project.Project" = project.Project("dummy")
