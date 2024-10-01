@@ -116,6 +116,7 @@ class ComponentsEnum(enum.IntEnum):
 
   IMPORT_SEQUENCE = 1101
   IMPORT_PROTEIN = 1201
+  SAVE_PROTEIN = 1202
   IMPORT_LIGAND = 1301
 
 

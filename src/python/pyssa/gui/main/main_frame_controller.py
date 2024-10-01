@@ -25,7 +25,7 @@ from pyssa.model.central_objects import protein
 from pyssa.model.central_objects import project
 from pyssa.model.util import component_manager
 from pyssa.model.preference import model_definitions
-from pyssa.gui.components import open_project_component
+from pyssa.gui.components import open_project_component, save_protein_component
 from pyssa.gui.components import create_project_component
 from pyssa.gui.components import import_sequence_component
 from pyssa.gui.components import import_protein_component
@@ -75,6 +75,8 @@ class MainFrameController:
           self.schedule_tool_task_result_object),
         model_definitions.ComponentsEnum.IMPORT_PROTEIN: import_protein_component.ImportProteinComponent(
           self.schedule_tool_task_result_object),
+        model_definitions.ComponentsEnum.SAVE_PROTEIN: save_protein_component.SaveProteinComponent(
+          self.schedule_tool_task_result_object),
         model_definitions.ComponentsEnum.IMPORT_LIGAND: import_ligand_component.ImportLigandComponent(
           self.schedule_tool_task_result_object),
       }
@@ -87,13 +89,10 @@ class MainFrameController:
     )
     self.sequence_model: "sequence_model.SequenceModel" = sequence_model.SequenceModel.from_a_list_of_sequences([])
     self.protein_model: "protein_model.ProteinModel" = protein_model.ProteinModel.from_a_list_of_proteins([])
-    self.ligand_model: "ligand_model.LigandModel" = ligand_model.LigandModel.from_a_list_of_ligands([])
+    # self.protein_protein_complex_model
     # </editor-fold>
 
     self.project: Optional["project.Project"] = None
-
-    # self.protein_protein_complex_model
-    # self.protein_ligand_complex_model
     self.set_all_models_to_their_views()
     self.connect_all_slots()
     # TODO: below is just for testing purposes until project management is working
@@ -115,6 +114,8 @@ class MainFrameController:
     # </editor-fold>
     # <editor-fold desc="Proteins tab">
     self.main_frame.ui.btn_import_protein.clicked.connect(self.slot_import_protein_dialog)
+    self.main_frame.ui.btn_save_protein.clicked.connect(self.slot_save_protein_dialog)
+    self.main_frame.ui.proteins_tree_view.clicked.connect(self.update_main_frame_gui)
     # </editor-fold>
 
   def temp_project_setup(self) -> None:
@@ -288,17 +289,24 @@ class MainFrameController:
       # </editor-fold>
       # </editor-fold>
       # <editor-fold desc="Protein-protein complexes">
-      if len(self.project.protein_protein_complexes) == 0:
-        # NO complexes
-        self.main_frame.ui.btn_delete_protein_pair.setEnabled(False)
-      else:
+      # <editor-fold desc="Contains Protein-protein complexes">
+      if len(self.project.protein_protein_complexes) > 0:
         # Contains protein-protein complexes
         if len(self.main_frame.ui.protein_pairs_tree_view.selectedIndexes()) > 0:
           # A protein-protein complex is selected
           self.main_frame.ui.btn_delete_protein_pair.setEnabled(True)
         else:
           # NO protein-protein complex is selected
+          self.main_frame.ui.btn_protein_pair_tree_view_expand.setEnabled(False)
+          self.main_frame.ui.btn_protein_pair_tree_view_collapse.setEnabled(False)
           self.main_frame.ui.btn_delete_protein_pair.setEnabled(False)
+      # </editor-fold>
+      # <editor-fold desc="NO Protein-protein complexes">
+      else:
+        self.main_frame.ui.btn_protein_pair_tree_view_expand.setEnabled(False)
+        self.main_frame.ui.btn_protein_pair_tree_view_collapse.setEnabled(False)
+        self.main_frame.ui.btn_delete_protein_pair.setEnabled(False)
+      # </editor-fold>
       # </editor-fold>
 
   def stop_wait_cursor(self) -> None:
@@ -635,7 +643,7 @@ class MainFrameController:
 
   # </editor-fold>
 
-  # <editor-fold desc="Main page">
+  # <editor-fold desc="Tab widget">
   # <editor-fold desc="Handling of the 'import sequence' component.">
   def slot_import_sequence_dialog(self):
     """Slot method for the import sequence button."""
@@ -737,12 +745,15 @@ class MainFrameController:
       self.update_main_frame_gui()
   # </editor-fold>
 
-  # <editor-fold desc="Handling of the 'import ligand' component.">
-  def slot_import_ligand_dialog(self) -> None:
-    """Slot method for the import ligand button."""
+  # <editor-fold desc="Handling of the 'save protein' component.">
+  def slot_save_protein_dialog(self) -> None:
+    """Slot method for the save protein button."""
     try:
-      self.component_manager.components[model_definitions.ComponentsEnum.IMPORT_LIGAND].run_tool(
-        self.__await_component_import_ligand_task
+      self.component_manager.components[model_definitions.ComponentsEnum.SAVE_PROTEIN].add_protein_structure_to_tool(
+        self.protein_model.get_protein_as_object(self.main_frame.ui.proteins_tree_view.currentIndex())
+      )
+      self.component_manager.components[model_definitions.ComponentsEnum.SAVE_PROTEIN].run_tool(
+        self.__await_component_save_protein_task
       )
     except Exception as e:
       default_logging.append_to_log_file(
@@ -752,8 +763,8 @@ class MainFrameController:
       )
       self.status_bar_manager.show_error_message("An error occurred.")
 
-  def __await_component_import_ligand_task(self, value) -> None:
-    """Adds the imported ligand to the project object and model.
+  def __await_component_save_protein_task(self, value) -> None:
+    """Adds the saved protein to the project object and model.
 
     Args:
       value: Result tuple of the finished task
@@ -772,8 +783,8 @@ class MainFrameController:
     # </editor-fold>
     try:
       tmp_results = task_result.TaskResult.get_single_action_result(value)
-      if tmp_results[0]:
-        self.ligand_model.add_ligand(tmp_results[1])  # TODO: Cannot be ignored!
+      if tmp_results[1][0] == 0:
+        self.status_bar_manager.show_temporary_message("Protein successfully saved.")
     except Exception as e:
       default_logging.append_to_log_file(
         logger,

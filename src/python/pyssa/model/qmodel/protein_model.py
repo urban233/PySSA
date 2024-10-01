@@ -117,6 +117,17 @@ class ProteinModel(base_tree_model.BaseTreeModel):
         logging.ERROR
       )
 
+  def get_protein_as_object(self, a_model_index: QtCore.QModelIndex) -> "protein.Protein":
+    """Get protein as object."""
+    if a_model_index.data(enums.ModelEnum.TYPE_ROLE) == model_definitions.TypesEnum.PROTEIN_TYPE:
+      return a_model_index.data(model_definitions.RolesEnum.OBJECT_ROLE)
+    elif a_model_index.data(enums.ModelEnum.TYPE_ROLE) == model_definitions.TypesEnum.CHAIN_TYPE:
+      return a_model_index.parent().data(model_definitions.RolesEnum.OBJECT_ROLE)
+    elif a_model_index.data(enums.ModelEnum.TYPE_ROLE) == model_definitions.TypesEnum.RESIDUE_TYPE:
+      return a_model_index.parent().parent().data(model_definitions.RolesEnum.OBJECT_ROLE)
+    elif a_model_index.data(enums.ModelEnum.TYPE_ROLE) == model_definitions.TypesEnum.ATOM_TYPE:
+      return a_model_index.parent().parent().parent().data(model_definitions.RolesEnum.OBJECT_ROLE)
+
   def get_chain_index(
           self,
           a_chain_identifier: str,
