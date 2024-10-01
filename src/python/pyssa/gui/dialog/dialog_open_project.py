@@ -23,6 +23,7 @@ class DialogOpenProject(base_dialog.BaseDialog):
     self.setup_ui()
     self.resize(450, 600)
     self.ui.btn_cancel.clicked.connect(self.close)
+    styles_utils.color_bottom_frame_button(self.ui.btn_open_project)
     self.setWindowModality(Qt.WindowModality.WindowModal)
 
   def setup_ui(self) -> None:
@@ -36,8 +37,6 @@ class DialogOpenProject(base_dialog.BaseDialog):
     self.ui.projects_list_view.clearSelection()
     self.ui.btn_open_project.setEnabled(False)
     icons.set_icon(self.ui.btn_help, model_definitions.IconsEnum.HELP)
-    #styles_util.color_bottom_frame_button(self.ui.btn_new_create_project)
-    # styles_utils.set_stylesheet(self)
     self.setWindowIcon(QtGui.QIcon(model_definitions.ModelDefinitions.PLUGIN_LOGO_FILEPATH))
     self.setWindowTitle("Open Project")
     self.setWindowFlags(

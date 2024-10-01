@@ -6,6 +6,7 @@ from pyssa.gui.base_classes import base_controller
 from pyssa.gui.util import ui_util
 from pyssa.model.util import exception
 from pyssa.model.pyssa_logging import default_logging
+from pyssa.model.util.gui_style import styles_utils
 
 logger = default_logging.setup_logger(__file__)
 

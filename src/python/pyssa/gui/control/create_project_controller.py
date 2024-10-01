@@ -1,8 +1,9 @@
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from PyQt6 import QtWidgets
 from PyQt6 import QtCore
 from pyssa.gui.base_classes import base_controller
+from pyssa.gui.util import input_validator
 from pyssa.model.util import exception
 from pyssa.model.pyssa_logging import default_logging
 
@@ -41,6 +42,8 @@ class CreateProjectController(base_controller.BaseController):
     """Flag to indicate whether the dialog was cancelled."""
     self.entered_project_name: str = ""
     """The project name that was entered in the line edit."""
+    self.project_names: Optional[set] = None
+    """All project names of the current workspace."""
     # </editor-fold>
     self.connect_all_signals()
 
@@ -76,9 +79,38 @@ class CreateProjectController(base_controller.BaseController):
     finally:
       return tmp_project_name
 
+  def convert_model_into_set(self) -> set:
+    """Converts the model into a set of project names.
+
+    Returns:
+        A set containing the project names.
+    """
+    tmp_project_names = []
+    for tmp_row in range(
+            self._dialog.ui.list_create_projects_view.model().rowCount()
+    ):
+      tmp_project_names.append(
+        self._dialog.ui.list_create_projects_view.model()
+        .index(tmp_row, 0)
+        .data(QtCore.Qt.ItemDataRole.DisplayRole),
+        )
+    return set(tmp_project_names)
+
   def __slot_check_project_name_input(self) -> None:
     """Checks if the project name is valid or not."""
-    self._dialog.ui.btn_new_create_project.setEnabled(True)
+    tmp_validate_flag, tmp_stylesheet_string, tmp_message = (
+      input_validator.validate_input_for_project_name(
+        self._dialog.ui.txt_new_project_name.text(),
+        self.project_names,
+      )
+    )
+    self._dialog.ui.txt_new_project_name.setStyleSheet(tmp_stylesheet_string)
+    if tmp_validate_flag:
+      self._dialog.ui.lbl_new_status_project_name.setText("")
+      self._dialog.ui.btn_new_create_project.setEnabled(True)
+    else:
+      self._dialog.ui.lbl_new_status_project_name.setText(tmp_message)
+      self._dialog.ui.btn_new_create_project.setEnabled(False)
 
   def __slot_create_project(self) -> None:
     """Slot method for the create project button."""

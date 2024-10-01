@@ -1015,6 +1015,11 @@ QFrame#frame_create_project_list {
     border-color: #DCDBE3;
     background-color: white;
 }
+
+QLabel#lbl_new_status_project_name {
+    color: #ba1a1a;
+    font-size: 11px;
+}
 /*</editor-fold>*/
 
 QFrame#frame_x_axis {

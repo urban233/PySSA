@@ -25,22 +25,81 @@ def color_bottom_frame_button(button: QtWidgets.QPushButton) -> None:
   if button is None:
     logger.error("button is None.")
     raise exception.IllegalArgumentError("button is None.")
-
   # </editor-fold>
-
-  with open(
-          os.path.join(
-            global_variables.global_var_root_dir,
-            "gui",
-            "ui",
-            "styles",
-            "bottom_frame_button.css",
-          ),
-          "r",
-  ) as style_sheet_file:
-    button_style = style_sheet_file.read()
-    # Set the stylesheet of the application
-    button.setStyleSheet(button_style)
+  # Set the stylesheet of the application
+  button.setStyleSheet(
+    """
+    QPushButton {
+        background-color: #367AF6;
+        color: #fff;
+        font-family: "Segoe UI Semibold";
+        font-size: 12px;
+        border: solid;
+        border-width: 1px;
+        border-radius: 4px;
+        border-color: #DCDCDC;
+        padding: 2px;
+        min-width: 65px;
+        max-width: 65px;
+        min-height: 15px;
+        max-height: 15px;
+        /*font-family: "Segoe UI";*/
+        /*font-size: 12px;*/
+        /*font: bold;*/
+        /*border: none;*/
+        /*border-width: 2px;*/
+        /*border-radius: 4px;*/
+        /*border-color: #DCDCDC;*/
+        /*padding: 2px;*/
+        /*min-width: 65px;*/
+        /*max-width: 65px;*/
+        /*min-height: 15px;*/
+    }
+    
+    QPushButton:disabled {
+        background-color: #fff;
+        color: #B0B0B0;
+        font-family: "Segoe UI";
+        font-size: 12px;
+        border: solid;
+        border-width: 1px;
+        border-radius: 4px;
+        border-color: #DCDCDC;
+        padding: 2px;
+        min-width: 65px;
+        max-width: 65px;
+        min-height: 15px;
+        /*background-color: #fff;*/
+        /*color: #B0B0B0;*/
+        /*font-family: "Segoe UI";*/
+        /*font-size: 12px;*/
+        /*font: bold;*/
+        /*border: solid;*/
+        /*border-width: 2px;*/
+        /*border-radius: 4px;*/
+        /*border-color: #fff;*/
+        /*padding: 2px;*/
+        /*min-width: 65px;*/
+        /*max-width: 65px;*/
+        /*min-height: 15px;*/
+    }
+    
+    QPushButton::pressed {
+        background-color: #204993;
+        color: #fff;
+        font-family: "Segoe UI";
+        font-size: 12px;
+        border: none;
+        border-width: 2px;
+        border-radius: 4px;
+        border-color: #DCDCDC;
+        padding: 2px;
+        min-width: 65px;
+        max-width: 65px;
+        min-height: 15px;
+    }
+    """
+  )
 
 
 def color_button_not_ready(button: QtWidgets.QPushButton) -> None:
@@ -56,22 +115,23 @@ def color_button_not_ready(button: QtWidgets.QPushButton) -> None:
   if button is None:
     logger.error("button is None.")
     raise exception.IllegalArgumentError("button is None.")
-
   # </editor-fold>
-
-  with open(
-          os.path.join(
-            global_variables.global_var_root_dir,
-            "gui",
-            "ui",
-            "styles",
-            "styles_start_button_not_ready.css",
-          ),
-          "r",
-  ) as style_sheet_file:
-    button_style = style_sheet_file.read()
-    # Set the stylesheet of the application
-    button.setStyleSheet(button_style)
+  button.setStyleSheet(
+    """
+    QPushButton {
+        background-color: white;
+        border-style: outset;
+        border-width: 2px;
+        border-radius: 6px;
+        border-color: #f7f7f7;
+        min-width: 6em;
+        padding: 2px;
+        min-width: 75px;
+        max-width: 75px;
+        min-height: 15px;
+    }
+    """
+  )
 
 
 def set_stylesheet(self) -> None:  # noqa: ANN001

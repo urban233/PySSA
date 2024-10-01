@@ -496,7 +496,6 @@ class MainFrameController:
       self.status_bar_manager.show_error_message("An error occurred.")
     finally:
       self.update_main_frame_gui()
-      self.main_frame.ribbon_bar.setCurrentIndex(1)
   # </editor-fold>
 
   # <editor-fold desc="Handling of the 'open project' component">

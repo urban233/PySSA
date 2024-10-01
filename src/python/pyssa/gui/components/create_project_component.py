@@ -58,6 +58,7 @@ class CreateProjectComponent(icomponent.IComponent):
       raise exception.NoneValueError("a_project_model is None.")
     # </editor-fold>
     self._dialog.ui.list_create_projects_view.setModel(a_project_model)
+    self._controller.project_names = self._controller.convert_model_into_set()
 
   def run_tool(
           self,
