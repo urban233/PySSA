@@ -45,12 +45,14 @@ class HelpManager:
   project_root_path = pathlib.Path(__file__).parent.absolute().parent.parent.parent
   """The Path to the project root directory."""
 
-  docs_html_path = pathlib.Path(project_root_path, "docs", "build", "html")
+  docs_html_path = pathlib.Path(project_root_path, "docs", "pyssa-documentation", "site")
   """The Path to the docs html directory."""
 
   docs_help_html_path = pathlib.Path(docs_html_path, "help")
   """The Path to the docs help html directory."""
 
+  index_html_filename = "index.html"
+  """Generic file name for the index pages."""
   # </editor-fold>
 
   def __init__(self) -> None:
@@ -82,137 +84,137 @@ class HelpManager:
   # <editor-fold desc="Main view help pages">
   def open_general_help_page(self) -> None:
     """Opens the help dialog on the general help page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "help.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, self.index_html_filename)))
 
   def open_sequences_tab_page(self) -> None:
     """Opens the help dialog on the sequences tab page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "sequences", "sequences_tab.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "sequences", "sequences_tab", self.index_html_filename)))
 
   def open_additional_sequence_information_page(self) -> None:
     """Opens the help dialog on the additional sequence information page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "sequences", "additional_sequence_information.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "sequences", "additional_sequence_information", self.index_html_filename)))
 
   def open_sequence_import_page(self) -> None:
     """Opens the help dialog on the import sequence page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "sequences", "sequence_import.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "sequences", "sequence_import", self.index_html_filename)))
 
   def open_sequence_add_page(self) -> None:
     """Opens the help dialog on the add sequence page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "sequences", "sequence_add.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "sequences", "sequence_add", self.index_html_filename)))
 
   def open_sequence_save_page(self) -> None:
     """Opens the help dialog on the save sequence page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "sequences", "sequence_save.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "sequences", "sequence_save", self.index_html_filename)))
 
   def open_sequence_delete_page(self) -> None:
     """Opens the help dialog on the delete sequence page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "sequences", "sequence_delete.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "sequences", "sequence_delete", self.index_html_filename)))
 
   def open_proteins_tab_page(self) -> None:
     """Opens the help dialog on the proteins tab page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "proteins_tab.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "proteins_tab", self.index_html_filename)))
 
   def open_protein_import_page(self) -> None:
     """Opens the help dialog on the import protein page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_import.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_import", self.index_html_filename)))
 
   def open_protein_save_page(self) -> None:
     """Opens the help dialog on the save protein page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_save.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_save", self.index_html_filename)))
 
   def open_protein_delete_page(self) -> None:
     """Opens the help dialog on the delete protein page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_delete.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_delete", self.index_html_filename)))
 
   def open_protein_pymol_scene_configuration_page(self) -> None:
     """Opens the help dialog on the protein pymol scene config page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_pymol_scene_configuration.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_pymol_scene_configuration", self.index_html_filename)))
 
   def open_protein_load_session_page(self) -> None:
     """Opens the help dialog on the open protein pymol session page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_load_session.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_load_session", self.index_html_filename)))
 
   def open_protein_add_scene_page(self) -> None:
     """Opens the help dialog on the protein add scene page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_add_scene.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_add_scene", self.index_html_filename)))
 
   def open_protein_update_scene_page(self) -> None:
     """Opens the help dialog on the protein update scene page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_update_scene.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_update_scene", self.index_html_filename)))
 
   def open_protein_delete_scene_page(self) -> None:
     """Opens the help dialog on the protein delete scene page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_delete_scene.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "proteins", "protein_delete_scene", self.index_html_filename)))
 
   def open_protein_pairs_tab_page(self) -> None:
     """Opens the help dialog on the protein pairs tab page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pairs_tab.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pairs_tab", self.index_html_filename)))
 
   def open_protein_pair_delete_page(self) -> None:
     """Opens the help dialog on the delete protein pair page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pair_delete.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pair_delete", self.index_html_filename)))
 
   def open_protein_pair_pymol_scene_configuration_page(self) -> None:
     """Opens the help dialog on the protein pair pymol scene config page."""
     self.change_url(
-      str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pair_pymol_scene_configuration.html")))
+      str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pair_pymol_scene_configuration", self.index_html_filename)))
 
   def open_protein_pair_load_session_page(self) -> None:
     """Opens the help dialog on the open protein pair pymol session page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pair_load_session.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pair_load_session", self.index_html_filename)))
 
   def open_protein_pair_add_scene_page(self) -> None:
     """Opens the help dialog on the protein pair add scene page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pair_add_scene.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pair_add_scene", self.index_html_filename)))
 
   def open_protein_pair_update_scene_page(self) -> None:
     """Opens the help dialog on the protein pair update scene page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pair_update_scene.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pair_update_scene", self.index_html_filename)))
 
   def open_protein_pair_delete_scene_page(self) -> None:
     """Opens the help dialog on the protein pair delete scene page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pair_delete_scene.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_pairs", "protein_pair_delete_scene", self.index_html_filename)))
 
   # </editor-fold>
 
   # <editor-fold desc="Project help pages">
   def open_create_project_page(self) -> None:
     """Opens the help dialog on the create new project page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "project", "new_project.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "project", "new_project", self.index_html_filename)))
 
   def open_delete_project_page(self) -> None:
     """Opens the help dialog on the delete project page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "project", "delete_project.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "project", "delete_project", self.index_html_filename)))
 
   def open_open_project_page(self) -> None:
     """Opens the help dialog on the open project page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "project", "open_project.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "project", "open_project", self.index_html_filename)))
 
   def open_use_project_page(self) -> None:
     """Opens the help dialog on the use project page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "project", "use_project.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "project", "use_project", self.index_html_filename)))
   # </editor-fold>
 
   def open_advanced_prediction_configuration_page(self) -> None:
     """Opens the help dialog on the advanced prediction configuration page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_structure_prediction", "advanced_prediction_configuration.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_structure_prediction", "advanced_prediction_configuration", self.index_html_filename)))
 
   def open_colabfold_page(self) -> None:
     """Opens the help dialog on the colabfold page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_structure_prediction", "colabfold.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_structure_prediction", "colabfold", self.index_html_filename)))
 
   def open_distance_analysis_page(self) -> None:
     """Opens the help dialog on the distance analysis page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_structure_analysis", "distance_analysis.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "protein_structure_analysis", "distance_analysis", self.index_html_filename)))
 
   def open_results_summary_page(self) -> None:
     """Opens the help dialog on the results summary page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "results", "summary.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "results", "summary", self.index_html_filename)))
 
   def open_distance_data_visualizer_page(self) -> None:
     """Opens the help dialog on the distance data visualizer page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "results", "distance_data_visualizer.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "results", "distance_data_visualizer", self.index_html_filename)))
 
   def open_pyssa_settings_page(self) -> None:
     """Opens the help dialog on the pyssa settings page."""
-    self.change_url(str(pathlib.Path(self.docs_help_html_path, "settings", "pyssa_settings.html")))
+    self.change_url(str(pathlib.Path(self.docs_help_html_path, "settings", "pyssa_settings", self.index_html_filename)))

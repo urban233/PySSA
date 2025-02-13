@@ -15,7 +15,7 @@ AppPublisher=IBCI
 VersionInfoProductName=PySSA
 MinVersion=10.0.19045
 OutputDir=..\..\dist
-OutputBaseFilename=full_pyssa_1.0.3_setup
+OutputBaseFilename=pyssa_src_update_1.0.3
 DisableReadyPage=True
 DisableWelcomePage=False
 DisableDirPage=True
@@ -25,8 +25,8 @@ UninstallDisplayIcon={app}\assets\logo.ico
 ArchitecturesInstallIn64BitMode=x64
 LicenseFile=LICENSE.txt
 ; This is necessary because the setup will exceed 2 GB (due to almalinux rootfs)
-DiskSpanning=yes
-DiskSliceSize=2100000000
+DiskSpanning=no
+;DiskSliceSize=2100000000
 
 
 [Languages]
@@ -52,7 +52,7 @@ Name: "{commonstartmenu}\PySSA"; Filename: "{app}\win_start\vb_script\window_arr
 
 [Run]
 Filename: "{app}\third_party\VC_redist.x64.exe"; Parameters: "/quiet /norestart"; Flags: runhidden waituntilterminated
-Filename: "{app}\tmp\setup.bat"; Flags: runhidden waituntilterminated
+; Filename: "{app}\tmp\setup.bat"; Flags: runhidden waituntilterminated
 
 [UninstallRun]
 Filename: "{cmd}"; Parameters: "/C wsl --unregister almaColabfold9"
@@ -82,7 +82,6 @@ begin
   end else
     Result := True;
 end;
-
 
 function IsWSL2Installed(): Boolean;
 var

@@ -9,5 +9,4 @@ Due to their considerable size, exceeding the limits of a GitHub repository,
 these files are excluded from the repository and must be provided separately.
 
 Both files can be downloaded using the provided links:
-- windows_package.zip: https://w-hs.sciebo.de/s/gSwAHI2LDlrqfw3
 - alma-colabfold-9-rootfs.tar: https://w-hs.sciebo.de/s/q5oYjcZdEzCDyEH

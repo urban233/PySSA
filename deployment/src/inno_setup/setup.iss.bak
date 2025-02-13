@@ -17,17 +17,13 @@ MinVersion=10.0.19045
 OutputDir=..\..\dist
 OutputBaseFilename=full_pyssa_1.0.3_setup
 DisableReadyPage=True
-DisableWelcomePage=False
-DisableDirPage=True
-DisableProgramGroupPage=True
 UninstallDisplayName=PySSA
-UninstallDisplayIcon={app}\assets\logo.ico
+UninstallDisplayIcon={app}\assets\icon.ico
 ArchitecturesInstallIn64BitMode=x64
 LicenseFile=LICENSE.txt
 ; This is necessary because the setup will exceed 2 GB (due to almalinux rootfs)
 DiskSpanning=yes
 DiskSliceSize=2100000000
-
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -83,7 +79,6 @@ begin
     Result := True;
 end;
 
-
 function IsWSL2Installed(): Boolean;
 var
   ResultCode: Integer;
@@ -121,7 +116,7 @@ begin
   if not IsWSL2Installed() then
   begin
     // Ask user if they want to install WSL2
-    if MsgBox('WSL2 is not installed. Do you want to install WSL2 now?' + #13#10 + 'IMPORTANT: The WSL2 will integrate into the Windows OS and be a system component that cannot be uninstalled!', mbConfirmation, MB_YESNO) = IDNO then
+    if MsgBox('WSL2 is not installed. Do you want to install WSL2 now?\nImportant: The WSL2 will integrate into the Windows OS and be a system component\nthat cannot be uninstalled!', mbConfirmation, MB_YESNO) = IDNO then
     begin
       MsgBox('WSL2 is required for this installation. Setup will now exit.', mbError, MB_OK);
       Result := False;

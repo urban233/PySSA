@@ -85,10 +85,10 @@ CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR = Path(
     f'{CACHE_STRUCTURE_ALN_IMAGES_DIR}/interesting_regions'
 )
 PREDICTION_FASTA_DIR = Path(f'{SCRATCH_DIR}/local_predictions/fasta')
-WSL_SCRATCH_DIR = r'\\wsl.localhost\almaColabfold9\home\rhel_user\scratch'
-WSL_PREDICTION_FASTA_DIR = r'\\wsl.localhost\almaColabfold9\home\rhel_user\scratch\local_predictions\fasta'
 PREDICTION_PDB_DIR = Path(f'{SCRATCH_DIR}/local_predictions/pdb')
-WSL_PREDICTION_PDB_DIR = r'\\wsl.localhost\almaColabfold9\home\rhel_user\scratch\local_predictions\pdb'
+# WSL_SCRATCH_DIR = r'\\wsl.localhost\almaColabfold9\home\rhel_user\scratch'
+# WSL_PREDICTION_FASTA_DIR = r'\\wsl.localhost\almaColabfold9\home\rhel_user\scratch\local_predictions\fasta'
+# WSL_PREDICTION_PDB_DIR = r'\\wsl.localhost\almaColabfold9\home\rhel_user\scratch\local_predictions\pdb'
 
 ESMFOLD_DIR = Path(f'{SCRATCH_DIR}/esmfold')
 ESMFOLD_PDB_DIR = Path(f'{SCRATCH_DIR}/esmfold/pdb')
@@ -154,15 +154,15 @@ ADD_WSL_POWERSHELL = pathlib.Path(
 # Constants for config file
 # TODO: uncomment constant below before deployment
 # WSL_CONF_PATH = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"
-WSL_CONF_PATH = f'/mnt/c/ProgramData/pyssa/plugin/Miniconda3/envs/pyssa_colab/Lib/site-packages/pymol/pymol_path/data/startup/{PLUGIN_NAME}/config/wsl/wsl.conf'  # noqa: E501
-WSL_DISTRO_NAME = 'UbuntuColabfold'
-WSL_STORAGE_PATH = pathlib.Path('C:\\ProgramData\\pyssa\\wsl\\UbuntuColabfold')
+# WSL_CONF_PATH = f'/mnt/c/ProgramData/pyssa/plugin/Miniconda3/envs/pyssa_colab/Lib/site-packages/pymol/pymol_path/data/startup/{PLUGIN_NAME}/config/wsl/wsl.conf'  # noqa: E501
+# WSL_DISTRO_NAME = 'UbuntuColabfold'
+# WSL_STORAGE_PATH = pathlib.Path('C:\\ProgramData\\pyssa\\wsl\\UbuntuColabfold')
 # WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")
-WSL_DISTRO_IMPORT_PATH = pathlib.Path(f'C:/Users/{os.getlogin()}/.pyssa/')
-DISTRO_DOWNLOAD_URL = (
-    'https://mega.nz/file/tz9wlLIQ#1qRxBdslCnOuUmLk2ytYHhSkItBsbuet3PTkZuvo-to'
-)
-WSL_DISK_PATH = pathlib.Path(f'{WSL_STORAGE_PATH}/ext4.vhdx')
+# WSL_DISTRO_IMPORT_PATH = pathlib.Path(f'C:/Users/{os.getlogin()}/.pyssa/')
+# DISTRO_DOWNLOAD_URL = (
+#     'https://mega.nz/file/tz9wlLIQ#1qRxBdslCnOuUmLk2ytYHhSkItBsbuet3PTkZuvo-to'
+# )
+# WSL_DISK_PATH = pathlib.Path(f'{WSL_STORAGE_PATH}/ext4.vhdx')
 # thread main tasks
 PREDICTION_TASK = 'Structure Prediction'
 ANALYSIS_TASK = 'Structure Analysis'

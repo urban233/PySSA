@@ -74,6 +74,9 @@ theme:
 extra_css:
     - stylesheets/extra.css
 
+plugins:
+    - offline
+
 markdown_extensions:
     - attr_list
     - pymdownx.emoji:

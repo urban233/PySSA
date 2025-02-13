@@ -132,9 +132,9 @@ dmypy.json
 testing_area
 .idea
 .mypy_cache
-/docs/pyssa-documentation/site/
-base_win_package/bin.zip
 _build
+/assets/convert_logo_to_ico/logo-*.png
+/docs/pyssa-documentation/site/
 /deployment/offline_resources/alma-colabfold-9-rootfs.tar
 /deployment/offline_resources/windows_package.zip
 /deployment/src/c_sharp/WindowsWrapper/WindowsCmdElevator/bin
@@ -144,3 +144,4 @@ _build
 /deployment/offline_resources/WindowsTasks.exe
 
 /inno-build-release/
+
