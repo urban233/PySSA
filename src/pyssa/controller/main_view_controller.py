@@ -28,7 +28,9 @@ import pathlib
 import shutil
 import subprocess
 import time
+import json
 from typing import Optional, Any
+from urllib import request
 
 import pygetwindow
 from Bio import SeqRecord
@@ -160,6 +162,7 @@ class MainViewController:
     self._init_generic_help_context_menus()
     self._interface_manager.refresh_main_view()
     self._connect_all_ui_elements_with_slot_functions()
+    QtCore.QTimer.singleShot(2000, self.check_for_updates)
 
   def _connect_all_ui_elements_with_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
@@ -250,6 +253,7 @@ class MainViewController:
     self._view.ui.action_restart_pymol.triggered.connect(
       self.__slot_restart_pymol
     )
+    self._view.action_check_for_updates.triggered.connect(self.__slot_check_for_updates)
     self._view.ui.action_about.triggered.connect(self.__slot_open_about)
     self._view.ui.action_predict_monomer.triggered.connect(
       self.__slot_predict_monomer
@@ -837,35 +841,39 @@ class MainViewController:
       tmp_dialog.exec_()
       if tmp_dialog.response:
         # PySSA should be closed
-        self.__slot_abort_prediction()
-        self._interface_manager.app_process_manager.close_manager()
-        if not self._view.ui.lbl_logo.isVisible():
-          self._interface_manager.get_task_manager().append_task_result(
-            task_result_factory.TaskResultFactory.run_task_result(
-              a_task_result=task_result.TaskResult.from_action(
-                an_action=action.Action(
-                  a_target=project_async.close_project,
-                  args=(
-                    self._database_thread,
-                    self._interface_manager.pymol_session_manager,
-                  ),
-                ),
-                an_await_function=self.__await_close_project_for_closing_app,
-              ),
-              a_task_scheduler=self._interface_manager.get_task_scheduler(),
-            )
-          )
-
-          logger.info(
-            "A project is currently opened. It will now be saved and the application exists afterwards."
-          )
-        else:
-          self.__await_close_project_for_closing_app()
+        self._close_app()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
         "An unknown error occurred!"
       )
+
+  def _close_app(self) -> None:
+    """First step to close the entire app."""
+    self.__slot_abort_prediction()
+    self._interface_manager.app_process_manager.close_manager()
+    if not self._view.ui.lbl_logo.isVisible():
+      self._interface_manager.get_task_manager().append_task_result(
+        task_result_factory.TaskResultFactory.run_task_result(
+          a_task_result=task_result.TaskResult.from_action(
+            an_action=action.Action(
+              a_target=project_async.close_project,
+              args=(
+                self._database_thread,
+                self._interface_manager.pymol_session_manager,
+              ),
+            ),
+            an_await_function=self.__await_close_project_for_closing_app,
+          ),
+          a_task_scheduler=self._interface_manager.get_task_scheduler(),
+        )
+      )
+
+      logger.info(
+        "A project is currently opened. It will now be saved and the application exists afterwards."
+      )
+    else:
+      self.__await_close_project_for_closing_app()
 
   def __await_close_project_for_closing_app(self) -> None:
     """Closes the project and then the application."""
@@ -1206,6 +1214,79 @@ class MainViewController:
       "Restarting PyMOL ...",
       a_with_timeout_flag=False,
     )
+
+  def __slot_check_for_updates(self) -> None:
+    """Slot method for the QAction that checks if updates are avaliable."""
+    self.check_for_updates()
+
+  def check_for_updates(self) -> None:
+    """Checks if an update is available."""
+    try:
+      if tools.check_internet_connectivity():
+        request.urlretrieve(
+          constants.VERSION_HISTORY_URL, constants.VERSION_HISTORY_FILEPATH
+        )
+
+        tmp_latest_release = tools.get_latest_release(constants.VERSION_HISTORY_FILEPATH)
+        tmp_current_version = constants.VERSION_NUMBER[1:]
+        if tmp_current_version != tmp_latest_release["version"]:
+          tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+            f"A new version of PySSA is available (v{tmp_latest_release['version']})!\nDo you want to update now?",
+            "Update",
+            custom_message_box.CustomMessageBoxIcons.INFORMATION.value,
+          )
+          tmp_dialog.exec_()
+          if tmp_dialog.response:
+            # This is not ideal but functional, should be refactored for better readability
+            try:
+              # Running this in a separate thread ensures the GUI stays responsive
+              # even if the update setup is large, like an update of the
+              # almaColabfold9 WSL2 distro
+              self._interface_manager.get_task_manager().append_task_result(
+                task_result_factory.TaskResultFactory.run_task_result(
+                  a_task_result=task_result.TaskResult.from_action(
+                    an_action=action.Action(
+                      a_target=self._download_update_setup,
+                      args=(
+                        tmp_latest_release["releaseUrl"],
+                      ),
+                    ),
+                    an_await_function=self.__await_download_update_setup,
+                  ),
+                  a_task_scheduler=self._interface_manager.get_task_scheduler(),
+                )
+              )
+            except Exception as e:
+              logger.error(f"An error occurred: {e}")
+              self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+              )
+            else:
+              self._interface_manager.status_bar_manager.show_permanent_message("Downloading update ...")
+              self._interface_manager.block_gui(with_wait_cursor=True)
+        else:
+          self._interface_manager.status_bar_manager.show_temporary_message("No update available.")
+    except Exception as e:
+      logger.error(f"An error occurred: {e}")
+      self._interface_manager.status_bar_manager.show_error_message(
+        "An unknown error occurred!"
+      )
+
+  def _download_update_setup(self, an_url: str) -> tuple[int, str]:
+    """Downloads the update setup."""
+    try:
+      request.urlretrieve(an_url, constants.UPDATE_SETUP_FILEPATH)
+    except Exception as e:
+      constants.PYSSA_LOGGER.error(e.__str__())
+      return -1, an_url
+    else:
+      return 0, an_url
+
+  def __await_download_update_setup(self) -> None:
+    """Awaits the download of the update setup."""
+    self._interface_manager.status_bar_manager.show_permanent_message("Starting update process ...")
+    self._close_app()
+    subprocess.Popen(constants.UPDATE_SETUP_FILEPATH)
 
   # <editor-fold desc="Util methods">
   def update_status(self, message: str) -> None:

@@ -57,6 +57,7 @@ class MainView(QtWidgets.QMainWindow):
     self.status_bar.addWidget(self.progress_bar)
     self.progress_bar.hide()
     self.add_custom_widgets()
+    self.add_custom_menu_entries()
     self.initialize_ui()
     self.add_custom_job_panels()
     gui_utils.fill_combo_box(self.ui.box_protein_color, constants.PYMOL_COLORS)
@@ -79,6 +80,15 @@ class MainView(QtWidgets.QMainWindow):
 
     # Emit the custom signal when the window is closed
     self.dialogClosed.emit(("", event))
+
+  def add_custom_menu_entries(self) -> None:
+    """Adds custom QActions to the menu bar."""
+    self.action_check_for_updates = QtWidgets.QAction("Check for Updates")
+    self.ui.menuAbout.insertAction(
+      self.ui.action_about,
+      self.action_check_for_updates
+    )
+    self.ui.menuAbout.insertSeparator(self.ui.action_about)
 
   def add_custom_job_panels(self) -> None:
     """Add custom job panels.

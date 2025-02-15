@@ -20,7 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for functions which can be used across the entire project."""
+import pathlib
 import socket
+import json
+from typing import Union
+from typing import Optional
 from urllib.error import URLError
 from urllib.request import urlopen
 from src.pyssa.internal.data_structures import settings
@@ -60,3 +64,49 @@ def restore_default_settings(settings_obj: "settings.Settings") -> None:
   settings_obj.restore_settings(
       constants.SETTINGS_DIR, constants.SETTINGS_FILENAME
   )
+
+
+def get_latest_version(json_file_path: Union[str, pathlib.Path]) -> Optional[str]:
+  """Gets the latest version of the remote version history.
+
+  Args:
+    json_file_path: Filepath to the version history JSON file.
+  """
+  with open(json_file_path, 'r') as file:
+    data = json.load(file)
+
+  version_history = data['versionHistory']
+
+  if not version_history:
+    return None  # Return None if there are no versions
+
+  # Convert version strings to tuples of integers for proper comparison
+  latest_entry = max(version_history,
+                     key=lambda x: tuple(map(int, x['version'].split('.'))))
+
+  return latest_entry['version']
+
+
+def get_latest_release(json_file_path: Union[str, pathlib.Path]) -> Optional[dict]:
+  """Gets the latest version of the remote version history.
+
+  Args:
+    json_file_path: Filepath to the version history JSON file.
+  """
+  with open(json_file_path, 'r') as file:
+    data = json.load(file)
+
+  version_history = data['versionHistory']
+
+  if not version_history:
+    return None
+
+  # Find the entry with the highest semantic version
+  latest_entry = max(version_history,
+                     key=lambda x: tuple(map(int, x['version'].split('.'))))
+
+  return {
+    'version': latest_entry['version'],
+    'releaseDate': latest_entry['releaseDate'],
+    'releaseUrl': latest_entry['releaseUrl']
+  }

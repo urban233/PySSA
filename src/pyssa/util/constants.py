@@ -29,7 +29,7 @@ from src.pyssa.util import globals, enums
 
 # General
 PLUGIN_NAME = 'PySSA'
-VERSION_NUMBER = "v1.0.1"  # The version number MUST be in double quotes
+VERSION_NUMBER = "v1.0.2"  # The version number MUST be in double quotes
 SETTINGS_FILE_NAME = 'settings'
 SETTINGS_FILENAME = 'settings.json'
 
@@ -64,7 +64,9 @@ DEFAULT_WORKSPACE_PATH = pathlib.Path(
 #IMAGE_NAME = 'localhost/localcolabfold-ubuntu2204:1.5.1.2'
 # ---------
 
-
+VERSION_HISTORY_FILEPATH = pathlib.Path(pathlib.Path(PROGRAM_BIN_ROOT_PATH) / "remote_version_history.json")
+VERSION_HISTORY_URL = "https://w-hs.sciebo.de/s/Omruw1qNvQ4igeP/download"
+UPDATE_SETUP_FILEPATH = pathlib.Path(pathlib.Path(PROGRAM_BIN_ROOT_PATH) / "update.exe")
 
 SCRATCH_DIR = Path(f'{SETTINGS_DIR}/scratch')
 SCRATCH_DIR_ANALYSIS = Path(f'{SCRATCH_DIR}/analysis')

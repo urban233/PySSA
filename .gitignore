@@ -136,12 +136,12 @@ _build
 /assets/convert_logo_to_ico/logo-*.png
 /docs/pyssa-documentation/site/
 /deployment/offline_resources/alma-colabfold-9-rootfs.tar
+/deployment/offline_resources/WindowsTasks.exe
 /deployment/offline_resources/windows_package.zip
 /deployment/src/c_sharp/WindowsWrapper/WindowsCmdElevator/bin
 /deployment/src/c_sharp/WindowsWrapper/WindowsCmdElevator/obj
 /deployment/src/c_sharp/WindowsWrapper/WindowsTasks/bin
 /deployment/src/c_sharp/WindowsWrapper/WindowsTasks/obj
-/deployment/offline_resources/WindowsTasks.exe
 
 /inno-build-release/
 

@@ -7,7 +7,7 @@
 [Setup]
 WizardStyle=modern
 AppName=PySSA
-AppVersion=1.0.3
+AppVersion=1.0.2
 AppCopyright=Martin Urban, Hannah Kullik, IBCI
 AppId={{192F52C3-D86D-4735-9929-C7DF599CB538}
 DefaultDirName={commonappdata}\IBCI\PySSA
@@ -15,7 +15,7 @@ AppPublisher=IBCI
 VersionInfoProductName=PySSA
 MinVersion=10.0.19045
 OutputDir=..\..\dist
-OutputBaseFilename=full_pyssa_1.0.3_setup
+OutputBaseFilename=PySSA_1.0.2_Setup
 DisableReadyPage=True
 DisableWelcomePage=False
 DisableDirPage=True

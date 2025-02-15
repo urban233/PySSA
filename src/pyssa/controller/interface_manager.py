@@ -1781,6 +1781,8 @@ class InterfaceManager:
       self._main_view.ui.action_close_project.setEnabled(True)
       # Demo Projects
       self._main_view.ui.action_get_demo_projects.setEnabled(False)
+      # Help
+      self._main_view.action_check_for_updates.setEnabled(False)
       # Sequence objects
       if len(self._current_project.sequences) > 0:
         # A project has sequence(s)
@@ -1964,7 +1966,8 @@ class InterfaceManager:
       # Hotspots
       self._main_view.ui.menuHotspots.setEnabled(False)
       self._main_view.ui.action_protein_regions.setEnabled(False)
-
+      # Help
+      self._main_view.action_check_for_updates.setEnabled(True)
     # # Menu bar view for prediction
     # if self.main_tasks_manager.prediction_task is not None:
     #     if not self.main_tasks_manager.check_if_prediction_task_is_finished():

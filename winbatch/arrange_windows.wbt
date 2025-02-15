@@ -1,7 +1,3 @@
-; Activate the target window (replace "Window Title" with the title of your target window)
-RunHide("cmd.exe", "/c C:\ProgramData\IBCI\PySSA\win_start\vb_script\PySSA.bat")
-WinWaitExist("PySSA~", 8)
-
 ; Set the position and size for the first window
 WinPlace(-4, 0, 0, 954, "PySSA~")
 ; Set the position and size for the second window
