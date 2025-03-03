@@ -65,7 +65,7 @@ const
   (*** Customize the following to your own name. ***)
   RunOnceName = 'My Program Setup restart';
 
-  QuitMessageReboot = 'To complete the installation of WSL2 which is a prerequisite you will need to restart your computer. After restarting your computer, Setup will continue next time an administrator logs in.';
+  QuitMessageReboot = 'To complete the installation of WSL2 which is a prerequisite you will need to restart your computer. After restarting your computer, the setup will continue.';
   QuitMessageError = 'An error occurred during the WSL2 installation. Please try again.';
 
 var

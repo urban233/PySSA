@@ -27,6 +27,7 @@ import colabfold_run
 import subprocess
 
 __docformat__ = "google"
+WSL2_USERNAME = "alma_user"
 
 
 def change_ownership_recursive(directory_path: str) -> None:
@@ -37,7 +38,7 @@ def change_ownership_recursive(directory_path: str) -> None:
     """
     try:
         # Run the chown command recursively on the specified directory
-        subprocess.run(["sudo", "chown", "-R", "rhel_user", directory_path], check=True)
+        subprocess.run(["sudo", "chown", "-R", WSL2_USERNAME, directory_path], check=True)
         print(f"Ownership changed successfully for {directory_path}")
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
@@ -52,7 +53,7 @@ def delete_scratch_directory_in_wsl2() -> bool:
     Returns:
         A boolean value indicating if the scratch directory was deleted.
     """
-    tmp_scratch_path: str = "/home/rhel_user/scratch"
+    tmp_scratch_path: str = f"/home/{WSL2_USERNAME}/scratch"
     try:
         if os.path.exists(tmp_scratch_path):
             shutil.rmtree(tmp_scratch_path)
@@ -70,7 +71,7 @@ def create_fasta_directory_in_wsl2() -> None:
         SubprocessExecutionError: If return code of subprocess is non-zero.
     """
     try:
-        os.makedirs("/home/rhel_user/scratch/local_predictions/fasta")
+        os.makedirs(f"/home/{WSL2_USERNAME}/scratch/local_predictions/fasta")
     except Exception as e:
         raise OSError(f"Fasta directory could not be created! {e}")
 
@@ -83,7 +84,7 @@ def create_pdb_directory_in_wsl2() -> None:
         SubprocessExecutionError: If return code of subprocess is non-zero
     """
     try:
-        os.makedirs("/home/rhel_user/scratch/local_predictions/pdb")
+        os.makedirs(f"/home/{WSL2_USERNAME}/scratch/local_predictions/pdb")
     except Exception as e:
         raise OSError(f"Pdb directory could not be created! {e}")
 
@@ -99,7 +100,7 @@ def copy_fasta_files_from_windows_to_wsl2(the_fasta_path: str) -> None:
         SubprocessExecutionError: If return code of subprocess is non-zero
     """
     try:
-        shutil.copytree(f"{the_fasta_path}", "/home/rhel_user/scratch/local_predictions/fasta/")
+        shutil.copytree(f"{the_fasta_path}", f"/home/{WSL2_USERNAME}/scratch/local_predictions/fasta/")
     except Exception as e:
         raise OSError(f"Fasta files from Windows host could not be copied to WSL2! {e}")
 
@@ -111,7 +112,8 @@ def disable_cuda_device_usage() -> None:
     effectively disabling the usage of any CUDA devices by the current process.
     """
     import os
-    os.environ['CUDA_VISIBLE_DEVICES'] = ''
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    os.environ['JAX_PLATFORMS'] = 'cpu'
 
 
 def prepare_computation_environment(the_scratch_fasta_dir_of_windows_host: str) -> None:
@@ -129,10 +131,10 @@ def prepare_computation_environment(the_scratch_fasta_dir_of_windows_host: str) 
     the_scratch_fasta_dir_of_windows_host = f"/mnt/{str_conversion_3}"
     try:
         disable_cuda_device_usage()
-        change_ownership_recursive("/home/rhel_user/")
+        change_ownership_recursive(f"/home/{WSL2_USERNAME}/")
         delete_scratch_directory_in_wsl2()
         create_pdb_directory_in_wsl2()
-        change_ownership_recursive("/home/rhel_user/scratch")
+        change_ownership_recursive(f"/home/{WSL2_USERNAME}/scratch")
         copy_fasta_files_from_windows_to_wsl2(the_scratch_fasta_dir_of_windows_host)
     except OSError as e:
         raise EnvironmentError(e)
@@ -144,7 +146,7 @@ def read_log_file() -> str:
     Returns:
         A string of the content of the log file.
     """
-    log_filepath = "/home/rhel_user/scratch/local_predictions/pdb/log.txt"
+    log_filepath = f"/home/{WSL2_USERNAME}/scratch/local_predictions/pdb/log.txt"
     if os.path.exists(log_filepath):
         log_file = open(log_filepath)
         tmp_log_content: str = log_file.read()
@@ -167,8 +169,8 @@ def start_computation(fasta_dir: str, pdb_dir: str, use_amber: bool, use_templat
     """
     try:
         prepare_computation_environment(fasta_dir)
-        tmp_fasta_dir: str = "/home/rhel_user/scratch/local_predictions/fasta"
-        tmp_pdb_dir: str = "/home/rhel_user/scratch/local_predictions/pdb"
+        tmp_fasta_dir: str = f"/home/{WSL2_USERNAME}/scratch/local_predictions/fasta"
+        tmp_pdb_dir: str = f"/home/{WSL2_USERNAME}/scratch/local_predictions/pdb"
         colabfold_run.run_prediction(tmp_fasta_dir, tmp_pdb_dir, use_amber, use_templates)
     except RuntimeError as e:
         return {"error": str(e), "log": read_log_file(), "exit_code": 2}

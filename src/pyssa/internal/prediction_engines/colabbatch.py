@@ -41,10 +41,10 @@ class Colabbatch:
   user_name: str = os.getlogin()
   """The name of the user who has opened the PySSA."""
 
-  fasta_path: str = "/home/rhel_user/scratch/local_predictions/fasta"
+  fasta_path: str = f"/home/{constants.WSL2_USERNAME}/scratch/local_predictions/fasta"
   """The path where the fasta files will be stored, in unix path format."""
 
-  pdb_path: str = "/home/rhel_user/scratch/local_predictions/pdb"
+  pdb_path: str = f"/home/{constants.WSL2_USERNAME}/scratch/local_predictions/pdb"
   """The path where the pdb files will be stored, in unix path format."""
 
   prediction_config: prediction_configuration.PredictionConfiguration
@@ -129,17 +129,48 @@ class Colabbatch:
         PredictionEndedWithError: If prediction ended with any kind of error.
     """
     # Start service process in WSL2
+    # service_process = subprocess.Popen(
+    #     [
+    #         "wsl",
+    #         "-d",
+    #         constants.WSL2_DISTRO_NAME,
+    #         "-u",
+    #         constants.WSL2_USERNAME,
+    #         f"/home/{constants.WSL2_USERNAME}/localcolabfold/colabfold-conda/bin/python3",
+    #         f"/home/{constants.WSL2_USERNAME}/pyssa_colabfold/service.py",
+    #     ],
+    #     creationflags=subprocess.CREATE_NO_WINDOW,
+    # )
+    subprocess.run(
+      [
+        "wsl",
+        "-d",
+        constants.WSL2_DISTRO_NAME,
+        "-u",
+        constants.WSL2_USERNAME,
+        "sudo", "chown", "-R", constants.WSL2_USERNAME, f"/home/{constants.WSL2_USERNAME}/pyssa_colabfold"
+      ]
+    )
+    subprocess.run(
+      [
+        "wsl",
+        "-d",
+        constants.WSL2_DISTRO_NAME,
+        "-u",
+        constants.WSL2_USERNAME,
+        "sudo", "chmod", "+x", f"/home/{constants.WSL2_USERNAME}/pyssa_colabfold/colabfold_wrapper.sh"
+      ]
+    )
     service_process = subprocess.Popen(
-        [
-            "wsl",
-            "-d",
-            "almaColabfold9",
-            "-u",
-            "rhel_user",
-            "/home/rhel_user/localcolabfold/colabfold-conda/bin/python3",
-            "/home/rhel_user/pyssa_colabfold/service.py",
-        ],
-        creationflags=subprocess.CREATE_NO_WINDOW,
+      [
+        "wsl",
+        "-d",
+        constants.WSL2_DISTRO_NAME,
+        "-u",
+        constants.WSL2_USERNAME,
+        f"/home/{constants.WSL2_USERNAME}/pyssa_colabfold/colabfold_wrapper.sh",
+      ],
+      #creationflags=subprocess.CREATE_NO_WINDOW,
     )
 
     context = zmq.Context()
@@ -198,12 +229,12 @@ class Colabbatch:
               [
                   "wsl",
                   "-d",
-                  "almaColabfold9",
+                  constants.WSL2_DISTRO_NAME,
                   "-u",
-                  "rhel_user",
+                  constants.WSL2_USERNAME,
                   "cp",
                   "-r",
-                  "/home/rhel_user/scratch/local_predictions/pdb",
+                  f"/home/{constants.WSL2_USERNAME}/scratch/local_predictions/pdb",
                   f"{self.settings_dir_unix_notation}/scratch/local_predictions",
               ],
               check=True,

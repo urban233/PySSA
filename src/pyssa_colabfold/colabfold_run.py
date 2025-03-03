@@ -5,10 +5,12 @@ from colabfold.download import default_data_dir
 from colabfold.utils import setup_logging
 from pathlib import Path
 
+WSL2_USERNAME = "alma_user"
+
 
 def run_prediction(fasta_dir: str, pdb_dir: str, use_amber: bool, use_templates: bool):
-    input_dir = "/home/rhel_user/pyssa_colabfold/fasta"  # @param {type:"string"}
-    result_dir = "/home/rhel_user/pyssa_colabfold/pdb"  # @param {type:"string"}
+    input_dir = f"/home/{WSL2_USERNAME}/pyssa_colabfold/fasta"  # @param {type:"string"}
+    result_dir = f"/home/{WSL2_USERNAME}/pyssa_colabfold/pdb"  # @param {type:"string"}
 
     input_dir = fasta_dir
     result_dir = pdb_dir
@@ -30,8 +32,8 @@ def run_prediction(fasta_dir: str, pdb_dir: str, use_amber: bool, use_templates:
     zip_results = False  # @param {type:"boolean"}
 
     # For some reason we need that to get pdbfixer to import
-    if use_amber and f"/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages" not in sys.path:
-        sys.path.insert(0, f"/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages")
+    if use_amber and f"/home/{WSL2_USERNAME}/localcolabfold/colabfold-conda/lib/python3.10/site-packages" not in sys.path:
+        sys.path.insert(0, f"/home/{WSL2_USERNAME}/localcolabfold/colabfold-conda/lib/python3.10/site-packages")
 
     setup_logging(Path(result_dir).joinpath("log.txt"))
 

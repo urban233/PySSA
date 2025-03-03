@@ -156,16 +156,18 @@ class PredictionJob(Job):
       tmp_msg = "Fasta files were not created."
       logger.error(tmp_msg)
       self.job_entry_widget.job_base_information.job_progress = (
-          enums.JobProgress.FAILED
+        enums.JobProgress.FAILED
       )
       self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
+      return
     except exception.FastaFilesNotFoundError:
       tmp_msg = "Fasta files were not found."
       logger.error(tmp_msg)
       self.job_entry_widget.job_base_information.job_progress = (
-          enums.JobProgress.FAILED
+        enums.JobProgress.FAILED
       )
       self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
+      return
     except Exception as e:
       tmp_msg = f"Unexpected error: {e}"
       logger.error(tmp_msg)
@@ -173,6 +175,7 @@ class PredictionJob(Job):
           enums.JobProgress.FAILED
       )
       self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
+      return
     else:
       logger.info("Fasta files were successfully created.")
 
@@ -191,6 +194,7 @@ class PredictionJob(Job):
           enums.JobProgress.FAILED
       )
       self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
+      return
     else:
       logger.info("Prediction process finished.")
 
@@ -211,6 +215,7 @@ class PredictionJob(Job):
           enums.JobProgress.FAILED
       )
       self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
+      return
     except FileNotFoundError:
       tmp_msg = "Could not move rank 1 model, because it does not exists."
       logger.error(tmp_msg)
@@ -218,6 +223,7 @@ class PredictionJob(Job):
           enums.JobProgress.FAILED
       )
       self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
+      return
     except Exception as e:
       logger.error(f"Unexpected error: {e}")
       tmp_msg = "Could not move rank 1 model, because it does not exists."
@@ -226,6 +232,7 @@ class PredictionJob(Job):
           enums.JobProgress.FAILED
       )
       self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
+      return
     else:
       structure_prediction_obj.add_proteins_to_project(
           self._main_socket,
@@ -470,6 +477,7 @@ class DistanceAnalysisJob(Job):
           enums.JobProgress.FAILED
       )
       self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
+      return
     else:
       if (
           self.job_entry_widget.job_base_information.job_type
@@ -645,6 +653,7 @@ class RayTracingJob(Job):
           enums.JobProgress.FAILED
       )
       self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
+      return
     else:
       self.job_entry_widget.job_base_information.job_progress = (
           enums.JobProgress.FINISHED

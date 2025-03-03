@@ -156,12 +156,10 @@ class Protein:
     )
     print(tmp_reply)
     self._pdb_data, tmp_more_than_one_ca_atom = bio_data.parse_pdb_file(tmp_reply["data"])
-    try:
+    if pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb").exists():
       os.remove(
-          str(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb"))
+        str(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb"))
       )
-    except Exception as e:
-      logger.error(f"Could not delete pdb file! Ran into error: {e}")
     return tmp_more_than_one_ca_atom
 
   def add_protein_structure_data_from_local_pdb_file(

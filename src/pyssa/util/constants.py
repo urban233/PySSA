@@ -57,6 +57,8 @@ SETTINGS_DIR_UNIX_NOTATION = SETTINGS_DIR.replace('\\', '/')
 DEFAULT_WORKSPACE_PATH = pathlib.Path(
     f"{os.path.expanduser('~')}/.pyssa/default_workspace"
 )
+WSL2_DISTRO_NAME = "almaColabfold9"
+WSL2_USERNAME = "alma_user"
 
 # Commented out in this revision
 #PLUGIN_PATH_WSL_NOTATION = '/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA'

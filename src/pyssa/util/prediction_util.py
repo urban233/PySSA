@@ -138,7 +138,7 @@ def delete_pyssa_colabfold_directory_in_wsl2() -> bool:
       exception.UnableToDeleteDirectoryError: If shutil.rmtree could not remove the pyssa_colabfold dir.
   """
   tmp_pyssa_colabfold_path: str = (
-      r"\\wsl$\almaColabfold9\home\rhel_user\pyssa_colabfold"
+      rf"\\wsl$\{constants.WSL2_DISTRO_NAME}\home\{constants.WSL2_USERNAME}\pyssa_colabfold"
   )
   try:
     if os.path.exists(tmp_pyssa_colabfold_path):
@@ -160,7 +160,7 @@ def copy_pyssa_colabfold_directory_to_wsl2() -> None:
       exception.UnableToCopyDirectoryError: If shutil.copytree could not copy the pyssa_colabfold dir.
   """
   tmp_pyssa_colabfold_wsl_path: str = (
-      r"\\wsl$\almaColabfold9\home\rhel_user\pyssa_colabfold"
+      rf"\\wsl$\{constants.WSL2_DISTRO_NAME}\home\{constants.WSL2_USERNAME}\pyssa_colabfold"
   )
   tmp_pyssa_colabfold_windows_path: str = str(
       pathlib.Path(f"{constants.PROGRAM_SRC_PATH}/pyssa_colabfold")
@@ -168,7 +168,7 @@ def copy_pyssa_colabfold_directory_to_wsl2() -> None:
   subprocess.run(
       [
           "wsl",
-          "-d almaColabfold9 -u rhel_user rm -r /home/rhel_user/pyssa_colabfold",
+          f"-d {constants.WSL2_DISTRO_NAME} -u {constants.WSL2_USERNAME} rm -r /home/{constants.WSL2_USERNAME}/pyssa_colabfold",
       ],
       creationflags=subprocess.CREATE_NO_WINDOW,
   )
@@ -199,7 +199,7 @@ def copy_pyssa_colabfold_directory_to_wsl2() -> None:
 def move_modified_batch_file_to_wsl2() -> None:
   """Deletes the original batch.py file in the WSL2 and copies the new one."""
   tmp_org_batch_filepath: str = (
-      r"\\wsl$\almaColabfold9\home\rhel_user\localcolabfold\colabfold-conda\lib\python3.10\site-packages\colabfold\batch.py"  # noqa: E501
+      rf"\\wsl$\{constants.WSL2_DISTRO_NAME}\home\{constants.WSL2_USERNAME}\localcolabfold\colabfold-conda\lib\python3.10\site-packages\colabfold\batch.py"  # noqa: E501
   )
   tmp_batch_py_filepath_windows: str = (
       f"{constants.PROGRAM_SRC_PATH}\\pyssa_colabfold\\colabfold_sub\\batch.py"

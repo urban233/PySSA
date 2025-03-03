@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 
+WSL2_USERNAME = "alma_user"
+
 ENV = {"TF_FORCE_UNIFIED_MEMORY": "1", "XLA_PYTHON_CLIENT_MEM_FRACTION": "4.0"}
 for k, v in ENV.items():
     if k not in os.environ:
@@ -76,7 +78,21 @@ from Bio.PDB.PDBIO import Select
 
 # logging settings
 logger = logging.getLogger(__name__)
-import jax
+logger.info(f"CUSTOM-PYSSA-MSG::Trying to import the jax library")
+try:
+    import jax
+except RuntimeError as e:
+    logger.error(str(e))
+    logger.error(f"CUSTOM-PYSSA-MSG::Cloud not import the jax library! Trying different environment variables ...")
+    import os
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    os.environ['JAX_PLATFORMS'] = 'cpu'
+    logger.info(f"CUSTOM-PYSSA-MSG::Trying again to import the jax library")
+    try:
+        import jax
+    except RuntimeError as e:
+        logger.error(e)
+        logger.error(f"CUSTOM-PYSSA-MSG::Cloud not import the jax library! Trying different environment variables ...")
 import jax.numpy as jnp
 
 logging.getLogger("jax._src.lib.xla_bridge").addFilter(lambda _: False)
@@ -135,7 +151,7 @@ def mk_template(
     )
 
     hhsearch_pdb70_runner = hhsearch.HHSearch(
-        binary_path="/home/rhel_user/localcolabfold/colabfold-conda/bin/hhsearch",
+        binary_path=f"/home/{WSL2_USERNAME}/localcolabfold/colabfold-conda/bin/hhsearch",
         databases=[f"{template_path}/pdb70"],
     )
 
@@ -1320,14 +1336,28 @@ def run(
     feature_dict_callback: Callable[[Any], Any] = None,
     **kwargs,
 ):
-    import multiprocessing
-    import jax
+    logger.info(f"CUSTOM-PYSSA-MSG::Trying to import the jax library")
+    try:
+        import jax
+    except RuntimeError as e:
+        logger.error(str(e))
+        logger.error(f"CUSTOM-PYSSA-MSG::Cloud not import the jax library! Trying different environment variables ...")
+        import os
+        os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+        os.environ['JAX_PLATFORMS'] = 'cpu'
+        logger.info(f"CUSTOM-PYSSA-MSG::Trying again to import the jax library")
+        try:
+            import jax
+        except RuntimeError as e:
+            logger.error(e)
+            logger.error(f"CUSTOM-PYSSA-MSG::Cloud not import the jax library! Trying different environment variables ...")
+
     logger.info(f"CUSTOM-PYSSA-MSG::Jax local devices platform: {jax.local_devices()[0].platform}")
     if jax.local_devices()[0].platform != "cpu":
         logger.warning("Jax uses a GPU by default, trying to switch to CPU ...")
         # PYSSA-BEGIN:
         import jax
-        jax.config.update('jax_platform_name', 'cpu')
+        jax.config.refresh('jax_platform_name', 'cpu')
         import os
         os.environ['CUDA_VISIBLE_DEVICES'] = ''
         # PYSSA-END.
@@ -1501,16 +1531,9 @@ def run(
     pad_len = 0
     ranks, metrics = [], []
     first_job = True
-
-
-
-    tmp_arguments = []
-    logger.info("CUSTOM-PYSSA-MSG::Arguments list gets created ...")
     for job_number, (raw_jobname, query_sequence, a3m_lines) in enumerate(queries):
-        tmp_arguments.append((job_number, raw_jobname, query_sequence, a3m_lines, max_seq, pad_len, first_job, max_extra_seq))
-
-    def predict_single_protein(job_number, raw_jobname, query_sequence, a3m_lines, max_seq, pad_len, first_job, max_extra_seq):
         jobname = safe_filename(raw_jobname)
+
         #######################################
         # check if job has already finished
         #######################################
@@ -1518,12 +1541,12 @@ def run(
         result_zip = result_dir.joinpath(jobname).with_suffix(".result.zip")
         if keep_existing_results and result_zip.is_file():
             logger.info(f"Skipping {jobname} (result.zip)")
-            return
+            continue
         # In the local version we use a marker file
         is_done_marker = result_dir.joinpath(jobname + ".done.txt")
         if keep_existing_results and is_done_marker.is_file():
             logger.info(f"Skipping {jobname} (already done)")
-            return
+            continue
 
         seq_len = len("".join(query_sequence))
         logger.info(f"Query {job_number + 1}/{len(queries)}: {jobname} (length {seq_len})")
@@ -1592,9 +1615,7 @@ def run(
                 if num_models == 0:
                     with open(pickled_msa_and_templates, "wb") as f:
                         pickle.dump(
-                            (
-                            unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality, template_features),
-                            f,
+                            (unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality, template_features), f,
                         )
                     logger.info(f"Saved {pickled_msa_and_templates}")
 
@@ -1604,7 +1625,7 @@ def run(
 
         except Exception as e:
             logger.exception(f"Could not get MSA/templates for {jobname}: {e}")
-            return
+            continue
 
         #######################
         # generate features
@@ -1627,7 +1648,7 @@ def run(
 
         except Exception as e:
             logger.exception(f"Could not generate input features {jobname}: {e}")
-            return
+            continue
 
         ###############
         # save plots not requiring prediction
@@ -1740,7 +1761,7 @@ def run(
             except RuntimeError as e:
                 # This normally happens on OOM. TODO: Filter for the specific OOM error message
                 logger.error(f"Could not predict {jobname}. Not Enough GPU memory? {e}")
-                return
+                continue
 
             ###############
             # save prediction plots
@@ -1792,13 +1813,6 @@ def run(
         else:
             if num_models > 0:
                 is_done_marker.touch()
-
-    logger.info("CUSTOM-PYSSA-MSG::Multiprocessing pool gets created ...")
-    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())  # Use all available CPU cores
-    logger.info("CUSTOM-PYSSA-MSG::Prediction function gets mapped against the argument list.")
-    results = pool.map(predict_single_protein, tmp_arguments)
-    pool.close()
-    pool.join()
 
     logger.info("Done")
     return {"rank": ranks, "metric": metrics}

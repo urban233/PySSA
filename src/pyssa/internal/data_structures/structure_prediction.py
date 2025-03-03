@@ -271,37 +271,38 @@ class StructurePrediction:
     the_project_lock.lock()
     for tmp_prediction in best_prediction_models:
       tmp_protein = protein.Protein(tmp_prediction[0].name)
-      tmp_protein.add_protein_structure_data_from_local_pdb_file(
-          pathlib.Path(
-              f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb"
-          ),
-          the_main_socket,
-          the_general_purpose_socket,
+      tmp_pdb_filepath = pathlib.Path(
+        f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb"
       )
-      pdb_filepath = pathlib.Path(
-          f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein.get_molecule_object()}.pdb"
+      tmp_protein.add_protein_structure_data_from_local_pdb_file(
+        tmp_pdb_filepath,
+        the_main_socket,
+        the_general_purpose_socket,
       )
       try:
-        bio_data.build_pdb_file(tmp_protein.get_pdb_data(), pdb_filepath)
+        bio_data.build_pdb_file(tmp_protein.get_pdb_data(), str(tmp_pdb_filepath))
       except exception.IllegalArgumentError:
         logger.error(
-            f"The argument pdb data is not usable: {tmp_protein.get_pdb_data}."
+          f"The argument pdb data is not usable: {tmp_protein.get_pdb_data}."
         )
         raise exception.UnableToCreatePdbFileError("")
       except exception.DirectoryNotFoundError:
-        logger.error(f"The argument pdb_filepath is illegal: {pdb_filepath}!")
+        logger.error(f"The argument pdb_filepath is illegal: {tmp_pdb_filepath}!")
         raise exception.UnableToCreatePdbFileError("")
       except PermissionError:
-        logger.error(f"The argument pdb_filepath is illegal: {pdb_filepath}!")
+        logger.error(f"The argument pdb_filepath is illegal: {tmp_pdb_filepath}!")
         raise exception.UnableToCreatePdbFileError("")
       except exception.UnableToOpenFileError:
         logger.error("pdb file could not be opened for writing.")
         raise exception.UnableToOpenFileError("")
+      except Exception as e:
+        logger.error(f"Something went wrong when creating the pdb file.: {e.__str__()}")
+        raise RuntimeError("Something went wrong when creating the pdb file.")
 
       tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
           the_main_socket,
           a_socket,
-          job.PredictionJobDescription(pdb_filepath),
+          job.PredictionJobDescription(str(tmp_pdb_filepath)),
       )
       tmp_protein.pymol_session = tmp_reply["data"][0]
 
