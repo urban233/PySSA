@@ -3450,16 +3450,6 @@ class MainViewController:
         "An unknown error occurred!"
       )
 
-  def open_documentation(self) -> None:
-    """Opens the official plugin documentation as PDF."""
-    try:
-      os.startfile(constants.DOCS_PATH)
-    except Exception as e:
-      logger.error(f"An error occurred: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred!"
-      )
-
   def __slot_open_about(self) -> None:
     """Opens the About dialog."""
     try:
