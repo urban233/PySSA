@@ -24,7 +24,7 @@ import logging
 import os
 from typing import Optional
 
-import local_constants
+from src.auxiliary_pymol import local_constants
 __docformat__ = "google"
 
 

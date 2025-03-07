@@ -22,8 +22,10 @@
 """Contains workers that are handling the requests to the auxiliary PyMOL."""
 import queue
 import zmq
-import auxiliary_pymol_base
-import local_enums
+
+from src.auxiliary_pymol import auxiliary_pymol_base
+from src.auxiliary_pymol import local_enums
+
 __docformat__ = "google"
 
 

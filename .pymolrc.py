@@ -21,7 +21,18 @@
 #
 """Init file for PyMOL interface. This exact file is only needed for development purposes!"""
 import sys
-sys.path.append("C:\\ProgramData\\IBCI\\PySSA\\bin\\PySSA")
+import pathlib
+
+ROOT_PATH: pathlib.Path = pathlib.Path(__file__).parent
+"""The path is .../user_pymol/lib/pymol"""
+
+PYSSA_LIB_PATH: pathlib.Path = pathlib.Path(ROOT_PATH.parent.parent.parent / "lib")
+"""
+This is the lib path of the main PySSA application and only valid if 
+the user_pymol folder is placed under the program root directory!
+"""
+
+sys.path.append(str(PYSSA_LIB_PATH))
 
 from src.pyssa_pymol import user_pymol_interface
 
@@ -29,7 +40,7 @@ from src.pyssa_pymol import user_pymol_interface
 mainInterface = None
 
 
-def start_user_pymol_interface():
+def start_user_pymol_interface() -> None:
     """Function to start the PyMOL interface, by instantiating the Interface class."""
     global mainInterface
     mainInterface = user_pymol_interface.UserPyMOLInterface()

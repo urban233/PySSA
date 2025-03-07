@@ -24,6 +24,7 @@ import logging
 import os
 import datetime
 import pathlib
+import sys
 from pathlib import Path
 from src.pyssa.util import globals, enums
 
@@ -37,9 +38,17 @@ SETTINGS_FILENAME = 'settings.json'
 DEBUGGING = False
 
 # Paths/Filepaths
-PLUGIN_PATH = globals.g_plugin_path
-PROGRAM_BIN_ROOT_PATH = "C:\\ProgramData\\IBCI\\PySSA\\bin\\PySSA"  # fixme: It could be beneficial to use this instead of the "PLUGIN_PATH" var
-PROGRAM_SRC_PATH = f"{PROGRAM_BIN_ROOT_PATH}\\src"
+PROGRAM_BIN_ROOT_PATH: pathlib.Path = pathlib.Path(sys.executable).parent
+#PROGRAM_ROOT_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH).parent
+PYTHON_LIB_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "lib")
+PROGRAM_SRC_PATH: pathlib.Path = pathlib.Path(PYTHON_LIB_PATH / "src")
+
+AUXILIARY_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "aux_pymol.exe")
+USER_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "user_pymol" / "Open-Source-PyMOL.exe")
+# PROGRAM_SRC_PATH = f"{PROGRAM_BIN_ROOT_PATH}\\src"  # OLD!!!
+
+#PROGRAM_BIN_ROOT_PATH = "C:\\ProgramData\\IBCI\\PySSA\\bin\\PySSA"
+
 PYTHON_FILEPATH = r"C:\ProgramData\IBCI\PySSA\bin\.venv\Scripts\python.exe"
 PLUGIN_EXTRA_TOOLS_PATH = str(pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/extra_tools/'))
 PLUGIN_DOCS_PATH = str(

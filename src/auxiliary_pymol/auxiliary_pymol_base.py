@@ -22,16 +22,16 @@
 """Module for the auxiliary pymol class."""
 import os
 import pathlib
-import pymol2
 
+import pymol2
 import numpy as np
 
-import local_constants
-import utils
+from src.auxiliary_pymol import local_constants
+from src.auxiliary_pymol import utils
+from src.auxiliary_pymol import logger
 
 __docformat__ = "google"
 
-import logger
 
 module_logger = logger.setup_logger(__file__, log_path=f"{local_constants.LOG_PATH}\\auxiliary_pymol")
 

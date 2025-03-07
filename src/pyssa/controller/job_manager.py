@@ -115,13 +115,18 @@ class JobManager:
     if constants.DEBUGGING:
       logger.debug("Debugging activated.")
       return
+
     process = subprocess.Popen(
-        [
-            constants.PYTHON_FILEPATH,
-            f"{constants.PROGRAM_SRC_PATH}\\auxiliary_pymol\\main.py",
-        ],
-        creationflags=subprocess.CREATE_NO_WINDOW,
+      [constants.AUXILIARY_PYMOL_FILEPATH],
+      #creationflags=subprocess.CREATE_NO_WINDOW,
     )
+    # process = subprocess.Popen(
+    #     [
+    #         constants.PYTHON_FILEPATH,
+    #         f"{constants.PROGRAM_SRC_PATH}\\auxiliary_pymol\\main.py",
+    #     ],
+    #     creationflags=subprocess.CREATE_NO_WINDOW,
+    # )
     if process.poll() is None:
       logger.debug("main.py of auxiliary pymol started correctly.")
     else:

@@ -457,6 +457,85 @@ class BuildInnoSetup:
       print(f"The build process of the inno setup EXE took: {tmp_duration:.2f} seconds ({(tmp_duration/60):.2f} minutes).")
     except Exception as e:
       print(e)
+
+
+class BuildInnoSetupDebug:
+  """Contains the logic for building a debug version of the inno setup EXE file."""
+
+  def __init__(self) -> None:
+    """Constructor."""
+    self.deployment_resources_path = pathlib.Path(PROJECT_ROOT_DIR / "deployment/resources")
+    self.inno_build_path = pathlib.Path(PROJECT_ROOT_DIR / "inno-build-debug")
+    self.inno_build_assets_path = pathlib.Path(self.inno_build_path / "inno-assets")
+    self.inno_build_cache_path = pathlib.Path(self.inno_build_path / "inno-cache")
+    self.inno_sources_build_path = pathlib.Path(self.inno_build_path / "inno-sources")
+    self.inno_build_prerequisite_path = pathlib.Path(self.inno_sources_build_path / "prerequisite")
+    self.inno_build_third_party_path = pathlib.Path(self.inno_sources_build_path / "third_party")
+    self.inno_build_tmp_path = pathlib.Path(self.inno_sources_build_path / "tmp")
+    self.inno_setup_script_path = pathlib.Path(PROJECT_ROOT_DIR / "deployment/src/inno_setup")
+    self.inno_setup_script_filepath = pathlib.Path(PROJECT_ROOT_DIR / "deployment/src/inno_setup" / "setup.iss")
+    self.inno_setup_compiler_filepath = pathlib.Path(r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe")
+
+  def clean_build_directory(self) -> None:
+    """Cleans the inno setup build directory."""
+    pass
+
+  def setup_build_environment(self, include_wsl2_distro: bool = False) -> None:
+    """Sets up a temporary build environment."""
+    # <editor-fold desc="Path/Filepath definitions">
+    tmp_pyssa_win_build_logo_filepath = pathlib.Path(PROJECT_ROOT_DIR / "assets/convert_logo_to_ico" / "logo.ico")
+    tmp_vc_redist_setup_filepath = pathlib.Path(PROJECT_ROOT_DIR / "third_party/microsoft" / "VC_redist.x64.exe")
+    tmp_windows_tasks_exe_filepath = pathlib.Path(PROJECT_ROOT_DIR / "deployment/offline_resources" / "WindowsTasks.exe")
+    # </editor-fold>
+    """IMPORTANT
+    Use the python interpreter of the venv of pymol windows build because
+    that interpreter gets also used in the build script of the 
+    pymol windows build repo!
+    """
+    # <editor-fold desc="Restore build directory for new build">
+    if self.inno_build_assets_path.exists():
+      shutil.rmtree(self.inno_build_assets_path)
+    if self.inno_sources_build_path.exists():
+      shutil.rmtree(self.inno_sources_build_path)
+    self.inno_build_path.mkdir(exist_ok=True)
+    self.inno_build_assets_path.mkdir()
+    self.inno_sources_build_path.mkdir()
+    self.inno_build_cache_path.mkdir(exist_ok=True)
+    # </editor-fold>
+    # <editor-fold desc="Get WSL2 distro from sciebo">
+    pathlib.Path(self.inno_build_tmp_path).mkdir()
+    if include_wsl2_distro:
+      if not pathlib.Path.exists(pathlib.Path(self.inno_build_cache_path / "alma-colabfold-9-rootfs.tar")):
+        print("Downloading alma-colabfold-9-rootfs.tar ...")
+        if not setup_util.download_file("https://w-hs.sciebo.de/s/q5oYjcZdEzCDyEH/download", str(pathlib.Path(self.inno_build_cache_path / "alma-colabfold-9-rootfs.tar"))):
+          print("Unable to download alma-colabfold-9-rootfs.tar, build process exists.")
+          return
+        print("Finished downloading alma-colabfold-9-rootfs.tar.")
+
+      if not setup_util.File.copy(
+              pathlib.Path(self.inno_build_cache_path / "alma-colabfold-9-rootfs.tar"),
+              pathlib.Path(self.inno_build_tmp_path / "alma-colabfold-9-rootfs.tar"),
+      ):
+        print("Copying the alma-colabfold-9-rootfs.tar failed!")
+        return
+    # </editor-fold>
+    # Extract bin.zip file
+    # <editor-fold desc="Copy operations">
+    setup_util.Directory.copy_directory(
+      pathlib.Path(PROJECT_ROOT_DIR / "build/exe.win-amd64-3.11"),
+      pathlib.Path(self.inno_sources_build_path)
+    )
+    setup_util.Directory.copy_directory(
+      pathlib.Path(PROJECT_ROOT_DIR / "build/user_pymol"),
+      pathlib.Path(self.inno_sources_build_path / "user_pymol")
+    )
+    self.inno_build_third_party_path.mkdir(exist_ok=True)
+    self.inno_build_prerequisite_path.mkdir(exist_ok=True)
+    shutil.copy(tmp_vc_redist_setup_filepath, pathlib.Path(self.inno_build_third_party_path / "VC_redist.x64.exe"))
+    shutil.copy(tmp_windows_tasks_exe_filepath, pathlib.Path(self.inno_build_prerequisite_path / "WindowsTasks.exe"))
+    self.inno_build_assets_path.mkdir(exist_ok=True)
+    shutil.copy(tmp_pyssa_win_build_logo_filepath, pathlib.Path(self.inno_build_assets_path / "logo.ico"))
+    # </editor-fold>
 # </editor-fold>
 
 
@@ -511,6 +590,12 @@ def clean_build_setup_exe() -> None:
   shutil.rmtree(pathlib.Path(PROJECT_ROOT_DIR / "innoBuild"))
 
 
+def build_setup_exe_dbg():
+  """Builds the setup exe directory n debug mode."""
+  tmp_builder = BuildInnoSetupDebug()
+  tmp_builder.setup_build_environment()
+
+
 def build_portable() -> None:
   """Builds the portable installation ZIP file."""
   tmp_builder = BuildInnoSetup()
@@ -550,6 +635,8 @@ def main() -> None:
   build_update_src_only_exe_parser.set_defaults(func=build_update_src_only_exe)
   clean_build_setup_exe_parser = subparsers.add_parser('clean', help="Cleans the inno setup build directory.")
   clean_build_setup_exe_parser.set_defaults(func=clean_build_setup_exe)
+  build_setup_exe_dbg_parser = subparsers.add_parser('build-setup-exe-dbg', help="Builds a debug mode inno setup.")
+  build_setup_exe_dbg_parser.set_defaults(func=build_setup_exe_dbg)
   build_portable_parser = subparsers.add_parser('build-portable', help="Builds the portable installation zip.")
   build_portable_parser.set_defaults(func=build_portable)
   # </editor-fold>

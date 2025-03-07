@@ -20,29 +20,38 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module that is used to start PySSA."""
-import sys
-
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5.QtCore import Qt
-
-sys.path.append("C:\\ProgramData\\IBCI\\PySSA\\bin\\PySSA")
-
-from src.pyssa.util import constants
-from src.pyssa.gui.ui.styles import styles
-from src.pyssa.controller import main_view_controller
-from src.pyssa.controller import interface_manager
+import pathlib
 
 
-if __name__ == "__main__":
+def main():
+  import sys
+
+  if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    bundle_dir = pathlib.Path(sys._MEIPASS)
+  else:
+    bundle_dir = pathlib.Path(__file__).parent
+  print(bundle_dir)
+  print(f"This is the path for sys.executable {sys.executable}")
+
+  from PyQt5 import QtWidgets
+  from PyQt5 import QtGui
+  from PyQt5.QtCore import Qt
+
+  sys.path.append("C:\\ProgramData\\IBCI\\PySSA\\bin\\PySSA")
+
+  from src.pyssa.util import constants
+  from src.pyssa.gui.ui.styles import styles
+  from src.pyssa.controller import main_view_controller
+  from src.pyssa.controller import interface_manager
+
   print(constants.PROGRAM_BIN_ROOT_PATH)
   app = QtWidgets.QApplication(sys.argv)
   # setup QSplashScreen
   pixmapi = QtGui.QPixmap(
-      f"{constants.PROGRAM_BIN_ROOT_PATH}\\assets\\images\\splash_screen.png"
+    f"{constants.PROGRAM_BIN_ROOT_PATH}\\assets\\images\\splash_screen.png"
   )
   smaller_pixmapi = pixmapi.scaled(
-      700, 700, Qt.KeepAspectRatio, Qt.SmoothTransformation
+    700, 700, Qt.KeepAspectRatio, Qt.SmoothTransformation
   )
   tmp_splash = QtWidgets.QSplashScreen(smaller_pixmapi)
   tmp_splash.show()
@@ -55,3 +64,7 @@ if __name__ == "__main__":
   main_window.show()
   tmp_splash.finish(None)
   sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+  main()

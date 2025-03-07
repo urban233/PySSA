@@ -22,9 +22,10 @@
 """Module to start Auxiliary PyMOL."""
 import threading
 import queue
-import workers
 import zmq
-import local_enums
+
+from src.auxiliary_pymol import workers
+from src.auxiliary_pymol import local_enums
 __docformat__ = "google"
 
 
