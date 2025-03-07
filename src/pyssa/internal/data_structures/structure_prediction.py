@@ -200,27 +200,25 @@ class StructurePrediction:
     for tmp_prediction in best_prediction_models:
       try:
         src = path_util.FilePath(
-            pathlib.Path(
-                f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}"
-            )
+          pathlib.Path(
+            f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}"
+          )
         )
+        dest = pathlib.Path(
+          f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb"
+        )
+        os.rename(src.get_filepath(), dest)
+        logger.debug(tmp_prediction[0].name)
       except FileNotFoundError:
         logger.error(
-            "This path does not exists: %s",
-            path_util.FilePath(
-                pathlib.Path(
-                    f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}"
-                ),
-            ).get_filepath(),
+          "This path does not exists: %s",
+          str(
+            pathlib.Path(
+              f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}"
+            )
+          ),
         )
-        raise FileNotFoundError()
-      dest = pathlib.Path(
-          f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb"
-      )
-      os.rename(src.get_filepath(), dest)
-      logger.debug(tmp_prediction[0].name)
-      return best_prediction_models
-    return None
+    return best_prediction_models
 
   def add_proteins_to_project(
       self,
