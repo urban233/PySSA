@@ -125,7 +125,7 @@ ANALYSIS_WORKER_LOGGER = logging.getLogger('AnalysisWorker')
 # docs paths
 # TODO: get correct paths
 DOCS_PDF = ''
-DOCS_HTML = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/docs/html/index.html')
+DOCS_HTML = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH.parent}/docs/html/index.html')
 
 WINDOW_TITLE_OF_HELP_CENTER = 'PySSA - Documentation Center'
 WINDOW_TITLE_OF_PYSSA = 'PySSA'

@@ -21,11 +21,7 @@
 #
 """Module for the predict protein view controller."""
 import logging
-import os
-import subprocess
 
-import pygetwindow
-from Bio import SeqRecord
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
@@ -34,8 +30,6 @@ from src.pyssa.controller import add_protein_pair_view_controller, advanced_pred
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.internal.data_structures import protein, chain
 from src.pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
-from src.pyssa.internal.thread import tasks
-from src.pyssa.internal.thread.async_pyssa import util_async
 from src.pyssa.util import tools, constants, prediction_util, enums, exception
 from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_levels, log_handlers

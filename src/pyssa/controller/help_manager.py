@@ -22,13 +22,9 @@
 """Module for the help manager."""
 import logging
 import pathlib
-import subprocess
 
-import pygetwindow
-from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QUrl
 
-from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.gui.ui.views import help_view
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import constants

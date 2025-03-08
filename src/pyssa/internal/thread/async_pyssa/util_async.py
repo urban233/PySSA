@@ -30,7 +30,7 @@ from typing import Optional
 
 import requests
 import zmq
-import pygetwindow
+import pywinctl
 
 from src.pyssa.controller import database_manager, interface_manager, pymol_session_manager
 from src.pyssa.internal.data_structures.data_classes import database_operation
@@ -84,7 +84,7 @@ def open_documentation_on_certain_page(
       while flag is not True:
         if (
             len(
-                pygetwindow.getWindowsWithTitle(
+                pywinctl.getWindowsWithTitle(
                     constants.WINDOW_TITLE_OF_HELP_CENTER
                 )
             )
@@ -93,7 +93,7 @@ def open_documentation_on_certain_page(
         ):
           flag = True
           globals.g_server_status = enums.DocsServerStatus.ACTIVE
-          tmp_docs_window = pygetwindow.getWindowsWithTitle(
+          tmp_docs_window = pywinctl.getWindowsWithTitle(
               constants.WINDOW_TITLE_OF_HELP_CENTER
           )[0]
           tmp_docs_window.minimize()
@@ -125,7 +125,7 @@ def open_documentation_on_certain_page(
         while flag is not True:
           if (
               len(
-                  pygetwindow.getWindowsWithTitle(
+                  pywinctl.getWindowsWithTitle(
                       constants.WINDOW_TITLE_OF_HELP_CENTER
                   )
               )
@@ -133,7 +133,7 @@ def open_documentation_on_certain_page(
           ):
             flag = True
             globals.g_server_status = enums.DocsServerStatus.ACTIVE
-            tmp_docs_window = pygetwindow.getWindowsWithTitle(
+            tmp_docs_window = pywinctl.getWindowsWithTitle(
                 constants.WINDOW_TITLE_OF_HELP_CENTER
             )[0]
             tmp_docs_window.minimize()
@@ -193,7 +193,7 @@ def start_documentation_server(
     while flag is not True:
       if (
           len(
-              pygetwindow.getWindowsWithTitle(
+              pywinctl.getWindowsWithTitle(
                   constants.WINDOW_TITLE_OF_HELP_CENTER
               )
           )
@@ -201,7 +201,7 @@ def start_documentation_server(
       ):
         flag = True
         globals.g_server_status = enums.DocsServerStatus.ACTIVE
-    tmp_docs_window = pygetwindow.getWindowsWithTitle(
+    tmp_docs_window = pywinctl.getWindowsWithTitle(
         constants.WINDOW_TITLE_OF_HELP_CENTER
     )[0]
     tmp_docs_window.minimize()

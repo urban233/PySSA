@@ -22,16 +22,12 @@
 """Module for the delete project view controller."""
 import logging
 import os
-import subprocess
 
-import pygetwindow
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 
 from src.pyssa.controller import interface_manager
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
-from src.pyssa.internal.thread import tasks
-from src.pyssa.internal.thread.async_pyssa import util_async
 from src.pyssa.util import constants, enums, ui_util, exception
 from src.pyssa.logging_pyssa import log_levels, log_handlers
 

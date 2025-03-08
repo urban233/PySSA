@@ -21,19 +21,10 @@
 #
 """Module for the add sequence view controller."""
 import logging
-import os
-import pathlib
-import subprocess
 
-import pygetwindow
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 
-from src.pyssa.gui.ui.custom_dialogs import custom_message_box
-from src.pyssa.gui.ui.styles import styles
-from src.pyssa.internal.thread import tasks
-from src.pyssa.internal.thread.async_pyssa import util_async
-from src.pyssa.io_pyssa import safeguard
 from src.pyssa.util import input_validator, constants, exception
 from src.pyssa.logging_pyssa import log_levels, log_handlers
 

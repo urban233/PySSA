@@ -32,7 +32,7 @@ import json
 from typing import Optional, Any
 from urllib import request
 
-import pygetwindow
+import pywinctl
 from Bio import SeqRecord
 from Bio.Seq import Seq
 
@@ -782,16 +782,16 @@ class MainViewController:
 
     # Help windows
     tmp_number_of_help_windows = len(
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)
+      pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)
     )
     if tmp_number_of_help_windows == 1:
       logger.info("The documentation window is open. It will be closed now.")
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
+      pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
         0
       ].close()
     elif tmp_number_of_help_windows > 1:
       for tmp_window_index in range(tmp_number_of_help_windows):
-        pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
+        pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
           tmp_window_index
         ].close()
     else:
@@ -879,16 +879,16 @@ class MainViewController:
     """Closes the project and then the application."""
     # Help windows
     tmp_number_of_help_windows = len(
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)
+      pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)
     )
     if tmp_number_of_help_windows == 1:
       logger.info("The documentation window is open. It will be closed now.")
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
+      pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
         0
       ].close()
     elif tmp_number_of_help_windows > 1:
       for tmp_window_index in range(tmp_number_of_help_windows):
-        pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
+        pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
           tmp_window_index
         ].close()
     else:
@@ -912,7 +912,7 @@ class MainViewController:
 
     # if tmp_number_of_exact_pyssa_match_windows == 1:
     #   logger.info("PySSA will be closed now.")
-    #   pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
+    #   pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
     #     0
     #   ].close()
     # elif tmp_number_of_exact_pyssa_match_windows > 1:
@@ -924,7 +924,7 @@ class MainViewController:
     #   tmp_dialog.exec_()
     #   if tmp_dialog.response:
     #     for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
-    #       pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
+    #       pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
     #         tmp_window_index
     #       ].close()
     # else:
@@ -1206,8 +1206,8 @@ class MainViewController:
 
     This method restarts PyMOL by closing the PyMOL window and displaying a temporary message on the status bar indicating that PyMOL is restarting.
     """
-    logger.warning("Recived user request to restart PyMOL.")
-    pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[
+    logger.warning("Received user request to restart PyMOL.")
+    pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[
       0
     ].close()
     self._interface_manager.status_bar_manager.show_temporary_message(
@@ -1430,7 +1430,7 @@ class MainViewController:
   #
   #     if (
   #             len(
-  #               pygetwindow.getWindowsWithTitle(
+  #               pywinctl.getWindowsWithTitle(
   #                 constants.WINDOW_TITLE_OF_HELP_CENTER
   #               )
   #             )

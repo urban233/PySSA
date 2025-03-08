@@ -20,16 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the settings view controller."""
-import os
-import subprocess
 from typing import TYPE_CHECKING
 import logging
 
-import pygetwindow
 from PyQt5 import QtCore
-from src.pyssa.gui.ui.custom_dialogs import custom_message_box
-from src.pyssa.internal.thread import tasks
-from src.pyssa.internal.thread.async_pyssa import util_async
 from src.pyssa.util import exception
 from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_handlers, log_levels
