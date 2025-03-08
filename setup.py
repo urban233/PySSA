@@ -140,12 +140,17 @@ except ImportError:
   get_qt_plugins_paths = None
 
 include_files = []
+if get_qt_plugins_paths:
+    # Inclusion of extra plugins (since cx_Freeze 6.8b2)
+    # cx_Freeze automatically imports the following plugins depending on the
+    # module used, but suppose we need the following:
+    include_files += get_qt_plugins_paths("PyQt5", "multimedia")
 
 build_exe_options = {
   # exclude packages that are not really needed
   "excludes": ["tkinter"],
   "include_files": include_files,
-  "packages": ["pymol.povray", "pymol.parser", "Xlib"] # Xlib -> linux
+  "packages": ["PyQt5.uic", "pymol.povray", "pymol.parser", "Xlib"] # Xlib -> linux
 }
 
 bdist_mac_options = {

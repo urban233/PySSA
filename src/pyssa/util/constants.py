@@ -40,8 +40,10 @@ PROGRAM_BIN_ROOT_PATH: pathlib.Path = pathlib.Path(sys.executable).parent
 PYTHON_LIB_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "lib")
 PROGRAM_SRC_PATH: pathlib.Path = pathlib.Path(PYTHON_LIB_PATH / "src")
 
-AUXILIARY_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "aux_pymol.exe")
-USER_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "user_pymol" / "Open-Source-PyMOL.exe")
+#AUXILIARY_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "aux_pymol.exe")
+AUXILIARY_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "aux_pymol")
+#USER_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "user_pymol" / "Open-Source-PyMOL.exe")
+USER_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "user_pymol" / "Open-Source-PyMOL")
 
 PYTHON_FILEPATH = r"C:\ProgramData\IBCI\PySSA\bin\.venv\Scripts\python.exe"
 PLUGIN_EXTRA_TOOLS_PATH = str(pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/extra_tools/'))

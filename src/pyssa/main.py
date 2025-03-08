@@ -28,6 +28,7 @@ import sys
 def main():
   tmp_root_path = pathlib.Path(__file__).parent
   sys.path.append(str(tmp_root_path / "lib"))
+  sys.path.append(str(tmp_root_path / "user_pymol/lib"))
 
   from PyQt5 import QtWidgets
   from PyQt5 import QtGui
@@ -56,10 +57,10 @@ def main():
   styles.set_stylesheet_homepage(main_window)
   main_window.show()
   tmp_splash.finish(None)
-  subprocess.Popen(
-    [constants.ARRANGE_WINDOWS_EXE_FILEPATH],
-    creationflags=subprocess.CREATE_NO_WINDOW,
-  )
+  # subprocess.Popen(
+  #   [constants.ARRANGE_WINDOWS_EXE_FILEPATH],
+  #   creationflags=subprocess.CREATE_NO_WINDOW,
+  # )
   sys.exit(app.exec_())
 
 

@@ -98,7 +98,7 @@ class ApplicationProcessManager:
     """Starts PyMOL application."""
     self.pymol_process = subprocess.Popen(
       [constants.USER_PYMOL_FILEPATH, "-A1"],
-      creationflags=subprocess.CREATE_NO_WINDOW,
+      # creationflags=subprocess.CREATE_NO_WINDOW,
     )
     # self.pymol_process = subprocess.Popen(
     #     [f"{constants.PROGRAM_BIN_ROOT_PATH}\\scripts\\batch\\start_pymol.bat"],
