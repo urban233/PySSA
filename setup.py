@@ -145,7 +145,7 @@ build_exe_options = {
   # exclude packages that are not really needed
   "excludes": ["tkinter"],
   "include_files": include_files,
-  "packages": ["pymol.povray", "pymol.parser"]
+  "packages": ["pymol.povray", "pymol.parser", "Xlib"] # Xlib -> linux
 }
 
 bdist_mac_options = {
