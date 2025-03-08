@@ -46,8 +46,10 @@ Source: "..\..\..\inno-build-release\inno-sources\*"; DestDir: "{app}"; Flags: i
 Source: "..\..\..\inno-build-release\inno-assets\logo.ico"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs;
 
 [Icons]
-Name: "{commondesktop}\PySSA"; Filename: "{app}\win_start\vb_script\window_arrangement.exe"; IconFilename: "{app}\assets\logo.ico"
-Name: "{commonstartmenu}\PySSA"; Filename: "{app}\win_start\vb_script\window_arrangement.exe"; IconFilename: "{app}\assets\logo.ico"
+Name: "{commondesktop}\PySSA"; Filename: "{app}\pyssa.exe"; IconFilename: "{app}\assets\logo.ico"
+Name: "{commonstartmenu}\PySSA"; Filename: "{app}\pyssa.exe"; IconFilename: "{app}\assets\logo.ico"
+;Name: "{commondesktop}\PySSA"; Filename: "{app}\win_start\vb_script\window_arrangement.exe"; IconFilename: "{app}\assets\logo.ico"
+;Name: "{commonstartmenu}\PySSA"; Filename: "{app}\win_start\vb_script\window_arrangement.exe"; IconFilename: "{app}\assets\logo.ico"
 
 [Run]
 Filename: "{app}\third_party\VC_redist.x64.exe"; Parameters: "/quiet /norestart"; Flags: runhidden waituntilterminated

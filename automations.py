@@ -536,6 +536,20 @@ class BuildInnoSetupDebug:
     self.inno_build_assets_path.mkdir(exist_ok=True)
     shutil.copy(tmp_pyssa_win_build_logo_filepath, pathlib.Path(self.inno_build_assets_path / "logo.ico"))
     # </editor-fold>
+
+  def build(self, a_inno_script_path: pathlib.Path) -> None:
+    """Builds the PyMOL Windows EXE file."""
+    try:
+      tmp_start_time = time.time()
+      subprocess.run(
+        [self.inno_setup_compiler_filepath, a_inno_script_path],
+        stdout=sys.stdout, stderr=sys.stderr, text=True
+      )
+      tmp_end_time = time.time()
+      tmp_duration = tmp_end_time - tmp_start_time
+      print(f"The build process of the inno setup EXE took: {tmp_duration:.2f} seconds ({(tmp_duration/60):.2f} minutes).")
+    except Exception as e:
+      print(e)
 # </editor-fold>
 
 

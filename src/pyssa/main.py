@@ -21,30 +21,23 @@
 #
 """Module that is used to start PySSA."""
 import pathlib
+import subprocess
+import sys
 
 
 def main():
-  import sys
-
-  if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-    bundle_dir = pathlib.Path(sys._MEIPASS)
-  else:
-    bundle_dir = pathlib.Path(__file__).parent
-  print(bundle_dir)
-  print(f"This is the path for sys.executable {sys.executable}")
+  tmp_root_path = pathlib.Path(__file__).parent
+  sys.path.append(str(tmp_root_path / "lib"))
 
   from PyQt5 import QtWidgets
   from PyQt5 import QtGui
   from PyQt5.QtCore import Qt
-
-  sys.path.append("C:\\ProgramData\\IBCI\\PySSA\\bin\\PySSA")
 
   from src.pyssa.util import constants
   from src.pyssa.gui.ui.styles import styles
   from src.pyssa.controller import main_view_controller
   from src.pyssa.controller import interface_manager
 
-  print(constants.PROGRAM_BIN_ROOT_PATH)
   app = QtWidgets.QApplication(sys.argv)
   # setup QSplashScreen
   pixmapi = QtGui.QPixmap(
@@ -63,6 +56,10 @@ def main():
   styles.set_stylesheet_homepage(main_window)
   main_window.show()
   tmp_splash.finish(None)
+  subprocess.Popen(
+    [constants.ARRANGE_WINDOWS_EXE_FILEPATH],
+    creationflags=subprocess.CREATE_NO_WINDOW,
+  )
   sys.exit(app.exec_())
 
 
