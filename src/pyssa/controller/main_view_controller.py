@@ -1223,9 +1223,10 @@ class MainViewController:
     """Checks if an update is available."""
     try:
       if tools.check_internet_connectivity():
-        request.urlretrieve(
-          constants.VERSION_HISTORY_URL, constants.VERSION_HISTORY_FILEPATH
-        )
+        tools.download_file(constants.VERSION_HISTORY_URL, constants.VERSION_HISTORY_FILEPATH)
+        # request.urlretrieve(
+        #   constants.VERSION_HISTORY_URL, constants.VERSION_HISTORY_FILEPATH
+        # )
 
         tmp_latest_release = tools.get_latest_release(constants.VERSION_HISTORY_FILEPATH)
         tmp_current_version = constants.VERSION_NUMBER[1:]
@@ -1275,7 +1276,8 @@ class MainViewController:
   def _download_update_setup(self, an_url: str) -> tuple[int, str]:
     """Downloads the update setup."""
     try:
-      request.urlretrieve(an_url, constants.UPDATE_SETUP_FILEPATH)
+      tools.download_file(an_url, constants.UPDATE_SETUP_FILEPATH)
+      # request.urlretrieve(an_url, constants.UPDATE_SETUP_FILEPATH)
     except Exception as e:
       constants.PYSSA_LOGGER.error(e.__str__())
       return -1, an_url
