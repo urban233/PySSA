@@ -89,6 +89,10 @@ class CustomBuildExe(build_exe):
     #   pathlib.Path("./.venv/Lib/site-packages/pyzmq.libs"),
     #   pathlib.Path(build_dir / "lib/pyzmq.libs")
     # )
+    # shutil.copytree(
+    #   pathlib.Path("./.venv/lib64/python3.11/site-packages/pyzmq.libs"),
+    #   pathlib.Path(build_dir / "lib/pyzmq.libs")
+    # )
     shutil.rmtree(build_dir / "lib/src")
     shutil.copytree(
       pathlib.Path(PROJECT_ROOT_PATH / "src"),
