@@ -550,6 +550,24 @@ class BuildInnoSetupDebug:
       print(f"The build process of the inno setup EXE took: {tmp_duration:.2f} seconds ({(tmp_duration/60):.2f} minutes).")
     except Exception as e:
       print(e)
+
+
+class BuildLiveLinuxExec:
+  """Class for building an environment to run and test the linux version."""
+
+  def build(self) -> None:
+    """Builds a live linux execution environment containing the user pymol."""
+    tmp_user_pymol_path = pathlib.Path(PROJECT_ROOT_DIR / "third_party/pymol-oss/linux-build/dist/exe.linux-x86_64-3.11")
+    if not tmp_user_pymol_path.exists():
+      print(f"User PyMOL distribution could not be found under {tmp_user_pymol_path}!")
+      exit(-1)
+
+    subprocess.run([f"{PROJECT_ROOT_DIR}/.venv/bin/python", "setup.py", "build"])
+    shutil.copytree(
+      tmp_user_pymol_path,
+      pathlib.Path(PROJECT_ROOT_DIR / "build/exe.linux-x86_64-3.11/user_pymol")
+    )
+
 # </editor-fold>
 
 
@@ -631,6 +649,12 @@ def build_portable() -> None:
   subprocess.run(powershell_command, check=True)
   shutil.rmtree(pathlib.Path(PROJECT_ROOT_DIR / "innoBuild"))
 
+
+def build_linux_live():
+  """Builds the live linux exec env incl. user_pymol."""
+  tmp_builder = BuildLiveLinuxExec()
+  tmp_builder.build()
+
 # </editor-fold>
 
 
@@ -653,6 +677,8 @@ def main() -> None:
   build_setup_exe_dbg_parser.set_defaults(func=build_setup_exe_dbg)
   build_portable_parser = subparsers.add_parser('build-portable', help="Builds the portable installation zip.")
   build_portable_parser.set_defaults(func=build_portable)
+  build_linux_live_parser = subparsers.add_parser('build-linux-live', help="Builds the live linux exec env incl. user_pymol.")
+  build_linux_live_parser.set_defaults(func=build_linux_live)
   # </editor-fold>
   args = parser.parse_args()
 

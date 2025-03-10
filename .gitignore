@@ -2259,3 +2259,4 @@ _build
 /inno-build-debug/inno-sources/python311.dll
 /inno-build-debug/inno-sources/README.md
 /inno-build-debug/inno-sources/remote_version_history.json
+/third_party/pymol-oss-win/linux/user_pymol/

@@ -20,9 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module that is used to start PySSA."""
+import os
 import pathlib
-import subprocess
 import sys
+import subprocess
 
 
 def main():
@@ -33,6 +34,14 @@ def main():
   from PyQt5 import QtWidgets
   from PyQt5 import QtGui
   from PyQt5.QtCore import Qt
+
+  # Check the session type
+  # session_type = os.environ.get('XDG_SESSION_TYPE', 'x11')  # Default to 'x11' if not set
+  #
+  # if session_type == 'wayland':
+  #   os.environ['QT_QPA_PLATFORM'] = 'wayland'
+  # else:
+  #   os.environ['QT_QPA_PLATFORM'] = 'xcb'
 
   from src.pyssa.util import constants
   from src.pyssa.gui.ui.styles import styles
