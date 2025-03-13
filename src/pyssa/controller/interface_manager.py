@@ -244,10 +244,6 @@ class InterfaceManager:
         constants.DEMO_PROJECT_SCIEBO_URL,
         str(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")),
       )
-      # request.urlretrieve(
-      #   constants.DEMO_PROJECT_SCIEBO_URL,
-      #   str(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")),
-      # )
       constants.PYSSA_LOGGER.info("Demo projects are getting extracted ...")
       import zipfile
 

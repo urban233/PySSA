@@ -85,14 +85,10 @@ class CustomBuildExe(build_exe):
     build_dir: pathlib.Path = pathlib.Path(self.build_exe)
     # <editor-fold desc="Copying necessary dependencies">
     print("Copying necessary dependencies ...")
-    # shutil.copytree(
-    #   pathlib.Path("./.venv/Lib/site-packages/pyzmq.libs"),
-    #   pathlib.Path(build_dir / "lib/pyzmq.libs")
-    # )
-    # shutil.copytree(
-    #   pathlib.Path("./.venv/lib64/python3.11/site-packages/pyzmq.libs"),
-    #   pathlib.Path(build_dir / "lib/pyzmq.libs")
-    # )
+    shutil.copytree(
+      pathlib.Path("./.venv/Lib/site-packages/pyzmq.libs"),
+      pathlib.Path(build_dir / "lib/pyzmq.libs")
+    )
     shutil.rmtree(build_dir / "lib/src")
     shutil.copytree(
       pathlib.Path(PROJECT_ROOT_PATH / "src"),
@@ -150,15 +146,8 @@ build_exe_options = {
   # exclude packages that are not really needed
   "excludes": ["tkinter"],
   "include_files": include_files,
-  "packages": ["PyQt5.uic", "pymol.povray", "pymol.parser", "Xlib"] # Xlib -> linux
-}
-
-bdist_mac_options = {
-  "bundle_name": "Test",
-}
-
-bdist_dmg_options = {
-  "volume_label": "TEST",
+  "packages": ["PyQt5.uic", "pymol.povray", "pymol.parser"]
+  #"packages": ["PyQt5.uic", "pymol.povray", "pymol.parser", "Xlib"] # Xlib -> linux
 }
 
 setup(
@@ -167,8 +156,6 @@ setup(
   description="Build script for PySSA",
   options={
     "build_exe": build_exe_options,
-    "bdist_mac": bdist_mac_options,
-    "bdist_dmg": bdist_dmg_options,
   },
   executables=[
     {"script": pathlib.Path("src/pyssa/main.py"), "target_name": "pyssa"},  # base="gui"

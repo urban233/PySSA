@@ -274,189 +274,7 @@ class BuildWinPackage:
 #     except Exception as e:
 #       print(e)
 
-class BuildInnoSetup:
-  """Contains the logic for building the inno setup EXE file."""
 
-  def __init__(self) -> None:
-    """Constructor."""
-    self.deployment_resources_path = pathlib.Path(PROJECT_ROOT_DIR / "deployment/resources")
-    self.inno_build_path = pathlib.Path(PROJECT_ROOT_DIR / "inno-build-release")
-    self.inno_build_assets_path = pathlib.Path(self.inno_build_path / "inno-assets")
-    self.inno_build_cache_path = pathlib.Path(self.inno_build_path / "inno-cache")
-    self.inno_sources_build_path = pathlib.Path(self.inno_build_path / "inno-sources")
-    self.pyssa_program_path = pathlib.Path(self.inno_build_path / "inno-sources/bin/PySSA")
-    self.inno_build_prerequisite_path = pathlib.Path(self.inno_sources_build_path / "prerequisite")
-    self.inno_build_third_party_path = pathlib.Path(self.inno_sources_build_path / "third_party")
-    self.inno_build_tmp_path = pathlib.Path(self.inno_sources_build_path / "tmp")
-    self.inno_setup_script_path = pathlib.Path(PROJECT_ROOT_DIR / "deployment/src/inno_setup")
-    self.inno_setup_script_filepath = pathlib.Path(PROJECT_ROOT_DIR / "deployment/src/inno_setup" / "setup.iss")
-    self.inno_setup_compiler_filepath = pathlib.Path(r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe")
-
-  def clean_build_directory(self) -> None:
-    """Cleans the inno setup build directory."""
-    pass
-
-  def setup_build_environment(self,
-                              include_wsl2_distro: bool = False,
-                              include_py_env: bool = False,
-                              include_wheelfiles: bool = False
-                              ) -> None:
-    """Sets up a temporary build environment."""
-    # <editor-fold desc="Path/Filepath definitions">
-    tmp_pyssa_win_build_logo_filepath = pathlib.Path(PROJECT_ROOT_DIR / "assets/convert_logo_to_ico" / "logo.ico")
-    tmp_vc_redist_setup_filepath = pathlib.Path(PROJECT_ROOT_DIR / "third_party/microsoft" / "VC_redist.x64.exe")
-    tmp_windows_tasks_exe_filepath = pathlib.Path(PROJECT_ROOT_DIR / "deployment/offline_resources" / "WindowsTasks.exe")
-    # </editor-fold>
-    """IMPORTANT
-    Use the python interpreter of the venv of pymol windows build because
-    that interpreter gets also used in the build script of the 
-    pymol windows build repo!
-    """
-    # <editor-fold desc="Restore build directory for new build">
-    if self.inno_build_assets_path.exists():
-      shutil.rmtree(self.inno_build_assets_path)
-    if self.inno_sources_build_path.exists():
-      shutil.rmtree(self.inno_sources_build_path)
-    self.inno_build_path.mkdir(exist_ok=True)
-    self.inno_build_assets_path.mkdir()
-    self.inno_sources_build_path.mkdir()
-    self.inno_build_cache_path.mkdir(exist_ok=True)
-    # </editor-fold>
-    # <editor-fold desc="Get WSL2 distro from sciebo">
-    pathlib.Path(self.inno_build_tmp_path).mkdir()
-    if include_wsl2_distro:
-      if not pathlib.Path.exists(pathlib.Path(self.inno_build_cache_path / "alma-colabfold-9-rootfs.tar")):
-        print("Downloading alma-colabfold-9-rootfs.tar ...")
-        if not setup_util.download_file("https://w-hs.sciebo.de/s/q5oYjcZdEzCDyEH/download", str(pathlib.Path(self.inno_build_cache_path / "alma-colabfold-9-rootfs.tar"))):
-          print("Unable to download alma-colabfold-9-rootfs.tar, build process exists.")
-          return
-        print("Finished downloading alma-colabfold-9-rootfs.tar.")
-
-      if not setup_util.File.copy(
-        pathlib.Path(self.inno_build_cache_path / "alma-colabfold-9-rootfs.tar"),
-        pathlib.Path(self.inno_build_tmp_path / "alma-colabfold-9-rootfs.tar"),
-      ):
-        print("Copying the alma-colabfold-9-rootfs.tar failed!")
-        return
-    # </editor-fold>
-    # <editor-fold desc="Get whl_files_for_pyssa.zip from sciebo">
-    if include_wheelfiles:
-      if not pathlib.Path.exists(pathlib.Path(self.inno_build_cache_path / "whl_files_for_pyssa")):
-        print("Downloading whl_files_for_pyssa.zip ...")
-        if not setup_util.download_file("https://w-hs.sciebo.de/s/lp54iAYr6t42Nh3/download", str(pathlib.Path(self.inno_build_cache_path / "whl_files_for_pyssa.zip"))):
-          print("Unable to download whl_files_for_pyssa.zip, build process exists.")
-          return
-        print("Finished downloading whl_files_for_pyssa.zip.")
-        # Extract whl_files_for_pyssa.zip file
-        powershell_command = f"Expand-Archive -Path {self.inno_build_cache_path}\\whl_files_for_pyssa.zip -DestinationPath {self.inno_build_cache_path}\\whl_files_for_pyssa"
-        print("Expand-Archive whl_files_for_pyssa.zip ...")
-        subprocess.run(["powershell", "-Command", powershell_command], shell=True)
-        setup_util.File.delete(pathlib.Path(self.inno_build_cache_path / "whl_files_for_pyssa.zip"))
-
-      setup_util.Directory.copy_directory(
-        pathlib.Path(self.inno_build_cache_path / "whl_files_for_pyssa/sub_wheelfiles"),
-        pathlib.Path(self.inno_build_tmp_path / "sub_wheelfiles")
-      )
-      setup_util.Directory.copy_directory(
-        pathlib.Path(self.inno_build_cache_path / "whl_files_for_pyssa/wheelfiles"),
-        pathlib.Path(self.inno_build_tmp_path / "wheelfiles")
-      )
-      setup_util.File.copy(
-        pathlib.Path(self.deployment_resources_path / "pymol-3.1.0a0-py3-none-any.whl"),
-        pathlib.Path(self.inno_build_tmp_path / "pymol-3.1.0a0-py3-none-any.whl"),
-        overwrite=True
-      )
-      setup_util.File.copy(
-        pathlib.Path(self.deployment_resources_path / "requirements.txt"),
-        pathlib.Path(self.inno_build_tmp_path / "requirements.txt"),
-        overwrite=True
-      )
-    # </editor-fold>
-
-    # Extract bin.zip file
-    if include_py_env:
-      if not pathlib.Path(self.inno_build_cache_path / "bin").exists():
-        powershell_command = f"Expand-Archive -Path {PROJECT_ROOT_DIR}\\deployment\\resources\\bin.zip -DestinationPath {self.inno_build_cache_path}\\bin"
-        print("Expand-Archive bin.zip ...")
-        subprocess.run(["powershell", "-Command", powershell_command], shell=True)
-      setup_util.Directory.copy_directory(
-        pathlib.Path(self.inno_build_cache_path / "bin"),
-        pathlib.Path(self.inno_sources_build_path / "bin")
-      )
-    # <editor-fold desc="Copy operations">
-    setup_util.Directory.copy_directory(
-      pathlib.Path(self.deployment_resources_path / "win_start"),
-      pathlib.Path(self.inno_sources_build_path / "win_start")
-    )
-    setup_util.Directory.copy_directory(
-      pathlib.Path(PROJECT_ROOT_DIR / "assets"),
-      pathlib.Path(self.pyssa_program_path / "assets")
-    )
-    setup_util.Directory.copy_directory(
-      pathlib.Path(PROJECT_ROOT_DIR / "docs"),
-      pathlib.Path(self.pyssa_program_path / "docs")
-    )
-    setup_util.Directory.copy_directory(
-      pathlib.Path(PROJECT_ROOT_DIR / "src"),
-      pathlib.Path(self.pyssa_program_path / "src")
-    )
-    setup_util.Directory.copy_directory(
-      pathlib.Path(PROJECT_ROOT_DIR / "src"),
-      pathlib.Path(self.pyssa_program_path / "src")
-    )
-    setup_util.Directory.copy_directory(
-      pathlib.Path(PROJECT_ROOT_DIR / "scripts"),
-      pathlib.Path(self.pyssa_program_path / "scripts")
-    )
-    setup_util.Directory.copy_directory(
-      pathlib.Path(PROJECT_ROOT_DIR / "winbatch"),
-      pathlib.Path(self.pyssa_program_path / "winbatch")
-    )
-    setup_util.File.copy(
-      pathlib.Path(PROJECT_ROOT_DIR / "LICENSE"),
-      pathlib.Path(self.pyssa_program_path / "LICENSE"),
-      overwrite=True
-    )
-    setup_util.File.copy(
-      pathlib.Path(PROJECT_ROOT_DIR / "README.md"),
-      pathlib.Path(self.pyssa_program_path / "README.md"),
-      overwrite=True
-    )
-    # TODO: Add automated way of updating the version number project wide
-    # Note: Until now there are different locations where the versions are stored
-    # (1) constants.py (2) pyproject.toml (3) version_history.json => TODO: This has to change for better maintenance!
-    setup_util.File.copy(
-      pathlib.Path(PROJECT_ROOT_DIR / "version_history.json"),
-      pathlib.Path(self.pyssa_program_path / "version_history.json"),
-      overwrite=True
-    )
-    setup_util.File.copy(
-      pathlib.Path(self.deployment_resources_path / "setup.bat"),
-      pathlib.Path(self.inno_build_tmp_path / "setup.bat"),
-      overwrite=True
-    )
-
-    self.inno_build_third_party_path.mkdir(exist_ok=True)
-    self.inno_build_prerequisite_path.mkdir(exist_ok=True)
-    shutil.copy(tmp_vc_redist_setup_filepath, pathlib.Path(self.inno_build_third_party_path / "VC_redist.x64.exe"))
-    shutil.copy(tmp_windows_tasks_exe_filepath, pathlib.Path(self.inno_build_prerequisite_path / "WindowsTasks.exe"))
-    self.inno_build_assets_path.mkdir(exist_ok=True)
-    shutil.copy(tmp_pyssa_win_build_logo_filepath, pathlib.Path(self.inno_build_assets_path / "logo.ico"))
-    # </editor-fold>
-
-  def build(self, a_inno_script_path: pathlib.Path) -> None:
-    """Builds the PyMOL Windows EXE file."""
-    try:
-      tmp_start_time = time.time()
-      subprocess.run(
-        [self.inno_setup_compiler_filepath, a_inno_script_path],
-        stdout=sys.stdout, stderr=sys.stderr, text=True
-      )
-      tmp_end_time = time.time()
-      tmp_duration = tmp_end_time - tmp_start_time
-      print(f"The build process of the inno setup EXE took: {tmp_duration:.2f} seconds ({(tmp_duration/60):.2f} minutes).")
-    except Exception as e:
-      print(e)
 
 
 class BuildInnoSetupDebug:
@@ -480,8 +298,15 @@ class BuildInnoSetupDebug:
     """Cleans the inno setup build directory."""
     pass
 
-  def setup_build_environment(self, include_wsl2_distro: bool = False) -> None:
+  def setup_build_environment(self, include_wsl2_distro: bool = False, do_setup_build: bool = False) -> None:
     """Sets up a temporary build environment."""
+    # <editor-fold desc="Configure for inno setup build">
+    if do_setup_build:
+      self.inno_build_path = pathlib.Path(PROJECT_ROOT_DIR / "inno-build-release")
+      if self.inno_build_path.exists():
+        shutil.rmtree(self.self.inno_build_path)
+        self.inno_build_path.mkdir()
+    # </editor-fold>
     # <editor-fold desc="Path/Filepath definitions">
     tmp_pyssa_win_build_logo_filepath = pathlib.Path(PROJECT_ROOT_DIR / "assets/convert_logo_to_ico" / "logo.ico")
     tmp_vc_redist_setup_filepath = pathlib.Path(PROJECT_ROOT_DIR / "third_party/microsoft" / "VC_redist.x64.exe")
@@ -572,23 +397,7 @@ class BuildLiveLinuxExec:
 
 
 # <editor-fold desc="Automation functions">
-def setup_dev_env() -> None:
-  """Installs the dependencies needed for building the _cmd extension module."""
-  subprocess.run(["git", "clone", "https://github.com/urban233/pymol-open-source-windows-build", pathlib.Path("./vendor/pymol-open-source-windows-build")])
-  subprocess.run(["powershell.exe", "pwd"], cwd=str(pathlib.Path(PROJECT_ROOT_DIR / 'vendor/pymol-open-source-windows-build'))
-  )
-  subprocess.run(
-    [
-      "cmd.exe", "/c", str(pathlib.Path(r'.\setup_dev_env.bat'))
-    ],
-    cwd=pathlib.Path(PROJECT_ROOT_DIR / 'vendor/pymol-open-source-windows-build')
-  )
-  subprocess.run(
-    [
-      pathlib.Path(PROJECT_ROOT_DIR / "vendor/pymol-open-source-windows-build/.venv/Scripts" / "python.exe"),
-      pathlib.Path(PROJECT_ROOT_DIR / "vendor/pymol-open-source-windows-build" / "run_automation.py"), 'setup-dev-env'
-    ], cwd=pathlib.Path(PROJECT_ROOT_DIR / "vendor/pymol-open-source-windows-build")
-  )
+
 
 
 def build_win_package() -> None:
@@ -600,11 +409,7 @@ def build_win_package() -> None:
 def build_setup_exe() -> None:
   """Builds the inno setup EXE file."""
   tmp_builder = BuildInnoSetup()
-  tmp_builder.setup_build_environment(
-    include_wsl2_distro=True,
-    include_py_env=True,
-    include_wheelfiles=True
-  )
+  tmp_builder.setup_build_environment(include_wsl2_distro=True)
   tmp_builder.build(tmp_builder.inno_setup_script_filepath)
 
 
@@ -625,7 +430,9 @@ def clean_build_setup_exe() -> None:
 def build_setup_exe_dbg():
   """Builds the setup exe directory n debug mode."""
   tmp_builder = BuildInnoSetupDebug()
-  tmp_builder.setup_build_environment()
+  tmp_builder.setup_build_environment(include_wsl2_distro=True)
+  tmp_builder.build(tmp_builder.inno_setup_script_filepath)
+  # TODO: Comment build line
 
 
 def build_portable() -> None:
