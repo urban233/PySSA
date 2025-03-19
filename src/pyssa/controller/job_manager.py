@@ -118,7 +118,7 @@ class JobManager:
 
     process = subprocess.Popen(
       [constants.AUXILIARY_PYMOL_FILEPATH],
-      #creationflags=subprocess.CREATE_NO_WINDOW,
+      creationflags=subprocess.CREATE_NO_WINDOW,
     )
     # process = subprocess.Popen(
     #     [

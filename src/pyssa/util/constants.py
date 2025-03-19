@@ -30,7 +30,7 @@ from src.pyssa.util import globals, enums
 
 # General
 PLUGIN_NAME = 'PySSA'
-VERSION_NUMBER = "v1.0.2"  # The version number MUST be in double quotes
+VERSION_NUMBER = "v1.0.5"  # The version number MUST be in double quotes
 
 # Flags
 DEBUGGING = False
@@ -40,16 +40,14 @@ PROGRAM_BIN_ROOT_PATH: pathlib.Path = pathlib.Path(sys.executable).parent
 PYTHON_LIB_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "lib")
 PROGRAM_SRC_PATH: pathlib.Path = pathlib.Path(PYTHON_LIB_PATH / "src")
 
-#AUXILIARY_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "aux_pymol.exe")
-AUXILIARY_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "aux_pymol")
-#USER_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "user_pymol" / "Open-Source-PyMOL.exe")
-USER_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "user_pymol" / "Open-Source-PyMOL")
+AUXILIARY_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "aux_pymol.exe")
+USER_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "user_pymol" / "Open-Source-PyMOL.exe")
+DOCS_PATH = str(
+    pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/docs/pyssa-documentation/site')
+)
 
 PYTHON_FILEPATH = r"C:\ProgramData\IBCI\PySSA\bin\.venv\Scripts\python.exe"
 PLUGIN_EXTRA_TOOLS_PATH = str(pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/extra_tools/'))
-PLUGIN_DOCS_PATH = str(
-    pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/docs/pyssa-documentation')
-)
 PLUGIN_LOGO_FILEPATH = str(
     pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/assets/images/pyssa_logo.png')
 )

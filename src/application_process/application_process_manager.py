@@ -153,5 +153,5 @@ class ApplicationProcessManager:
       else:
         time.sleep(2)
     print("check_process (in class ApplicationProcessManager) method finished.")  # TODO: change to logger message
-    subprocess.run(["powershell", "-Command", "TASKKILL /IM Open-Source-PyMOL.exe /F"])
+    subprocess.run(["powershell", "-Command", "TASKKILL /IM Open-Source-PyMOL.exe /F"], creationflags=subprocess.CREATE_NO_WINDOW)
     return "", ""  # These two empty strings are needed for the task class

@@ -163,20 +163,21 @@ class Analysis:
 
         tmp_protein_1_name = tmp_protein_pair.protein_1.get_molecule_object()
         tmp_protein_1_pdb_cache_filepath = pathlib.Path(
-            f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein_1_name}.pdb",  # fixme: Must be a string, but is a path!
+            f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein_1_name}.pdb",
         )
         tmp_protein_2_name = tmp_protein_pair.protein_2.get_molecule_object()
         tmp_protein_2_pdb_cache_filepath = pathlib.Path(
-            f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein_2_name}.pdb",  # fixme: Must be a string, but is a path!
+            f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein_2_name}.pdb",
         )
         try:
+          tmp_protein_1_pdb_cache_filepath.parent.mkdir(exist_ok=True, parents=True)
           bio_data.build_pdb_file(
               tmp_protein_pair.protein_1.get_pdb_data(),
-              tmp_protein_1_pdb_cache_filepath,
+              str(tmp_protein_1_pdb_cache_filepath),
           )
           bio_data.build_pdb_file(
               tmp_protein_pair.protein_2.get_pdb_data(),
-              tmp_protein_2_pdb_cache_filepath,
+              str(tmp_protein_2_pdb_cache_filepath),
           )
         except Exception as e:
           logger.error(f"PDB file could not be built. Error: {e}")

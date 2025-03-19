@@ -3206,7 +3206,7 @@ class MainViewController:
       constants.PYSSA_LOGGER.info(
         "Structure prediction process was aborted manually."
       )
-      subprocess.run(["wsl", "--shutdown"])
+      subprocess.run(["wsl", "--shutdown"], creationflags=subprocess.CREATE_NO_WINDOW)
       constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
       filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
       constants.PYSSA_LOGGER.info("Cleaned scratch directory.")
@@ -4241,20 +4241,15 @@ class MainViewController:
 
   def open_context_menu_for_sequences(self, position) -> None:
     """Opens the context menu for the sequences tab."""
-    tmp_context_menu = self._sequence_list_context_menu.get_context_menu(
-      self._view.ui.seqs_list_view.selectedIndexes(),
-    )
-    tmp_context_menu.exec_(
-      self._view.ui.seqs_list_view.viewport().mapToGlobal(position)
-    )
-    # sequence_context_menu = QtWidgets.QMenu()
-    #
-    # self.sequences_context_menu_rename_action = sequence_context_menu.addAction(
-    #     self._view.tr("Rename selected sequence")
-    # )
-    # self.sequences_context_menu_rename_action.triggered.connect(self.rename_selected_sequence)
-    #
-    # sequence_context_menu.exec_(self._view.ui.seqs_list_view.viewport().mapToGlobal(position))
+    try:
+      tmp_context_menu = self._sequence_list_context_menu.get_context_menu(
+        self._view.ui.seqs_list_view.selectedIndexes(),
+      )
+      tmp_context_menu.exec_(
+        self._view.ui.seqs_list_view.viewport().mapToGlobal(position)
+      )
+    except Exception as e:
+      logger.error(e)
 
   # </editor-fold>
 
@@ -4339,44 +4334,48 @@ class MainViewController:
   def _open_context_menu_for_proteins(self, position) -> None:
     """Opens the context menu for the proteins tab."""
     try:
-      tmp_protein = self._interface_manager.get_current_active_protein_object()
-    except ValueError:
-      tmp_is_protein_in_any_pair_flag = True
-      tmp_is_protein_in_session_flag = False
-    else:
-      tmp_is_protein_in_any_pair_flag = self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
-        tmp_protein.get_molecule_object(),
-      )
-      tmp_is_protein_in_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
-        self._interface_manager.get_current_active_protein_object().get_molecule_object()
-      )
-    tmp_is_protein_expanded_flag: bool = False
-    try:
-      if (
-              self._interface_manager.get_current_protein_tree_index().data(
-                enums.ModelEnum.TYPE_ROLE
-              )
-              == "protein"
-      ):
-        if self._view.ui.proteins_tree_view.isExpanded(
-                self._interface_manager.get_current_protein_tree_index()
+      try:
+        tmp_protein = self._interface_manager.get_current_active_protein_object()
+      except ValueError:
+        tmp_is_protein_in_any_pair_flag = True
+        tmp_is_protein_in_session_flag = False
+      else:
+        tmp_is_protein_in_any_pair_flag = self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
+          tmp_protein.get_molecule_object(),
+        )
+        tmp_is_protein_in_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
+          self._interface_manager.get_current_active_protein_object().get_molecule_object()
+        )
+      tmp_is_protein_expanded_flag: bool = False
+      try:
+        if (
+                self._interface_manager.get_current_protein_tree_index().data(
+                  enums.ModelEnum.TYPE_ROLE
+                )
+                == "protein"
         ):
-          tmp_is_protein_expanded_flag: bool = True
+          if self._view.ui.proteins_tree_view.isExpanded(
+                  self._interface_manager.get_current_protein_tree_index()
+          ):
+            tmp_is_protein_expanded_flag: bool = True
+      except Exception as e:
+        logger.error(e)
+      else:
+        tmp_context_menu = self._protein_tree_context_menu.get_context_menu(
+          self._view.ui.proteins_tree_view.selectedIndexes(),
+          self._interface_manager.get_current_protein_tree_index_type(),
+          tmp_is_protein_in_any_pair_flag,
+          tmp_is_protein_in_session_flag,
+          tmp_is_protein_expanded_flag,
+          self._database_thread.queue_is_running()
+        )
+        tmp_context_menu.exec_(
+          self._view.ui.proteins_tree_view.viewport().mapToGlobal(position)
+        )
+        self.__slot_get_information_about_selected_object_in_protein_branch()
     except Exception as e:
+      # TODO: The large try-except block is ugly but does the job for the moment
       logger.error(e)
-    else:
-      tmp_context_menu = self._protein_tree_context_menu.get_context_menu(
-        self._view.ui.proteins_tree_view.selectedIndexes(),
-        self._interface_manager.get_current_protein_tree_index_type(),
-        tmp_is_protein_in_any_pair_flag,
-        tmp_is_protein_in_session_flag,
-        tmp_is_protein_expanded_flag,
-        self._database_thread.queue_is_running()
-      )
-      tmp_context_menu.exec_(
-        self._view.ui.proteins_tree_view.viewport().mapToGlobal(position)
-      )
-      self.__slot_get_information_about_selected_object_in_protein_branch()  # fixme: This should be done in a better way than this!
 
   # <editor-fold desc="PyMOL session">
   def __slot_open_protein_pymol_session(self) -> None:
@@ -7759,39 +7758,44 @@ class MainViewController:
   def open_context_menu_for_protein_pairs(self, position) -> None:
     """Opens the context menu for the protein pairs tab."""
     try:
-      tmp_protein_pair = (
-        self._interface_manager.get_current_active_protein_pair_object()
-      )
-    except ValueError:
-      tmp_is_protein_pair_in_current_session_flag = False
-    else:
-      tmp_is_protein_pair_in_current_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(
-        tmp_protein_pair.name
-      )
-    tmp_is_protein_pair_expanded_flag: bool = False
-    try:
-      if (
-              self._interface_manager.get_current_protein_pair_tree_index().data(
-                enums.ModelEnum.TYPE_ROLE
-              )
-              == "protein_pair"
-      ):
-        if self._view.ui.protein_pairs_tree_view.isExpanded(
-                self._interface_manager.get_current_protein_pair_tree_index()
+      try:
+        tmp_protein_pair = (
+          self._interface_manager.get_current_active_protein_pair_object()
+        )
+      except ValueError:
+        tmp_is_protein_pair_in_current_session_flag = False
+      else:
+        tmp_is_protein_pair_in_current_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(
+          tmp_protein_pair.name
+        )
+      tmp_is_protein_pair_expanded_flag: bool = False
+      try:
+        if (
+                self._interface_manager.get_current_protein_pair_tree_index().data(
+                  enums.ModelEnum.TYPE_ROLE
+                )
+                == "protein_pair"
         ):
-          tmp_is_protein_pair_expanded_flag: bool = True
+          if self._view.ui.protein_pairs_tree_view.isExpanded(
+                  self._interface_manager.get_current_protein_pair_tree_index()
+          ):
+            tmp_is_protein_pair_expanded_flag: bool = True
+      except Exception as e:
+        logger.error(e)
+      else:
+        tmp_context_menu = self._protein_pair_tree_context_menu.get_context_menu(
+          self._view.ui.protein_pairs_tree_view.selectedIndexes(),
+          tmp_is_protein_pair_in_current_session_flag,
+          tmp_is_protein_pair_expanded_flag,
+        )
+        if self._view.ui.protein_pairs_tree_view.model().rowCount() > 0:
+          tmp_context_menu.exec_(
+            self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position)
+          )
+          self.__slot_get_information_about_selected_object_in_protein_pair_branch()
     except Exception as e:
+      # TODO: The large try-except block is ugly but does the job for the moment
       logger.error(e)
-    else:
-      tmp_context_menu = self._protein_pair_tree_context_menu.get_context_menu(
-        self._view.ui.protein_pairs_tree_view.selectedIndexes(),
-        tmp_is_protein_pair_in_current_session_flag,
-        tmp_is_protein_pair_expanded_flag,
-      )
-      tmp_context_menu.exec_(
-        self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position)
-      )
-      self.__slot_get_information_about_selected_object_in_protein_pair_branch()  # fixme: This should be done in a better way than this!
 
   def _get_protein_name_of_a_protein_from_a_protein_pair(
           self,

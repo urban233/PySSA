@@ -137,11 +137,9 @@ _build
 /docs/pyssa-documentation/site/
 /deployment/offline_resources/alma-colabfold-9-rootfs.tar
 /deployment/offline_resources/WindowsTasks.exe
-/deployment/offline_resources/windows_package.zip
 /deployment/src/c_sharp/WindowsWrapper/WindowsCmdElevator/bin
 /deployment/src/c_sharp/WindowsWrapper/WindowsCmdElevator/obj
 /deployment/src/c_sharp/WindowsWrapper/WindowsTasks/bin
 /deployment/src/c_sharp/WindowsWrapper/WindowsTasks/obj
 /inno-build-release/
 /inno-build-debug/
-/third_party/pymol-oss-win/linux/user_pymol/

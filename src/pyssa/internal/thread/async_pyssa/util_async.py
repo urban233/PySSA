@@ -101,7 +101,7 @@ def open_documentation_on_certain_page(
       # Docs are need to be built in this process
       logger.info("Trying to run the mkdocs serve command ...")
       try:
-        os.chdir(constants.PLUGIN_DOCS_PATH)
+        os.chdir(constants.DOCS_PATH)
         subprocess.Popen(
             [
                 r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Scripts\mkdocs.exe",
@@ -169,7 +169,7 @@ def start_documentation_server(
   try:
     logger.info("Trying to run the mkdocs serve command ...")
     try:
-      os.chdir(constants.PLUGIN_DOCS_PATH)
+      os.chdir(constants.DOCS_PATH)
       subprocess.Popen(
           [
               r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Scripts\mkdocs.exe",

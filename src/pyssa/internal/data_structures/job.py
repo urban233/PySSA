@@ -242,7 +242,7 @@ class PredictionJob(Job):
           self.frozen_project,
           self.project_lock,
       )
-      subprocess.run(["wsl", "--shutdown"])
+      subprocess.run(["wsl", "--shutdown"], creationflags=subprocess.CREATE_NO_WINDOW)
       logger.info("WSL gets shutdown.")
       if (
           self.job_entry_widget.job_base_information.job_type

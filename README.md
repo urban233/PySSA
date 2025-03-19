@@ -28,7 +28,7 @@ There are three interconnected use cases that progressively demonstrate the capa
   * [Documentation](#Documentation)
   * [Assets](#Assets)
 * [Installation](#Installation)
-    * [Windows](#Windows)
+    * [Microsoft Windows](#microsoft-windows)
       * [Installation for Windows OS](#installation-for-windows-os)
       * [Offline environment](#offline-environment)
       * [Online installation (For experts)](#online-installation-for-experts)
@@ -42,7 +42,7 @@ There are three interconnected use cases that progressively demonstrate the capa
 
 ## Description
 PySSA ('Python rich client for visual protein Sequence to Structure Analysis') is an open software project that 
-aims to combine PyMOL and ColabFold to enable the prediction and analysis of 
+aims to combine PyMOL(TM) and ColabFold to enable the prediction and analysis of 
 3D protein structures for the scientific end-user.
 PySSA allows the creation of managed and shareable projects with defined workflows for 
 the prediction and analysis of protein structures, 
@@ -82,8 +82,8 @@ the subfolder <a href="https://github.com/urban233/PySSA/tree/main/assets/images
 If you are using PySSA for your own projects, you are welcome to give credit to PySSA by using the logo in your presentations, etc.
 
 ## Installation
-PySSA is tested and available for Windows 10 and 11.
-### Windows
+PySSA is tested and available for Windows(TM) 10 and 11.
+### Microsoft Windows
 For a convenient and user-friendly installation, the <a href="https://github.com/urban233/ComponentInstaller">"PySSA Component Installer"</a> is available.
 
 **Important:**
@@ -93,26 +93,32 @@ For a convenient and user-friendly installation, the <a href="https://github.com
 #### Installation for Windows OS
 A step-by-step guide can be found in the Wiki (click [here](https://github.com/urban233/PySSA/wiki/Installation-for-Windows-Operating-System) to go to the guide).
 
-#### Offline Environment
-A short guide on how to install PySSA in an offline environment can be found [here](https://github.com/urban233/PySSA/wiki/Advanced-Installation#offline-environment).
-
-#### Online Installation (For experts)
-A short guide on how to install PySSA by downloading ColabFold and PySSA during installation (i.e. online) can be found [here](https://github.com/urban233/PySSA/wiki/Advanced-Installation#online-installation-for-experts).
-
-The PySSA Component Installer [user guide](https://github.com/urban233/ComponentInstaller/blob/v1.0.1/deployment/inno_setup/PySSA-Component-Installer-User-Guide.pdf) is available in the installer's menu under _Help_.
-If WSL2 or ColabFold installation fails, consult the user guide and read the troubleshooting section.
-
 ### Source code
-This is a Python project based on a virtual environment. 
+This is a Python project based on Python's virtual environment module. 
 To modify the source code, download or clone the repository 
-and open it in an IDE that supports virtual environments (e.g. PyCharm).
-Finally, run `pip install -r requirements_dev.txt` to set up the virtual environment used for development.
+and open it in an IDE that supports virtual environments (e.g. JetBrains PyCharm).
+Finally, run `pip install -r requirements.txt` to set up the virtual environment used for development.
 
+To build the inno setup for the Microsoft Windows deployment, run
+```shell
+automator.bat build inno_setup
+```
+This will include the WSL2 distribution that gets downloaded during the build process.
 The project supports using a setup.py file to create a package that works with the PySSA Component Installer.
-To build the package run `python setup.py create_win_package`.
 
-The setup.py also supports building the documentation using the command:
-`python setup.py make_docs`.
+If you want to create only a setup without the entire WSL2 distro run:
+```shell
+automator.bat update_inno_setup
+```
+instead.
+
+To build the end-user documentation run:
+```shell
+automator.bat make docs
+```
+This is **only necessary for developers** who wish to extend the documentation.
+End-users should always consult the built-in documentation by clicking on 
+the question mark icon in the bottom left.
 
 ## Dependencies
 **Managed by PySSA-Installer:**
@@ -124,6 +130,8 @@ The setup.py also supports building the documentation using the command:
   * License: MIT License
 * [PyQt5](https://riverbankcomputing.com/software/pyqt/intro)
   * License: GNU General Public License (GPL)
+* [cx_Freeze](https://marcelotduarte.github.io/cx_Freeze/)
+  * License: [Derived from the Python Software Foundation License](https://github.com/marcelotduarte/cx_Freeze?tab=License-1-ov-file)
 * [NumPy](https://numpy.org/)
   * License: BSD 3-Clause "New" or "Revised" License
 * [Pandas](https://github.com/pandas-dev/pandas)

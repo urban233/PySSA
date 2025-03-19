@@ -3884,7 +3884,7 @@ class InterfaceManager:
         constants.PYSSA_LOGGER.info(
             "Structure prediction process was aborted manually."
         )
-        subprocess.run(["wsl", "--shutdown"])
+        subprocess.run(["wsl", "--shutdown"], creationflags=subprocess.CREATE_NO_WINDOW)
         constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
         filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
         constants.PYSSA_LOGGER.info("Cleaned scratch directory.")
