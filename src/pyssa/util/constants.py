@@ -24,47 +24,46 @@ import logging
 import os
 import datetime
 import pathlib
+import sys
 from pathlib import Path
 from src.pyssa.util import globals, enums
 
 # General
 PLUGIN_NAME = 'PySSA'
-VERSION_NUMBER = "v1.0.2"  # The version number MUST be in double quotes
-SETTINGS_FILE_NAME = 'settings'
-SETTINGS_FILENAME = 'settings.json'
+VERSION_NUMBER = "v1.0.5"  # The version number MUST be in double quotes
 
 # Flags
 DEBUGGING = False
 
 # Paths/Filepaths
-PLUGIN_PATH = globals.g_plugin_path
-PROGRAM_BIN_ROOT_PATH = "C:\\ProgramData\\IBCI\\PySSA\\bin\\PySSA"  # fixme: It could be beneficial to use this instead of the "PLUGIN_PATH" var
-PROGRAM_SRC_PATH = f"{PROGRAM_BIN_ROOT_PATH}\\src"
+PROGRAM_BIN_ROOT_PATH: pathlib.Path = pathlib.Path(sys.executable).parent
+PYTHON_LIB_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "lib")
+PROGRAM_SRC_PATH: pathlib.Path = pathlib.Path(PYTHON_LIB_PATH / "src")
+
+AUXILIARY_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "aux_pymol.exe")
+USER_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "user_pymol" / "Open-Source-PyMOL.exe")
+DOCS_PATH = str(
+    pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/docs/pyssa-documentation/site')
+)
+
 PYTHON_FILEPATH = r"C:\ProgramData\IBCI\PySSA\bin\.venv\Scripts\python.exe"
 PLUGIN_EXTRA_TOOLS_PATH = str(pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/extra_tools/'))
-PLUGIN_DOCS_PATH = str(
-    pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/docs/pyssa-documentation')
-)
 PLUGIN_LOGO_FILEPATH = str(
     pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/assets/images/pyssa_logo.png')
 )
 PLUGIN_LOGO_WITH_CAPTION_FILEPATH = str(
     pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/assets/images/app_home_logo.png')
 )
+
 SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
+SETTINGS_FILENAME = 'settings.json'
 SETTINGS_FULL_FILEPATH = pathlib.Path(f'{SETTINGS_DIR}/{SETTINGS_FILENAME}')
-SETTINGS_DIR_UNIX_NOTATION = SETTINGS_DIR.replace('\\', '/')
+
 DEFAULT_WORKSPACE_PATH = pathlib.Path(
     f"{os.path.expanduser('~')}/.pyssa/default_workspace"
 )
 WSL2_DISTRO_NAME = "almaColabfold9"
 WSL2_USERNAME = "alma_user"
-
-# Commented out in this revision
-#PLUGIN_PATH_WSL_NOTATION = '/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA'
-#CONTAINER_NAME = 'localcolabfold-container'
-#IMAGE_NAME = 'localhost/localcolabfold-ubuntu2204:1.5.1.2'
-# ---------
 
 VERSION_HISTORY_FILEPATH = pathlib.Path(pathlib.Path(PROGRAM_BIN_ROOT_PATH) / "remote_version_history.json")
 VERSION_HISTORY_URL = "https://w-hs.sciebo.de/s/Omruw1qNvQ4igeP/download"
@@ -90,21 +89,12 @@ CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR = Path(
 )
 PREDICTION_FASTA_DIR = Path(f'{SCRATCH_DIR}/local_predictions/fasta')
 PREDICTION_PDB_DIR = Path(f'{SCRATCH_DIR}/local_predictions/pdb')
-# WSL_SCRATCH_DIR = r'\\wsl.localhost\almaColabfold9\home\rhel_user\scratch'
-# WSL_PREDICTION_FASTA_DIR = r'\\wsl.localhost\almaColabfold9\home\rhel_user\scratch\local_predictions\fasta'
-# WSL_PREDICTION_PDB_DIR = r'\\wsl.localhost\almaColabfold9\home\rhel_user\scratch\local_predictions\pdb'
 
 ESMFOLD_DIR = Path(f'{SCRATCH_DIR}/esmfold')
 ESMFOLD_PDB_DIR = Path(f'{SCRATCH_DIR}/esmfold/pdb')
 
-UNIX_SCRIPTS_SCIEBO_URL = 'https://w-hs.sciebo.de/s/X3L7pnr4wfqy6gu/download'
-UNIX_SCRIPTS_USER_DIR = pathlib.Path(f'{SETTINGS_DIR}/scripts/unix')
-
 DEMO_PROJECT_SCIEBO_URL = 'https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download'
 
-POWERSHELL_EXE = (
-    'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe'
-)
 # Constants for structure prediction
 CONVERT_DOS_TO_UNIX = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/scripts/batch/convert.bat')
 CONVERT_DOS_TO_UNIX_EXE = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/externals/dos2unix.exe')
@@ -113,61 +103,13 @@ COLABFOLD_PREDICT_SCRIPT_WIN = pathlib.Path(
     f'{UNIX_SCRIPTS_WIN}/colabfold_predict.sh'
 )
 
-INSTALL_WSL_PS1 = pathlib.Path(
-    f'{PROGRAM_BIN_ROOT_PATH}/scripts/powershell/install_wsl.ps1'
-)
-PREDICTION_PS1 = pathlib.Path(
-    f'{PROGRAM_BIN_ROOT_PATH}/scripts/powershell/run_prediction.ps1'
-)
-INSTALL_WSL = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/scripts/batch/install_wsl.bat')
-INSTALL_LOCAL_COLABFOLD_DISTRO = pathlib.Path(
-    f'{PROGRAM_BIN_ROOT_PATH}/scripts/batch/import_distro.bat'
-)
-UNINSTALL_LOCAL_COLABFOLD_DISTRO = pathlib.Path(
-    f'{PROGRAM_BIN_ROOT_PATH}/scripts/batch/uninstall_distro.bat'
-)
-# TODO: original paths, please uncomment before deployment!!!
-COLABFOLD_PREDICT_SCRIPT_OLD = f'/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh'
-COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT_OLD = f'/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh'  # noqa: E501
-INSTALLATION_COLABFOLD_SCRIPT_OLD = f'/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh'
-
-COLABFOLD_PREDICT_SCRIPT = (
-    f'/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict.sh'
-)
-COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f'/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict_no_templates.sh'
-INSTALLATION_COLABFOLD_SCRIPT = f'/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/installation_colabfold.sh'
-COLABFOLD_PREDICT_NO_AMBER_SCRIPT = f'/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict_no_amber.sh'
-COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT = f'/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict_no_amber_and_templates.sh'
-COLABFOLD_LOG_FILE_PATH = pathlib.Path(f'{PREDICTION_PDB_DIR}/log.txt')
-NOTEBOOK_RESULTS_ZIP_NAME = 'prediction'
+NOTEBOOK_RESULTS_ZIP_NAME = 'prediction'  # Used in experimental features
 
 current_time = datetime.datetime.now()
 LOG_FILENAME = f'{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log'  # noqa: E501
 LOG_FILEPATH = pathlib.Path(f'{SETTINGS_DIR}/logs/{LOG_FILENAME}')
 LOG_PATH = pathlib.Path(f'{SETTINGS_DIR}/logs')
 
-TUTORIAL_PATH = 'C:\\ProgramData\\pyssa\\tutorials'
-DOCS_PATH = 'C:\\ProgramData\\pyssa\\user_guide.pdf'
-
-REMOVE_WSL_POWERSHELL = pathlib.Path(
-    f'{PROGRAM_BIN_ROOT_PATH}/scripts/powershell/remove_wsl_env.ps1'
-)
-ADD_WSL_POWERSHELL = pathlib.Path(
-    f'{PROGRAM_BIN_ROOT_PATH}/scripts/powershell/add_wsl_env.ps1'
-)
-# Constants for config file
-# TODO: uncomment constant below before deployment
-# WSL_CONF_PATH = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"
-# WSL_CONF_PATH = f'/mnt/c/ProgramData/pyssa/plugin/Miniconda3/envs/pyssa_colab/Lib/site-packages/pymol/pymol_path/data/startup/{PLUGIN_NAME}/config/wsl/wsl.conf'  # noqa: E501
-# WSL_DISTRO_NAME = 'UbuntuColabfold'
-# WSL_STORAGE_PATH = pathlib.Path('C:\\ProgramData\\pyssa\\wsl\\UbuntuColabfold')
-# WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")
-# WSL_DISTRO_IMPORT_PATH = pathlib.Path(f'C:/Users/{os.getlogin()}/.pyssa/')
-# DISTRO_DOWNLOAD_URL = (
-#     'https://mega.nz/file/tz9wlLIQ#1qRxBdslCnOuUmLk2ytYHhSkItBsbuet3PTkZuvo-to'
-# )
-# WSL_DISK_PATH = pathlib.Path(f'{WSL_STORAGE_PATH}/ext4.vhdx')
-# thread main tasks
 PREDICTION_TASK = 'Structure Prediction'
 ANALYSIS_TASK = 'Structure Analysis'
 
@@ -183,7 +125,7 @@ ANALYSIS_WORKER_LOGGER = logging.getLogger('AnalysisWorker')
 # docs paths
 # TODO: get correct paths
 DOCS_PDF = ''
-DOCS_HTML = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/docs/html/index.html')
+DOCS_HTML = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH.parent}/docs/html/index.html')
 
 WINDOW_TITLE_OF_HELP_CENTER = 'PySSA - Documentation Center'
 WINDOW_TITLE_OF_PYSSA = 'PySSA'

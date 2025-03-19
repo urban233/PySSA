@@ -55,7 +55,7 @@ from src.pyssa.internal.thread.async_pyssa import custom_signals
 from src.pyssa.io_pyssa import filesystem_io
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.model import proteins_model, protein_pairs_model
-from src.pyssa.util import enums, constants, main_window_util, ui_util, exception
+from src.pyssa.util import enums, constants, main_window_util, ui_util, exception, tools
 from src.pyssa.util.void import rvoid
 from src.pyssa.internal.thread import thread_util
 from src.tea.thread import task_manager, task_scheduler
@@ -240,7 +240,7 @@ class InterfaceManager:
         os.mkdir(pathlib.Path(f"{constants.SCRATCH_DIR}"))
       if not os.path.exists(pathlib.Path(f"{constants.CACHE_DIR}")):
         os.mkdir(pathlib.Path(f"{constants.CACHE_DIR}"))
-      request.urlretrieve(
+      tools.download_file(
         constants.DEMO_PROJECT_SCIEBO_URL,
         str(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")),
       )
@@ -3884,7 +3884,7 @@ class InterfaceManager:
         constants.PYSSA_LOGGER.info(
             "Structure prediction process was aborted manually."
         )
-        subprocess.run(["wsl", "--shutdown"])
+        subprocess.run(["wsl", "--shutdown"], creationflags=subprocess.CREATE_NO_WINDOW)
         constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
         filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
         constants.PYSSA_LOGGER.info("Cleaned scratch directory.")

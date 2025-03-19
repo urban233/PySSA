@@ -1,14 +1,14 @@
 # This is the latest DOCKERFILE that was used to build the rootfs that is
 # located under deployment/offline_resources -> alma-colabfold-9-rootfs.tar
 
-FROM almalinux:10-kitten
+FROM almalinux/9-base:9
 
 # Set environment variables
 ENV PATH="/home/alma_user/localcolabfold/colabfold-conda/bin:$PATH"
 
 # Install required dependencies
 RUN dnf -y update && \
-    dnf -y install curl git wget gcc gcc-c++ make sudo && \
+    dnf -y install git wget gcc gcc-c++ make sudo && \
     dnf clean all
 
 # Ensure GCC version is at least 9.0

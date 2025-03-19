@@ -21,18 +21,12 @@
 #
 """Module for the use project view controller."""
 import logging
-import os
 import pathlib
-import subprocess
 
-import pygetwindow
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets
 from src.pyssa.controller import database_manager
-from src.pyssa.gui.ui.custom_dialogs import custom_message_box
-from src.pyssa.internal.thread import tasks
-from src.pyssa.internal.thread.async_pyssa import util_async
 from src.pyssa.util import input_validator, constants, enums, exception
 from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_levels, log_handlers

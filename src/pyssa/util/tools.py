@@ -21,12 +21,12 @@
 #
 """Module for functions which can be used across the entire project."""
 import pathlib
-import socket
 import json
 from typing import Union
 from typing import Optional
-from urllib.error import URLError
-from urllib.request import urlopen
+
+import requests
+
 from src.pyssa.internal.data_structures import settings
 from src.pyssa.util import constants, exception
 
@@ -39,18 +39,23 @@ def check_internet_connectivity() -> bool:
   """
   timeout: float = 6
   try:
-    urlopen("https://www.google.com", timeout=timeout)
-  except URLError:
+    response = requests.get("https://www.google.com", timeout=timeout)
+    return response.status_code == 200
+  except requests.RequestException as e:
+    print(f"Could not connect to internet: {e}")
     return False
-  except socket.timeout:
-    return False
-  except Exception as e:
-    constants.PYSSA_LOGGER.error(
-        f"Could not connect to internet, due to an unknown error: {e}"
-    )
-    return False
-  else:
-    return True
+
+
+def download_file(url: str, filepath: str) -> None:
+  """Downloads a file from the given URL and saves it to the specified filepath."""
+  try:
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+    with open(filepath, 'wb') as file:
+      for chunk in response.iter_content(chunk_size=8192):
+        file.write(chunk)
+  except requests.RequestException as e:
+    print(f"Failed to download file: {e}")
 
 
 def restore_default_settings(settings_obj: "settings.Settings") -> None:

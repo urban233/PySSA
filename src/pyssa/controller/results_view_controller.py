@@ -22,9 +22,7 @@
 """Module for the results view controller."""
 import logging
 import os
-import subprocess
 
-import pygetwindow
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt

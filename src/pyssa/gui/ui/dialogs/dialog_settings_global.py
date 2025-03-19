@@ -45,9 +45,9 @@ def is_local_colabfold_installed() -> bool:
   Returns:
       True if the local colabfold is installed, False otherwise.
   """
-  powershell_results = subprocess.run(["wsl", "-d", "almaColabfold9", "ls"])
+  powershell_results = subprocess.run(["wsl", "-d", "almaColabfold9", "ls"], creationflags=subprocess.CREATE_NO_WINDOW)
   if powershell_results.returncode == 0:
-    subprocess.run(["wsl", "--shutdown"])
+    subprocess.run(["wsl", "--shutdown"], creationflags=subprocess.CREATE_NO_WINDOW)
     return True
-  subprocess.run(["wsl", "--shutdown"])
+  subprocess.run(["wsl", "--shutdown"], creationflags=subprocess.CREATE_NO_WINDOW)
   return False

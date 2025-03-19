@@ -32,7 +32,7 @@ import json
 from typing import Optional, Any
 from urllib import request
 
-import pygetwindow
+import pywinctl
 from Bio import SeqRecord
 from Bio.Seq import Seq
 
@@ -782,16 +782,16 @@ class MainViewController:
 
     # Help windows
     tmp_number_of_help_windows = len(
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)
+      pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)
     )
     if tmp_number_of_help_windows == 1:
       logger.info("The documentation window is open. It will be closed now.")
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
+      pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
         0
       ].close()
     elif tmp_number_of_help_windows > 1:
       for tmp_window_index in range(tmp_number_of_help_windows):
-        pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
+        pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
           tmp_window_index
         ].close()
     else:
@@ -879,16 +879,16 @@ class MainViewController:
     """Closes the project and then the application."""
     # Help windows
     tmp_number_of_help_windows = len(
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)
+      pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)
     )
     if tmp_number_of_help_windows == 1:
       logger.info("The documentation window is open. It will be closed now.")
-      pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
+      pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
         0
       ].close()
     elif tmp_number_of_help_windows > 1:
       for tmp_window_index in range(tmp_number_of_help_windows):
-        pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
+        pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[
           tmp_window_index
         ].close()
     else:
@@ -912,7 +912,7 @@ class MainViewController:
 
     # if tmp_number_of_exact_pyssa_match_windows == 1:
     #   logger.info("PySSA will be closed now.")
-    #   pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
+    #   pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
     #     0
     #   ].close()
     # elif tmp_number_of_exact_pyssa_match_windows > 1:
@@ -924,7 +924,7 @@ class MainViewController:
     #   tmp_dialog.exec_()
     #   if tmp_dialog.response:
     #     for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
-    #       pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
+    #       pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
     #         tmp_window_index
     #       ].close()
     # else:
@@ -1206,8 +1206,8 @@ class MainViewController:
 
     This method restarts PyMOL by closing the PyMOL window and displaying a temporary message on the status bar indicating that PyMOL is restarting.
     """
-    logger.warning("Recived user request to restart PyMOL.")
-    pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[
+    logger.warning("Received user request to restart PyMOL.")
+    pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[
       0
     ].close()
     self._interface_manager.status_bar_manager.show_temporary_message(
@@ -1223,9 +1223,10 @@ class MainViewController:
     """Checks if an update is available."""
     try:
       if tools.check_internet_connectivity():
-        request.urlretrieve(
-          constants.VERSION_HISTORY_URL, constants.VERSION_HISTORY_FILEPATH
-        )
+        tools.download_file(constants.VERSION_HISTORY_URL, constants.VERSION_HISTORY_FILEPATH)
+        # request.urlretrieve(
+        #   constants.VERSION_HISTORY_URL, constants.VERSION_HISTORY_FILEPATH
+        # )
 
         tmp_latest_release = tools.get_latest_release(constants.VERSION_HISTORY_FILEPATH)
         tmp_current_version = constants.VERSION_NUMBER[1:]
@@ -1275,7 +1276,8 @@ class MainViewController:
   def _download_update_setup(self, an_url: str) -> tuple[int, str]:
     """Downloads the update setup."""
     try:
-      request.urlretrieve(an_url, constants.UPDATE_SETUP_FILEPATH)
+      tools.download_file(an_url, constants.UPDATE_SETUP_FILEPATH)
+      # request.urlretrieve(an_url, constants.UPDATE_SETUP_FILEPATH)
     except Exception as e:
       constants.PYSSA_LOGGER.error(e.__str__())
       return -1, an_url
@@ -1430,7 +1432,7 @@ class MainViewController:
   #
   #     if (
   #             len(
-  #               pygetwindow.getWindowsWithTitle(
+  #               pywinctl.getWindowsWithTitle(
   #                 constants.WINDOW_TITLE_OF_HELP_CENTER
   #               )
   #             )
@@ -3204,7 +3206,7 @@ class MainViewController:
       constants.PYSSA_LOGGER.info(
         "Structure prediction process was aborted manually."
       )
-      subprocess.run(["wsl", "--shutdown"])
+      subprocess.run(["wsl", "--shutdown"], creationflags=subprocess.CREATE_NO_WINDOW)
       constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
       filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
       constants.PYSSA_LOGGER.info("Cleaned scratch directory.")
@@ -3444,16 +3446,6 @@ class MainViewController:
       )
       tmp_dialog = dialog_tutorial_videos.TutorialVideosDialog()
       tmp_dialog.exec_()
-    except Exception as e:
-      logger.error(f"An error occurred: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred!"
-      )
-
-  def open_documentation(self) -> None:
-    """Opens the official plugin documentation as PDF."""
-    try:
-      os.startfile(constants.DOCS_PATH)
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -4249,20 +4241,15 @@ class MainViewController:
 
   def open_context_menu_for_sequences(self, position) -> None:
     """Opens the context menu for the sequences tab."""
-    tmp_context_menu = self._sequence_list_context_menu.get_context_menu(
-      self._view.ui.seqs_list_view.selectedIndexes(),
-    )
-    tmp_context_menu.exec_(
-      self._view.ui.seqs_list_view.viewport().mapToGlobal(position)
-    )
-    # sequence_context_menu = QtWidgets.QMenu()
-    #
-    # self.sequences_context_menu_rename_action = sequence_context_menu.addAction(
-    #     self._view.tr("Rename selected sequence")
-    # )
-    # self.sequences_context_menu_rename_action.triggered.connect(self.rename_selected_sequence)
-    #
-    # sequence_context_menu.exec_(self._view.ui.seqs_list_view.viewport().mapToGlobal(position))
+    try:
+      tmp_context_menu = self._sequence_list_context_menu.get_context_menu(
+        self._view.ui.seqs_list_view.selectedIndexes(),
+      )
+      tmp_context_menu.exec_(
+        self._view.ui.seqs_list_view.viewport().mapToGlobal(position)
+      )
+    except Exception as e:
+      logger.error(e)
 
   # </editor-fold>
 
@@ -4347,44 +4334,48 @@ class MainViewController:
   def _open_context_menu_for_proteins(self, position) -> None:
     """Opens the context menu for the proteins tab."""
     try:
-      tmp_protein = self._interface_manager.get_current_active_protein_object()
-    except ValueError:
-      tmp_is_protein_in_any_pair_flag = True
-      tmp_is_protein_in_session_flag = False
-    else:
-      tmp_is_protein_in_any_pair_flag = self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
-        tmp_protein.get_molecule_object(),
-      )
-      tmp_is_protein_in_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
-        self._interface_manager.get_current_active_protein_object().get_molecule_object()
-      )
-    tmp_is_protein_expanded_flag: bool = False
-    try:
-      if (
-              self._interface_manager.get_current_protein_tree_index().data(
-                enums.ModelEnum.TYPE_ROLE
-              )
-              == "protein"
-      ):
-        if self._view.ui.proteins_tree_view.isExpanded(
-                self._interface_manager.get_current_protein_tree_index()
+      try:
+        tmp_protein = self._interface_manager.get_current_active_protein_object()
+      except ValueError:
+        tmp_is_protein_in_any_pair_flag = True
+        tmp_is_protein_in_session_flag = False
+      else:
+        tmp_is_protein_in_any_pair_flag = self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
+          tmp_protein.get_molecule_object(),
+        )
+        tmp_is_protein_in_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
+          self._interface_manager.get_current_active_protein_object().get_molecule_object()
+        )
+      tmp_is_protein_expanded_flag: bool = False
+      try:
+        if (
+                self._interface_manager.get_current_protein_tree_index().data(
+                  enums.ModelEnum.TYPE_ROLE
+                )
+                == "protein"
         ):
-          tmp_is_protein_expanded_flag: bool = True
+          if self._view.ui.proteins_tree_view.isExpanded(
+                  self._interface_manager.get_current_protein_tree_index()
+          ):
+            tmp_is_protein_expanded_flag: bool = True
+      except Exception as e:
+        logger.error(e)
+      else:
+        tmp_context_menu = self._protein_tree_context_menu.get_context_menu(
+          self._view.ui.proteins_tree_view.selectedIndexes(),
+          self._interface_manager.get_current_protein_tree_index_type(),
+          tmp_is_protein_in_any_pair_flag,
+          tmp_is_protein_in_session_flag,
+          tmp_is_protein_expanded_flag,
+          self._database_thread.queue_is_running()
+        )
+        tmp_context_menu.exec_(
+          self._view.ui.proteins_tree_view.viewport().mapToGlobal(position)
+        )
+        self.__slot_get_information_about_selected_object_in_protein_branch()
     except Exception as e:
+      # TODO: The large try-except block is ugly but does the job for the moment
       logger.error(e)
-    else:
-      tmp_context_menu = self._protein_tree_context_menu.get_context_menu(
-        self._view.ui.proteins_tree_view.selectedIndexes(),
-        self._interface_manager.get_current_protein_tree_index_type(),
-        tmp_is_protein_in_any_pair_flag,
-        tmp_is_protein_in_session_flag,
-        tmp_is_protein_expanded_flag,
-        self._database_thread.queue_is_running()
-      )
-      tmp_context_menu.exec_(
-        self._view.ui.proteins_tree_view.viewport().mapToGlobal(position)
-      )
-      self.__slot_get_information_about_selected_object_in_protein_branch()  # fixme: This should be done in a better way than this!
 
   # <editor-fold desc="PyMOL session">
   def __slot_open_protein_pymol_session(self) -> None:
@@ -7767,39 +7758,44 @@ class MainViewController:
   def open_context_menu_for_protein_pairs(self, position) -> None:
     """Opens the context menu for the protein pairs tab."""
     try:
-      tmp_protein_pair = (
-        self._interface_manager.get_current_active_protein_pair_object()
-      )
-    except ValueError:
-      tmp_is_protein_pair_in_current_session_flag = False
-    else:
-      tmp_is_protein_pair_in_current_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(
-        tmp_protein_pair.name
-      )
-    tmp_is_protein_pair_expanded_flag: bool = False
-    try:
-      if (
-              self._interface_manager.get_current_protein_pair_tree_index().data(
-                enums.ModelEnum.TYPE_ROLE
-              )
-              == "protein_pair"
-      ):
-        if self._view.ui.protein_pairs_tree_view.isExpanded(
-                self._interface_manager.get_current_protein_pair_tree_index()
+      try:
+        tmp_protein_pair = (
+          self._interface_manager.get_current_active_protein_pair_object()
+        )
+      except ValueError:
+        tmp_is_protein_pair_in_current_session_flag = False
+      else:
+        tmp_is_protein_pair_in_current_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(
+          tmp_protein_pair.name
+        )
+      tmp_is_protein_pair_expanded_flag: bool = False
+      try:
+        if (
+                self._interface_manager.get_current_protein_pair_tree_index().data(
+                  enums.ModelEnum.TYPE_ROLE
+                )
+                == "protein_pair"
         ):
-          tmp_is_protein_pair_expanded_flag: bool = True
+          if self._view.ui.protein_pairs_tree_view.isExpanded(
+                  self._interface_manager.get_current_protein_pair_tree_index()
+          ):
+            tmp_is_protein_pair_expanded_flag: bool = True
+      except Exception as e:
+        logger.error(e)
+      else:
+        tmp_context_menu = self._protein_pair_tree_context_menu.get_context_menu(
+          self._view.ui.protein_pairs_tree_view.selectedIndexes(),
+          tmp_is_protein_pair_in_current_session_flag,
+          tmp_is_protein_pair_expanded_flag,
+        )
+        if self._view.ui.protein_pairs_tree_view.model().rowCount() > 0:
+          tmp_context_menu.exec_(
+            self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position)
+          )
+          self.__slot_get_information_about_selected_object_in_protein_pair_branch()
     except Exception as e:
+      # TODO: The large try-except block is ugly but does the job for the moment
       logger.error(e)
-    else:
-      tmp_context_menu = self._protein_pair_tree_context_menu.get_context_menu(
-        self._view.ui.protein_pairs_tree_view.selectedIndexes(),
-        tmp_is_protein_pair_in_current_session_flag,
-        tmp_is_protein_pair_expanded_flag,
-      )
-      tmp_context_menu.exec_(
-        self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position)
-      )
-      self.__slot_get_information_about_selected_object_in_protein_pair_branch()  # fixme: This should be done in a better way than this!
 
   def _get_protein_name_of_a_protein_from_a_protein_pair(
           self,

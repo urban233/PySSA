@@ -20,29 +20,41 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module that is used to start PySSA."""
+import os
+import pathlib
 import sys
-
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5.QtCore import Qt
-
-sys.path.append("C:\\ProgramData\\IBCI\\PySSA\\bin\\PySSA")
-
-from src.pyssa.util import constants
-from src.pyssa.gui.ui.styles import styles
-from src.pyssa.controller import main_view_controller
-from src.pyssa.controller import interface_manager
+import subprocess
 
 
-if __name__ == "__main__":
-  print(constants.PROGRAM_BIN_ROOT_PATH)
+def main():
+  tmp_root_path = pathlib.Path(__file__).parent
+  sys.path.append(str(tmp_root_path / "lib"))
+  sys.path.append(str(tmp_root_path / "user_pymol/lib"))
+
+  from PyQt5 import QtWidgets
+  from PyQt5 import QtGui
+  from PyQt5.QtCore import Qt
+
+  # Check the session type
+  # session_type = os.environ.get('XDG_SESSION_TYPE', 'x11')  # Default to 'x11' if not set
+  #
+  # if session_type == 'wayland':
+  #   os.environ['QT_QPA_PLATFORM'] = 'wayland'
+  # else:
+  #   os.environ['QT_QPA_PLATFORM'] = 'xcb'
+
+  from src.pyssa.util import constants
+  from src.pyssa.gui.ui.styles import styles
+  from src.pyssa.controller import main_view_controller
+  from src.pyssa.controller import interface_manager
+
   app = QtWidgets.QApplication(sys.argv)
   # setup QSplashScreen
   pixmapi = QtGui.QPixmap(
-      f"{constants.PROGRAM_BIN_ROOT_PATH}\\assets\\images\\splash_screen.png"
+    f"{constants.PROGRAM_BIN_ROOT_PATH}\\assets\\images\\splash_screen.png"
   )
   smaller_pixmapi = pixmapi.scaled(
-      700, 700, Qt.KeepAspectRatio, Qt.SmoothTransformation
+    700, 700, Qt.KeepAspectRatio, Qt.SmoothTransformation
   )
   tmp_splash = QtWidgets.QSplashScreen(smaller_pixmapi)
   tmp_splash.show()
@@ -54,4 +66,12 @@ if __name__ == "__main__":
   styles.set_stylesheet_homepage(main_window)
   main_window.show()
   tmp_splash.finish(None)
+  subprocess.Popen(
+    [constants.ARRANGE_WINDOWS_EXE_FILEPATH],
+    creationflags=subprocess.CREATE_NO_WINDOW,
+  )
   sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+  main()

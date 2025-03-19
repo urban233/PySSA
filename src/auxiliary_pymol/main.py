@@ -22,9 +22,18 @@
 """Module to start Auxiliary PyMOL."""
 import threading
 import queue
-import workers
 import zmq
-import local_enums
+import sys
+import pathlib
+
+tmp_root_path = pathlib.Path(__file__).parent.parent.parent
+sys.path.insert(0, str(tmp_root_path / "user_pymol/lib"))
+print(str(tmp_root_path.parent / "user_pymol/lib"))
+print(sys.path)
+
+from src.auxiliary_pymol import workers
+from src.auxiliary_pymol import local_enums
+
 __docformat__ = "google"
 
 

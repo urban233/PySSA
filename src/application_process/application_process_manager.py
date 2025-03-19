@@ -97,8 +97,8 @@ class ApplicationProcessManager:
   def start_pymol(self) -> None:
     """Starts PyMOL application."""
     self.pymol_process = subprocess.Popen(
-        [f"{constants.PROGRAM_BIN_ROOT_PATH}\\scripts\\batch\\start_pymol.bat"],
-        creationflags=subprocess.CREATE_NO_WINDOW,
+      [constants.USER_PYMOL_FILEPATH, "-A1"],
+      creationflags=subprocess.CREATE_NO_WINDOW,
     )
     if self.pymol_process.poll() is None:
       print("PyMOL from ApplicationProcessManager class started correctly.")
@@ -153,5 +153,5 @@ class ApplicationProcessManager:
       else:
         time.sleep(2)
     print("check_process (in class ApplicationProcessManager) method finished.")  # TODO: change to logger message
-    subprocess.run(["powershell", "-Command", "TASKKILL /IM pymol.exe /F"])
+    subprocess.run(["powershell", "-Command", "TASKKILL /IM Open-Source-PyMOL.exe /F"], creationflags=subprocess.CREATE_NO_WINDOW)
     return "", ""  # These two empty strings are needed for the task class

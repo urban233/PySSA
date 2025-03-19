@@ -149,7 +149,8 @@ class Colabbatch:
         "-u",
         constants.WSL2_USERNAME,
         "sudo", "chown", "-R", constants.WSL2_USERNAME, f"/home/{constants.WSL2_USERNAME}/pyssa_colabfold"
-      ]
+      ],
+      creationflags=subprocess.CREATE_NO_WINDOW
     )
     subprocess.run(
       [
@@ -159,7 +160,8 @@ class Colabbatch:
         "-u",
         constants.WSL2_USERNAME,
         "sudo", "chmod", "+x", f"/home/{constants.WSL2_USERNAME}/pyssa_colabfold/colabfold_wrapper.sh"
-      ]
+      ],
+      creationflags=subprocess.CREATE_NO_WINDOW
     )
     service_process = subprocess.Popen(
       [
@@ -170,7 +172,7 @@ class Colabbatch:
         constants.WSL2_USERNAME,
         f"/home/{constants.WSL2_USERNAME}/pyssa_colabfold/colabfold_wrapper.sh",
       ],
-      #creationflags=subprocess.CREATE_NO_WINDOW,
+      creationflags=subprocess.CREATE_NO_WINDOW,
     )
 
     context = zmq.Context()
@@ -217,11 +219,11 @@ class Colabbatch:
       tmp_output = self.send_prediction_request()
     except exception.PredictionEndedWithError:
       logger.error("Prediction ended with error.")
-      subprocess.run(["wsl", "--shutdown"])
+      subprocess.run(["wsl", "--shutdown"], creationflags=subprocess.CREATE_NO_WINDOW)
       raise exception.PredictionEndedWithError("")
     else:
       logger.info("Received success message of prediction service.")
-      subprocess.run(["wsl", "--shutdown"])
+      subprocess.run(["wsl", "--shutdown"], creationflags=subprocess.CREATE_NO_WINDOW)
       if tmp_output:
         logger.info("Prediction process finished, copying results ...")
         try:
@@ -238,6 +240,7 @@ class Colabbatch:
                   f"{self.settings_dir_unix_notation}/scratch/local_predictions",
               ],
               check=True,
+              creationflags=subprocess.CREATE_NO_WINDOW
           )
         except subprocess.CalledProcessError:
           logger.error("Could not copy prediction results to Windows host!")

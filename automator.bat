@@ -42,7 +42,7 @@ if "%1"=="init" (
 
 if exist .\.venv\Scripts\python.exe (
     :: Default behavior: Run automations.py
-    .\.venv\Scripts\python.exe .\automations.py %*
+    .\.venv\Scripts\python.exe .\automations\my_automator.py %*
 ) else (
-    echo Virtual environment does not exist yet! Please run run_automation.bat init
+    echo Virtual environment does not exist yet! Please run automator.bat init
 )
