@@ -66,6 +66,7 @@ nav:
 theme:
     name: material
     logo: assets/images/pyssa_logo.png
+    favicon: assets/images/pyssa_logo.png
     palette:
         primary: custom
     features:
