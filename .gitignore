@@ -143,3 +143,4 @@ _build
 /deployment/src/c_sharp/WindowsWrapper/WindowsTasks/obj
 /inno-build-release/
 /inno-build-debug/
+./docs/pyssa-documentation/site
