@@ -144,3 +144,7 @@ _build
 /inno-build-release/
 /inno-build-debug/
 ./docs/pyssa-documentation/site
+/deployment/src/dockerfiles/alma9-colabfold-rootfs.tar
+/winbatch/*.cmp
+/winbatch/*.dll
+*.cmp

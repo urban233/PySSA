@@ -1,4 +1,39 @@
-:root > * {
+.md-typeset__table {
+  min-width: 100%;
+}
+
+@media only screen and (min-width: 768px)
+{
+  td:nth-child(1){
+    white-space: nowrap;
+  }
+}
+
+/*@font-face {*/
+/*  font-family: Telegraf-Regular;*/
+/*  src: url("typography/Telegraf-Regular.otf");*/
+/*}*/
+
+/*@font-face {*/
+/*  font-family: Telegraf-UltraBold;*/
+/*  src: url("typography/Telegraf-UltraBold.otf");*/
+/*}*/
+
+/*.Telegraf-Regular{*/
+/*  font-family:Telegraf-Regular;*/
+/*}*/
+
+/*.Telegraf-UltraBold{*/
+/*  font-family:Telegraf-UltraBold;*/
+/*}*/
+
+* {
+  /*--md-primary-fg-color: #BDD61C;*/
+  /*--md-primary-fg-color--light: #029c8e;*/
+  /*--md-primary-fg-color--dark:  #303C55;*/
+  /*--md-typeset-color:   var(--md-default-fg-color);*/
+  /*--md-typeset-a-color: var(--md-primary-fg-color--light);*/
+  /*--md-text-font: "Telegraf-Regular"*/
   --md-primary-fg-color:        #367af6;
   --md-primary-fg-color--light: #367af6;
   --md-primary-fg-color--dark:  #367af6;
@@ -13,68 +48,75 @@
   --md-admonition-icon--general-information: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M.3 89.5C.1 91.6 0 93.8 0 96V224 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64V224 96c0-35.3-28.7-64-64-64H64c-2.2 0-4.4 .1-6.5 .3c-9.2 .9-17.8 3.8-25.5 8.2C21.8 46.5 13.4 55.1 7.7 65.5c-3.9 7.3-6.5 15.4-7.4 24zM48 224H464l0 192c0 8.8-7.2 16-16 16L64 432c-8.8 0-16-7.2-16-16l0-192z"/></svg>');
 }
 
-.md-typeset .admonition,
-.md-typeset details {
-  border-width: 0;
-  border-left-width: 4px;
+/*:root {*/
+/*  --md-primary-fg-color: #181917;*/
+/*  --md-primary-fg-color--light: #029c8e;*/
+/*  --md-primary-fg-color--dark:  #303C55;*/
+/*}*/
+
+/*:root>* {*/
+/*  --md-primary-bg-color:   #000;*/
+/*  --md-typeset-color:   var(--md-default-fg-color);*/
+/*  --md-typeset-a-color: var(--md-primary-fg-color--light);*/
+/*}*/
+
+/*
+markdown and image alignment
+ALT tag and a CSS selector on the alt tag
+*/
+img[src*='#left'] {
+  float: left;
+}
+img[src*='#right'] {
+  float: right;
+}
+img[src*='#center'] {
+  display: block;
+  margin: auto;
 }
 
-.md-typeset .admonition.built-in,
-.md-typeset details.built-in {
-  border-color: #367af6;
-}
-.md-typeset .built-in > .admonition-title,
-.md-typeset .built-in > summary {
-  background-color: rgb(54, 122, 246, 0.1);
-}
-.md-typeset .built-in > .admonition-title::before,
-.md-typeset .built-in > summary::before {
-  background-color: #367af6;
-  -webkit-mask-image: var(--md-admonition-icon--built-in);
-          mask-image: var(--md-admonition-icon--built-in);
+/*
+Tables set to 100% width
+*/
+.md-typeset__table {
+  min-width: 100%;
 }
 
-.md-typeset .admonition.general-information,
-.md-typeset details.general-information {
-  border-color: #367af6;
-}
-.md-typeset .general-information > .admonition-title,
-.md-typeset .general-information > summary {
-  background-color: rgb(75, 145, 247, 0.1);
-}
-.md-typeset .general-information > .admonition-title::before,
-.md-typeset .general-information > summary::before {
-  background-color: #367af6;
-  -webkit-mask-image: var(--md-admonition-icon--general-information);
-          mask-image: var(--md-admonition-icon--general-information);
+.md-typeset table:not([class]) {
+  display: table;
 }
 
-.md-typeset .admonition.related-guide,
-.md-typeset details.related-guide {
-  border-color: #F37E34;
+/*
+Colors for First Steps
+custom code blocks coloring
+*/
+.fsg-timestamp {
+  color: grey;
 }
-.md-typeset .related-guide > .admonition-title,
-.md-typeset .related-guide > summary {
-  background-color: rgb(243,126,52, 0.1);
+.fsg-userinput {
+  color: cornflowerblue;
 }
-.md-typeset .related-guide > .admonition-title::before,
-.md-typeset .related-guide > summary::before {
-  background-color: #F37E34;
-  -webkit-mask-image: var(--md-admonition-icon--related-guide);
-          mask-image: var(--md-admonition-icon--related-guide);
+.fsg-path, .fsg-prompt {
+  color: mediumseagreen;
 }
 
-.md-typeset .admonition.overview,
-.md-typeset details.overview {
-  border-color: #c4c5c6;
+/*
+Footer social media icons:
+set the size of the svg icons and the espace between them.
+*/
+.md-social__link {
+  width: 2rem;
 }
-.md-typeset .overview > .admonition-title,
-.md-typeset .overview > summary {
-  background-color: rgb(196, 197, 198, 0.1);
+.md-social__link svg {
+  max-height: 1.6rem;
 }
-.md-typeset .overview > .admonition-title::before,
-.md-typeset .overview > summary::before {
-  background-color: #c4c5c6;
-  -webkit-mask-image: var(--md-admonition-icon--overview);
-          mask-image: var(--md-admonition-icon--overview);
+
+/*
+hide content only for mobile devices
+*/
+@media only screen and (min-device-width: 280px) and (max-device-width: 480px)
+{
+  .hide-on-mobile {
+    display: none;
+  }
 }

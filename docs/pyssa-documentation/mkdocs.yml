@@ -2,6 +2,7 @@ site_name: PySSA
 site_url: https://mydomain.org/mysite
 nav:
     - Home: index.md
+    - Install: install.md
     - Help:
         - help/index.md
         - Project:
@@ -61,12 +62,21 @@ nav:
         - Settings:
             - Overview: help/settings/index.md
             - PySSA Settings: help/settings/pyssa_settings.md
+    - Use Cases: use_cases.md
+    - Development:
+       #- Overview: development/index.md
+       - Code Rules: development/code_rules.md
     - About: about.md
 
 theme:
     name: material
+    custom_dir: material
+    language: en
     logo: assets/images/pyssa_logo.png
     favicon: assets/images/pyssa_logo.png
+    font:
+        text: Roboto
+        code: Roboto Mono
     palette:
         primary: custom
     features:
@@ -94,4 +104,4 @@ markdown_extensions:
 
 
 copyright:
-    Copyright © 2024 PySSA - Martin Urban & Hannah Kullik
+    Copyright © 2025 PySSA - Martin Urban & Hannah Kullik

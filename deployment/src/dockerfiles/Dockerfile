@@ -1,7 +1,7 @@
 # This is the latest DOCKERFILE that was used to build the rootfs that is
 # located under deployment/offline_resources -> alma-colabfold-9-rootfs.tar
 
-FROM almalinux/9-base:9
+FROM cern/alma9-base:20250201-1.x86_64
 
 # Set environment variables
 ENV PATH="/home/alma_user/localcolabfold/colabfold-conda/bin:$PATH"

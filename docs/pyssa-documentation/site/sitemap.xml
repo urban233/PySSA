@@ -2,272 +2,292 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://mydomain.org/mysite/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/about.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://mydomain.org/mysite/install.html</loc>
+         <lastmod>2025-03-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://mydomain.org/mysite/use_cases.html</loc>
+         <lastmod>2025-03-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://mydomain.org/mysite/development/index.html</loc>
+         <lastmod>2025-03-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://mydomain.org/mysite/development/code_rules.html</loc>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/hotspots/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/hotspots/protein_regions.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/images/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/images/preview_image.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/images/ray_traced_image.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/images/simple_image.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/project/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/project/delete_project.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/project/export_project.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/project/import_project.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/project/new_project.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/project/open_project.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/project/use_project.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_pairs/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_pairs/protein_pair_add_scene.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_pairs/protein_pair_delete.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_pairs/protein_pair_delete_scene.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_pairs/protein_pair_load_session.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_pairs/protein_pair_pymol_scene_configuration.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_pairs/protein_pair_update_scene.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_pairs/protein_pairs_tab.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_structure_analysis/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_structure_analysis/distance_analysis.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_structure_prediction/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_structure_prediction/advanced_prediction_configurations.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/protein_structure_prediction/colabfold.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/proteins/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/proteins/protein_add_scene.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/proteins/protein_delete.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/proteins/protein_delete_scene.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/proteins/protein_import.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/proteins/protein_load_session.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/proteins/protein_pymol_scene_configuration.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/proteins/protein_save.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/proteins/protein_update_scene.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/proteins/proteins_tab.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/results/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/results/distance_data_visualizer.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/results/summary.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/sequences/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/sequences/additional_sequence_information.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/sequences/sequence_add.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/sequences/sequence_delete.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/sequences/sequence_import.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/sequences/sequence_save.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/sequences/sequences_tab.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/sequences/guides/how_to_import_fasta_file.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/settings/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/help/settings/pyssa_settings.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/screenshots/index.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://mydomain.org/mysite/screenshots/screenshot_open_project.html</loc>
-         <lastmod>2025-03-19</lastmod>
+         <lastmod>2025-03-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
