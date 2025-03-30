@@ -7,6 +7,8 @@ The entire installation process of all three components (WSL2, ColabFold and PyS
 ## Prerequisites
 You must be running Windows 10 version 2004 and higher (Build 19041 and higher) or Windows 11 to use PySSA.
 
+If you have a real-time virus scanner software installed (e.g. Avira, Kaspersky, ...), please disable it temporarily during the installation process.
+
 ## Download and extract setup
 
 1. Download the _PySSA_1.0.6_Setup.zip_. Click [here](<insert correct link here!>) 
