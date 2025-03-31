@@ -17,6 +17,13 @@
 # Python rich client for visual protein Sequence to Structure Analysis (PySSA)
 
 ## <img src='https://github.com/primer/octicons/blob/main/icons/download-24.svg' width='32'/> [Quick Installation](https://urban233.github.io/PySSA/install.html)
+
+> [!IMPORTANT]
+> 📣 **Update details for version 1.0.6** 📣
+>
+> Please reinstall PySSA if your current version is 1.0.5 or older!
+> Version 1.0.6 includes a new AlmaLinux WSL2 distribution and therefore requires a complete reinstallation, i.e. uninstall and reinstall.
+
 ## <img src='https://github.com/primer/octicons/blob/main/icons/video-24.svg' width='32'/> [Use Cases](https://urban233.github.io/PySSA/use_cases.html)
 A "Use Case" refers to a specific scenario that demonstrates how the software can be used to accomplish a particular task or objective.
 There are three interconnected use cases that progressively demonstrate the capabilities of PySSA: the first use case illustrates how to use PySSA to validate the ColabFold prediction method, the second involves comparing the wild-type protein to a mutated protein to determine if the amino acids crucial for receptor interaction remain in the same position, and the third showcases how to generate a high-quality, ray-traced image of a specific amino acid.
