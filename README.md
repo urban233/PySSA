@@ -6,7 +6,7 @@
 [![GitHub contributors](https://img.shields.io/github/contributors/urban233/PySSA.svg)](https://GitHub.com/urban233/PySSA/graphs/contributors/)
 [![GitHub release](https://img.shields.io/github/release/urban233/PySSA.svg)](https://github.com/urban233/PySSA/releases/)
 [![Software Article - JChemInf](https://img.shields.io/badge/Software_Article_Preprint-ChemRxiv-blue)](https://doi.org/10.26434/chemrxiv-2024-srx5d)
-[![Application Example - Use Cases](https://img.shields.io/badge/Application%20Example-Use%20Cases-blue)](https://github.com/urban233/PySSA/wiki/Use-Cases)
+[![Application Example - Use Cases](https://img.shields.io/badge/Application%20Example-Use%20Cases-blue)](https://urban233.github.io/PySSA/use_cases.html)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 
@@ -16,8 +16,8 @@
 
 # Python rich client for visual protein Sequence to Structure Analysis (PySSA)
 
-## <img src='https://github.com/primer/octicons/blob/main/icons/download-24.svg' width='32'/> [Quick Installation](https://github.com/urban233/PySSA/wiki/Installation-for-Windows-Operating-System)
-## <img src='https://github.com/primer/octicons/blob/main/icons/video-24.svg' width='32'/> [Use Cases](https://github.com/urban233/PySSA/wiki/Use-Cases)
+## <img src='https://github.com/primer/octicons/blob/main/icons/download-24.svg' width='32'/> [Quick Installation](https://urban233.github.io/PySSA/install.html)
+## <img src='https://github.com/primer/octicons/blob/main/icons/video-24.svg' width='32'/> [Use Cases](https://urban233.github.io/PySSA/use_cases.html)
 A "Use Case" refers to a specific scenario that demonstrates how the software can be used to accomplish a particular task or objective.
 There are three interconnected use cases that progressively demonstrate the capabilities of PySSA: the first use case illustrates how to use PySSA to validate the ColabFold prediction method, the second involves comparing the wild-type protein to a mutated protein to determine if the amino acids crucial for receptor interaction remain in the same position, and the third showcases how to generate a high-quality, ray-traced image of a specific amino acid.
 
@@ -29,9 +29,6 @@ There are three interconnected use cases that progressively demonstrate the capa
   * [Assets](#Assets)
 * [Installation](#Installation)
     * [Microsoft Windows](#microsoft-windows)
-      * [Installation for Windows OS](#installation-for-windows-os)
-      * [Offline environment](#offline-environment)
-      * [Online installation (For experts)](#online-installation-for-experts)
     * [Source code](#Source-code)
 * [Dependencies](#Dependencies)
 * [Architecture](#Architecture)
@@ -74,7 +71,7 @@ The <a href="https://github.com/urban233/PySSA/tree/main/docs">"docs"</a> folder
 contains the end-user documentation in the form of markdown and HTML files. 
 The subfolder <a href="https://github.com/urban233/PySSA/tree/main/docs/dev-notes">"dev-notes"</a>, contains development notes.
 
-Use cases describing specific workflows can be found [here](https://github.com/urban233/PySSA/wiki/Use-Cases). 
+Use cases describing specific workflows can be found [here](https://urban233.github.io/PySSA/use_cases.html). 
 
 ### Assets
 The <a href="https://github.com/urban233/PySSA/tree/main/assets">"assets"</a> folder consists of
@@ -84,14 +81,13 @@ If you are using PySSA for your own projects, you are welcome to give credit to 
 ## Installation
 PySSA is tested and available for Windows(TM) 10 and 11.
 ### Microsoft Windows
-For a convenient and user-friendly installation, the <a href="https://github.com/urban233/ComponentInstaller">"PySSA Component Installer"</a> is available.
+For a convenient and user-friendly installation, a [setup](https://zenodo.org/records/15114056/files/PySSA_1.0.6_Setup.zip?download=1) is available.
 
 **Important:**
 * WSL2 **cannot** be uninstalled, once it is installed! Windows will integrate the WSL2 as a system component.
 * Be aware that the computer needs to be **restarted** after installing WSL2.
 
-#### Installation for Windows OS
-A step-by-step guide can be found in the Wiki (click [here](https://github.com/urban233/PySSA/wiki/Installation-for-Windows-Operating-System) to go to the guide).
+A step-by-step guide can be found [here](https://urban233.github.io/PySSA/install.html).
 
 ### Source code
 This is a Python project based on Python's virtual environment module. 
@@ -156,7 +152,7 @@ Each use case builds upon the preceding one,
 and it is therefore recommended to view all three in order to gain 
 a comprehensive understanding of the software's capabilities.
 
-The use cases can be found under this wiki page: [Use Cases](https://github.com/urban233/PySSA/wiki/Use-Cases)
+The use cases can be found under this wiki page: [Use Cases](https://urban233.github.io/PySSA/use_cases.html)
 
 ## Citation
 You can cite this software or this repository as it is defined in the CITATION.cff file.
@@ -169,7 +165,8 @@ You can cite this software or this repository as it is defined in the CITATION.c
 
 **PyMOL**
 * [Open-source GitHub repository](https://github.com/schrodinger/pymol-open-source)
-* [Open-source Windows Python wheelfiles](https://github.com/cgohlke/pymol-open-source-wheels)
+* [Unofficial PyMOL(TM) Python wheel files](https://github.com/urban233/pymol-open-source-whl)
+* [Unofficial PyMOL(TM) Setup](https://github.com/kullik01/pymol-open-source-setup)
 
 ## Acknowledgements
 **Developers:**
