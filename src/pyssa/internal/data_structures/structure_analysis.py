@@ -187,8 +187,8 @@ class Analysis:
             a_socket,
             job.DistanceAnalysisJobDescription(
                 tmp_protein_pair.name,
-                tmp_protein_1_pdb_cache_filepath,
-                tmp_protein_2_pdb_cache_filepath,
+                str(tmp_protein_1_pdb_cache_filepath),
+                str(tmp_protein_2_pdb_cache_filepath),
                 tmp_protein_pair.protein_1.pymol_selection.selection_string,
                 tmp_protein_pair.protein_2.pymol_selection.selection_string,
                 tmp_protein_pair.distance_analysis.cutoff,

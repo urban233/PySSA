@@ -142,7 +142,10 @@ class AuxiliaryPyMOL:
                 )
 
                 fasta_prot_1 = auxiliary_pymol.cmd.get_fastastr(a_protein_1_pymol_selection_string)
-                seq_len_protein_1 = len(fasta_prot_1[fasta_prot_1.find("\n"):])
+                filtered_str = ''.join(
+                    [line for line in fasta_prot_1.split('\n') if not line.startswith('>')]
+                )
+                seq_len_protein_1 = len(filtered_str)
                 rmsd_dict = {
                     "rmsd": str(round(tmp_align_results[0], 2)),
                     "aligned_residues": f"{str(tmp_align_results[1])} / {seq_len_protein_1}",
