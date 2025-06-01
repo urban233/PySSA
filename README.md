@@ -88,7 +88,7 @@ If you are using PySSA for your own projects, you are welcome to give credit to 
 ## Installation
 PySSA is tested and available for Windows(TM) 10 and 11.
 ### Microsoft Windows
-For a convenient and user-friendly installation, a [setup](https://zenodo.org/records/15114056/files/PySSA_1.0.6_Setup.zip?download=1) is available.
+For a convenient and user-friendly installation, a [setup](https://zenodo.org/records/15564925/files/PySSA_1.0.7_Setup.zip?download=1) is available.
 
 **Important:**
 * WSL2 **cannot** be uninstalled, once it is installed! Windows will integrate the WSL2 as a system component.
@@ -115,7 +115,7 @@ automator.bat update_inno_setup
 ```
 instead.
 
-To build the end-user documentation run:
+To build the end-user documentation, run:
 ```shell
 automator.bat make docs
 ```

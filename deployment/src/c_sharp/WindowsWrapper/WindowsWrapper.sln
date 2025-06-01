@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsTasks", "WindowsTasks\WindowsTasks.csproj", "{E57E6F69-A4C0-4517-A95D-7D86E295A7F4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsCmdElevator", "WindowsCmdElevator\WindowsCmdElevator.csproj", "{858C5D6A-061B-4498-A570-BE5EE1D9A49B}"
@@ -18,5 +21,11 @@ Global
 		{858C5D6A-061B-4498-A570-BE5EE1D9A49B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{858C5D6A-061B-4498-A570-BE5EE1D9A49B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{858C5D6A-061B-4498-A570-BE5EE1D9A49B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {37E5BDDD-7FD7-4742-A446-3385320E6821}
 	EndGlobalSection
 EndGlobal

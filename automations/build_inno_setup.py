@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import sys
 import time
+import zipfile
 
 from task_automator.IO import file
 from task_automator.utils import web_utils
@@ -59,8 +60,38 @@ class BuildInnoSetup:
       pathlib.Path(self.inno_sources_build_path),
       dirs_exist_ok=True
     )
+    # Download and extract user_pymol.zip
+    user_pymol_zip = self.inno_build_cache_path / "user_pymol.zip"
+    user_pymol_extract_path = self.inno_build_cache_path / "user_pymol"
+
+    if not user_pymol_zip.exists():
+      print("Downloading user_pymol.zip...")
+      if not web_utils.download_file("https://w-hs.sciebo.de/s/YOsNELqpCLXGzvi/download", str(user_pymol_zip)):
+        print("Unable to download user_pymol.zip, build process exits.")
+        return
+      print("Finished downloading user_pymol.zip.")
+
+      # Extract the zip file
+      print("Extracting user_pymol.zip...")
+      try:
+        with zipfile.ZipFile(user_pymol_zip, 'r') as zip_ref:
+          zip_ref.extractall(user_pymol_extract_path)
+        print("Successfully extracted user_pymol.zip")
+      except Exception as e:
+        print(f"Error extracting user_pymol.zip: {e}")
+        return
+    else:
+      print("Using cached version of user_pymol.zip")
+      if not user_pymol_extract_path.exists():
+        try:
+          with zipfile.ZipFile(user_pymol_zip, 'r') as zip_ref:
+            zip_ref.extractall(user_pymol_extract_path)
+          print("Successfully extracted user_pymol.zip from cache")
+        except Exception as e:
+          print(f"Error extracting cached user_pymol.zip: {e}")
+          return
     shutil.copytree(
-      pathlib.Path(const.PROJECT_ROOT_DIR / "build/user_pymol"),
+      pathlib.Path(const.PROJECT_ROOT_DIR / "inno-build-release/inno-cache/user_pymol"),
       pathlib.Path(self.inno_sources_build_path / "user_pymol"),
       dirs_exist_ok=True
     )
@@ -70,7 +101,7 @@ class BuildInnoSetup:
     if include_wsl2_distro:
       if not pathlib.Path.exists(pathlib.Path(self.inno_build_cache_path / "alma-colabfold-9-rootfs.tar")):
         print("Downloading alma-colabfold-9-rootfs.tar ...")
-        if not web_utils.download_file("https://w-hs.sciebo.de/s/q5oYjcZdEzCDyEH/download", str(pathlib.Path(self.inno_build_cache_path / "alma-colabfold-9-rootfs.tar"))):
+        if not web_utils.download_file("https://w-hs.sciebo.de/s/yOQ8Qo1Uvk1eaQc/download", str(pathlib.Path(self.inno_build_cache_path / "alma-colabfold-9-rootfs.tar"))):
           print("Unable to download alma-colabfold-9-rootfs.tar, build process exists.")
           return
         print("Finished downloading alma-colabfold-9-rootfs.tar.")

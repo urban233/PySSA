@@ -148,3 +148,4 @@ _build
 /winbatch/*.cmp
 /winbatch/*.dll
 *.cmp
+/deployment/offline_resources/user_pymol/
