@@ -5,7 +5,8 @@
 [![GitHub issues](https://img.shields.io/github/issues/urban233/PySSA)](https://GitHub.com/urban233/PySSA/issues/)
 [![GitHub contributors](https://img.shields.io/github/contributors/urban233/PySSA.svg)](https://GitHub.com/urban233/PySSA/graphs/contributors/)
 [![GitHub release](https://img.shields.io/github/release/urban233/PySSA.svg)](https://github.com/urban233/PySSA/releases/)
-[![Software Article - JChemInf](https://img.shields.io/badge/Software_Article_Preprint-ChemRxiv-blue)](https://doi.org/10.26434/chemrxiv-2024-srx5d)
+[![Software Article Preprint - ChemRxiv](https://img.shields.io/badge/Software_Article_Preprint-ChemRxiv-blue)](https://doi.org/10.26434/chemrxiv-2024-srx5d)
+[![Software Article - JCIM](https://img.shields.io/badge/Software_Article_-JCIM-blue)](https://doi.org/10.1021/acs.jcim.5c00797)
 [![Application Example - Use Cases](https://img.shields.io/badge/Application%20Example-Use%20Cases-blue)](https://urban233.github.io/PySSA/use_cases.html)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 

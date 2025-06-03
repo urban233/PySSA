@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 title: PySSA
-version: "1.0.1"
+version: "1.0.7"
 message: "If you use this software, please cite it as below."
 type: software
 authors:
@@ -22,7 +22,7 @@ authors:
 doi: "10.5281/zenodo.12667157"
 url: "https://github.com/urban233/PySSA"
 license: "GPL-3.0"
-date-released: 2024-07-08
+date-released: 2025-06-03
 references:
   - authors:
     - family-names: "Kullik"
@@ -40,8 +40,9 @@ references:
     - family-names: "Zielesny"
       given-names: "Achim"
       orcid: "https://orcid.org/0000-0003-0722-4229"
-    doi: "10.26434/chemrxiv-2024-srx5d"
-    journal: "ChemRxiv"
+    doi: "10.1021/acs.jcim.5c00797"
+    journal: "JCIM"
     scope: "Cite this article if you want to reference the general concepts of the software."
     title: "PySSA: end-user protein structure prediction and visual analysis with ColabFold and PyMOL"
-    type: "unpublished"
+    type: article
+    year: 2025
