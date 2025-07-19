@@ -46,6 +46,7 @@ class UserPyMOLInterface(QtCore.QObject):
     """Constructor."""
     super().__init__()
     self.commands = {
+        pymol_enums.CommandEnum.TOGGLE_EXPERT_MODE: commands.toggle_expert_mode,
         pymol_enums.CommandEnum.REINITIALIZE_SESSION: commands.reinitialize_session,
         pymol_enums.CommandEnum.LOAD_PYMOL_SESSION: commands.load_pymol_session,
         pymol_enums.CommandEnum.SAVE_PYMOL_SESSION: commands.save_pymol_session,
@@ -331,7 +332,14 @@ class UserPyMOLInterface(QtCore.QObject):
     logger.info("Running in Main Thread.")
     print("Running in Main Thread.")
     tmp_command_name, tmp_args = the_command_info
-    if tmp_command_name == pymol_enums.CommandEnum.REINITIALIZE_SESSION.value:
+    if tmp_command_name == pymol_enums.CommandEnum.TOGGLE_EXPERT_MODE.value:
+      logger.info("Running command: toggle_expert_mode")
+      tmp_result: tuple[bool, str] = commands.toggle_expert_mode()
+      logger.info(f"Command result: {tmp_result}")
+      self._sender_socket.send_json(
+        {"success": tmp_result[0], "message": str(tmp_result[1])},
+      )
+    elif tmp_command_name == pymol_enums.CommandEnum.REINITIALIZE_SESSION.value:
       logger.info("Running command: reinitialize_session")
       tmp_result: tuple[bool, str] = commands.reinitialize_session()
       logger.info(f"Command result: {tmp_result}")

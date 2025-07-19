@@ -174,6 +174,7 @@ class SettingsViewController(QtCore.QObject):
     self._view.ui.btn_workspace_dir.clicked.connect(self.choose_workspace_dir)
     self._view.ui.btn_ok.clicked.connect(self.ok_dialog)
     self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
+    self._view.ui.cb_toggle_pymol_expert_mode.clicked.connect(self.toggle_pymol_expert_mode)
 
   def choose_workspace_dir(self) -> None:
     """Opens a QFileDialog to choose a workspace directory."""
@@ -215,3 +216,6 @@ class SettingsViewController(QtCore.QObject):
     logging.info("Settings were successfully saved.")
     self._view.close()
     self.user_input.emit((0, True))
+
+  def toggle_pymol_expert_mode(self):
+    self._interface_manager.pymol_session_manager.toggle_pymol_expert_mode()

@@ -26,12 +26,27 @@ from typing import Optional, Union
 import pymol
 from pymol import cmd
 from pymol import CmdException
+from pmg_qt import pymol_qt_gui
 
 from src.pyssa.util import constants
 from src.pyssa_pymol import local_logging
 
 logger = local_logging.setup_logger(__file__)
 __docformat__ = "google"
+
+
+def toggle_expert_mode() -> tuple[bool, str]:
+  """Toggles the expert mode of PyMOL."""
+  logger.info("Executing command.")
+  try:
+    pymol_qt_gui.pyssa_toggle_menu_bar()
+    # Maybe adding a toggle function for the context menu would be good?
+  except CmdException as e:
+    logger.error(f"Command failed with error: {e}")
+    return False, e.message
+  else:
+    logger.info("Command executed successfully.")
+    return True, ""
 
 
 def reinitialize_session() -> tuple[bool, str]:

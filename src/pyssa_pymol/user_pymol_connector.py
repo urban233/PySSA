@@ -145,7 +145,27 @@ class UserPyMOLConnector:
       return False, {}
     else:
       return True, tmp_result
-    
+
+  def toggle_pymol_expert_mode(self) -> dict:
+    """Toggles the expert mode of PyMOL.
+
+    Returns:
+        A dictionary containing the reply from PyMOL or an empty dict if PyMOL crashed.
+    """
+    tmp_pymol_command = pymol_command.PyMOLCommand(
+      pymol_enums.CommandEnum.TOGGLE_EXPERT_MODE,
+      (0, 0),
+    )
+    try:
+      tmp_reply = self.send_command_to_pymol(
+        tmp_pymol_command, self._poller, self._app_process_manager
+      )
+    except pyssa_exception.PyMOLNotRespondingError as e:
+      logger.error(e)
+      return {}
+    else:
+      return tmp_reply
+
   def reinitialize_session(self) -> dict:
     """Reinitializes the PyMOL session.
 

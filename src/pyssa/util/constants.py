@@ -30,15 +30,19 @@ from src.pyssa.util import globals, enums
 
 # General
 PLUGIN_NAME = 'PySSA'
-VERSION_NUMBER = "v1.0.7"  # The version number MUST be in double quotes
+VERSION_NUMBER = "v1.0.8"  # The version number MUST be in double quotes
 
 # Flags
-DEBUGGING = False
+DEBUGGING = True
 
 # Paths/Filepaths
-PROGRAM_BIN_ROOT_PATH: pathlib.Path = pathlib.Path(sys.executable).parent
-PYTHON_LIB_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "lib")
-PROGRAM_SRC_PATH: pathlib.Path = pathlib.Path(PYTHON_LIB_PATH / "src")
+if DEBUGGING:
+    PROGRAM_BIN_ROOT_PATH = pathlib.Path(r"C:\Users\manfred\github_repos\PySSA")
+    PROGRAM_SRC_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "src")
+else:
+    PROGRAM_BIN_ROOT_PATH: pathlib.Path = pathlib.Path(sys.executable).parent
+    PYTHON_LIB_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "lib")
+    PROGRAM_SRC_PATH: pathlib.Path = pathlib.Path(PYTHON_LIB_PATH / "src")
 
 AUXILIARY_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "aux_pymol.exe")
 USER_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "user_pymol" / "Open-Source-PyMOL.exe")

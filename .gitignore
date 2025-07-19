@@ -149,3 +149,5 @@ _build
 /winbatch/*.dll
 *.cmp
 /deployment/offline_resources/user_pymol/
+/user_pymol/
+/src/pyssa/.pymolrc.py

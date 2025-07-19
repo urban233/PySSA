@@ -455,6 +455,10 @@ class PymolSessionManager:
     )
     
   # <editor-fold desc="Cmd-depended methods">
+  def toggle_pymol_expert_mode(self) -> None:
+    """Reinitialize the pymol session and class attributes."""
+    self.user_pymol_connector.toggle_pymol_expert_mode()
+
   def reinitialize_session(self) -> None:
     """Reinitialize the pymol session and class attributes."""
     # reset class attributes
