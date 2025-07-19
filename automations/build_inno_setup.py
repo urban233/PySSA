@@ -36,7 +36,7 @@ class BuildInnoSetup:
     # <editor-fold desc="Path/Filepath definitions">
     tmp_pyssa_win_build_logo_filepath = pathlib.Path(const.PROJECT_ROOT_DIR / "assets/convert_logo_to_ico" / "logo.ico")
     tmp_vc_redist_setup_filepath = pathlib.Path(const.PROJECT_ROOT_DIR / "third_party/microsoft" / "VC_redist.x64.exe")
-    tmp_windows_tasks_exe_filepath = pathlib.Path(const.PROJECT_ROOT_DIR / "deployment/offline_resources" / "WindowsTasks.exe")
+    tmp_windows_tasks_exe_filepath = pathlib.Path(const.PROJECT_ROOT_DIR / "deployment/offline_resources" / "WindowsCli.exe")
     # </editor-fold>
     """IMPORTANT
     Use the python interpreter of the venv of pymol windows build because
@@ -126,7 +126,7 @@ class BuildInnoSetup:
     self.inno_build_third_party_path.mkdir(exist_ok=True)
     self.inno_build_prerequisite_path.mkdir(exist_ok=True)
     shutil.copy(tmp_vc_redist_setup_filepath, pathlib.Path(self.inno_build_third_party_path / "VC_redist.x64.exe"))
-    shutil.copy(tmp_windows_tasks_exe_filepath, pathlib.Path(self.inno_build_prerequisite_path / "WindowsTasks.exe"))
+    shutil.copy(tmp_windows_tasks_exe_filepath, pathlib.Path(self.inno_build_prerequisite_path / "WindowsCli.exe"))
     self.inno_build_assets_path.mkdir(exist_ok=True)
     shutil.copy(tmp_pyssa_win_build_logo_filepath, pathlib.Path(self.inno_build_assets_path / "logo.ico"))
     # </editor-fold>

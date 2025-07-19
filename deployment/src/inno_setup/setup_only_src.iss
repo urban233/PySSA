@@ -14,6 +14,7 @@ DefaultDirName={commonappdata}\IBCI\PySSA
 AppPublisher=IBCI
 VersionInfoProductName=PySSA
 MinVersion=10.0.19045
+PrivilegesRequired=lowest
 OutputDir=..\..\dist
 OutputBaseFilename=pyssa_src_update_1.0.8
 DisableReadyPage=True
@@ -41,7 +42,7 @@ Name: "{app}\third_party"
 
 [Files]
 ; Place any prerequisite files here, for example:
-Source: "..\..\..\inno-build-release\inno-sources\prerequisite\WindowsTasks.exe"; Flags: dontcopy;
+Source: "..\..\..\inno-build-release\inno-sources\prerequisite\WindowsCli.exe"; Flags: dontcopy;
 ; Place any regular files here, so *after* all your prerequisites.
 Source: "..\..\..\inno-build-release\inno-sources\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs;
 Source: "..\..\..\inno-build-release\inno-assets\logo.ico"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs;
@@ -70,30 +71,25 @@ const
 var
   Restarted: Boolean;
 
-function InitializeSetup(): Boolean;
-begin
-  Restarted := ExpandConstant('{param:restart|0}') = '1';
-
-  if not Restarted then begin
-    Result := not RegValueExists(HKA, 'Software\Microsoft\Windows\CurrentVersion\RunOnce', RunOnceName);
-    if not Result then
-      MsgBox(QuitMessageReboot, mbError, mb_Ok);
-  end else
-    Result := True;
-end;
-
 function IsWSL2Installed(): Boolean;
 var
   ResultCode: Integer;
 begin
   Result := False;
 
-  ExtractTemporaryFile('WindowsTasks.exe');
+  ExtractTemporaryFile('WindowsCli.exe');
 
-  if ShellExec(
-    'runas',
-    ExpandConstant('{tmp}\WindowsTasks.exe'),
-    '',
+  // if ShellExec(
+    // 'runas',
+    // ExpandConstant('{tmp}\WindowsCli.exe'),
+    // '',
+    // '',
+    // SW_HIDE,  // Consider hiding the window if you don't need user interaction
+    // ewWaitUntilTerminated,
+    // ResultCode) then
+  if Exec(
+    ExpandConstant('{tmp}\WindowsCli.exe'),
+    '--check-wsl2-install',
     '',
     SW_HIDE,  // Consider hiding the window if you don't need user interaction
     ewWaitUntilTerminated,
@@ -105,7 +101,7 @@ begin
   else
   begin
     // Show error if execution fails
-    MsgBox('Failed to launch WindowsTasks.exe with elevated privileges: ' +
+    MsgBox('Failed to launch WindowsCli.exe with elevated privileges: ' +
       SysErrorMessage(ResultCode), mbError, MB_OK);
     Result := False;
   end;
@@ -127,7 +123,8 @@ begin
     end;
 
     // Proceed with installation if user selects Yes
-    if Exec('wsl.exe', '--install --no-distribution', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    // if Exec('wsl.exe', '--install --no-distribution', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    if Exec('WindowsCli.exe', '--install-wsl2', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
     begin
       if ResultCode = 0 then
       begin
@@ -189,11 +186,27 @@ begin
   RunOnceData := AddParam(RunOnceData, 'COMPONENTS', Quote(WizardSelectedComponents(False)));
   RunOnceData := AddParam(RunOnceData, 'TASKS', Quote(WizardSelectedTasks(False)));
 
-  (*** Place any custom user selection you want to remember below. ***)
+  // Try to write to HKLM first (for all users), fall back to HKCU if that fails
+  try
+    if not RegWriteStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\RunOnce', RunOnceName, RunOnceData) then
+      RegWriteStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\RunOnce', RunOnceName, RunOnceData);
+  except
+    RegWriteStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\RunOnce', RunOnceName, RunOnceData);
+  end;
+end;
 
-  //<your code here>
+function InitializeSetup(): Boolean;
+begin
+  Restarted := ExpandConstant('{param:restart|0}') = '1';
 
-  RegWriteStringValue(HKA, 'Software\Microsoft\Windows\CurrentVersion\RunOnce', RunOnceName, RunOnceData);
+  if not Restarted then begin
+    // Check both HKLM and HKCU for existing RunOnce entries
+    Result := not (RegValueExists(HKLM, 'Software\Microsoft\Windows\CurrentVersion\RunOnce', RunOnceName) or
+                   RegValueExists(HKCU, 'Software\Microsoft\Windows\CurrentVersion\RunOnce', RunOnceName));
+    if not Result then
+      MsgBox(QuitMessageReboot, mbError, mb_Ok);
+  end else
+    Result := True;
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;

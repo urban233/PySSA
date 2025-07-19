@@ -151,3 +151,4 @@ _build
 /deployment/offline_resources/user_pymol/
 /user_pymol/
 /src/pyssa/.pymolrc.py
+/deployment/offline_resources/WindowsCli.exe

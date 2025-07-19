@@ -33,7 +33,7 @@ PLUGIN_NAME = 'PySSA'
 VERSION_NUMBER = "v1.0.8"  # The version number MUST be in double quotes
 
 # Flags
-DEBUGGING = True
+DEBUGGING = False
 
 # Paths/Filepaths
 if DEBUGGING:
