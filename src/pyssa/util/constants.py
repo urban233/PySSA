@@ -70,8 +70,8 @@ WSL2_DISTRO_NAME = "almaColabfold9"
 WSL2_USERNAME = "alma_user"
 
 VERSION_HISTORY_FILEPATH = pathlib.Path(pathlib.Path(PROGRAM_BIN_ROOT_PATH) / "remote_version_history.json")
-VERSION_HISTORY_URL = "https://w-hs.sciebo.de/s/Omruw1qNvQ4igeP/download"
-# VERSION_HISTORY_URL = "https://www.dropbox.com/scl/fi/m2aen8ljk9r1tqev18oyx/version_history.json?rlkey=ll3ir1qbtdyn7jhgaipfpk2yy&st=ndmsw4wi&dl=1"
+# VERSION_HISTORY_URL = "https://w-hs.sciebo.de/s/Omruw1qNvQ4igeP/download"
+VERSION_HISTORY_URL = "https://www.dropbox.com/scl/fi/m2aen8ljk9r1tqev18oyx/version_history.json?rlkey=ll3ir1qbtdyn7jhgaipfpk2yy&st=ndmsw4wi&dl=1"
 UPDATE_SETUP_FILEPATH = pathlib.Path(pathlib.Path(PROGRAM_BIN_ROOT_PATH) / "update.exe")
 
 SCRATCH_DIR = Path(f'{SETTINGS_DIR}/scratch')

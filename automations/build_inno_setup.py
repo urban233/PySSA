@@ -66,7 +66,7 @@ class BuildInnoSetup:
 
     if not user_pymol_zip.exists():
       print("Downloading user_pymol.zip...")
-      if not web_utils.download_file("https://w-hs.sciebo.de/s/YOsNELqpCLXGzvi/download", str(user_pymol_zip)):
+      if not web_utils.download_file("https://github.com/urban233/custom-pyssa-pymol-open-source-version/releases/download/v2025.07.1/user_pymol.zip", str(user_pymol_zip)):
         print("Unable to download user_pymol.zip, build process exits.")
         return
       print("Finished downloading user_pymol.zip.")
