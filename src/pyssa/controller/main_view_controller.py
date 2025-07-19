@@ -167,6 +167,7 @@ class MainViewController:
   def _connect_all_ui_elements_with_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
     self._view.dialogClosed.connect(self._close_main_window)
+    self._view.btn_update.clicked.connect(self.__slot_update)
     self._interface_manager.get_restart_pymol_view().return_value.connect(
       self._force_close_all
     )
@@ -1224,47 +1225,11 @@ class MainViewController:
     try:
       if tools.check_internet_connectivity():
         tools.download_file(constants.VERSION_HISTORY_URL, constants.VERSION_HISTORY_FILEPATH)
-        # request.urlretrieve(
-        #   constants.VERSION_HISTORY_URL, constants.VERSION_HISTORY_FILEPATH
-        # )
 
         tmp_latest_release = tools.get_latest_release(constants.VERSION_HISTORY_FILEPATH)
         tmp_current_version = constants.VERSION_NUMBER[1:]
         if tmp_current_version != tmp_latest_release["version"]:
-          tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
-            f"A new version of PySSA is available (v{tmp_latest_release['version']})!\nDo you want to update now?",
-            "Update",
-            custom_message_box.CustomMessageBoxIcons.INFORMATION.value,
-          )
-          tmp_dialog.exec_()
-          if tmp_dialog.response:
-            # This is not ideal but functional, should be refactored for better readability
-            try:
-              # Running this in a separate thread ensures the GUI stays responsive
-              # even if the update setup is large, like an update of the
-              # almaColabfold9 WSL2 distro
-              self._interface_manager.get_task_manager().append_task_result(
-                task_result_factory.TaskResultFactory.run_task_result(
-                  a_task_result=task_result.TaskResult.from_action(
-                    an_action=action.Action(
-                      a_target=self._download_update_setup,
-                      args=(
-                        tmp_latest_release["releaseUrl"],
-                      ),
-                    ),
-                    an_await_function=self.__await_download_update_setup,
-                  ),
-                  a_task_scheduler=self._interface_manager.get_task_scheduler(),
-                )
-              )
-            except Exception as e:
-              logger.error(f"An error occurred: {e}")
-              self._interface_manager.status_bar_manager.show_error_message(
-                "An unknown error occurred!"
-              )
-            else:
-              self._interface_manager.status_bar_manager.show_permanent_message("Downloading update ...")
-              self._interface_manager.block_gui(with_wait_cursor=True)
+          self._view.btn_update.show()
         else:
           self._interface_manager.status_bar_manager.show_temporary_message("No update available.")
     except Exception as e:
@@ -1272,6 +1237,43 @@ class MainViewController:
       self._interface_manager.status_bar_manager.show_error_message(
         "An unknown error occurred!"
       )
+
+  def __slot_update(self):
+    tmp_latest_release = tools.get_latest_release(constants.VERSION_HISTORY_FILEPATH)
+    tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+      f"A new version of PySSA is available (v{tmp_latest_release['version']})!\nDo you want to update now?",
+      "Update",
+      custom_message_box.CustomMessageBoxIcons.INFORMATION.value,
+    )
+    tmp_dialog.exec_()
+    if tmp_dialog.response:
+      # This is not ideal but functional should be refactored for better readability
+      try:
+        # Running this in a separate thread ensures the GUI stays responsive
+        # even if the update setup is large, like an update of the
+        # almaColabfold9 WSL2 distro
+        self._interface_manager.get_task_manager().append_task_result(
+          task_result_factory.TaskResultFactory.run_task_result(
+            a_task_result=task_result.TaskResult.from_action(
+              an_action=action.Action(
+                a_target=self._download_update_setup,
+                args=(
+                  tmp_latest_release["releaseUrl"],
+                ),
+              ),
+              an_await_function=self.__await_download_update_setup,
+            ),
+            a_task_scheduler=self._interface_manager.get_task_scheduler(),
+          )
+        )
+      except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        self._interface_manager.status_bar_manager.show_error_message(
+          "An unknown error occurred!"
+        )
+      else:
+        self._interface_manager.status_bar_manager.show_permanent_message("Downloading update ...")
+        self._interface_manager.block_gui(with_wait_cursor=True)
 
   def _download_update_setup(self, an_url: str) -> tuple[int, str]:
     """Downloads the update setup."""

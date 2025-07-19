@@ -71,6 +71,7 @@ WSL2_USERNAME = "alma_user"
 
 VERSION_HISTORY_FILEPATH = pathlib.Path(pathlib.Path(PROGRAM_BIN_ROOT_PATH) / "remote_version_history.json")
 VERSION_HISTORY_URL = "https://w-hs.sciebo.de/s/Omruw1qNvQ4igeP/download"
+# VERSION_HISTORY_URL = "https://www.dropbox.com/scl/fi/m2aen8ljk9r1tqev18oyx/version_history.json?rlkey=ll3ir1qbtdyn7jhgaipfpk2yy&st=ndmsw4wi&dl=1"
 UPDATE_SETUP_FILEPATH = pathlib.Path(pathlib.Path(PROGRAM_BIN_ROOT_PATH) / "update.exe")
 
 SCRATCH_DIR = Path(f'{SETTINGS_DIR}/scratch')
@@ -97,7 +98,9 @@ PREDICTION_PDB_DIR = Path(f'{SCRATCH_DIR}/local_predictions/pdb')
 ESMFOLD_DIR = Path(f'{SCRATCH_DIR}/esmfold')
 ESMFOLD_PDB_DIR = Path(f'{SCRATCH_DIR}/esmfold/pdb')
 
-DEMO_PROJECT_SCIEBO_URL = 'https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download'
+# DEMO_PROJECT_SCIEBO_URL = 'https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download'
+DEMO_PROJECT_SCIEBO_URL = 'https://www.dropbox.com/scl/fi/logf4po2t9odojif0dra6/demo_projects.zip?rlkey=wq4dtnbyf04uiey2ohepqnr66&st=63a9cvq3&dl=1'
+
 
 # Constants for structure prediction
 CONVERT_DOS_TO_UNIX = pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/scripts/batch/convert.bat')

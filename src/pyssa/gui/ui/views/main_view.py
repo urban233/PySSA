@@ -53,6 +53,25 @@ class MainView(QtWidgets.QMainWindow):
     self.ui = auto_main_view.Ui_MainWindow()
     self.ui.setupUi(self)
     self.status_bar = QtWidgets.QStatusBar()
+    self.btn_update = QtWidgets.QPushButton("Update")
+    self.btn_update.setStyleSheet("""
+        QPushButton {
+            color: #0000FF;
+            text-decoration: underline;
+            border: none;
+            background-color: transparent;
+            padding: 0px;
+            margin: 0px;
+        }
+        QPushButton:hover {
+            color: #0000CC;
+        }
+        QPushButton:pressed {
+            color: #000088;
+        }
+    """)
+    self.status_bar.addWidget(self.btn_update)
+    self.btn_update.hide()
     self.progress_bar = QtWidgets.QProgressBar()
     self.status_bar.addWidget(self.progress_bar)
     self.progress_bar.hide()
