@@ -31,7 +31,7 @@
 >
 > - Manual update to v1.1.0 is required
 >
-> - Download the latest installer [here](<Insert GitHub release link here>)
+> - Download the latest installer [here](https://www.dropbox.com/scl/fi/h3wqlp5fkb139st6y7kjo/pyssa_update_1.1.0.exe?rlkey=7heq666kbzy13cnhezz02h156&st=pj04cepm&dl=1)
 >
 > - Run the downloaded setup file from your local download directory
 >
