@@ -50,7 +50,7 @@ DOCS_PATH = str(
     pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/docs/pyssa-documentation/site')
 )
 
-PYTHON_FILEPATH = r"C:\ProgramData\IBCI\PySSA\bin\.venv\Scripts\python.exe"
+# PYTHON_FILEPATH = r"C:\ProgramData\IBCI\PySSA\bin\.venv\Scripts\python.exe"
 PLUGIN_EXTRA_TOOLS_PATH = str(pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/extra_tools/'))
 PLUGIN_LOGO_FILEPATH = str(
     pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/assets/images/pyssa_logo.png')
