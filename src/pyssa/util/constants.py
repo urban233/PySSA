@@ -30,7 +30,7 @@ from src.pyssa.util import globals, enums
 
 # General
 PLUGIN_NAME = 'PySSA'
-VERSION_NUMBER = "v1.0.8"  # The version number MUST be in double quotes
+VERSION_NUMBER = "v1.1.0"  # The version number MUST be in double quotes
 
 # Flags
 DEBUGGING = False
