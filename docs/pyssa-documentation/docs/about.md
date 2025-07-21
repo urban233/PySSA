@@ -7,8 +7,8 @@ Westphalian University of Applied Sciences <br>
 Germany <br>
 
 ## License
-PySSA - Python plugin for protein Sequence to Structure Analysis
-Copyright (C) 2024 Martin Urban, Hannah Kullik
+PySSA - Python rich client for visual protein Sequence to Structure Analysis
+Copyright (C) 2025 Martin Urban, Hannah Kullik
 (martin.urban@studmail.w-hs.de, hannah.kullik@studmail.w-hs.de)
 
 Source code is available at <https://github.com/urban233/PySSA>
