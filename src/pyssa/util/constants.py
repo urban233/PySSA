@@ -30,7 +30,7 @@ from src.pyssa.util import globals, enums
 
 # General
 PLUGIN_NAME = 'PySSA'
-VERSION_NUMBER = "v1.1.0"  # The version number MUST be in double quotes
+VERSION_NUMBER = "v1.2.0"  # The version number MUST be in double quotes
 
 # Flags
 DEBUGGING = False
@@ -99,7 +99,7 @@ ESMFOLD_DIR = Path(f'{SCRATCH_DIR}/esmfold')
 ESMFOLD_PDB_DIR = Path(f'{SCRATCH_DIR}/esmfold/pdb')
 
 # DEMO_PROJECT_SCIEBO_URL = 'https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download'
-DEMO_PROJECT_SCIEBO_URL = 'https://www.dropbox.com/scl/fi/logf4po2t9odojif0dra6/demo_projects.zip?rlkey=wq4dtnbyf04uiey2ohepqnr66&st=63a9cvq3&dl=1'
+DEMO_PROJECT_URL = 'https://www.dropbox.com/scl/fi/logf4po2t9odojif0dra6/demo_projects.zip?rlkey=wq4dtnbyf04uiey2ohepqnr66&st=63a9cvq3&dl=1'
 
 
 # Constants for structure prediction

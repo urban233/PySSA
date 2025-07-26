@@ -7,16 +7,16 @@
 [Setup]
 WizardStyle=modern
 AppName=PySSA
-AppVersion=1.1.0
+AppVersion=1.2.0
 AppCopyright=Martin Urban, Hannah Kullik, IBCI
 AppId={{192F52C3-D86D-4735-9929-C7DF599CB538}
-DefaultDirName={commonappdata}\IBCI\PySSA
+DefaultDirName={localappdata}\IBCI\PySSA
 AppPublisher=IBCI
 VersionInfoProductName=PySSA
 MinVersion=10.0.19045
 PrivilegesRequired=lowest
 OutputDir=..\..\dist
-OutputBaseFilename=pyssa_src_update_1.1.0
+OutputBaseFilename=pyssa_src_update_1.2.0
 DisableReadyPage=True
 DisableWelcomePage=False
 DisableDirPage=True
@@ -34,7 +34,7 @@ DiskSpanning=no
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Dirs]
-Name: "{commonappdata}\IBCI\wsl2\PySSA"
+;Name: "{commonappdata}\IBCI\wsl2\PySSA"
 Name: "{app}"
 Name: "{app}\assets"
 Name: "{app}\bin"
@@ -52,7 +52,8 @@ Name: "{userstartmenu}\PySSA"; Filename: "{app}\pyssa.exe"; IconFilename: "{app}
 Filename: "{app}\third_party\VC_redist.x64.exe"; Parameters: "/quiet /norestart"; Flags: runhidden waituntilterminated
 
 [UninstallRun]
-Filename: "{cmd}"; Parameters: "/C wsl --unregister almaColabfold9"
+Filename: "{app}\uninstall_helper.bat"; Flags: runhidden waituntilterminated
+;Filename: "{cmd}"; Parameters: "/C wsl --unregister almaColabfold9"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"

@@ -121,27 +121,27 @@ QTreeView {
     border-color: #DCDBE3;
 }
 
-QTreeView#proteins_tree_view {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: white;
-}
+/*QTreeView#proteins_tree_view {*/
+/*    border-style: solid;*/
+/*    border-width: 2px;*/
+/*    border-radius: 4px;*/
+/*    border-color: white;*/
+/*}*/
 
-QTreeView:disabled#proteins_tree_view {
-    background-color: white;
-}
+/*QTreeView:disabled#proteins_tree_view {*/
+/*    background-color: white;*/
+/*}*/
 
-QTreeView#protein_pairs_tree_view {
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 4px;
-    border-color: white;
-}
+/*QTreeView#protein_pairs_tree_view {*/
+/*    border-style: solid;*/
+/*    border-width: 2px;*/
+/*    border-radius: 4px;*/
+/*    border-color: white;*/
+/*}*/
 
-QTreeView:disabled#protein_pairs_tree_view {
-    background-color: white;
-}
+/*QTreeView:disabled#protein_pairs_tree_view {*/
+/*    background-color: white;*/
+/*}*/
 
 QFrame#frame_protein_protein_regions {
     border-style: solid;
@@ -194,13 +194,13 @@ QFrame#frame_protein_pair_protein_regions {
 QTreeView::branch:has-children:!has-siblings:closed,
 QTreeView::branch:closed:has-children:has-siblings{
     border-image: none;
-    image: url(C:/ProgramData/IBCI/PySSA/assets/icons/keyboard_arrow_right_w400.svg)
+    image: arrow-right
 }
 
 QTreeView::branch:open:has-children:!has-siblings,
 QTreeView::branch:open:has-children:has-siblings{
     border-image: none;
-    image: url(C:/ProgramData/IBCI/PySSA/assets/icons/keyboard_arrow_down_w400.svg)
+    image: arrow-down
 }
 
 QMainWindow {

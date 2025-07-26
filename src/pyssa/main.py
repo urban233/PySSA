@@ -47,6 +47,7 @@ def main():
   from src.pyssa.gui.ui.styles import styles
   from src.pyssa.controller import main_view_controller
   from src.pyssa.controller import interface_manager
+  styles.inject_local_appdata_path_into_stylesheet()
 
   app = QtWidgets.QApplication(sys.argv)
   # setup QSplashScreen

@@ -137,7 +137,7 @@ class DialogStartup(QtWidgets.QDialog):
     if not os.path.exists(pathlib.Path(f"{constants.CACHE_DIR}")):
       os.mkdir(pathlib.Path(f"{constants.CACHE_DIR}"))
     request.urlretrieve(
-        constants.DEMO_PROJECT_SCIEBO_URL,
+        constants.DEMO_PROJECT_URL,
         str(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")),
     )
     self.close()

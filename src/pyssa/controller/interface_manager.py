@@ -241,7 +241,7 @@ class InterfaceManager:
       if not os.path.exists(pathlib.Path(f"{constants.CACHE_DIR}")):
         os.mkdir(pathlib.Path(f"{constants.CACHE_DIR}"))
       tools.download_file(
-        constants.DEMO_PROJECT_SCIEBO_URL,
+        constants.DEMO_PROJECT_URL,
         str(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")),
       )
       constants.PYSSA_LOGGER.info("Demo projects are getting extracted ...")

@@ -790,7 +790,10 @@ class MainView(QtWidgets.QMainWindow):
     # Set the scaled pixmap to the QLabel
     self.ui.lbl_logo.setPixmap(scaled_pixmap)
     self.ui.lbl_logo.setAlignment(Qt.AlignCenter)
+    # Setting stylesheets
     styles.set_stylesheet_homepage(self)
+    # self.ui.proteins_tree_view.setStyleSheet(styles.get_tree_view_stylesheet())
+    # self.ui.protein_pairs_tree_view.setStyleSheet(styles.get_tree_view_stylesheet())
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     self.setWindowTitle("PySSA")
     constants.PYSSA_LOGGER.info(

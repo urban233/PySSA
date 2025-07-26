@@ -123,6 +123,13 @@ class BuildInnoSetup:
     ):
       print("Copying the setup.bat file failed!")
       exit(1)
+    if not file.File.copy(
+            pathlib.Path(self.deployment_resources_path / "uninstall_helper.bat"),
+            pathlib.Path(self.inno_sources_build_path / "uninstall_helper.bat"),
+            overwrite=True
+    ):
+      print("Copying the setup.bat file failed!")
+      exit(1)
     self.inno_build_third_party_path.mkdir(exist_ok=True)
     self.inno_build_prerequisite_path.mkdir(exist_ok=True)
     shutil.copy(tmp_vc_redist_setup_filepath, pathlib.Path(self.inno_build_third_party_path / "VC_redist.x64.exe"))

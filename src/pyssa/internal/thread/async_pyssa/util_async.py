@@ -448,10 +448,8 @@ def download_demo_projects(
     if os.path.exists(download_dest):
       os.remove(download_dest)
 
-    # download demo projects
-    url = "https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download"
     try:
-      response = requests.get(url)
+      response = requests.get(constants.DEMO_PROJECT_URL)
       response.raise_for_status()  # Check for errors
       zipfile = zipfile.ZipFile(BytesIO(response.content))
       zipfile.extractall(

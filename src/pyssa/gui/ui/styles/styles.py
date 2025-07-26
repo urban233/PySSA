@@ -130,3 +130,57 @@ def set_stylesheet_homepage(self) -> None:  # noqa: ANN001
     style = file.read()
     # Set the stylesheet of the application
     self.setStyleSheet(style)
+
+
+def get_tree_view_stylesheet() -> str:
+  local_app_data_path = os.getenv('LOCALAPPDATA').replace("\\", "/")
+  css_string = """
+  QTreeView {
+      border-style: solid;
+      border-width: 2px;
+      border-radius: 4px;
+      border-color: white;
+  }
+
+  QTreeView:disabled {
+      background-color: white;
+  }
+    
+  QTreeView::branch:has-children:!has-siblings:closed,
+  QTreeView::branch:closed:has-children:has-siblings {{
+      border-image: none;
+      image: arrow-right
+  }}
+  
+  QTreeView::branch:open:has-children:!has-siblings,
+  QTreeView::branch:open:has-children:has-siblings {{
+      border-image: none;
+      image: arrow-down
+  }}
+  """
+  css_string = css_string.replace("arrow-right", f"url({local_app_data_path}/IBCI/PySSA/assets/icons/keyboard_arrow_right_w400.svg)")
+  css_string = css_string.replace("arrow-down", f"url({local_app_data_path}/IBCI/PySSA/assets/icons/keyboard_arrow_down_w400.svg)")
+  return css_string
+
+
+def inject_local_appdata_path_into_stylesheet() -> None:
+  logger.info("Injecting the local appdata path into both stylesheets: pyssa_style.css and pyssa_style_homepage.css.")
+  tmp_local_app_data_path = os.getenv('LOCALAPPDATA').replace("\\", "/")
+
+  for tmp_stylesheet_path in [
+    pathlib.Path(f"{constants.PROGRAM_SRC_PATH}/pyssa/gui/ui/styles/pyssa_style.css"),
+    pathlib.Path(f"{constants.PROGRAM_SRC_PATH}/pyssa/gui/ui/styles/pyssa_style_homepage.css")
+  ]:
+    with open(tmp_stylesheet_path, "r", encoding="utf-8") as file:
+      css_string = file.read()
+      css_string = css_string.replace(
+        "arrow-right",
+        f"url({tmp_local_app_data_path}/IBCI/PySSA/assets/icons/keyboard_arrow_right_w400.svg)"
+      )
+      css_string = css_string.replace(
+        "arrow-down",
+        f"url({tmp_local_app_data_path}/IBCI/PySSA/assets/icons/keyboard_arrow_down_w400.svg)"
+      )
+
+    with open(tmp_stylesheet_path, "w", encoding="utf-8") as file:
+      file.write(css_string)
