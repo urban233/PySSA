@@ -121,27 +121,27 @@ QTreeView {
     border-color: #DCDBE3;
 }
 
-/*QTreeView#proteins_tree_view {*/
-/*    border-style: solid;*/
-/*    border-width: 2px;*/
-/*    border-radius: 4px;*/
-/*    border-color: white;*/
-/*}*/
+QTreeView#proteins_tree_view {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: white;
+}
 
-/*QTreeView:disabled#proteins_tree_view {*/
-/*    background-color: white;*/
-/*}*/
+QTreeView:disabled#proteins_tree_view {
+    background-color: white;
+}
 
-/*QTreeView#protein_pairs_tree_view {*/
-/*    border-style: solid;*/
-/*    border-width: 2px;*/
-/*    border-radius: 4px;*/
-/*    border-color: white;*/
-/*}*/
+QTreeView#protein_pairs_tree_view {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: white;
+}
 
-/*QTreeView:disabled#protein_pairs_tree_view {*/
-/*    background-color: white;*/
-/*}*/
+QTreeView:disabled#protein_pairs_tree_view {
+    background-color: white;
+}
 
 QFrame#frame_protein_protein_regions {
     border-style: solid;

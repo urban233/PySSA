@@ -20,27 +20,17 @@
 ## <img src='https://github.com/primer/octicons/blob/main/icons/download-24.svg' width='32'/> [Quick Installation](https://urban233.github.io/PySSA/install.html)
 
 > [!IMPORTANT]
+> 📣 **Update details for version 1.2.0** 📣
+> Please reinstall PySSA if your current version is 1.2.0 or older!
+> Version 1.2.0 introduces a user-only installation and therefore requires a complete reinstallation, i.e., uninstall and reinstall.
+> 
 > 📣 **Update details for version 1.1.0** 📣
 > Due to persistent reliability issues with our previous cloud hosting provider (Sciebo), 
 > PySSA's automatic update detection feature has been temporarily disabled. 
 > You may have encountered unexpected errors during application launch as a result 
 > of this service disruption.
 >
-> To ensure continued stability, we've migrated to a new cloud hosting infrastructure. 
-> As part of this transition:
->
-> - Manual update to v1.1.0 is required
->
-> - Download the latest installer [here](https://www.dropbox.com/scl/fi/h3wqlp5fkb139st6y7kjo/pyssa_update_1.1.0.exe?rlkey=7heq666kbzy13cnhezz02h156&st=pj04cepm&dl=1)
->
-> - Run the downloaded setup file from your local download directory
->
 > We sincerely apologize for any inconvenience caused by this necessary migration.
-> 
-> 📣 **Update details for version 1.0.6** 📣
->
-> Please reinstall PySSA if your current version is 1.0.5 or older!
-> Version 1.0.6 includes a new AlmaLinux WSL2 distribution and therefore requires a complete reinstallation, i.e. uninstall and reinstall.
 
 ## <img src='https://github.com/primer/octicons/blob/main/icons/video-24.svg' width='32'/> [Use Cases](https://urban233.github.io/PySSA/use_cases.html)
 A "Use Case" refers to a specific scenario that demonstrates how the software can be used to accomplish a particular task or objective.
@@ -106,7 +96,7 @@ If you are using PySSA for your own projects, you are welcome to give credit to 
 ## Installation
 PySSA is tested and available for Windows(TM) 10 and 11.
 ### Microsoft Windows
-For a convenient and user-friendly installation, a [setup](https://zenodo.org/records/16265466/files/PySSA_1.1.0_Setup.zip?download=1) is available.
+For a convenient and user-friendly installation, a [setup](https://zenodo.org/records/16753632/files/PySSA_1.2.0_Setup.zip?download=1) is available.
 
 **Important:**
 * WSL2 **cannot** be uninstalled, once it is installed! Windows will integrate the WSL2 as a system component.

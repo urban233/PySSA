@@ -110,13 +110,13 @@ QTreeView {
 QTreeView::branch:has-children:!has-siblings:closed,
 QTreeView::branch:closed:has-children:has-siblings{
     border-image: none;
-    image: arrow-right
+    image: url(C:/Users/manfred/AppData/Local/IBCI/PySSA/assets/icons/keyboard_arrow_right_w400.svg)
 }
 
 QTreeView::branch:open:has-children:!has-siblings,
 QTreeView::branch:open:has-children:has-siblings{
     border-image: none;
-    image: arrow-down
+    image: url(C:/Users/manfred/AppData/Local/IBCI/PySSA/assets/icons/keyboard_arrow_down_w400.svg)
 }
 
 QMainWindow {
