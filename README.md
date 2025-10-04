@@ -20,17 +20,18 @@
 ## <img src='https://github.com/primer/octicons/blob/main/icons/download-24.svg' width='32'/> [Quick Installation](https://urban233.github.io/PySSA/install.html)
 
 > [!IMPORTANT]
-> 📣 **Update details for version 1.2.0** 📣
+> 📣 **Update details for version 1.3.0** 📣
 > Please reinstall PySSA if your current version is 1.2.0 or older!
-> Version 1.2.0 introduces a user-only installation and therefore requires a complete reinstallation, i.e., uninstall and reinstall.
+> Version 1.3.0 fixes the bug that every structure prediction job failed. 
+> However, this requires a complete reinstallation, i.e., uninstall and reinstall.
+> 
+> We sincerely apologize for all the inconvenience regarding PySSA updates.
 > 
 > 📣 **Update details for version 1.1.0** 📣
 > Due to persistent reliability issues with our previous cloud hosting provider (Sciebo), 
 > PySSA's automatic update detection feature has been temporarily disabled. 
 > You may have encountered unexpected errors during application launch as a result 
 > of this service disruption.
->
-> We sincerely apologize for any inconvenience caused by this necessary migration.
 
 ## <img src='https://github.com/primer/octicons/blob/main/icons/video-24.svg' width='32'/> [Use Cases](https://urban233.github.io/PySSA/use_cases.html)
 A "Use Case" refers to a specific scenario that demonstrates how the software can be used to accomplish a particular task or objective.
@@ -96,7 +97,7 @@ If you are using PySSA for your own projects, you are welcome to give credit to 
 ## Installation
 PySSA is tested and available for Windows(TM) 10 and 11.
 ### Microsoft Windows
-For a convenient and user-friendly installation, a [setup](https://zenodo.org/records/16753632/files/PySSA_1.2.0_Setup.zip?download=1) is available.
+For a convenient and user-friendly installation, a [setup](https://zenodo.org/records/17265961/files/PySSA_1.3.0_Setup.zip?download=1) is available.
 
 **Important:**
 * WSL2 **cannot** be uninstalled, once it is installed! Windows will integrate the WSL2 as a system component.

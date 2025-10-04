@@ -1,33 +1,27 @@
 # Workflow Results
-* 
-  * [Test workflow 1](#Test-workflow-1) Result: OK (05.04.2024)
-  * [Test workflow 2](#Test-workflow-2) Result: OK (04.04.2024; no more testing needed)
-  * [Test workflow 3](#Test-workflow-3) Result: OK (05.04.2024)
-  * [Test workflow 4](#Test-workflow-4) Result: OK (05.04.2024)
-  * [Test workflow 5](#Test-workflow-5) Result: OK (05.04.2024)
 * Proteins
   * Import
-    * [Test workflow 6](#Test-workflow-6) Result: OK (05.04.2024)
-    * [Test workflow 7](#Test-workflow-7) Result: OK (05.04.2024)
-    * [Test workflow 8](#Test-workflow-8) Result: OK (05.04.2024)
-    * [Test workflow 9](#Test-workflow-9) Result: OK (05.04.2024)
+    * [Test workflow 6](#Test-workflow-6) Result: OK (04.10.2025)
+    * [Test workflow 7](#Test-workflow-7) Result: OK (04.10.2025)
+    * [Test workflow 8](#Test-workflow-8) Result: OK (04.10.2025)
+    * [Test workflow 9](#Test-workflow-9) Result: OK (04.10.2025)
 * Sequences
   * Add
-    * [Test workflow 10](#Test-workflow-10) Result: OK (06.04.2024)
+    * [Test workflow 10](#Test-workflow-10) Result: OK (04.10.2025)
   * Import
-    * [Test workflow 11](#Test-workflow-11) Result: OK (06.04.2024)
+    * [Test workflow 11](#Test-workflow-11) Result: OK (04.10.2025)
 * Prediction
   * Monomer
-    * [Test workflow 12](#Test-workflow-12) Result: OK (06.04.2024)
+    * [Test workflow 12](#Test-workflow-12) Result: OK (04.10.2025)
  * Multimer
-    * [Test workflow 16](#Test-workflow-16) Result:
+    * [Test workflow 16](#Test-workflow-16) Result: OK (04.10.2025)
 * Prediction + Analysis
   * Monomer
-    * [Test workflow 20](#Test-workflow-20) Result: OK (06.04.2024)
+    * [Test workflow 20](#Test-workflow-20) Result: OK (04.10.2025)
   * Multimer
-    * [Test workflow 22](#Test-workflow-22) Result:
+    * [Test workflow 22](#Test-workflow-22) Result: OK (04.10.2025)
 * Distance Analysis
-  * [Test workflow 24](#Test-workflow-24) Result: OK (06.04.2024)
+  * [Test workflow 24](#Test-workflow-24) Result: OK (04.10.2025)
 
 
 # Proteins
