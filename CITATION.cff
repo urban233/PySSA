@@ -1,6 +1,6 @@
-cff-version: 1.3.0
+cff-version: 1.3.1
 title: PySSA
-version: "1.3.0"
+version: "1.3.1"
 message: "If you use this software, please cite it as below."
 type: software
 authors:

@@ -81,7 +81,7 @@ build_exe_options = {
 
 setup(
   name="PySSA",
-  version="1.3.0",
+  version="1.3.1",
   description="Build script for PySSA",
   options={
     "build_exe": build_exe_options,

@@ -143,7 +143,7 @@ _build
 /deployment/src/c_sharp/WindowsWrapper/WindowsTasks/obj
 /inno-build-release/
 /inno-build-debug/
-./docs/pyssa-documentation/site
+/docs/pyssa-documentation/site/*
 /deployment/src/dockerfiles/alma9-colabfold-rootfs.tar
 /winbatch/*.cmp
 /winbatch/*.dll
