@@ -11,7 +11,7 @@ If you have a real-time virus scanner software installed (e.g. Avira, Kaspersky,
 
 ## Download and extract setup
 
-1. Download the _PySSA_1.3.0_Setup.zip_. Click [here](https://zenodo.org/records/17265961/files/PySSA_1.3.0_Setup.zip?download=1) 
+1. Download the _PySSA_1.3.1_Setup.zip_. Click [here](https://zenodo.org/records/17316609/files/PySSA_1.3.1_Setup.zip?download=1) 
 to automatically start the download. The download will take several minutes to download depending on your internet connection.
 
 2. After the download is finished, open a Windows explorer window and navigate to _Downloads_.
@@ -36,7 +36,7 @@ to automatically start the download. The download will take several minutes to d
 
 ## Run setup
 1. After the extraction process finished, a new Windows explorer windows will open. 
-In the new window double-click on the file **PySSA_1.3.0._Setup.exe** to start the setup.
+In the new window double-click on the file **PySSA_1.3.1._Setup.exe** to start the setup.
     <figure markdown="span">
       ![Image title](assets/images/installation/install_5.png){ width="1000" }
       <figcaption></figcaption>
