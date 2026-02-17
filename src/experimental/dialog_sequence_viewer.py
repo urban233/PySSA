@@ -19,16 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QHBoxLayout
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt.QtWidgets import QHBoxLayout
+from src.pyssa.gui.qt import QtCore
 
 from src.pyssa.model import sequence_model
 from src.pyssa.util import constants
 from src.pyssa.gui.ui.forms.auto_generated.auto_dialog_sequence_viewer import Ui_Dialog
-from PyQt5.QtWidgets import *
+from src.pyssa.gui.qt.QtWidgets import *
 import PyQt5
-from PyQt5 import QtGui
+from src.pyssa.gui.qt import QtGui
 
 
 class SequenceViewer(QtWidgets.QDialog):

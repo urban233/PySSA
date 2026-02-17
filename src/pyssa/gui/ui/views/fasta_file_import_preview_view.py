@@ -20,11 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the fasta file import preview view."""
-from PyQt5.QtWidgets import QDialog
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
+from src.pyssa.gui.qt.QtWidgets import QDialog
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtGui
 
 from src.pyssa.gui.ui.custom_delegates import sequence_table_delegate
 from src.pyssa.gui.ui.styles import styles

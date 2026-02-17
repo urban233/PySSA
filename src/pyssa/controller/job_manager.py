@@ -27,7 +27,7 @@ import subprocess
 import time
 from typing import Union, Optional
 
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 
 from src.pyssa.gui.ui.custom_widgets import job_entry
 from src.pyssa.internal.data_structures import job

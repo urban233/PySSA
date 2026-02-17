@@ -26,11 +26,11 @@ import sys
 import zipfile
 import PyQt5.QtWidgets
 from urllib import request
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt.QtWidgets import QApplication
 from src.pyssa.util import constants
 from src.pyssa.gui.ui.forms.auto_generated.auto_dialog_startup import Ui_Dialog
 

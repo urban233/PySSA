@@ -25,8 +25,8 @@ import pathlib
 from typing import Any, Optional
 
 import numpy as np
-from PyQt5 import QtCore
-from PyQt5 import QtSql
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtSql
 from Bio import SeqRecord
 
 from src.pyssa.internal.data_structures import protein, project, protein_pair, structure_analysis, results, chain, sequence, settings

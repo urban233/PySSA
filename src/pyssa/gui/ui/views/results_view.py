@@ -20,10 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the results summary view."""
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.forms.auto_generated import auto_results_view
 from src.pyssa.gui.ui.styles import styles

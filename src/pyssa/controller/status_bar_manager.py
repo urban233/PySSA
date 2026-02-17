@@ -22,8 +22,8 @@
 """Module for the status bar manager."""
 import logging
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.ui.custom_widgets import custom_label
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import constants

@@ -23,9 +23,9 @@
 import logging
 import pathlib
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.controller import database_manager
 from src.pyssa.util import input_validator, constants, enums, exception
 from src.pyssa.util import gui_utils

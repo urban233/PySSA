@@ -25,8 +25,8 @@ import queue
 import uuid
 from typing import Optional, Callable
 
-from PyQt5.QtCore import pyqtSignal
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import pyqtSignal
+from src.pyssa.gui.qt import QtCore
 
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import exception, enums

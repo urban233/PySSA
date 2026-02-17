@@ -22,8 +22,8 @@
 """Module for the distance analysis view controller."""
 import logging
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import pyqtSignal
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import pyqtSignal
 
 from src.pyssa.controller import add_protein_pair_view_controller
 from src.pyssa.internal.data_structures.data_classes import prediction_configuration

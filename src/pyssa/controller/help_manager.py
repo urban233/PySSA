@@ -23,7 +23,7 @@
 import logging
 import pathlib
 
-from PyQt5.QtCore import QUrl
+from src.pyssa.gui.qt.QtCore import QUrl
 
 from src.pyssa.gui.ui.views import help_view
 from src.pyssa.logging_pyssa import log_handlers

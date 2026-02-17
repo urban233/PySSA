@@ -23,8 +23,8 @@
 import logging
 from collections import defaultdict
 from Bio.SeqRecord import SeqRecord
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.controller import interface_manager, fasta_file_import_preview_view_controller
 from src.pyssa.internal.data_structures.data_classes import basic_seq_info
 from src.pyssa.logging_pyssa import log_levels, log_handlers

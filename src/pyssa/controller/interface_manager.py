@@ -33,9 +33,9 @@ from typing import TYPE_CHECKING
 from urllib import request
 
 from Bio import SeqRecord
-from PyQt5 import QtGui, QtCore
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtGui, QtCore
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import Qt
 
 from src.application_process import application_process_manager
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS  # noqa: F401
@@ -45,7 +45,8 @@ from src.pyssa.gui.ui.custom_widgets import job_entry
 from src.pyssa.gui.ui.dialogs import dialog_startup
 from src.pyssa.gui.ui.views import rename_protein_view, use_project_view, add_sequence_view, add_scene_view, settings_view, predict_protein_view, fasta_file_import_preview_view, rename_sequence_view, add_protein_pair_view, advanced_prediction_configurations, restart_user_pymol_view
 from src.pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
-from src.pyssa.gui.ui.views import main_view, distance_analysis_view, results_view, add_protein_view
+from src.pyssa.gui.ui.views import distance_analysis_view, results_view, add_protein_view
+from src.pyssa import main_view
 from src.pyssa.gui.ui.views import hotspots_protein_regions_view
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.internal.data_structures import project, protein_pair

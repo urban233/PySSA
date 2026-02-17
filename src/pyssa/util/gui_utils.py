@@ -24,7 +24,7 @@ import logging
 import os
 import pathlib
 
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtWidgets
 
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.internal.thread import thread_util

@@ -23,9 +23,9 @@
 import logging
 
 import zmq
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
 
 from src.auxiliary_pymol import auxiliary_pymol_client
 from src.pyssa.internal.data_structures import protein, job

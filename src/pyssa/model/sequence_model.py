@@ -22,7 +22,7 @@
 """Module contains the sequence model."""
 import logging
 
-from PyQt5 import QtGui
+from src.pyssa.gui.qt import QtGui
 
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import exception

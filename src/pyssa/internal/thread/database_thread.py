@@ -22,7 +22,7 @@
 """Module contains the database thread class."""
 import logging
 import queue
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 from src.pyssa.controller import database_manager
 from src.pyssa.internal.thread import tasks
 from src.pyssa.logging_pyssa import log_handlers

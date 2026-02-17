@@ -22,8 +22,8 @@
 """Module that contains the dialog for the advanced configuration of the ColabFold prediction."""
 import logging
 
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.ui.forms.auto_generated.auto_dialog_advanced_prediction_configurations import Ui_Dialog
 from src.pyssa.util import gui_utils
 

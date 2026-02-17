@@ -23,9 +23,9 @@
 import enum
 import logging
 
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtWidgets
 
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.logging_pyssa import log_handlers

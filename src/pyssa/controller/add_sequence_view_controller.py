@@ -22,8 +22,8 @@
 """Module for the add sequence view controller."""
 import logging
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
 
 from src.pyssa.util import input_validator, constants, exception
 from src.pyssa.logging_pyssa import log_levels, log_handlers

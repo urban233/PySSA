@@ -19,10 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from PyQt5.QtGui import QIcon
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5 import QtCore
+from src.pyssa.gui.qt.QtGui import QIcon
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.util import constants
 

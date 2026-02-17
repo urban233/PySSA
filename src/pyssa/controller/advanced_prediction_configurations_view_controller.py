@@ -22,7 +22,7 @@
 """Module for the advanced prediction configuration view controller."""
 import logging
 
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 
 from src.pyssa.internal.data_structures.data_classes import prediction_configuration
 from src.pyssa.util import constants, exception

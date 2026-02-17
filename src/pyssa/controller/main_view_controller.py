@@ -36,10 +36,10 @@ import pywinctl
 from Bio import SeqRecord
 from Bio.Seq import Seq
 
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtGui
 
 from src.auxiliary_pymol import auxiliary_pymol_client
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
@@ -62,7 +62,7 @@ from src.pyssa.internal.thread import database_thread
 from src.pyssa.io_pyssa import filesystem_io
 from src.pyssa.logging_pyssa import log_handlers, log_levels
 from src.pyssa.util import constants, enums, exit_codes, tools, ui_util, exception
-from src.pyssa.gui.ui.views import main_view
+from src.pyssa import main_view
 from src.pyssa.controller import interface_manager, distance_analysis_view_controller, delete_project_view_controller, \
   create_project_view_controller, open_project_view_controller, database_manager
 from src.pyssa.util import globals

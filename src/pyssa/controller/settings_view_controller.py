@@ -23,7 +23,7 @@
 from typing import TYPE_CHECKING
 import logging
 
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 from src.pyssa.util import exception
 from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_handlers, log_levels

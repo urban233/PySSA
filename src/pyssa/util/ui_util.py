@@ -23,9 +23,9 @@
 import logging
 from typing import Union
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import Qt
 
 from src.pyssa.gui.ui.custom_widgets import toggle_button
 from src.pyssa.internal.thread import thread_util

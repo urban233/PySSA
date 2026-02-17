@@ -32,23 +32,35 @@ from src.pyssa.util import globals, enums
 PLUGIN_NAME = 'PySSA'
 VERSION_NUMBER = "v1.3.1"  # The version number MUST be in double quotes
 
-# Flags
-DEBUGGING = False
+# Debugging env var
+PYDEBUG: bool = os.getenv("PYDEBUG", "0") == "1"
+"""C like macro for the C like preprocessor env var PYDEBUG.
+True if the env var is set to 1
+False if the env var is not defined
+"""
+
+
 
 # Paths/Filepaths
-if DEBUGGING:
+if PYDEBUG:
     PROGRAM_BIN_ROOT_PATH = pathlib.Path(r"C:\Users\manfred\github_repos\PySSA")
     PROGRAM_SRC_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "src")
+    print(PROGRAM_SRC_PATH)
+    DATA_PATH = pathlib.Path(PROGRAM_SRC_PATH / "pyssa/data")
 else:
     PROGRAM_BIN_ROOT_PATH: pathlib.Path = pathlib.Path(sys.executable).parent
     PYTHON_LIB_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "lib")
     PROGRAM_SRC_PATH: pathlib.Path = pathlib.Path(PYTHON_LIB_PATH / "src")
+    # TODO: Check if this path is correct if deployed
+    DATA_PATH = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "data")
 
 AUXILIARY_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "aux_pymol.exe")
 USER_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "user_pymol" / "Open-Source-PyMOL.exe")
 DOCS_PATH = str(
     pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/docs/pyssa-documentation/site')
 )
+ICONS_PATH = pathlib.Path(f"{DATA_PATH}/icons")
+MAIN_STYLESHEET_FILEPATH = pathlib.Path(DATA_PATH / "style/style.css")
 
 # PYTHON_FILEPATH = r"C:\ProgramData\IBCI\PySSA\bin\.venv\Scripts\python.exe"
 PLUGIN_EXTRA_TOOLS_PATH = str(pathlib.Path(f'{PROGRAM_BIN_ROOT_PATH}/extra_tools/'))

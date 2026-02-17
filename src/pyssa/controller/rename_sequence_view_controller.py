@@ -21,8 +21,8 @@
 #
 """Module for the rename sequence view controller."""
 import logging
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
 
 from src.pyssa.controller import interface_manager
 from src.pyssa.util import input_validator, exception

@@ -23,8 +23,8 @@
 from typing import Optional
 
 import zmq
-from PyQt5 import QtCore
-from PyQt5.QtCore import pyqtSignal
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import pyqtSignal
 
 from src.pyssa.internal.thread import tasks
 from src.pyssa_pymol import local_logging, commands, pymol_enums

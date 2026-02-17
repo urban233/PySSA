@@ -22,9 +22,9 @@
 """Module for the add protein view controller."""
 import logging
 import os
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.internal.thread import tasks
 from src.pyssa.internal.thread.async_pyssa import validate_async

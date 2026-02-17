@@ -1,14 +1,14 @@
 import datetime
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QPushButton, QLabel
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-from PyQt5.QtCore import QUrl
+from src.pyssa.gui.qt.QtWidgets import QHBoxLayout, QVBoxLayout, QPushButton, QLabel
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt.QtCore import QUrl
 from src.pyssa.util import constants
 from src.pyssa.util import gui_utils
 from src.experimental import dialog_notebook_managment
 
 try:
-    from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineDownloadItem
+    from src.pyssa.gui.qt.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineDownloadItem
 except ImportError:
     print("QtWebEngineWidgets could not be imported correctly!")
 

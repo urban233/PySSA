@@ -20,8 +20,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the custom line edit widget."""
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtCore
 
 
 class CustomLineEdit(QtWidgets.QLineEdit):

@@ -22,8 +22,8 @@
 """Module for the fasta file import preview view controller."""
 import logging
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.controller import interface_manager
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.internal.data_structures.data_classes import basic_seq_info

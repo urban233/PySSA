@@ -22,11 +22,11 @@
 """Module for the main view of the PySSA plugin."""
 import logging
 
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAbstractItemView
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt.QtWidgets import QAbstractItemView
 from src.pyssa.gui.ui.custom_widgets import custom_line_edit, toggle_button, color_grid
 from src.pyssa.gui.ui.forms.auto_generated import auto_main_view
 from src.pyssa.gui.ui.styles import styles

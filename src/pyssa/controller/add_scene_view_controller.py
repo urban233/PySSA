@@ -22,7 +22,7 @@
 """Module for the add scene view controller."""
 import logging
 
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 
 from src.pyssa.controller import interface_manager
 from src.pyssa.logging_pyssa import log_levels, log_handlers

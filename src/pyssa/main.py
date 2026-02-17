@@ -31,9 +31,9 @@ def main():
   sys.path.append(str(tmp_root_path / "lib"))
   sys.path.append(str(tmp_root_path / "user_pymol/lib"))
 
-  from PyQt5 import QtWidgets
-  from PyQt5 import QtGui
-  from PyQt5.QtCore import Qt
+  from src.pyssa.gui.qt import QtWidgets
+  from src.pyssa.gui.qt import QtGui
+  from src.pyssa.gui.qt import Qt
 
   # Check the session type
   # session_type = os.environ.get('XDG_SESSION_TYPE', 'x11')  # Default to 'x11' if not set

@@ -1,6 +1,6 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QStatusBar, QPushButton, QDialog, QVBoxLayout, QProgressBar
-from PyQt5.QtCore import QTimer
+from src.pyssa.gui.qt.QtWidgets import QApplication, QMainWindow, QStatusBar, QPushButton, QDialog, QVBoxLayout, QProgressBar
+from src.pyssa.gui.qt import Qtimer
 
 
 class JobProgressPopup(QDialog):

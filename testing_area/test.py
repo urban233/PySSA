@@ -1,5 +1,5 @@
 # import sys
-# from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QSplitter, QTableWidget, QTableWidgetItem, QTextEdit, QFrame
+# from src.pyssa.gui.qt.QtWidgets import QApplication, QDialog, QVBoxLayout, QSplitter, QTableWidget, QTableWidgetItem, QTextEdit, QFrame
 #
 #
 # class ResizableDialog(QDialog):

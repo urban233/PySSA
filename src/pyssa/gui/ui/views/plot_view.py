@@ -25,11 +25,11 @@ import logging
 from typing import Optional
 
 import numpy as np
-from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import QVBoxLayout, QWidget, QScrollArea
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt.QtWidgets import QVBoxLayout, QWidget, QScrollArea
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backend_bases import MouseButton
 from matplotlib.figure import Figure

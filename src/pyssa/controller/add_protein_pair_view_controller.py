@@ -21,10 +21,10 @@
 #
 """Module for the add protein pair view controller."""
 import logging
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import Qt
 from src.pyssa.controller import interface_manager, watcher
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.internal.data_structures import chain, protein

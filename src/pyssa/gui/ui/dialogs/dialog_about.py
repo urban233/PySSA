@@ -20,9 +20,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the About dialog."""
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.ui.forms.auto_generated.auto_dialog_about import Ui_Dialog
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.util import constants

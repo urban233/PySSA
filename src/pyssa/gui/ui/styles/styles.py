@@ -23,7 +23,7 @@
 import logging
 import os
 import pathlib
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import constants, global_variables, exception
 

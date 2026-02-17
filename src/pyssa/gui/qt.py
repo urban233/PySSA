@@ -1,0 +1,58 @@
+#
+# PySSA - Python-Plugin for Sequence-to-Structure Analysis
+# Copyright (C) 2024
+# Martin Urban (martin.urban@studmail.w-hs.de)
+# Hannah Kullik (hannah.kullik@studmail.w-hs.de)
+#
+# Source code is available at <https://github.com/urban233/PySSA>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+try:
+    from PyQt6 import QtCore, QtGui, QtWidgets, QtSql
+    from PyQt6.QtCore import pyqtSignal
+    from PyQt6.QtCore import Qt
+
+    IS_PYQT6 = True
+except ImportError:
+    from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
+    from PyQt5.QtCore import pyqtSignal
+    from PyQt5.QtCore import Qt
+
+    IS_PYQT6 = False
+
+__docformat__ = "google"
+
+# Handle enum differences (PyQt6 uses enum classes, PyQt5 uses constants)
+if not IS_PYQT6:
+    QtCore.Qt.AlignmentFlag = QtCore.Qt
+    QtCore.Qt.WindowType = QtCore.Qt
+    QtGui.QAction = QtWidgets.QAction
+    QtGui.QActionGroup = QtWidgets.QActionGroup
+
+# Alias `exec` method for QDialog, QApplication, etc.
+if not IS_PYQT6:
+    QtWidgets.QDialog.exec = QtWidgets.QDialog.exec_
+    QtWidgets.QApplication.exec = QtWidgets.QApplication.exec_
+# else:
+#     QtWidgets.QDialog.exec = QtWidgets.QDialog.exec
+#     QtWidgets.QApplication.exec = QtWidgets.QApplication.exec
+
+# Handle moved classes (e.g., QStringListModel moved from QtGui to QtCore in PyQt6)
+if IS_PYQT6:
+    QtGui.QStringListModel = QtCore.QStringListModel
+    QtWidgets.QAbstractItemView.NoEditTriggers = (
+        QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
+    )

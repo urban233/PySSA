@@ -26,7 +26,7 @@ import os.path
 import pathlib
 from typing import Optional, Callable
 
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 
 from src.application_process import application_process_manager
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box

@@ -22,10 +22,10 @@
 """Module for the job entry widget."""
 import logging
 
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.custom_widgets.auto import auto_job_entry_widget
 from src.pyssa.gui.ui.custom_widgets.auto import auto_job_notification_widget

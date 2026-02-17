@@ -22,10 +22,10 @@
 """Module for the input validator class."""
 import logging
 import re
-from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtCore
 
 from src.pyssa.internal.thread import thread_util
 from src.pyssa.logging_pyssa import log_handlers

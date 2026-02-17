@@ -27,7 +27,7 @@ import logging
 from typing import Optional
 
 import zmq
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 
 from src.auxiliary_pymol import auxiliary_pymol_client
 from src.pyssa.controller import database_manager

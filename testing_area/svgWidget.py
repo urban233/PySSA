@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets
-from PyQt5 import QtSvg
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtSvg
 import sys
 
 app = QtWidgets.QApplication(sys.argv)

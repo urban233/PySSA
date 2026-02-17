@@ -22,8 +22,7 @@
 """Module for the custom color grid widget."""
 import logging
 
-from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtWidgets import QWidget, QPushButton
+from src.pyssa.gui.qt import QtWidgets, QtGui
 
 from src.pyssa.internal.data_structures import chain
 from src.pyssa.logging_pyssa import log_handlers

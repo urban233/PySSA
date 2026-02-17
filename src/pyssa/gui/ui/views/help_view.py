@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtWebEngineWidgets import QWebEngineView
+from src.pyssa.gui.qt import QtWidgets, QtGui, QtCore
+from src.pyssa.gui.qt.QtWebEngineWidgets import QWebEngineView
 
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.util import constants
