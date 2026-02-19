@@ -1,21 +1,25 @@
-# wMOL
-# Copyright (C) 2025 Hannah Kullik, Martin Urban (hannah.kullik@studmail.w-hs.de, martin.urban@studmail.w-hs.de)
 #
-# Source code is available at <https://github.com/urban233/wMOL>
+# PySSA - Python-Plugin for Sequence-to-Structure Analysis
+# Copyright (C) 2024
+# Martin Urban (martin.urban@studmail.w-hs.de)
+# Hannah Kullik (hannah.kullik@studmail.w-hs.de)
+#
+# Source code is available at <https://github.com/urban233/PySSA>
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3 as published by
-# the Free Software Foundation.
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-# ==============================================================================
-"""Main window controller class for the wMOL frontend application.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""Main window controller class for the PySSA frontend application.
 
 Authors: Martin Urban, Hannah Kullik
 
@@ -23,18 +27,28 @@ Version: 2.0.0
 """
 import logging
 import pathlib
+import shutil
 from multiprocessing import Pipe, Process
 
+from pyssa.controller import create_project_view_controller, interface_manager
+from pyssa.controller import database_manager
+from pyssa.controller import open_project_view_controller
+from pyssa.controller import use_project_view_controller
+from pyssa.controller import delete_project_view_controller
+from pyssa.internal.data_structures import project
+from pyssa.internal.thread import database_thread
+from pyssa.internal.thread.async_pyssa import project_async
+from pyssa.logging_pyssa import log_handlers, log_levels
 from src.pyssa.controller import status_bar_manager
 from src.pyssa.gui.qt import QtCore, QtWidgets, QtGui
 from src.pyssa.gui import main_window
-# from wmol.model.qmodel import protein_model
+# from PySSA.model.qmodel import protein_model
 from src.pyssa.internal.pymol import pml_worker, worker_command
 from src.pyssa.util import enums
+from tea.thread import task_result_factory, task_result, action
 
-
-_LOGGER = logging.getLogger(__file__)  # Add log filepath
-
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 
@@ -53,14 +67,15 @@ class MainWindowController:
         # <editor-fold desc="Instance attributes">
         # <editor-fold desc="Private">
         self._main_window = a_main_window
+        self._interface_manager = interface_manager.InterfaceManager(a_main_window)
         # self._pyssa_api = api.CoreAPI.instance()
         # self._context = communication.ZmqContext()
         # self._push_endpoint = communication.PushEndpoint.connect(
         #   self._context, "tcp://127.0.0.1:8070"
         # )
         self._user_pymol = self._main_window.user_pymol
-        # self._wmol_worker = w_worker.WWorker()
-        # self._wmol_worker.start()
+        # self._PySSA_worker = w_worker.WWorker()
+        # self._PySSA_worker.start()
         self._pymol_worker_connection, child_conn = Pipe()
         self._pymol_worker_process = Process(
             target=pml_worker.start_pml_worker, args=(child_conn,)
@@ -91,7 +106,11 @@ class MainWindowController:
 
     def _connect_all_signals_with_their_slots(self) -> None:
         """Connects all relevant widget signals with their appropriate slots."""
-        self._main_window.dialogClosed.connect(self.__slot_close_application)
+        # self._main_window.dialogClosed.connect(self.__slot_close_application)
+
+        self._main_window.action_new_project.triggered.connect(self.__slot_create_project)
+
+
         # # <editor-fold desc="Session ribbon slots">
         # # <editor-fold desc="Session slots">
         self._main_window.viewer_toolbar_actions.get("open_session").get_action().triggered.connect(
@@ -267,6 +286,7 @@ class MainWindowController:
         # )
         # # </editor-fold>
         # # </editor-fold>
+
         # # </editor-fold>
         self._main_window.pyssa_objects_panel.tree_view.clicked.connect(
             self.__slot_select_pymol_object
@@ -300,7 +320,7 @@ class MainWindowController:
             if handler is not None:
                 handler(command_name, line)
         except Exception as e:
-            _LOGGER.error(f"Error handling command '{command_name}': {e}")
+            logger.error(f"Error handling command '{command_name}': {e}")
 
     def __handle_refresh_molecule_objects(self, _command_name: str, _line: str) -> None:
         """Refresh Molecule Objects protein model from current PyMOL state.
@@ -311,23 +331,10 @@ class MainWindowController:
             model = self._user_pymol.get_cmd_module().get_model()
             self._main_window.pyssa_objects_panel._model.add_protein(model)
         except Exception as e:
-            _LOGGER.error(f"Failed to refresh molecule objects: {e}")
-    # </editor-fold>
-
+            logger.error(f"Failed to refresh molecule objects: {e}")
     # </editor-fold>
 
     # <editor-fold desc="Slot methods">
-    def __slot_close_application(self, an_event_signal: tuple[str, QtCore.QEvent]) -> None:
-        """Closes all threads and process as well as the application itself.
-
-        Args:
-          an_event_signal: Signal that the dialog closes that consists of a string (default emtpy) and the QEvent
-        """
-        # <editor-fold desc="Checks">
-        # psa_comm_api.macros.REQUIRE_NOT_NONE(an_event_signal)
-        # </editor-fold>
-        self.shutdown_application_processes()
-        an_event_signal[1].accept()  # Closing QApplication
 
     # <editor-fold desc="Left side panel slots">
     def __slot_close_left_side_panel(self) -> None:
@@ -335,7 +342,7 @@ class MainWindowController:
         try:
             self._main_window.tool_window_layout.set_left_panel_hidden(True)
         except Exception as e:
-            _LOGGER.error(f"Failed to close left side panel: {e}")
+            logger.error(f"Failed to close left side panel: {e}")
 
     def __slot_show_protein_structure_side_panel(self) -> None:
         """Toggle the protein structure left side panel using ToolWindowLayout.
@@ -355,21 +362,683 @@ class MainWindowController:
                 layout.left_stack.setCurrentIndex(target_index)
                 layout.set_left_panel_hidden(False)
         except Exception as e:
-            _LOGGER.error(f"Failed to toggle left side panel: {e}")
+            logger.error(f"Failed to toggle left side panel: {e}")
 
     # </editor-fold>
 
-    def __slot_close_right_side_panel(self) -> None:
-        """Closes the right side panel using the ToolWindowLayout."""
+    # <editor-fold desc="Project management">
+    def __slot_create_project(self) -> None:
+        """Initializes the CreateProjectViewController and shows the create project dialog."""
         try:
-            self._main_window.tool_window_layout.set_right_panel_hidden(True)
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Project/Create' clicked.",
+            )
+            self._external_controller = (
+                create_project_view_controller.CreateProjectViewController(
+                    self._interface_manager
+                )
+            )
+            self._external_controller.user_input.connect(self._post_create_project)
+            self._interface_manager.get_create_view().show()
         except Exception as e:
-            _LOGGER.error(f"Failed to close right side panel: {e}")
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
 
-    # <editor-fold desc="Project management slots">
+    def _post_create_project(self, user_input: tuple) -> None:
+        """Creates a new project based on the user's input.
+
+        Args:
+            user_input: A tuple containing the user input for creating a new project. The tuple must have two elements:
+                        - tmp_project_name: A string representing the name of the new project.
+                        - tmp_protein_name: A string representing the name of the protein associated with the new project.
+
+        Notes:
+            This method is called after the user provides input to create a new project. It performs the following steps:
+        """
+        # <editor-fold desc="Checks">
+        if user_input is None:
+            logger.error("user_input is None.")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "No data received!"
+            )
+            return
+
+        # </editor-fold>
+
+        try:
+            self._interface_manager.block_gui(with_wait_cursor=True)
+            tmp_project_name, tmp_protein_name = user_input
+            tmp_project_database_filepath = str(
+                pathlib.Path(
+                    f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"
+                )
+            )
+            with database_manager.DatabaseManager(
+                    tmp_project_database_filepath
+            ) as db_manager:
+                db_manager.build_new_database()
+            self._database_thread = database_thread.DatabaseThread(
+                tmp_project_database_filepath
+            )
+            # self._database_thread.start()
+            # self._active_task = tasks.LegacyTask(
+            #     target=project_async.create_new_project,
+            #     args=(
+            #         tmp_project_name,
+            #         self._interface_manager.get_application_settings().get_workspace_path(),
+            #         self._interface_manager.watcher,
+            #         self._interface_manager,
+            #     ),
+            #     post_func=self.__await_create_project,
+            # )
+
+            self._interface_manager.get_task_manager().append_task_result(
+                task_result_factory.TaskResultFactory.run_task_result(
+                    a_task_result=task_result.TaskResult.from_action(
+                        an_action=action.Action(
+                            a_target=project_async.create_new_project,
+                            args=(
+                                tmp_project_name,
+                                self._interface_manager.get_application_settings().get_workspace_path(),
+                                self._interface_manager.watcher,
+                                self._interface_manager,
+                            ),
+                        ),
+                        an_await_function=self.__await_create_project,
+                    ),
+                    a_task_scheduler=self._interface_manager.get_task_scheduler(),
+                )
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+
+    def __await_create_project(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+        """Awaits the async method that creates the new project.
+
+        Args:
+            return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple containing the return value of the async method.
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None:
+            logger.error("return_value is None.")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "No data received!"
+            )
+            return
+        if return_value[0] == "":
+            self._interface_manager.status_bar_manager.show_error_message(
+                "Creating the project failed!"
+            )
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+            return
+        # </editor-fold>
+
+        try:
+            tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
+            (
+                _,
+                tmp_project,
+                self._interface_manager.watcher,
+                self._interface_manager,
+            ) = tmp_result
+            self._interface_manager.set_new_project(tmp_project)
+            self._interface_manager.refresh_workspace_model()
+            self._interface_manager.pymol_session_manager.reinitialize_session()
+            self._connect_sequence_selection_model()
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+        finally:
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
+
+    def __slot_open_project(self) -> None:
+        """Opens the dialog to open a project."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Project/Open' clicked.",
+            )
+            self._external_controller = (
+                open_project_view_controller.OpenProjectViewController(
+                    self._interface_manager
+                )
+            )
+            self._external_controller.return_value.connect(self._post_open_project)
+            self._interface_manager.get_open_view().show()
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+
+    def _post_open_project(self, return_value: tuple) -> None:
+        """Post method that gets executed after the open project dialog closes.
+
+        Args:
+            return_value (tuple[str, list[tuple[bool, tuple]]]): The return value from the method.
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None:
+            logger.error("return_value is None.")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "No data received!"
+            )
+            return
+        if return_value[1] is False:
+            self._interface_manager.refresh_main_view()
+            return
+
+        # </editor-fold>
+
+        try:
+            self._interface_manager.status_bar_manager.show_temporary_message(
+                enums.StatusMessages.OPENING_PROJECT.value,
+                False,
+            )
+            self._interface_manager.block_gui(with_wait_cursor=True)
+            tmp_project_name = return_value
+            tmp_project_database_filepath = str(
+                pathlib.Path(
+                    f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db",
+                ),
+            )
+            self._database_thread = database_thread.DatabaseThread(
+                tmp_project_database_filepath
+            )
+            # self._database_thread.start()
+            self._database_manager.set_database_filepath(
+                tmp_project_database_filepath
+            )
+            # self._active_task = tasks.LegacyTask(
+            #     target=project_async.open_project,
+            #     args=(
+            #         tmp_project_name,
+            #         tmp_project_database_filepath,
+            #         self._interface_manager,
+            #         self._interface_manager.pymol_session_manager,
+            #         self.custom_progress_signal,
+            #         self._interface_manager.watcher,
+            #     ),
+            #     post_func=self.__await_open_project,
+            # )
+
+            self._interface_manager.get_task_manager().append_task_result(
+                task_result_factory.TaskResultFactory.run_task_result(
+                    a_task_result=task_result.TaskResult.from_action(
+                        an_action=action.Action(
+                            a_target=project_async.open_project,
+                            args=(
+                                tmp_project_name,
+                                tmp_project_database_filepath,
+                                self._interface_manager,
+                                self._interface_manager.pymol_session_manager,
+                                self.custom_progress_signal,
+                                self._interface_manager.watcher,
+                            ),
+                        ),
+                        an_await_function=self.__await_open_project,
+                    ),
+                    a_task_scheduler=self._interface_manager.get_task_scheduler(),
+                )
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+
+    def __await_open_project(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+        """Finishes the project opening process.
+
+        Args:
+            return_value (tuple[str, list[tuple[bool, tuple]]]): The return value from the async method.
+        """
+        self._interface_manager.status_bar_manager.hide_progress_bar()
+        # <editor-fold desc="Checks">
+        if return_value is None:
+            logger.error("return_value is None.")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "No data received!"
+            )
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+            return
+        if return_value[0] == "":
+            self._interface_manager.status_bar_manager.show_error_message(
+                enums.StatusMessages.OPENING_PROJECT_FAILED.value,
+            )
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+            return
+
+        # </editor-fold>
+
+        try:
+            tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
+            _, tmp_project, tmp_interface_manager, tmp_watcher = tmp_result
+            self._interface_manager = tmp_interface_manager
+            self._interface_manager.watcher = tmp_watcher
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.hide_progress_bar()
+            self._interface_manager.status_bar_manager.show_temporary_message(
+                enums.StatusMessages.OPENING_PROJECT_FINISHED.value,
+            )
+            self._connect_sequence_selection_model()
+            # Expand all available proteins
+            self.__slot_expand_all_proteins()
+            # Expand all available protein pairs
+            self.__slot_expand_all_protein_pairs()
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+        finally:
+            self._interface_manager.stop_wait_cursor()
+
+    def __slot_use_project(self) -> None:
+        """Opens the use project dialog."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Project/Use' clicked.",
+            )
+            self._external_controller = (
+                use_project_view_controller.UseProjectViewController(
+                    self._interface_manager
+                )
+            )
+            self._external_controller.user_input.connect(self._post_use_project)
+            self._interface_manager.get_use_project_view().show()
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+
+    def _post_use_project(self, user_input: tuple) -> None:
+        """Starts the use project process.
+
+        Args:
+            user_input (tuple): The user inputs from the use project dialog.
+        """
+        # <editor-fold desc="Checks">
+        if user_input is None:
+            logger.error("user_input is None.")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "No data received!"
+            )
+            return
+
+        # </editor-fold>
+
+        try:
+            tmp_project_database_filepath = str(
+                pathlib.Path(
+                    f"{self._interface_manager.get_application_settings().get_workspace_path()}/{user_input[0]}.db"
+                )
+            )
+            with database_manager.DatabaseManager(
+                    tmp_project_database_filepath
+            ) as db_manager:
+                db_manager.build_new_database()
+
+            # self._active_task = tasks.LegacyTask(
+            #   target=project_async.create_use_project,
+            #   args=(
+            #     user_input[0],
+            #     self._interface_manager.get_application_settings().get_workspace_path(),
+            #     user_input[1],
+            #     self._interface_manager.watcher,
+            #     self._interface_manager,
+            #   ),
+            #   post_func=self.__await_use_project,
+            # )
+
+            self._interface_manager.get_task_manager().append_task_result(
+                task_result_factory.TaskResultFactory.run_task_result(
+                    a_task_result=task_result.TaskResult.from_action(
+                        an_action=action.Action(
+                            a_target=project_async.create_use_project,
+                            args=(
+                                user_input[0],
+                                self._interface_manager.get_application_settings().get_workspace_path(),
+                                user_input[1],
+                                self._interface_manager.watcher,
+                                self._interface_manager,
+                            ),
+                        ),
+                        an_await_function=self.__await_use_project,
+                    ),
+                    a_task_scheduler=self._interface_manager.get_task_scheduler(),
+                )
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+        else:
+            self._interface_manager.block_gui(with_wait_cursor=True)
+            # self._active_task.start()
+
+    def __await_use_project(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+        """Finishes the use project process.
+
+        Args:
+            return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None:
+            logger.error("return_value is None.")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "No data received!"
+            )
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+            return
+        if return_value[0] == "":
+            self._interface_manager.status_bar_manager.show_error_message(
+                "Using the project failed!"
+            )
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+            return
+
+        # </editor-fold>
+
+        try:
+            tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
+            (
+                _,
+                tmp_project,
+                self._interface_manager.watcher,
+                self._interface_manager,
+            ) = tmp_result
+            self._interface_manager.set_new_project(tmp_project)
+            self._interface_manager.add_project_to_workspace_model(
+                tmp_project.get_project_name()
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+        else:
+            self._connect_sequence_selection_model()
+            self._interface_manager.status_bar_manager.show_temporary_message(
+                "Use process finished."
+            )
+        finally:
+            self._interface_manager.pymol_session_manager.reinitialize_session()
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+
+    def __slot_delete_project(self) -> None:
+        """Opens the delete project dialog."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Project/Delete' clicked.",
+            )
+            self._external_controller = (
+                delete_project_view_controller.DeleteProjectViewController(
+                    self._interface_manager
+                )
+            )
+            self._interface_manager.get_delete_view().show()
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+
+    def _post_delete_project(self) -> None:
+        """Refreshes the main view after the delete project dialog closed."""
+        self._interface_manager.refresh_main_view()
+
+    def __slot_import_project(self) -> None:
+        """Imports a project into the current workspace."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Project/Import' clicked.",
+            )
+            file_dialog = QtWidgets.QFileDialog()
+            desktop_path = QtCore.QStandardPaths.standardLocations(
+                QtCore.QStandardPaths.DesktopLocation
+            )[0]
+            file_dialog.setDirectory(desktop_path)
+            file_path, _ = file_dialog.getOpenFileName(
+                self._view,
+                "Select a project file to import",
+                "",
+                "Project Database File (*.db)",
+            )
+            if not file_path:
+                return
+            file = QtCore.QFile(file_path)
+            if not file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text):
+                print("Error: Cannot open file for reading")
+                return
+            tmp_import_filepath = pathlib.Path(file_path)
+            tmp_project_name_input_dialog = QtWidgets.QInputDialog()
+            tmp_new_project_name = tmp_project_name_input_dialog.getText(
+                self._view,
+                "Project Name",
+                "Enter A Project Name:",
+                text=tmp_import_filepath.name.replace(".db", ""),
+            )[0]
+            if tmp_new_project_name == "":
+                return
+            # self._active_task = tasks.LegacyTask(
+            #   target=project_async.import_project,
+            #   args=(
+            #     tmp_new_project_name,
+            #     tmp_import_filepath,
+            #     self._interface_manager,
+            #   ),
+            #   post_func=self._await__slot_import_project,
+            # )
+
+            self._interface_manager.get_task_manager().append_task_result(
+                task_result_factory.TaskResultFactory.run_task_result(
+                    a_task_result=task_result.TaskResult.from_action(
+                        an_action=action.Action(
+                            a_target=project_async.import_project,
+                            args=(
+                                tmp_new_project_name,
+                                tmp_import_filepath,
+                                self._interface_manager,
+                            ),
+                        ),
+                        an_await_function=self._await__slot_import_project,
+                    ),
+                    a_task_scheduler=self._interface_manager.get_task_scheduler(),
+                )
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+        else:
+            self._interface_manager.block_gui(with_wait_cursor=True)
+            self._interface_manager.status_bar_manager.show_temporary_message(
+                "Importing project ...", a_with_timeout_flag=False
+            )
+            # self._active_task.start()
+
+    def _await__slot_import_project(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+        """Finishes the import project process.
+
+        Args:
+            return_value (tuple[str, list[tuple[bool, tuple]]]): The result data from the async method.
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None:
+            logger.error("return_value is None.")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "No data received!"
+            )
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
+            return
+
+        # </editor-fold>
+
+        try:
+            tmp_success_flag, tmp_result = task_result.TaskResult.get_single_action_result(return_value)
+            self._database_thread = database_thread.DatabaseThread(tmp_result[1])
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+        finally:
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.status_bar_manager.show_temporary_message(
+                "Importing project finished."
+            )
+
+    def __slot_export_current_project(self) -> None:
+        """Exports the current project to an importable format."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Project/Export' clicked.",
+            )
+            file_dialog = QtWidgets.QFileDialog()
+            desktop_path = QtCore.QStandardPaths.standardLocations(
+                QtCore.QStandardPaths.DesktopLocation
+            )[0]
+            file_dialog.setDirectory(desktop_path)
+            file_path, _ = file_dialog.getSaveFileName(
+                self._view,
+                "Export current project",
+                "",
+                "Project Database File (*.db)",
+            )
+            if file_path:
+                shutil.copyfile(
+                    self._interface_manager.get_current_project().get_database_filepath(),
+                    file_path,
+                )
+                # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                #     "The project was successfully exported.", "Export Project",
+                #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                # )
+                # tmp_dialog.exec_()
+                self._interface_manager.status_bar_manager.show_temporary_message(
+                    "The project was successfully exported."
+                )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+
+    def __slot_close_project(self) -> None:
+        """Closes the current project."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Project/Close' clicked.",
+            )
+            # self._active_task = tasks.LegacyTask(
+            #     target=project_async.close_project,
+            #     args=(
+            #         self._database_thread,
+            #         self._interface_manager.pymol_session_manager,
+            #     ),
+            #     post_func=self.__await_close_project,
+            # )
+
+            self._interface_manager.get_task_manager().append_task_result(
+                task_result_factory.TaskResultFactory.run_task_result(
+                    a_task_result=task_result.TaskResult.from_action(
+                        an_action=action.Action(
+                            a_target=project_async.close_project,
+                            args=(
+                                self._database_thread,
+                                self._interface_manager.pymol_session_manager,
+                            ),
+                        ),
+                        an_await_function=self.__await_close_project,
+                    ),
+                    a_task_scheduler=self._interface_manager.get_task_scheduler(),
+                )
+            )
+
+            self._interface_manager.restore_default_main_view()
+            self._interface_manager.close_job_notification_panel()
+            self._interface_manager.close_job_overview_panel()
+            self._disconnect_sequence_selection_model()
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+        else:
+            self._interface_manager.block_gui(with_wait_cursor=True)
+            self.update_status("Saving current project ...")
+            # self._active_task.start()
+
+    def __await_close_project(self, return_value: tuple[str, list[tuple[bool, tuple]]]) -> None:
+        """Await the async closing process.
+
+        Args:
+            return_value (tuple[str, list[tuple[bool, tuple]]]): A tuple of the return value of the async closing process.
+        """
+        # <editor-fold desc="Checks">
+        if return_value[0] == "":
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.status_bar_manager.show_error_message(
+                "Closing the project failed!"
+            )
+            return
+        # </editor-fold>
+
+        try:
+            self._interface_manager.set_new_project(project.Project())
+            self._view.ui.project_tab_widget.setCurrentIndex(0)
+            self.update_status("Closing project finished.")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+        finally:
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+    
     def __slot_exit_application(self) -> None:
         """Slot method for the Exit Application menu item"""
         self.shutdown_application_processes()
+    
+    # def __slot_close_application(self, an_event_signal: tuple[str, QtCore.QEvent]) -> None:
+    #     """Closes all threads and process as well as the application itself.
+    # 
+    #     Args:
+    #       an_event_signal: Signal that the dialog closes that consists of a string (default emtpy) and the QEvent
+    #     """
+    #     # <editor-fold desc="Checks">
+    #     # psa_comm_api.macros.REQUIRE_NOT_NONE(an_event_signal)
+    #     # </editor-fold>
+    #     self.shutdown_application_processes()
+    #     an_event_signal[1].accept()  # Closing QApplication
 
     # </editor-fold>
 
@@ -439,7 +1108,7 @@ class MainWindowController:
                 scene_name, pathlib.Path(image_filepath)
             )
         except Exception as error:
-            _LOGGER.error(f"Failed to update scene: {error}")
+            logger.error(f"Failed to update scene: {error}")
             QtWidgets.QMessageBox.critical(
                 self._main_window,
                 "Error",
@@ -455,7 +1124,7 @@ class MainWindowController:
             self._user_pymol.get_cmd_module().scene(key=scene_name, action="clear")
             self._main_window.side_panel_pymol_scenes.scenes_list.remove_scene(scene_name)
         except Exception as error:
-            _LOGGER.error(f"Failed to update scene: {error}")
+            logger.error(f"Failed to update scene: {error}")
             QtWidgets.QMessageBox.critical(
                 self._main_window,
                 "Error",
@@ -473,7 +1142,7 @@ class MainWindowController:
                 self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("cartoon"))
             )
         except Exception as e:
-            _LOGGER.error(e.__str__())
+            logger.error(e.__str__())
 
     def __slot_show_as_cartoon(self) -> None:
         """Shows the `pyssa_sele` selection in cartoon representation."""
@@ -493,7 +1162,7 @@ class MainWindowController:
                 self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("sticks"))
             )
         except Exception as e:
-            _LOGGER.error(e.__str__())
+            logger.error(e.__str__())
 
     def __slot_show_as_sticks(self) -> None:
         """Shows the `pyssa_sele` selection in sticks representation."""
@@ -513,7 +1182,7 @@ class MainWindowController:
                 self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("ribbon"))
             )
         except Exception as e:
-            _LOGGER.error(e.__str__())
+            logger.error(e.__str__())
 
     def __slot_show_as_ribbon(self) -> None:
         """Shows the `sele` selection in ribbon representation."""
@@ -532,7 +1201,7 @@ class MainWindowController:
                 self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("lines"))
             )
         except Exception as e:
-            _LOGGER.error(e.__str__())
+            logger.error(e.__str__())
 
     def __slot_show_as_lines(self) -> None:
         """Shows the `sele` selection in lines representation."""
@@ -551,7 +1220,7 @@ class MainWindowController:
                 self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("spheres"))
             )
         except Exception as e:
-            _LOGGER.error(e.__str__())
+            logger.error(e.__str__())
 
     def __slot_show_as_spheres(self) -> None:
         """Shows the `pyssa_sele` selection in spheres representation."""
@@ -571,7 +1240,7 @@ class MainWindowController:
                 self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("dots"))
             )
         except Exception as e:
-            _LOGGER.error(e.__str__())
+            logger.error(e.__str__())
 
     def __slot_show_as_dots(self) -> None:
         """Shows the `sele` selection in dots representation."""
@@ -590,7 +1259,7 @@ class MainWindowController:
                 self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("mesh"))
             )
         except Exception as e:
-            _LOGGER.error(e.__str__())
+            logger.error(e.__str__())
 
     def __slot_show_as_mesh(self) -> None:
         """Shows the `sele` selection in mesh representation."""
@@ -609,7 +1278,7 @@ class MainWindowController:
                 self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("surface"))
             )
         except Exception as e:
-            _LOGGER.error(e.__str__())
+            logger.error(e.__str__())
 
     def __slot_show_as_surface(self) -> None:
         """Shows the `pyssa_sele` selection in surface representation."""
@@ -633,7 +1302,7 @@ class MainWindowController:
             # Fallback: open without explicit position
             self._main_window.color_grid_menu.exec()
         except Exception as e:
-            _LOGGER.error(e.__str__())
+            logger.error(e.__str__())
 
     def __slot_apply_color(self, a_color_name) -> None:
         """Colors the default sele selection in the given color."""

@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the fasta file import preview view."""
-from src.pyssa.gui.qt.QtWidgets import QDialog
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import Qt
@@ -33,7 +32,7 @@ from src.pyssa.gui.ui import icon_resources  # this import is used for the icons
 from src.pyssa.gui.ui.forms.auto_generated.auto_fasta_file_import_preview_view import Ui_Dialog
 
 
-class FastaFileImportPreviewView(QDialog):
+class FastaFileImportPreviewView(QtWidgets.QDialog):
   """A QDialog that allows users to customize the fasta file import."""
 
   def __init__(self, parent=None) -> None:

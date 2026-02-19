@@ -24,6 +24,7 @@ try:
     from PyQt6 import QtCore, QtGui, QtWidgets, QtSql
     from PyQt6.QtCore import pyqtSignal
     from PyQt6.QtCore import Qt
+    from PyQt6.QtWebEngineWidgets import QWebEngineView
 
     IS_PYQT6 = True
 except ImportError:
@@ -56,3 +57,4 @@ if IS_PYQT6:
     QtWidgets.QAbstractItemView.NoEditTriggers = (
         QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
     )
+    Qt.WindowModal = Qt.WindowModality.WindowModal

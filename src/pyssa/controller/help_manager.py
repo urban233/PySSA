@@ -23,8 +23,7 @@
 import logging
 import pathlib
 
-from src.pyssa.gui.qt.QtCore import QUrl
-
+from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.ui.views import help_view
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import constants
@@ -66,7 +65,7 @@ class HelpManager:
     else:
       tmp_url = an_url
 
-    self._view.browser.setUrl(QUrl(tmp_url))
+    self._view.browser.setUrl(QtCore.QUrl(tmp_url))
     self._view.show()
     self._view.activateWindow()
 

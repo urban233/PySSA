@@ -24,13 +24,11 @@ import os
 import pathlib
 import sys
 import zipfile
-import PyQt5.QtWidgets
 from urllib import request
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.qt import QtGui
 from src.pyssa.gui.qt import Qt
-from src.pyssa.gui.qt.QtWidgets import QApplication
 from src.pyssa.util import constants
 from src.pyssa.gui.ui.forms.auto_generated.auto_dialog_startup import Ui_Dialog
 
@@ -92,19 +90,19 @@ class DialogStartup(QtWidgets.QDialog):
 
   def choose_workspace(self) -> None:
     """Opens a file dialog to choose a workspace directory."""
-    self.workspace_dir = PyQt5.QtWidgets.QFileDialog.getExistingDirectory(
+    self.workspace_dir = QtWidgets.QFileDialog.getExistingDirectory(
         self,
         "Open Workspace Directory",
         QtCore.QDir.homePath(),
-        PyQt5.QtWidgets.QFileDialog.ShowDirsOnly
-        | PyQt5.QtWidgets.QFileDialog.DontResolveSymlinks,
+        QtWidgets.QFileDialog.ShowDirsOnly
+        | QtWidgets.QFileDialog.DontResolveSymlinks,
     )
     if self.workspace_dir != "":
       self.ui.txt_workspace.setText(self.workspace_dir)
 
   def launch_app(self) -> None:
     """Launches the pyssa plugin."""
-    QApplication.setOverrideCursor(Qt.WaitCursor)
+    QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
     global global_var_startup_workspace
     global_var_startup_workspace = self.ui.txt_workspace.text()
 

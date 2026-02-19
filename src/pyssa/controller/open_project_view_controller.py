@@ -24,9 +24,7 @@ import logging
 
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import Qt
-
-from src.pyssa.controller import interface_manager
-from src.pyssa.util import constants, ui_util, exception
+from src.pyssa.util import ui_util, exception
 from src.pyssa.logging_pyssa import log_levels, log_handlers
 
 logger = logging.getLogger(__file__)
