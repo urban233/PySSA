@@ -30,7 +30,6 @@ from typing import Optional
 
 import requests
 import zmq
-import pywinctl
 
 from src.pyssa.controller import database_manager, interface_manager, pymol_session_manager
 from src.pyssa.internal.data_structures.data_classes import database_operation

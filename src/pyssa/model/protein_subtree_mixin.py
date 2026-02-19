@@ -59,8 +59,6 @@ class ProteinSubtreeMixin:
   def _fetch_scenes(
           self,
           a_pymol_session: str,
-          the_main_socket: zmq.Socket,
-          a_socket: zmq.Socket,
   ) -> list[str]:
     """Return the list of scene names stored in *a_pymol_session*."""
     with pml_worker.PmlWorker.session(
@@ -85,15 +83,13 @@ class ProteinSubtreeMixin:
           self,
           a_pymol_session: str,
           a_molecule_object: str,
-          the_main_socket: zmq.Socket,
-          a_socket: zmq.Socket,
   ) -> Indexed:
     """Return the chempy ``Indexed`` model for *a_molecule_object* in *a_pymol_session*."""
     with pml_worker.PmlWorker.session(
-            pml_worker.PmlWorker.cache_session(a_pymol_session, "fetch_scenes")
+            pml_worker.PmlWorker.cache_session(a_pymol_session, "fetch_chempy_model")
     ) as tmp_pml_worker:
       return tmp_pml_worker.do(
-        pml_enums.PmlCommand.GET_MODEL, ("all", ), sync=True
+        pml_enums.PmlCommand.GET_MODEL, (f"{a_molecule_object}", ), sync=True
       )
 
     tmp_job = job.GeneralPurposeJobDescription(
@@ -113,26 +109,18 @@ class ProteinSubtreeMixin:
   def _fetch_scenes_for_protein(
           self,
           a_protein: "protein.Protein",
-          the_main_socket: zmq.Socket,
-          a_socket: zmq.Socket,
   ) -> list[str]:
     """Convenience wrapper: fetch scenes using a ``Protein`` object."""
-    return self._fetch_scenes(
-      str(a_protein.pymol_session), the_main_socket, a_socket
-    )
+    return self._fetch_scenes(str(a_protein.pymol_session))
 
   def _fetch_chempy_model_for_protein(
           self,
           a_protein: "protein.Protein",
-          the_main_socket: zmq.Socket,
-          a_socket: zmq.Socket,
   ) -> Indexed:
     """Convenience wrapper: fetch chempy model using a ``Protein`` object."""
     return self._fetch_chempy_model(
       str(a_protein.pymol_session),
-      str(a_protein.get_molecule_object()),
-      the_main_socket,
-      a_socket,
+      str(a_protein.get_molecule_object())
     )
 
   # ------------------------------------------------------------------

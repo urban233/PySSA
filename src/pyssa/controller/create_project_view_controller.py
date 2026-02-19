@@ -89,7 +89,7 @@ class CreateProjectViewController(QtCore.QObject):
         "color: #ba1a1a; font-size: 11px;"
     )
     self._view.ui.btn_new_create_project.setEnabled(False)
-    self._view.ui.cb_new_add_reference.setCheckState(False)
+    # self._view.ui.cb_new_add_reference.setCheckState(False)
     self._view.ui.txt_new_choose_reference.clear()
     self._hide_add_protein_options()
 

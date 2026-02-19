@@ -44,6 +44,7 @@ without any changes being required in the sub-model classes.
 import logging
 
 import zmq
+from Bio.SeqRecord import SeqRecord
 
 from src.pyssa.gui.qt import QtGui
 from src.pyssa.gui.qt import QtCore
@@ -114,20 +115,16 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
 
   def build_model(
           self,
-          the_sequences: list[str],
+          the_sequences: list[SeqRecord],
           the_protein_objects: list["protein.Protein"],
-          the_protein_pair_objects: list["protein_pair.ProteinPair"],
-          the_main_socket: zmq.Socket,
-          a_socket: zmq.Socket,
+          the_protein_pair_objects: list["protein_pair.ProteinPair"]
   ) -> None:
     """Populate the model from all project data in one call.
 
     Args:
-        the_sequences: Amino acid sequence strings to add under "Sequences".
+        the_sequences: Amino acid sequence SeqRecords to add under "Sequences".
         the_protein_objects: Standalone proteins to add under "Proteins".
         the_protein_pair_objects: Protein pairs to add under "Protein Pairs".
-        the_main_socket: Main ZMQ socket for auxiliary PyMOL.
-        a_socket: Secondary ZMQ socket for auxiliary PyMOL.
 
     Raises:
         exception.IllegalArgumentError: If any argument is ``None``.
@@ -141,21 +138,15 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
     if the_protein_pair_objects is None:
       logger.error("the_protein_pair_objects is None.")
       raise exception.IllegalArgumentError("the_protein_pair_objects is None.")
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if a_socket is None:
-      logger.error("a_socket is None.")
-      raise exception.IllegalArgumentError("a_socket is None.")
 
     for sequence in the_sequences:
-      self.add_sequence(sequence)
+      self.add_sequence(sequence.name)
 
     for tmp_protein in the_protein_objects:
-      self.add_protein(tmp_protein, the_main_socket, a_socket)
+      self.add_protein(tmp_protein)
 
     for tmp_pair in the_protein_pair_objects:
-      self.add_protein_pair(tmp_pair, the_main_socket, a_socket)
+      self.add_protein_pair(tmp_pair)
 
   # ------------------------------------------------------------------
   # Public API — adding items
@@ -165,7 +156,7 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
     """Add an amino acid sequence under the "Sequences" section.
 
     The sequence string is used as both the display name and the stored
-    value.  Use :meth:`add_named_sequence` when a human-readable name is
+    value.  Use :meth:`add_named_sequence` when a name is
     available.
 
     Args:
@@ -214,16 +205,12 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
 
   def add_protein(
           self,
-          a_protein: "protein.Protein",
-          the_main_socket: zmq.Socket,
-          a_socket: zmq.Socket,
+          a_protein: "protein.Protein"
   ) -> None:
     """Add a standalone protein under the "Proteins" section.
 
     Args:
         a_protein: The protein to add.
-        the_main_socket: Main ZMQ socket for auxiliary PyMOL.
-        a_socket: Secondary ZMQ socket for auxiliary PyMOL.
 
     Raises:
         exception.IllegalArgumentError: If any argument is ``None``.
@@ -231,33 +218,21 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
     if a_protein is None:
       logger.error("a_protein is None.")
       raise exception.IllegalArgumentError("a_protein is None.")
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if a_socket is None:
-      logger.error("a_socket is None.")
-      raise exception.IllegalArgumentError("a_socket is None.")
 
     self._with_root(
       self._proteins_model,
       self._proteins_section,
-      lambda: self._proteins_model.add_protein_from_protein_object(
-        a_protein, the_main_socket, a_socket
-      ),
+      lambda: self._proteins_model.add_protein_from_protein_object(a_protein),
     )
 
   def add_protein_pair(
           self,
           a_protein_pair: "protein_pair.ProteinPair",
-          the_main_socket: zmq.Socket,
-          a_socket: zmq.Socket,
   ) -> None:
     """Add a protein pair under the "Protein Pairs" section.
 
     Args:
         a_protein_pair: The protein pair to add.
-        the_main_socket: Main ZMQ socket for auxiliary PyMOL.
-        a_socket: Secondary ZMQ socket for auxiliary PyMOL.
 
     Raises:
         exception.IllegalArgumentError: If any argument is ``None``.
@@ -265,19 +240,11 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
     if a_protein_pair is None:
       logger.error("a_protein_pair is None.")
       raise exception.IllegalArgumentError("a_protein_pair is None.")
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if a_socket is None:
-      logger.error("a_socket is None.")
-      raise exception.IllegalArgumentError("a_socket is None.")
 
     self._with_root(
       self._protein_pairs_model,
       self._protein_pairs_section,
-      lambda: self._protein_pairs_model.add_protein_pair(
-        a_protein_pair, the_main_socket, a_socket
-      ),
+      lambda: self._protein_pairs_model.add_protein_pair(a_protein_pair),
     )
 
   # ------------------------------------------------------------------

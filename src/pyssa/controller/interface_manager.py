@@ -56,6 +56,7 @@ from src.pyssa.internal.thread.async_pyssa import custom_signals
 from src.pyssa.io_pyssa import filesystem_io
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.model import proteins_model, protein_pairs_model
+from src.pyssa.model import psa_objects_model
 from src.pyssa.util import enums, constants, main_window_util, ui_util, exception, tools
 from src.pyssa.util.void import rvoid
 from src.pyssa.internal.thread import thread_util
@@ -292,13 +293,14 @@ class InterfaceManager:
 
     # Model definitions
     self._workspace_model = QtGui.QStandardItemModel()
-    self._sequence_model = QtGui.QStandardItemModel()
-    self._protein_model: "proteins_model.ProteinsModel" = (
-        proteins_model.ProteinsModel()
-    )
-    self._protein_pair_model: "protein_pairs_model.ProteinPairsModel" = (
-        protein_pairs_model.ProteinPairsModel()
-    )
+    self._pyssa_objects_model = psa_objects_model.PSAObjectsModel()
+    # self._sequence_model = QtGui.QStandardItemModel()
+    # self._protein_model: "proteins_model.ProteinsModel" = (
+    #     proteins_model.ProteinsModel()
+    # )
+    # self._protein_pair_model: "protein_pairs_model.ProteinPairsModel" = (
+    #     protein_pairs_model.ProteinPairsModel()
+    # )
     self._build_workspace_model()
 
   # <editor-fold desc="Application process manager related methods">
@@ -1190,6 +1192,9 @@ class InterfaceManager:
     """
     return self._protein_model
 
+  def get_pyssa_objects_model(self) -> "psa_objects_model.PSAObjectsModel":
+    return self._pyssa_objects_model
+
   def get_task_manager(self) -> "task_manager.TaskManager":
     """Gets the task manager.
 
@@ -1263,12 +1268,18 @@ class InterfaceManager:
     # </editor-fold>
 
     self._current_project = the_current_project
-    self._sequence_model.clear()
-    self._build_sequences_model()
-    self._protein_model.clear()
-    self._build_proteins_model()
-    self._protein_pair_model.clear()
-    self._build_protein_pairs_model()
+
+    self._pyssa_objects_model.build_model(
+      the_current_project.sequences,
+      the_current_project.proteins,
+      the_current_project.protein_pairs
+    )
+    # self._sequence_model.clear()
+    # self._build_sequences_model()
+    # self._protein_model.clear()
+    # self._build_proteins_model()
+    # self._protein_pair_model.clear()
+    # self._build_protein_pairs_model()
 
   # fixme: This function does not used anymore!!!
   def set_new_workspace(self, the_current_workspace: str) -> None:
@@ -1747,7 +1758,7 @@ class InterfaceManager:
     self._main_window.ui.menuProject.setEnabled(True)
     # A project is open
     if self._current_project.get_project_name() != "":
-      styles.set_stylesheet(self._main_window)
+      # styles.set_stylesheet(self._main_window)
       self._main_window.ui.lbl_project_name.show()
       self._main_window.ui.lbl_project_name.setText(
           f"Project Name: {self._current_project.get_project_name()}"
@@ -3656,13 +3667,10 @@ class InterfaceManager:
     if with_wait_cursor is True:
       QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
     self._main_window.disable_menu_bar_without_exit_application()
-    self._main_window.disable_tab_widget()
-    self._main_window.disable_job_panels()
 
   def stop_wait_cursor(self) -> None:
     """Stops the cursor."""
     QtWidgets.QApplication.restoreOverrideCursor()
-    self._main_window.enable_job_panels()
 
   # <editor-fold desc="Job related methods">
   def add_job_entry_to_job_overview_layout(

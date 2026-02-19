@@ -94,33 +94,22 @@ class PSAProteinPairModel(ProteinSubtreeMixin, base_tree_model.BaseTreeModel):
   def add_protein_pair(
           self,
           a_protein_pair: "protein_pair.ProteinPair",
-          the_main_socket: zmq.Socket,
-          a_socket: zmq.Socket,
   ) -> None:
     """Add a single ProteinPair to the model with full atom-level hierarchy.
 
     Args:
         a_protein_pair: The protein pair to add.
-        the_main_socket: Main ZMQ socket for auxiliary PyMOL.
-        a_socket: Secondary ZMQ socket for auxiliary PyMOL.
-
     Raises:
         exception.IllegalArgumentError: If any argument is ``None``.
     """
     if a_protein_pair is None:
       logger.error("a_protein_pair is None.")
       raise exception.IllegalArgumentError("a_protein_pair is None.")
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if a_socket is None:
-      logger.error("a_socket is None.")
-      raise exception.IllegalArgumentError("a_socket is None.")
 
     scenes = self._fetch_scenes(
-      str(a_protein_pair.pymol_session), the_main_socket, a_socket
+      str(a_protein_pair.pymol_session)
     )
-    self._add_protein_pair_node(a_protein_pair, scenes, the_main_socket, a_socket)
+    self._add_protein_pair_node(a_protein_pair, scenes)
 
   # ------------------------------------------------------------------
   # Public API — scene management
@@ -226,17 +215,13 @@ class PSAProteinPairModel(ProteinSubtreeMixin, base_tree_model.BaseTreeModel):
   def _add_protein_pair_node(
           self,
           a_protein_pair: "protein_pair.ProteinPair",
-          scenes: list[str],
-          the_main_socket: zmq.Socket,
-          a_socket: zmq.Socket,
+          scenes: list[str]
   ) -> QtGui.QStandardItem:
     """Create and append a full protein-pair subtree under the root node.
 
     Args:
         a_protein_pair: The source ``ProteinPair`` object.
         scenes: Scene names for the pair's Scenes header.
-        the_main_socket: Main ZMQ socket for auxiliary PyMOL.
-        a_socket: Secondary ZMQ socket for auxiliary PyMOL.
 
     Returns:
         The newly created protein-pair ``QStandardItem``.
@@ -254,10 +239,10 @@ class PSAProteinPairModel(ProteinSubtreeMixin, base_tree_model.BaseTreeModel):
 
     # Each protein in the pair gets its own subtree (chains → residues → atoms)
     self._add_protein_child_node(
-      pair_node, a_protein_pair.protein_1, the_main_socket, a_socket
+      pair_node, a_protein_pair.protein_1
     )
     self._add_protein_child_node(
-      pair_node, a_protein_pair.protein_2, the_main_socket, a_socket
+      pair_node, a_protein_pair.protein_2
     )
 
     return pair_node
@@ -265,9 +250,7 @@ class PSAProteinPairModel(ProteinSubtreeMixin, base_tree_model.BaseTreeModel):
   def _add_protein_child_node(
           self,
           pair_node: QtGui.QStandardItem,
-          a_protein: "protein.Protein",
-          the_main_socket: zmq.Socket,
-          a_socket: zmq.Socket,
+          a_protein: "protein.Protein"
   ) -> QtGui.QStandardItem:
     """Append a protein node (with full chain hierarchy) to *pair_node*.
 
@@ -291,7 +274,7 @@ class PSAProteinPairModel(ProteinSubtreeMixin, base_tree_model.BaseTreeModel):
       an_item_object_value=a_protein,
     )
 
-    chempy_model = self._fetch_chempy_model_for_protein(a_protein, the_main_socket, a_socket)
+    chempy_model = self._fetch_chempy_model_for_protein(a_protein)
     hierarchy_map = self._build_hierarchy_map(chempy_model)
     chains_for_this_protein = hierarchy_map.get(a_protein.get_molecule_object(), {})
 

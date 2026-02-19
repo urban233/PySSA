@@ -49,7 +49,7 @@ class WorkerCommand:
 
     command_type: CommandType
     session_path: str | None = None
-    pymol_command: str | None = None
+    pymol_command: str | enum.Enum | None = None
     args: tuple[Any, ...] = field(default_factory=tuple)
     sync: bool = False
 
@@ -88,7 +88,7 @@ class WorkerCommand:
     def do(
             cls,
             session_path: str,
-            pymol_command: str,
+            pymol_command: str | enum.Enum,
             args: tuple[Any, ...] = (),
             *,
             sync: bool = False,
@@ -98,8 +98,9 @@ class WorkerCommand:
         Args:
             session_path: Absolute path to the ``.pse`` file. The worker will
                 load it if it differs from the currently loaded session.
-            pymol_command: A valid PyMOL command string, e.g. ``"zoom"`` or
-                ``"select"``.
+            pymol_command: A valid PyMOL command as a plain string or a
+                string-valued enum (e.g. ``PmlCommand.GET_MODEL``). The enum's
+                ``.value`` is used automatically.
             args: Positional arguments appended to the command string.
             sync: When True, the host blocks until the worker sends back an
                 acknowledgement.
@@ -132,7 +133,12 @@ class WorkerCommand:
         """
         if self.pymol_command is None:
             raise ValueError("pymol_command must be set to build a PyMOL string.")
+        cmd_str = self.pymol_command.value if hasattr(self.pymol_command, "value") else str(self.pymol_command)
         if not self.args:
-            return self.pymol_command
+            return cmd_str
         args_str = ", ".join(str(a) for a in self.args)
-        return f"{self.pymol_command} {args_str}"
+        return f"{cmd_str} {args_str}"
+
+    def build_pymol_args(self) -> str:
+        """Construct the PyMOL args."""
+        return ", ".join(str(a) for a in self.args)

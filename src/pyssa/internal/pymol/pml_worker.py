@@ -42,9 +42,9 @@ from typing import Any, Generator
 
 import pymol2
 
+from pyssa.io_pyssa import binary_data
 from src.pyssa.gui.user_pymol import UserPyMOL
 from src.pyssa.internal.pymol.worker_command import CommandType, WorkerCommand
-from src.pyssa.io_pyssa import binary_data
 from src.pyssa.util import constants
 
 logger = logging.getLogger(__name__)
@@ -110,12 +110,16 @@ class PmlWorker:
         self._conn.send(WorkerCommand.shutdown())
       except OSError:
         pass  # Pipe already broken; process likely already dead.
+      finally:
+        # Closing the host-side pipe end is what actually unblocks the
+        # worker's recv() via EOFError. Do it inside the lock so no
+        # other thread can attempt a send after this point.
+        self._conn.close()
     self._process.join(timeout=timeout)
     if self._process.is_alive():
       logger.warning("Worker did not exit cleanly; killing it.")
       self._process.kill()
       self._process.join()
-    self._conn.close()
     logger.debug("PmlWorker stopped.")
 
   # ------------------------------------------------------------------
@@ -325,9 +329,9 @@ def _worker_loop(conn: Connection) -> None:
     while True:
       try:
         cmd: WorkerCommand = conn.recv()
-      except EOFError:
-        # Host closed the pipe – treat as implicit shutdown.
-        logger.debug("Worker: pipe closed by host; shutting down.")
+      except (EOFError, OSError):
+        # The host closed its pipe end — this is the normal teardown
+        # path when using the context manager. Exit cleanly.
         break
 
       if cmd.command_type is CommandType.SHUTDOWN:
@@ -352,8 +356,17 @@ def _worker_loop(conn: Connection) -> None:
           loaded_session_path = cmd.session_path
 
         pymol_cmd_str = cmd.build_pymol_string()
-        pymol_instance.cmd.do(pymol_cmd_str)
-        result = f"OK: {pymol_cmd_str}"
+
+        # TODO: Integrate this more smoothly
+        match cmd.pymol_command.value:
+          case "get_scene_list":
+            result = pymol_instance.cmd.get_scene_list()
+          case "get_model":
+            result = pymol_instance.cmd.get_model(cmd.build_pymol_args())
+          case _:
+            pymol_instance.cmd.do(pymol_cmd_str)
+            result = f"OK: {pymol_cmd_str}"
+
         logger.debug("Worker executed: %s", pymol_cmd_str)
 
         if cmd.sync:

@@ -326,7 +326,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.user_pymol = user_pymol.UserPyMOL(self.pymolwidget)
     # <editor-fold desc="Panels">
     self.left_side_panel_stacked_widget = QtWidgets.QStackedWidget()
-    self.pyssa_objects_panel = pyssa_objects_panel.PySSAObjectsPanel(self.user_pymol)
+    self.pyssa_objects_panel = pyssa_objects_panel.PySSAObjectsPanel()
     self.right_side_panel_stacked_widget = QtWidgets.QStackedWidget()
     self.bottom_panel_stacked_widget = QtWidgets.QStackedWidget()
     # </editor-fold>
@@ -519,6 +519,24 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # self.bottom_panel_stacked_widget.addWidget(self.base_bottom_panel)
     self.bottom_panel_stacked_widget.addWidget(self.bottom_panel_command_output)
     # self.bottom_panel_stacked_widget.addWidget(self.side_panel_pymol_scenes)
+
+  def disable_menu_bar_without_exit_application(self) -> None:
+    """Disables the menu entries but not 'Exit Application'."""
+    self.menuProject.setEnabled(True)
+    self.action_new_project.setEnabled(False)
+    self.action_open_project.setEnabled(False)
+    self.action_close_project.setEnabled(False)
+    self.action_use_project.setEnabled(False)
+    self.action_delete_project.setEnabled(False)
+    self.action_export_project.setEnabled(False)
+    self.action_import_project.setEnabled(False)
+    self.menuPrediction.setEnabled(False)
+    self.menuAnalysis.setEnabled(False)
+    self.menuResults.setEnabled(False)
+    self.menuImage.setEnabled(False)
+    self.menuHotspots.setEnabled(False)
+    self.menuSettings.setEnabled(False)
+    self.menuAbout.setEnabled(False)
   # </editor-fold>
 
   # <editor-fold desc="Public methods">
@@ -592,11 +610,13 @@ def commandoverloaddecorator(func):
 
 
 window = None
+controller = None
 
 
 def exec_app():
   """Run PySSA as a Qt application"""
   global window
+  global controller
   global pymol
 
   # don't let exceptions stop PyMOL
@@ -626,7 +646,7 @@ def exec_app():
   app = QtWidgets.QApplication(sys.argv)
   app.setWindowIcon(IconManager.instance().get_icon(IconManager.Icons.LOGO))
   window = MainWindow()
-  main_window_controller.MainWindowController(window)
+  controller = main_window_controller.MainWindowController(window)
 
   @commandoverloaddecorator
   def viewport(w=-1, h=-1, _self=None):

@@ -92,9 +92,7 @@ class PSAProteinModel(ProteinSubtreeMixin, base_tree_model.BaseTreeModel):
 
   def add_protein_from_protein_object(
           self,
-          a_protein: "protein.Protein",
-          the_main_socket: zmq.Socket,
-          a_socket: zmq.Socket,
+          a_protein: "protein.Protein"
   ) -> None:
     """Add a single Protein to the model with full atom-level hierarchy.
 
@@ -112,18 +110,12 @@ class PSAProteinModel(ProteinSubtreeMixin, base_tree_model.BaseTreeModel):
     if a_protein is None:
       logger.error("a_protein is None.")
       raise exception.IllegalArgumentError("a_protein is None.")
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if a_socket is None:
-      logger.error("a_socket is None.")
-      raise exception.IllegalArgumentError("a_socket is None.")
 
-    scenes = self._fetch_scenes_for_protein(a_protein, the_main_socket, a_socket)
+    scenes = self._fetch_scenes_for_protein(a_protein)
     if not scenes:
       scenes = ["base"]
 
-    chempy_model = self._fetch_chempy_model_for_protein(a_protein, the_main_socket, a_socket)
+    chempy_model = self._fetch_chempy_model_for_protein(a_protein)
     hierarchy_map = self._build_hierarchy_map(chempy_model)
     self._add_protein_node(a_protein, scenes=scenes, hierarchy_map=hierarchy_map)
 
