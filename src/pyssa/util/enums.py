@@ -431,3 +431,41 @@ class JobShortDescription(enum.Enum):
   )
   CLEAN_PROTEIN_UPDATE_STRUCTURE = "Clean the existing protein structure."
   ABORT = "abort"
+
+
+class LeftSidePanel(enum.IntEnum):
+  """Enum for storing the indexes of the left side panel stacked widget."""
+
+  PROTEIN_STRUCTURE = 0
+
+
+class RolesEnum(enum.IntEnum):
+  """Enumeration for storing possible model roles."""
+
+  OBJECT_ROLE = 1003
+  """Model role to store an object."""
+  TYPE_ROLE = 1004
+  """Model role to store a type."""
+  FILEPATH_ROLE = 1005
+  """Model role to store a filepath."""
+  CHAIN_COLOR_ROLE = 1006
+  """Model role to store a chain color."""
+
+
+class TypesEnum:
+  """Enumeration for storing possible model types."""
+
+  PROJECT_TYPE = "project"
+  """Model type for storing a project."""
+  SEQUENCE_TYPE = "sequence"
+  """Model type for storing a sequence."""
+  PROTEIN_TYPE = "protein"
+  """Model type for storing a protein."""
+  CHAIN_TYPE = "chain"
+  """Model type for storing a chain."""
+  RESIDUE_TYPE = "residue"
+  """Model type for storing a residue."""
+  ATOM_TYPE = "atom"
+  """Model type for storing an atom."""
+  LIGAND_TYPE = "ligand"
+  """Model type for storing an ligand."""

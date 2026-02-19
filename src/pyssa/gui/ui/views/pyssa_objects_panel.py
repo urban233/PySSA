@@ -34,16 +34,16 @@ TODO: Work in progress, this panel is not yet functional.
 """
 from src.pyssa.gui.ui.styles.icon_manager import IconManager
 from src.pyssa.gui.qt import QtCore
-from src.pyssa.gui.qt import QtGui
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.ui.views import base_side_panel
+from src.pyssa.model import psa_objects_model
 from src.pyssa.gui.user_pymol import UserPyMOL
 from src.pyssa.gui.ui.custom_widgets import quick_access_bar_action, quick_access_bar, dropdown_menu
 
 __docformat__ = "google"
 
 
-class MoleculeObjectsPanel(base_side_panel.BaseSidePanel):
+class PySSAObjectsPanel(base_side_panel.BaseSidePanel):
     """Panel for displaying all molecule objects of a project.
 
     This panel provides a tree view for molecule object objects and
@@ -60,14 +60,14 @@ class MoleculeObjectsPanel(base_side_panel.BaseSidePanel):
         super().__init__("PySSA Objects")
         # <editor-fold desc="Instance attributes">
         # TODO: Sub with the correct model
-        self._protein_model = None
+        self._model = psa_objects_model.PSAObjectsModel()
         self._user_pymol: UserPyMOL = user_pymol
         self.container_widget: QtWidgets.QWidget = QtWidgets.QWidget()
         self.expand_all: QtWidgets.QPushButton = QtWidgets.QPushButton()
         self.collapse_all: QtWidgets.QPushButton = QtWidgets.QPushButton()
         self.collapse_expand_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
         self.tree_view: QtWidgets.QTreeView = QtWidgets.QTreeView()
-        self.tree_view.setModel(self._protein_model)
+        self.tree_view.setModel(self._model)
         # </editor-fold>
         self._setup_panel_extra_ui()
         self._connect_signals()
@@ -78,9 +78,6 @@ class MoleculeObjectsPanel(base_side_panel.BaseSidePanel):
             pass
 
     # </editor-fold>
-
-    def clear_protein_model(self):
-        self._protein_model.clear()
 
     # <editor-fold desc="Private methods">
     def _setup_extra_styles(self) -> None:
@@ -215,7 +212,7 @@ class MoleculeObjectsPanel(base_side_panel.BaseSidePanel):
         if file_path:
             print(file_path)
             self._user_pymol.get_cmd_module().load(file_path)
-            self._protein_model.add_protein(self._user_pymol.get_cmd_module().get_model())
+            self._model.add_protein(self._user_pymol.get_cmd_module().get_model())
 
     def __slot_export_file(self):
         # Determine selected top-level molecule name from tree view

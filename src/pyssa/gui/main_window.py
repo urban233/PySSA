@@ -38,9 +38,10 @@ from pymol.Qt.utils import MainThreadCaller
 from pmg_qt.pymol_gl_widget import PyMOLGLWidget
 from pmg_qt import keymapping
 
+from src.pyssa.controller import main_window_controller
 from src.pyssa.gui import user_pymol
 
-from src.pyssa.gui.ui.views import molecule_objects_panel
+from src.pyssa.gui.ui.views import pyssa_objects_panel
 
 from src.pyssa.gui.ui.styles.icon_manager import IconManager
 from src.pyssa.gui.qt import QtCore
@@ -70,6 +71,87 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
 
   def __init__(self):  # noqa
     QtWidgets.QMainWindow.__init__(self)
+    # <editor-fold desc="Create Menus">
+    self.menuProject = QtWidgets.QMenu("Project", self)
+    self.menuPrediction = QtWidgets.QMenu("Prediction", self)
+    self.menuAnalysis = QtWidgets.QMenu("Analysis", self)
+    self.menuResults = QtWidgets.QMenu("Results", self)
+    self.menuImage = QtWidgets.QMenu("Image", self)
+    self.menuHotspots = QtWidgets.QMenu("Hotspots", self)
+    self.menuSettings = QtWidgets.QMenu("Settings", self)
+    self.menuAbout = QtWidgets.QMenu("Help", self)
+    # </editor-fold>
+
+    # <editor-fold desc="Create Actions">
+    # --- Project Actions ---
+    self.action_new_project = QtGui.QAction("New", self)
+    self.action_open_project = QtGui.QAction("Open", self)
+    self.action_use_project = QtGui.QAction("Use", self)
+    self.action_delete_project = QtGui.QAction("Delete", self)
+    self.action_import_project = QtGui.QAction("Import", self)
+    self.action_export_project = QtGui.QAction("Export", self)
+    self.action_close_project = QtGui.QAction("Close", self)
+    self.action_exit_application = QtGui.QAction("Exit Application", self)
+
+    # --- Prediction Actions ---
+    self.action_predict_monomer = QtGui.QAction("Monomer", self)
+    self.action_predict_multimer = QtGui.QAction("Multimer", self)
+    self.action_abort_prediction = QtGui.QAction("Abort", self)
+
+    # --- Analysis Actions ---
+    self.action_distance_analysis = QtGui.QAction("Distance", self)
+
+    # --- Results Actions ---
+    self.action_results_summary = QtGui.QAction("Summary", self)
+
+    # --- Image Actions ---
+    self.action_preview_image = QtGui.QAction("Preview", self)
+    self.action_ray_tracing_image = QtGui.QAction("Ray-Tracing", self)
+    self.action_simple_image = QtGui.QAction("Simple", self)
+
+    # --- Hotspots Actions ---
+    self.action_protein_regions = QtGui.QAction("Protein Regions", self)
+    self.action_protein_regions.setCheckable(False)
+
+    # --- Settings Actions ---
+    self.action_edit_settings = QtGui.QAction("Edit", self)
+    self.action_restore_settings = QtGui.QAction("Restore", self)
+
+    # --- About/Help Actions ---
+    self.action_documentation = QtGui.QAction("Documentation", self)
+    self.action_get_demo_projects = QtGui.QAction("Get Demo Projects", self)
+    self.action_show_log_in_explorer = QtGui.QAction("Show Logs in Explorer", self)
+    self.action_clear_logs = QtGui.QAction("Clear Logs", self)
+    self.action_about = QtGui.QAction("About", self)
+    # </editor-fold>
+
+    # <editor-fold desc="Set up status bar">
+    self.status_bar = QtWidgets.QStatusBar()
+    self.btn_update = QtWidgets.QPushButton("Update")
+    self.btn_update.setStyleSheet("""
+        QPushButton {
+            color: #0000FF;
+            text-decoration: underline;
+            border: none;
+            background-color: transparent;
+            padding: 0px;
+            margin: 0px;
+        }
+        QPushButton:hover {
+            color: #0000CC;
+        }
+        QPushButton:pressed {
+            color: #000088;
+        }
+    """)
+    self.status_bar.addWidget(self.btn_update)
+    self.btn_update.hide()
+    self.progress_bar = QtWidgets.QProgressBar()
+    self.status_bar.addWidget(self.progress_bar)
+    self.progress_bar.hide()
+    self.setStatusBar(self.status_bar)
+    # </editor-fold>
+
     # <editor-fold desc="Viewer toolbar actions">
     self.viewer_toolbar_actions = {
       "open_session": quick_access_bar_action.QuickAccessBarAction(
@@ -244,25 +326,19 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.user_pymol = user_pymol.UserPyMOL(self.pymolwidget)
     # <editor-fold desc="Panels">
     self.left_side_panel_stacked_widget = QtWidgets.QStackedWidget()
-    self.side_panel_molecule_objects = molecule_objects_panel.MoleculeObjectsPanel(self.user_pymol)
+    self.pyssa_objects_panel = pyssa_objects_panel.PySSAObjectsPanel(self.user_pymol)
     self.right_side_panel_stacked_widget = QtWidgets.QStackedWidget()
     self.bottom_panel_stacked_widget = QtWidgets.QStackedWidget()
     # </editor-fold>
-    # self.split_pane = split_pane_design.SplitPaneDesign(
-    #   [self.viewer_widget],
-    #   self.left_side_panel_stacked_widget,
-    #   self.right_side_panel_stacked_widget,
-    #   self.bottom_panel_stacked_widget,
-    # )
-    # self.split_pane.hide_right_side_panel()
-    # self.split_pane.hide_bottom_panel()
     # # </editor-fold>
+    self._setup_menu()
     self._setup_left_side_panels()
     # self._setup_right_side_panels()
     # self._setup_bottom_panels()
     self._setup_color_grid()
     self._central_widget = QtWidgets.QWidget()
     self._main_layout = QtWidgets.QVBoxLayout(self._central_widget)
+    self._main_layout.setContentsMargins(4, 2, 4, 2)
     self._main_content_layout = QtWidgets.QHBoxLayout()
     self._main_content_layout.setContentsMargins(0, 0, 0, 0)
     self.tool_window_layout = tool_window_layout.ToolWindowLayout(
@@ -276,31 +352,150 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.tool_window_layout.set_bottom_panel_hidden(True)
     # Register panels in ToolWindowLayout in enum order
     # Left stack
-    self.tool_window_layout.add_left_panel(self.side_panel_molecule_objects)  # LeftSidePanel.PROTEIN_STRUCTURE = 0
+    self.tool_window_layout.add_left_panel(self.pyssa_objects_panel)  # LeftSidePanel.PROTEIN_STRUCTURE = 0
 
     self._main_content_layout.addWidget(self.tool_window_layout)
     self._main_layout.addLayout(self._main_content_layout)
     self.setWindowTitle("PySSA")
     self.setCentralWidget(self._central_widget)
-    self.status_bar = QtWidgets.QStatusBar()
-    self.setStatusBar(self.status_bar)
-    # self.menu_bar = pymol_menu_bar.PyMOLStandardMenuBar(
-    #   self,
-    #   self.user_pymol.get_cmd_module(),
-    #   MenuBarController(self, self.user_pymol.get_cmd_module())
-    # )
-    self.menu_bar = QtWidgets.QMenuBar()
-    menu = self.menuBar()
-    # Apply themed, compact menu bar style (avoid unreliable reset via empty stylesheet)
-    # menu.setStyleSheet(ThemeManager.instance().get_current_theme().get_menu_bar_style())
-    self.plugins_menu_action = QtGui.QAction(QtGui.QIcon("bug.png"), "&Plugins", self)
-    file_menu = menu.addMenu("&Settings")
-    file_menu.addAction(self.plugins_menu_action)
-    # Apply compact QMenu popup style alongside the main window background
-    base_style = "QMainWindow {background-color: #eeeff0;}"
+    self._add_menu_style()
+    base_style = "QMainWindow {background-color: #ebecf0;}"
     self.setStyleSheet(base_style)
 
   # <editor-fold desc="Private methods">
+  def _setup_menu(self):
+    """Builds the main menu bar, menus, and actions in the exact original order."""
+    menubar = self.menuBar()
+
+    # <editor-fold desc="Add Actions to Menus (with separators)">
+    # --- Project Menu ---
+    self.menuProject.addAction(self.action_new_project)
+    self.menuProject.addAction(self.action_open_project)
+    self.menuProject.addAction(self.action_use_project)
+    self.menuProject.addAction(self.action_delete_project)
+    self.menuProject.addAction(self.action_import_project)
+    self.menuProject.addAction(self.action_export_project)
+    self.menuProject.addSeparator()
+    self.menuProject.addAction(self.action_close_project)
+    self.menuProject.addSeparator()
+    self.menuProject.addAction(self.action_exit_application)
+
+    # --- Prediction Menu ---
+    self.menuPrediction.addAction(self.action_predict_monomer)
+    self.menuPrediction.addAction(self.action_predict_multimer)
+    self.menuPrediction.addAction(self.action_abort_prediction)
+
+    # --- Analysis Menu ---
+    self.menuAnalysis.addAction(self.action_distance_analysis)
+
+    # --- Results Menu ---
+    self.menuResults.addAction(self.action_results_summary)
+
+    # --- Image Menu ---
+    self.menuImage.addAction(self.action_preview_image)
+    self.menuImage.addAction(self.action_ray_tracing_image)
+    self.menuImage.addAction(self.action_simple_image)
+
+    # --- Hotspots Menu ---
+    self.menuHotspots.addAction(self.action_protein_regions)
+
+    # --- Settings Menu ---
+    self.menuSettings.addAction(self.action_edit_settings)
+    self.menuSettings.addAction(self.action_restore_settings)
+
+    # --- About/Help Menu ---
+    self.menuAbout.addAction(self.action_documentation)
+    self.menuAbout.addAction(self.action_get_demo_projects)
+    self.menuAbout.addSeparator()
+    self.menuAbout.addAction(self.action_show_log_in_explorer)
+    self.menuAbout.addAction(self.action_clear_logs)
+    self.menuAbout.addSeparator()
+    self.menuAbout.addAction(self.action_about)
+    # </editor-fold>
+
+    # <editor-fold desc="Add Menus to MenuBar">
+    menubar.addMenu(self.menuProject)
+    menubar.addMenu(self.menuPrediction)
+    menubar.addMenu(self.menuAnalysis)
+    menubar.addMenu(self.menuResults)
+    menubar.addMenu(self.menuImage)
+    menubar.addMenu(self.menuHotspots)
+    menubar.addMenu(self.menuSettings)
+    menubar.addMenu(self.menuAbout)
+    # </editor-fold>
+
+  def _add_menu_style(self):
+    modern_light_menu_style = """
+    /* Main Menu Bar */
+    QMenuBar {
+        background-color: #ebecf0;
+        color: #000000; /* Dark gray text */
+        font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+        font-size: 12px;
+    }
+    
+    /* Menu Bar Items (Project, Prediction, etc.) */
+    QMenuBar::item {
+        background-color: transparent;
+        padding: 8px 6px;
+        margin: 0px 2px;
+         
+    }
+    
+    QMenuBar::item:selected {
+        background-color: #f3f4f6; /* Light gray highlight */
+        color: #111827; /* Nearly black text on hover */
+    }
+    
+    QMenuBar::item:pressed {
+        background-color: #e5e7eb; /* Slightly darker gray when clicked */
+    }
+    """
+    self.menuBar().setStyleSheet(modern_light_menu_style)
+    tmp_menu_style = """
+    /* The Dropdown Menu */
+    QMenu {
+        background-color: #ffffff;
+        color: #374151;
+        border: 1px solid #d1d5db; /* Soft gray border for shadowless definition */
+        border-radius: 8px;
+        padding: 0px;
+        font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+        font-size: 12px;
+    }
+    
+    /* Individual Dropdown Actions */
+    QMenu::item {
+        padding: 3px 10px 3px 24px;
+        margin: 2px;
+        border-radius: 5px;
+        background-color: transparent;
+    }
+    
+    QMenu::item:selected {
+        background-color: #d4e2ff;
+        color: #111827;
+    }
+    
+    QMenu::item:disabled {
+        color: #9ca3af; /* Faded gray for disabled items */
+    }
+    
+    /* Horizontal Separators */
+    QMenu::separator {
+        height: 1px;
+        background-color: #e5e7eb;
+    }
+    """
+    self.menuProject.setStyleSheet(tmp_menu_style)
+    self.menuPrediction.setStyleSheet(tmp_menu_style)
+    self.menuAnalysis.setStyleSheet(tmp_menu_style)
+    self.menuResults.setStyleSheet(tmp_menu_style)
+    self.menuImage.setStyleSheet(tmp_menu_style)
+    self.menuHotspots.setStyleSheet(tmp_menu_style)
+    self.menuSettings.setStyleSheet(tmp_menu_style)
+    self.menuAbout.setStyleSheet(tmp_menu_style)
+
   def _setup_color_grid(self) -> None:
     """Sets up the color grid on the ribbon bar."""
     self.color_grid_action.setDefaultWidget(self.color_grid)
@@ -308,7 +503,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
 
   def _setup_left_side_panels(self) -> None:
     """Sets up the left side panel."""
-    self.left_side_panel_stacked_widget.addWidget(self.side_panel_molecule_objects)
+    self.left_side_panel_stacked_widget.addWidget(self.pyssa_objects_panel)
 
   def _setup_right_side_panels(self) -> None:
     """Sets up the right side panel."""
@@ -431,7 +626,7 @@ def exec_app():
   app = QtWidgets.QApplication(sys.argv)
   app.setWindowIcon(IconManager.instance().get_icon(IconManager.Icons.LOGO))
   window = MainWindow()
-  # main_window_controller.MainWindowController(window)
+  main_window_controller.MainWindowController(window)
 
   @commandoverloaddecorator
   def viewport(w=-1, h=-1, _self=None):

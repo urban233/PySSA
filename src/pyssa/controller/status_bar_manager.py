@@ -59,23 +59,11 @@ class StatusBarManager:
     self._progress_bar = QtWidgets.QProgressBar()
     self._permanent_message = custom_label.PermanentMessageLabel()
 
-    self._menu_task = QtWidgets.QMenu()
-    self._is_menu_open = False
-    self._abort_action = QtWidgets.QAction("Abort Job")
-    self._menu_task.addAction(self._abort_action)
-
     self._view.status_bar.addPermanentWidget(self._progress_bar)
     self._view.status_bar.addPermanentWidget(self._permanent_message)
-    self._view.status_bar.addPermanentWidget(self._view.btn_open_job_overview)
-    self._view.status_bar.addPermanentWidget(
-        self._view.btn_open_job_notification
-    )
     self._progress_bar.hide()
-    self._view.btn_open_job_overview.show()
-    self._view.btn_open_job_notification.show()
     self.temp_message_timer = QtCore.QTimer()
-
-    # self._connect_ui_elements()
+    self._restore_status_bar()
 
   # <editor-fold desc="Util methods">
 
@@ -85,11 +73,9 @@ class StatusBarManager:
     self._view.status_bar.setStyleSheet(
         """
             QStatusBar {
-                background-color: #F2F2F2;
-                border-style: solid;
-                border-width: 2px;
-                border-radius: 4px;
-                border-color: #DCDBE3;
+                background-color: #eeeff0;
+                min-height: 1.1em;
+                max-height: 1.1em;
             }
         """
     )
@@ -100,10 +86,6 @@ class StatusBarManager:
         """
             QStatusBar {
                 background-color: #ff9000;
-                border-style: solid;
-                border-width: 2px;
-                border-radius: 4px;
-                border-color: #5b5b5b;
             }
         """
     )
@@ -114,10 +96,6 @@ class StatusBarManager:
         """
             QStatusBar {
                 background-color: #ff9000;
-                border-style: solid;
-                border-width: 2px;
-                border-radius: 4px;
-                border-color: #5b5b5b;
             }
         """
     )

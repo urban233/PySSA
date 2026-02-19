@@ -180,6 +180,12 @@ class ToolWindowLayout(QtWidgets.QWidget):
         }
       """
     )
+    self.left_splitter.setStyleSheet("""
+    QSplitter::handle {
+      background-color: #ebecf0; /* Soft light gray to match your menu separators */
+      margin: 1px; /* Keeps it from feeling too cramped against the panels */
+    }
+    """)
 
   def _apply_viewer_background(self, bg_color: str):
     """Applies the background color of PyMOL to the underlying QFrame.
