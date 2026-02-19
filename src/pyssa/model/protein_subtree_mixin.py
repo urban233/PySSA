@@ -18,6 +18,7 @@ from chempy.models import Indexed
 from src.auxiliary_pymol import auxiliary_pymol_client
 from src.pyssa.gui.qt import QtGui
 from src.pyssa.internal.data_structures import protein, job
+from src.pyssa.internal.pymol import pml_worker, pml_enums
 from src.pyssa.util import enums
 
 # ---------------------------------------------------------------------------
@@ -62,6 +63,13 @@ class ProteinSubtreeMixin:
           a_socket: zmq.Socket,
   ) -> list[str]:
     """Return the list of scene names stored in *a_pymol_session*."""
+    with pml_worker.PmlWorker.session(
+            pml_worker.PmlWorker.cache_session(a_pymol_session, "fetch_scenes")
+    ) as tmp_pml_worker:
+      return tmp_pml_worker.do(
+        pml_enums.PmlCommand.GET_SCENE_LIST, sync=True
+      )
+
     tmp_job = job.GeneralPurposeJobDescription(
       enums.JobShortDescription.GET_ALL_SCENES_OF_SESSION
     )
@@ -81,6 +89,13 @@ class ProteinSubtreeMixin:
           a_socket: zmq.Socket,
   ) -> Indexed:
     """Return the chempy ``Indexed`` model for *a_molecule_object* in *a_pymol_session*."""
+    with pml_worker.PmlWorker.session(
+            pml_worker.PmlWorker.cache_session(a_pymol_session, "fetch_scenes")
+    ) as tmp_pml_worker:
+      return tmp_pml_worker.do(
+        pml_enums.PmlCommand.GET_MODEL, ("all", ), sync=True
+      )
+
     tmp_job = job.GeneralPurposeJobDescription(
       enums.JobShortDescription.GET_MODEL
     )

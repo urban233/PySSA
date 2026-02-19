@@ -61,11 +61,11 @@ class MainWindowController:
         self._user_pymol = self._main_window.user_pymol
         # self._wmol_worker = w_worker.WWorker()
         # self._wmol_worker.start()
-        self._pymol_worker_connection, child_conn = Pipe()
-        self._pymol_worker_process = Process(
-            target=pml_worker.start_pml_worker, args=(child_conn,)
-        )
-        self._pymol_worker_process.start()
+        # self._pymol_worker_connection, child_conn = Pipe()
+        # self._pymol_worker_process = Process(
+        #     target=pml_worker.start_pml_worker, args=(child_conn,)
+        # )
+        # self._pymol_worker_process.start()
         self.feedback_timer = QtCore.QTimer()
         self._status_bar_manager = status_bar_manager.StatusBarManager(
             self._main_window
@@ -393,13 +393,29 @@ class MainWindowController:
     def __slot_open_session(self) -> None:
         """TODO: Change this implementation to correct session opening."""
         self._status_bar_manager.show_temporary_message("Session opened")
-        self._user_pymol.get_cmd_module().save("test.pse")
-        self._pymol_worker_connection.send(
-            worker_command.WorkerCommand(
-                "test.pse", "get_model", ("", ), True
-            )
-        )
-        print(self._pymol_worker_connection.recv())
+        with pml_worker.PmlWorker.session(pml_worker.PmlWorker.cache_user_session(self._user_pymol, "my_test")) as worker:
+            worker.do("color", ("red", "all"), sync=True)
+            worker.do("draw", ("800", "600"), sync=True)
+            worker.do("png", ("test.png", ), sync=True)
+        # print(pml_worker.one_shot_do(
+        #     self._user_pymol, "my_test", "color", ("red", "all"), True
+        # ))
+        # tmp_session_path = pml_worker.PmlWorker.cache_session(self._user_pymol, "my_test")
+        # tmp_worker = pml_worker.PmlWorker()
+        # tmp_worker.start()
+        # tmp_worker.set_session_path(tmp_session_path)
+        # print(
+        #     tmp_worker.do("color", ("red", "all"), True)
+        # )
+        # tmp_worker.stop()
+
+        # self._user_pymol.get_cmd_module().save("test.pse")
+        # self._pymol_worker_connection.send(
+        #     worker_command.WorkerCommand(
+        #         "test.pse", "get_model", ("", ), True
+        #     )
+        # )
+        # print(self._pymol_worker_connection.recv())
 
     # </editor-fold>
 
@@ -739,8 +755,8 @@ class MainWindowController:
         #   # TODO: Add correct pyssa_core logic here
         #   raise NotImplementedError()
         # self.aux_pymol_client.shutdown_service()
-        self._pymol_worker_connection.send(worker_command.WorkerCommand("", "shutdown", ()))
-        self._pymol_worker_process.join()
+        # self._pymol_worker_connection.send(worker_command.WorkerCommand("", "shutdown", ()))
+        # self._pymol_worker_process.join()
         self._main_window.close()
 
     def _get_viewer_tool_bar_action_pos(self, an_action) -> QtCore.QPoint:
