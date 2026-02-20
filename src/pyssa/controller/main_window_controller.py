@@ -314,6 +314,9 @@ class MainWindowController:
             lambda: self.__slot_apply_color("black")
         )
         # # </editor-fold>
+        self._main_window.color_config.btn_color_by_elements.clicked.connect(
+            self.__slot_apply_color_by_elements
+        )
         self._main_window.color_config.btn_white_bg.clicked.connect(
             lambda: self.__slot_apply_bg_color("white")
         )
@@ -323,10 +326,6 @@ class MainWindowController:
         self._main_window.color_config.btn_black_bg.clicked.connect(
             lambda: self.__slot_apply_bg_color("black")
         )
-        # TODO: Add implementation that does this for every type of molecule object
-        # self._main_window.color_config.btn_color_by_elements.clicked.connect(
-        #
-        # )
         # # </editor-fold>
         # # <editor-fold desc="Selection slots">
         # self._main_window.show_sele_rb_panel_item.get_action().triggered.connect(
@@ -702,8 +701,13 @@ class MainWindowController:
         """Colors the default sele selection in the given color."""
         self._user_pymol.get_cmd_module().color(a_color_name, "sele")
 
-    def __slot_apply_bg_color(self, a_color_name) -> None:
+    def __slot_apply_color_by_elements(self) -> None:
         """Colors the default sele selection in the given color."""
+        self._user_pymol.get_cmd_module().color("atomic", "sele and not elem C")
+        self._user_pymol.get_cmd_module().color("grey70", "sele and elem C")
+
+    def __slot_apply_bg_color(self, a_color_name) -> None:
+        """Colors the viewer background in the given color."""
         self._user_pymol.get_cmd_module().bg_color(a_color_name)
         match a_color_name:
             case "white":
