@@ -148,7 +148,7 @@ class MainWindowController:
         self._main_window.action_export_project.triggered.connect(self.__slot_export_current_project)
         self._main_window.action_close_project.triggered.connect(self.__slot_close_project)
         # TODO: Add the right slot method! ;)
-        self._main_window.action_exit_application.triggered.connect(self.)
+        # self._main_window.action_exit_application.triggered.connect(self.)
 
 
 
@@ -314,6 +314,19 @@ class MainWindowController:
             lambda: self.__slot_apply_color("black")
         )
         # # </editor-fold>
+        self._main_window.color_config.btn_white_bg.clicked.connect(
+            lambda: self.__slot_apply_bg_color("white")
+        )
+        self._main_window.color_config.btn_grey_bg.clicked.connect(
+            lambda: self.__slot_apply_bg_color("grey40")
+        )
+        self._main_window.color_config.btn_black_bg.clicked.connect(
+            lambda: self.__slot_apply_bg_color("black")
+        )
+        # TODO: Add implementation that does this for every type of molecule object
+        # self._main_window.color_config.btn_color_by_elements.clicked.connect(
+        #
+        # )
         # # </editor-fold>
         # # <editor-fold desc="Selection slots">
         # self._main_window.show_sele_rb_panel_item.get_action().triggered.connect(
@@ -688,6 +701,19 @@ class MainWindowController:
     def __slot_apply_color(self, a_color_name) -> None:
         """Colors the default sele selection in the given color."""
         self._user_pymol.get_cmd_module().color(a_color_name, "sele")
+
+    def __slot_apply_bg_color(self, a_color_name) -> None:
+        """Colors the default sele selection in the given color."""
+        self._user_pymol.get_cmd_module().bg_color(a_color_name)
+        match a_color_name:
+            case "white":
+                self._main_window.tool_window_layout.apply_viewer_background("#ffffff")
+            case "grey40":
+                self._main_window.tool_window_layout.apply_viewer_background("#666666")
+            case "black":
+                self._main_window.tool_window_layout.apply_viewer_background("#000000")
+            case _:
+                logger.error(f"The color name {a_color_name} is not available as bg color!")
 
     # </editor-fold>
 

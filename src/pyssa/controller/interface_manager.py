@@ -306,12 +306,12 @@ class InterfaceManager:
   # <editor-fold desc="Application process manager related methods">
   def start_app_process_manager(self) -> None:
     """Starts a LegacyTasks for the application process manager."""
-    self._app_process_manager_thread = tasks.LegacyTask(
-        target=self.app_process_manager.check_process,
-        args=(0, 0),
-        post_func=self._closed_app_process_manager,
-    )
-    self._app_process_manager_thread.start()
+    # self._app_process_manager_thread = tasks.LegacyTask(
+    #     target=self.app_process_manager.check_process,
+    #     args=(0, 0),
+    #     post_func=self._closed_app_process_manager,
+    # )
+    # self._app_process_manager_thread.start()
 
   def _closed_app_process_manager(self) -> None:
     """Await method after the app process manager closed."""

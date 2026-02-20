@@ -100,7 +100,7 @@ class ToolWindowLayout(QtWidgets.QWidget):
     tmp_viewer_frame_layout.setContentsMargins(4, 4, 4, 4)
     self.viewer_frame.setLayout(tmp_viewer_frame_layout)
     content_layout.addWidget(self.viewer_frame)
-    self._apply_viewer_background("black")
+    self.apply_viewer_background("black")
 
     # Splitter hierarchy
     self.right_splitter.addWidget(content_panel)
@@ -187,7 +187,7 @@ class ToolWindowLayout(QtWidgets.QWidget):
     }
     """)
 
-  def _apply_viewer_background(self, bg_color: str):
+  def apply_viewer_background(self, bg_color: str):
     """Applies the background color of PyMOL to the underlying QFrame.
 
     Args:

@@ -207,7 +207,8 @@ class PyMOLColorGrid(QtWidgets.QWidget):
 
     stylesheet = """QPushButton {
                 background-color: %s;
-                border: none;
+                border: solid;
+                border-width: 1px;
                 border-radius: 4px;
                 min-width: 20px;
                 max-width: 20px;

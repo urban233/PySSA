@@ -48,7 +48,7 @@ from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.qt import QtGui
 
-from src.pyssa.gui.ui.custom_widgets import dropdown_menu
+from src.pyssa.gui.ui.custom_widgets import dropdown_menu, psa_color_config
 from src.pyssa.gui.ui.custom_widgets import color_grid
 from src.pyssa.gui.ui.custom_widgets import tool_window_layout
 from src.pyssa.gui.ui.custom_widgets import quick_access_bar
@@ -283,6 +283,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.surface_show_hide_menu.addAction(self.surface_hide_action)
     # </editor-fold>
     self.color_grid = color_grid.PyMOLColorGrid()
+    self.color_config = psa_color_config.PSAColorConfig(self.color_grid)
     self.color_grid_menu = dropdown_menu.DropDownMenu()
     self.color_grid_action = QtWidgets.QWidgetAction(None)
 
@@ -498,7 +499,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
 
   def _setup_color_grid(self) -> None:
     """Sets up the color grid on the ribbon bar."""
-    self.color_grid_action.setDefaultWidget(self.color_grid)
+    self.color_grid_action.setDefaultWidget(self.color_config)
     self.color_grid_menu.addAction(self.color_grid_action)
 
   def _setup_left_side_panels(self) -> None:
