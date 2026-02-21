@@ -68,7 +68,6 @@ class AddProteinViewController(QtCore.QObject):
     self._connect_all_ui_elements_to_slot_functions()
 
   def get_view(self):
-    return self._view
     # check internet connectivity
     if not tools.check_internet_connectivity():
       tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -79,11 +78,12 @@ class AddProteinViewController(QtCore.QObject):
           "Internet Connection",
           custom_message_box.CustomMessageBoxIcons.ERROR.value,
       )
-      tmp_dialog.exec_()
+      tmp_dialog.exec()
       self._view.ui.txt_add_protein.setEnabled(False)
       self._view.ui.lbl_status.setText(
           "You cannot enter a PDB ID (no working internet connection)."
       )
+    return self._view
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
@@ -286,70 +286,51 @@ class AddProteinViewController(QtCore.QObject):
         # We can load directly through user_pymol which AppState doesn't hold directly,
         # but PyMOL runs in the same process instance namespace basically via the global cmd module.
         # It's cleaner to access PyMOL directly here or via an established interface.
-        from src.auxiliary_pymol import auxiliary_pymol_client
-        pymol_cmd = auxiliary_pymol_client._get_client()
 
         if tmp_name_len == 4:
             pdb_name = tmp_protein_name.upper()
             tmp_ref_protein = protein.Protein(pdb_name)
             tmp_ref_protein.set_id(0) # Let the model map it later
             tmp_ref_protein.db_project_id = self._app_state.project.get_id()
-            pymol_cmd.fetch(pdb_name)
+            tmp_ref_protein.add_protein_structure_data_from_pdb_db(pdb_name)
+            # pymol_cmd.fetch(pdb_name)
         else:
             pdb_filepath = pathlib.Path(tmp_protein_name)
             pdb_name = pdb_filepath.name.replace(".pdb", "")
             tmp_ref_protein = protein.Protein(pdb_name)
             tmp_ref_protein.set_id(0)
             tmp_ref_protein.db_project_id = self._app_state.project.get_id()
-            pymol_cmd.load(str(pdb_filepath))
-            
-        model = pymol_cmd.get_model(pdb_name)
+            tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pdb_filepath)
+            # pymol_cmd.load(str(pdb_filepath))
+
+        tmp_ref_protein.create_new_pymol_session()
+
+        # model = pymol_cmd.get_model(pdb_name)
+        # with pml_worker.PmlWorker.session(pml_worker.PmlWorker.cache_user_session(self._user_pymol, "my_test")) as worker:
+        #   worker.do("color", ("red", "all"), sync=True)
+        #   worker.do("draw", ("800", "600"), sync=True)
+        #   worker.do("png", ("test.png", ), sync=True)
         
-        tmp_protein_id = self._app_state.hot_db.insert_protein(tmp_ref_protein)
+        tmp_protein_id = self._app_state.hot_db.insert_protein_full(tmp_ref_protein)
         tmp_ref_protein.set_id(tmp_protein_id)
         return tmp_ref_protein
         
     def on_success(tmp_protein):
         self._app_state.project.add_existing_protein(tmp_protein)
         self._app_state.pyssa_objects_model.build_model(self._app_state.project)
-        self._view.close()
+        self._app_state.status_bar_manager.show_permanent_message("", False)
+        self._app_state.status_bar_manager.show_temporary_message("Protein imported.")
         
     def on_error(exc):
         logger.exception("Failed to insert protein.", exc_info=exc)
         QtWidgets.QMessageBox.critical(self._view, "Import Error", f"An error occurred: {exc}")
         self._view.ui.btn_add_protein.setEnabled(True)
+        self._app_state.status_bar_manager.show_error_message(
+          "Failed to import protein", True
+        )
 
     thread_runtime.get_singleton_thread_runtime().run(import_task).on_success(on_success).on_error(on_error)
-
-  def _validate_scene_name(self, text: str) -> None:
-    """Validates the given scene name and updates the UI elements accordingly.
-
-    Args:
-        text (str): The scene name to be validated.
-
-    Raises:
-        exception.IllegalArgumentError: If `text` is None.
-    """
-    # <editor-fold desc="Checks">
-    if text is None:
-      logger.error("text is None.")
-      raise exception.IllegalArgumentError("text is None.")
-
-    # </editor-fold>
-
-    new_text = "".join(char for char in text)
-    self._view.line_edit_scene_name.setText(new_text)
-    if new_text in self._all_current_scenes:
-      self._view.btn_add_scene.setEnabled(False)
-      self._view.line_edit_scene_name.setToolTip(
-          "This scene name already exists. Please enter another name."
-      )
-      self._view.line_edit_scene_name.setStyleSheet(
-          """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
-      )
-    else:
-      self._view.btn_add_scene.setEnabled(True)
-      self._view.line_edit_scene_name.setToolTip("")
-      self._view.line_edit_scene_name.setStyleSheet(
-          """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
-      )
+    self._app_state.status_bar_manager.show_permanent_message(
+      "Importing protein ...", True
+    )
+    self._view.close()

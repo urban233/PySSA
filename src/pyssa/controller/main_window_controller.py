@@ -611,6 +611,8 @@ class MainWindowController:
                 # self._app_state.open_project(tmp_project, tmp_db)
                 self._app_state._build_workspace_model()
                 self.refresh_ui()
+                self._app_state.status_bar_manager.show_permanent_message("", False)
+                self._app_state.status_bar_manager.show_temporary_message("Project imported.")
 
             def on_error(exc):
                 logger.exception("Failed to import project.", exc_info=exc)
@@ -619,12 +621,16 @@ class MainWindowController:
                     "Failed to import project",
                     f"Could not import the project:\n{exc}",
                 )
+                self._app_state.status_bar_manager.show_error_message("Failed to import project.")
 
             (
                 thread_runtime.get_singleton_thread_runtime()
                 .run(import_project_task)
                 .on_success(on_success)
                 .on_error(on_error)
+            )
+            self._app_state.status_bar_manager.show_permanent_message(
+                "Importing project ...", True
             )
 
         except Exception as e:
@@ -659,10 +665,8 @@ class MainWindowController:
                     
                 def on_success(result):
                     logger.info("Project exported successfully to %s", file_path)
-                    try:
-                        self._status_bar_manager.show_temporary_message("The project was successfully exported.")
-                    except Exception:
-                        pass
+                    self._app_state.status_bar_manager.show_permanent_message("", False)
+                    self._app_state.status_bar_manager.show_temporary_message("Project exported.")
                 
                 def on_error(exc):
                     logger.exception("Failed to export project.", exc_info=exc)
@@ -671,12 +675,16 @@ class MainWindowController:
                         "Failed to export project",
                         f"Could not export the project:\n{exc}",
                     )
+                    self._app_state.status_bar_manager.show_error_message("Failed to export project.")
 
                 (
                     thread_runtime.get_singleton_thread_runtime()
                     .run(export_project_task)
                     .on_success(on_success)
                     .on_error(on_error)
+                )
+                self._app_state.status_bar_manager.show_permanent_message(
+                    "Importing project ...", True
                 )
 
         except Exception as e:
@@ -692,40 +700,9 @@ class MainWindowController:
             self._app_state.close_project()
             self._user_pymol.get_cmd_module().reinitialize()
 
-    # <editor-fold desc="Left side panel slots">
-    def __slot_close_left_side_panel(self) -> None:
-        """Closes the left side panel using the ToolWindowLayout."""
-        try:
-            self._main_window.tool_window_layout.set_left_panel_hidden(True)
-        except Exception as e:
-            logger.error(f"Failed to close left side panel: {e}")
-
-    def __slot_show_protein_structure_side_panel(self) -> None:
-        """Toggle the protein structure left side panel using ToolWindowLayout.
-
-        - If the left panel is visible and already showing the protein structure page,
-          hide the left panel.
-        - Otherwise, show the left panel and switch to the protein structure page.
-        """
-        try:
-            target_index = enums.LeftSidePanel.PROTEIN_STRUCTURE
-            layout = self._main_window.tool_window_layout
-            is_hidden = layout.is_left_panel_hidden
-            current_index = layout.left_stack.currentIndex()
-            if not is_hidden and current_index == target_index:
-                layout.set_left_panel_hidden(True)
-            else:
-                layout.left_stack.setCurrentIndex(target_index)
-                layout.set_left_panel_hidden(False)
-        except Exception as e:
-            logger.error(f"Failed to toggle left side panel: {e}")
-
-    # </editor-fold>
-
     def __slot_toggle_help_panel(self):
         layout = self._main_window.tool_window_layout
         layout.set_right_panel_hidden(not layout.is_right_panel_hidden)
-
 
     # <editor-fold desc="Project tree selection handling">
     def __slot_on_project_tree_selection_changed(

@@ -26,7 +26,7 @@ from Bio.SeqRecord import SeqRecord
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.ui.views import import_sequence_view
-from src.pyssa.controller import interface_manager, fasta_file_import_preview_view_controller
+from src.pyssa.controller import fasta_file_import_preview_view_controller
 from src.pyssa.internal.data_structures.data_classes import basic_seq_info
 from src.pyssa.logging_pyssa import log_levels, log_handlers
 from src.pyssa.util import exception
@@ -292,18 +292,31 @@ class ImportSequenceViewController(QtCore.QObject):
             logger.info(
               f"Adding new sequence {tmp_seq_record.name} with {tmp_seq_record.seq} to the current project."
             )
-            self._app_state.hot_db.insert_sequence(0, tmp_seq_record)
+            self._app_state.hot_db.insert_sequence(
+              str(tmp_seq_record.id),
+              str(tmp_seq_record.seq),
+              tmp_seq_record.name,
+              self._app_state.project.get_id()
+            )
 
     def on_success(result):
         for tmp_seq_record in self._parsed_seq_records:
             self._app_state.project.sequences.append(tmp_seq_record)
             
         self._app_state.pyssa_objects_model.build_model(self._app_state.project)
-        self._view.close()
+        self._app_state.status_bar_manager.show_permanent_message("", False)
+        self._app_state.status_bar_manager.show_temporary_message("Sequence(s) imported.")
         
     def on_error(exc):
         logger.exception("Failed to insert sequence into database.", exc_info=exc)
         QtWidgets.QMessageBox.critical(self._view, "Import Error", f"An error occurred: {exc}")
         self._view.ui.btn_import_sequence.setEnabled(True)
+        self._app_state.status_bar_manager.show_error_message(
+          "Failed to import sequence(s)", True
+        )
 
     thread_runtime.get_singleton_thread_runtime().run(import_task).on_success(on_success).on_error(on_error)
+    self._app_state.status_bar_manager.show_permanent_message(
+      "Importing sequence(s) ...", True
+    )
+    self._view.close()

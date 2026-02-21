@@ -185,6 +185,9 @@ class CreateProjectViewController(QtCore.QObject):
       tmp_project, tmp_db, tmp_pyssa_objects_model = result
       self._app_state.pyssa_objects_model = tmp_pyssa_objects_model
       self._app_state.open_project(tmp_project, tmp_db)
+      self._app_state._build_workspace_model()
+      self._app_state.status_bar_manager.show_permanent_message("", False)
+      self._app_state.status_bar_manager.show_temporary_message("Project created.")
 
     def on_error(exc):
       logger.exception("Failed to create project.", exc_info=exc)
@@ -194,6 +197,9 @@ class CreateProjectViewController(QtCore.QObject):
         "Failed to create project",
         f"Could not create the project:\n{exc}",
       )
+      self._app_state.status_bar_manager.show_error_message(
+        "Failed to create project", True
+      )
 
     (
       thread_runtime.get_singleton_thread_runtime()
@@ -202,6 +208,9 @@ class CreateProjectViewController(QtCore.QObject):
       .on_error(on_error)
     )
     self._view.close()
+    self._app_state.status_bar_manager.show_permanent_message(
+      "Creating project ...", True
+    )
 
   def _hide_add_protein_options(self) -> None:
     """Hides the add protein options in the UI."""

@@ -1055,6 +1055,7 @@ def _open_sequence_viewer(self, index: QtCore.QModelIndex) -> None:
     from src.pyssa.gui.qt import QtWidgets
 
     name = index.data(_DR)
+    # TODO: This is not the sequence string it is just the name of the seq
     sequence_string = index.data(enums.ModelEnum.OBJECT_ROLE)
     if not sequence_string:
         return
@@ -1064,6 +1065,7 @@ def _open_sequence_viewer(self, index: QtCore.QModelIndex) -> None:
     dialog.setMinimumSize(500, 300)
 
     layout = QtWidgets.QVBoxLayout(dialog)
+    bottom_layout = QtWidgets.QHBoxLayout()
 
     text_edit = QtWidgets.QPlainTextEdit(dialog)
     text_edit.setReadOnly(True)
@@ -1072,7 +1074,9 @@ def _open_sequence_viewer(self, index: QtCore.QModelIndex) -> None:
     layout.addWidget(text_edit)
 
     close_button = QtWidgets.QPushButton("Close", dialog)
+    bottom_layout.addStretch()
+    bottom_layout.addWidget(close_button)
     close_button.clicked.connect(dialog.accept)
-    layout.addWidget(close_button)
+    layout.addLayout(bottom_layout)
 
     dialog.exec()

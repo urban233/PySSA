@@ -48,6 +48,7 @@ class PySSAObjectsPanelController:
   ):
     """Constructor."""
     # <editor-fold desc="Instance attributes">
+    self._app_state = the_app_state
     self._panel = a_pyssa_objects_panel
     self._user_pymol: "user_pymol.UserPyMOL" = a_user_pymol
     self._model = the_app_state.pyssa_objects_model
