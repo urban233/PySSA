@@ -24,9 +24,11 @@ from typing import Callable, TYPE_CHECKING
 
 from src.pyssa.gui.qt import QtGui
 from src.pyssa.controller import settings_manager
+from src.pyssa.controller.job_scheduler import JobScheduler
 from src.pyssa.io_pyssa.db_pyssa import ProjectDatabase
 from src.pyssa.io_pyssa.db_pyssa import ColdProjectHandle
 from src.pyssa.internal.data_structures import workspace, settings
+from src.pyssa.model import job_model as jm_module
 from src.pyssa.model import psa_objects_model
 from src.pyssa.util import enums
 
@@ -70,6 +72,10 @@ class AppState:
     self._cold_dbs: dict[str, ProjectDatabase] = {}
 
     self._pyssa_objects_model = psa_objects_model.PSAObjectsModel()
+
+    self._job_model = jm_module.JobModel()
+    self._job_scheduler = JobScheduler(self._job_model)
+    self._job_model.job_finished.connect(self._on_job_finished)
 
     self._build_workspace_model()
 
@@ -186,6 +192,7 @@ class AppState:
 
   def close_all(self) -> None:
     """Drain and close every open database.  Call at application exit."""
+    self._job_scheduler.shutdown()
     self._close_hot_db()
     for project_id in list(self._cold_dbs):
       db = self._cold_dbs.pop(project_id)
@@ -207,3 +214,42 @@ class AppState:
 
   def is_first_pass(self) -> bool:
     return self._first_pass
+
+  # ------------------------------------------------------------------
+  # Job system
+  # ------------------------------------------------------------------
+
+  @property
+  def job_model(self) -> jm_module.JobModel:
+    """The application-wide job table model."""
+    return self._job_model
+
+  @property
+  def job_scheduler(self) -> JobScheduler:
+    """The application-wide job scheduler."""
+    return self._job_scheduler
+
+  def _on_job_finished(
+      self,
+      descriptor: "jd_module.JobDescriptor",
+      result: object,
+  ) -> None:
+    """Handle a completed hot-project job by invoking its result callback.
+
+    Connected to ``JobModel.job_finished``.  Only acts when the job's
+    project is still the hot project.  Does **not** show any popup.
+
+    Args:
+        descriptor: The job's immutable metadata.
+        result: The return value of the worker function.
+    """
+    if not descriptor.is_hot:
+      return
+    if descriptor.on_result is not None:
+      try:
+        descriptor.on_result(result)
+      except Exception:
+        logger.exception(
+          "on_result callback failed for job '%s'.",
+          descriptor.display_name or descriptor.job_type.value,
+        )

@@ -383,6 +383,20 @@ class JobProgress(enum.Enum):
   FAILED = "failed"
 
 
+class JobStatus(enum.Enum):
+  """Human-readable status labels displayed in the job table.
+
+  Unlike `JobProgress` (used by the legacy job system), these values are
+  designed to be shown directly in a ``QTableView`` column.
+  """
+
+  QUEUED = "Queued"
+  RUNNING = "Running"
+  FINISHED = "Finished"
+  FAILED = "Failed"
+  CANCELLED = "Cancelled"
+
+
 class JobDescriptionKeys(enum.Enum):
   """An enum for all job description keys.
 
