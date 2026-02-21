@@ -23,10 +23,11 @@
 import logging
 import os
 
+from src.pyssa.gui import app_state
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.ui.views import delete_project_view
 
-from src.pyssa.controller import interface_manager
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.util import constants, enums, ui_util, exception
 from src.pyssa.logging_pyssa import log_levels, log_handlers
@@ -40,35 +41,37 @@ class DeleteProjectViewController(QtCore.QObject):
   """Class for the DeleteProjectViewController."""
 
   def __init__(
-      self, the_interface_manager: "interface_manager.InterfaceManager"
+      self, the_app_state: "app_state.AppState"
   ) -> None:
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        the_app_state (app_state.AppState): The AppState object.
 
     Raises:
-        exception.IllegalArgumentError: If `the_interface_manager` is None.
+        exception.IllegalArgumentError: If `the_app_state` is None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
 
     # </editor-fold>
     super().__init__()
-    self._interface_manager = the_interface_manager
-    self._view = the_interface_manager.get_delete_view()
+    self._app_state = the_app_state
+    self._view = delete_project_view.DeleteProjectView()
     self._fill_projects_list_view()
     self._connect_all_ui_elements_to_slot_functions()
     self.restore_default_view()
+
+  def get_view(self):
+    return self._view
 
   def _open_help_for_dialog(self) -> None:
     """Opens the help dialog for the corresponding dialog."""
     logger.log(
       log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
-    self._interface_manager.help_manager.open_delete_project_page()
 
   def restore_default_view(self) -> None:
     """Restores the default UI."""
@@ -81,7 +84,7 @@ class DeleteProjectViewController(QtCore.QObject):
   def _fill_projects_list_view(self) -> None:
     """Lists all projects."""
     self._view.ui.list_delete_projects_view.setModel(
-        self._interface_manager.get_workspace_model()
+        self._app_state.workspace.get_model()
     )
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
@@ -154,75 +157,38 @@ class DeleteProjectViewController(QtCore.QObject):
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete' button was clicked."
     )
 
-    if (
-        len(
-            self._view.ui.list_delete_projects_view.selectionModel().selectedIndexes()
-        )
-        > 1
-    ):
+    selected_indexes = self._view.ui.list_delete_projects_view.selectionModel().selectedIndexes()
+    if not selected_indexes:
+      return
+
+    if len(selected_indexes) > 1:
       tmp_dialog = custom_message_box.CustomMessageBoxDelete(
           "Are you sure you want to delete these projects?",
           "Delete Projects",
           custom_message_box.CustomMessageBoxIcons.WARNING.value,
       )
-      tmp_dialog.exec_()
-      tmp_indexes = (
-          self._view.ui.list_delete_projects_view.selectionModel().selectedIndexes()
-      )
-      tmp_filepaths_with_row_numbers = []
-      for tmp_index in tmp_indexes:
-        tmp_filepaths_with_row_numbers.append(
-            (
-                self._view.ui.list_delete_projects_view.model().data(
-                    tmp_index, enums.ModelEnum.FILEPATH_ROLE
-                ),
-                tmp_index.row(),
-            ),
-        )
-      tmp_filepaths_with_row_numbers.sort(reverse=True)
-    elif (
-        len(
-            self._view.ui.list_delete_projects_view.selectionModel().selectedIndexes()
-        )
-        == 1
-    ):
+      tmp_dialog.exec()
+      if not tmp_dialog.response:
+        return
+      
+      names_to_delete = []
+      for idx in selected_indexes:
+        names_to_delete.append(self._view.ui.list_delete_projects_view.model().data(idx, Qt.DisplayRole))
+        
+      for name in names_to_delete:
+        self._app_state.workspace.delete_project(name)
+
+    elif len(selected_indexes) == 1:
       tmp_dialog = custom_message_box.CustomMessageBoxDelete(
           "Are you sure you want to delete this project?",
           "Delete Project",
           custom_message_box.CustomMessageBoxIcons.WARNING.value,
       )
-      tmp_dialog.exec_()
-      tmp_filepaths_with_row_numbers = [
-          (
-              self._view.ui.list_delete_projects_view.model().data(
-                  self._view.ui.list_delete_projects_view.currentIndex(),
-                  enums.ModelEnum.FILEPATH_ROLE,
-              ),
-              self._view.ui.list_delete_projects_view.currentIndex().row(),
-          ),
-      ]
-    else:
-      return
+      tmp_dialog.exec()
+      if not tmp_dialog.response:
+        return
+        
+      project_name = self._view.ui.list_delete_projects_view.model().data(selected_indexes[0], Qt.DisplayRole)
+      self._app_state.workspace.delete_project(project_name)
 
-    response: bool = tmp_dialog.response
-    if response is True:
-      for tmp_filepath, tmp_row in tmp_filepaths_with_row_numbers:
-        try:
-          os.remove(
-              tmp_filepath
-          )  # TODO: throws permission error, throws FileNotFound if more than one project gets deleted and afterwards selected
-        except PermissionError:
-          tmp_dialog = custom_message_box.CustomMessageBoxOk(
-              "The project cannot be deleted, due to a permission error. Restart the application and try again.",
-              "Delete Project",
-              custom_message_box.CustomMessageBoxIcons.ERROR.value,
-          )
-          tmp_dialog.exec_()
-        self._view.ui.list_delete_projects_view.model().removeRow(
-            tmp_row
-        )  # removes item from model
-      self.restore_default_view()
-    else:
-      constants.PYSSA_LOGGER.info(
-          "No project has been deleted. No changes were made."
-      )
+    self.restore_default_view()

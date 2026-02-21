@@ -144,10 +144,10 @@ class MainWindowController:
         """Connects all relevant widget signals with their appropriate slots."""
         # self._main_window.dialogClosed.connect(self.__slot_close_application)
 
-        # self._main_window.action_new_project.triggered.connect(self.__slot_create_project)
+        self._main_window.action_new_project.triggered.connect(self.__slot_create_project)
         self._main_window.action_open_project.triggered.connect(self.__slot_open_project)
-        # self._main_window.action_use_project.triggered.connect(self.__slot_use_project)
-        # self._main_window.action_delete_project.triggered.connect(self.__slot_delete_project)
+        self._main_window.action_use_project.triggered.connect(self.__slot_use_project)
+        self._main_window.action_delete_project.triggered.connect(self.__slot_delete_project)
         # self._main_window.action_import_project.triggered.connect(self.__slot_import_project)
         # self._main_window.action_export_project.triggered.connect(self.__slot_export_current_project)
         # self._main_window.action_close_project.triggered.connect(self.__slot_close_project)
@@ -424,21 +424,135 @@ class MainWindowController:
 
         Called automatically by AppState whenever state changes.
         Also safe to call manually at any time.
+
+        This method is fully declarative and idempotent: it reads
+        the current ``AppState`` and unconditionally sets every relevant
+        widget property based on specific object-level rules (e.g., proteins or sequences).
+        UI elements that are not applicable in a given state are **disabled** (never hidden).
         """
         has_project = self._app_state.has_open_project()
+        project = self._app_state.project
 
-        self._main_window.action_open_project.setEnabled(not has_project)
+        # Derived booleans from detailed project data.
+        has_sequences = has_project and len(project.sequences) > 0
+        has_proteins = has_project and len(project.proteins) > 0
+        has_protein_pairs = has_project and len(project.protein_pairs) > 0
+        has_any_objects = has_sequences or has_proteins or has_protein_pairs
+        has_running_jobs = len(self._app_state._cold_dbs) > 0
+
+        # -- Project menu actions ------------------------------------------
+        # Actions that replace or manage the active project context are always available.
+        self._main_window.action_new_project.setEnabled(True)
+        self._main_window.action_open_project.setEnabled(True)
+        self._main_window.action_use_project.setEnabled(True)
+        self._main_window.action_delete_project.setEnabled(True)
+        self._main_window.action_import_project.setEnabled(True)
+        
+        # Export and close specifically act upon the *current* project.
+        self._main_window.action_export_project.setEnabled(has_project)
         self._main_window.action_close_project.setEnabled(has_project)
+        # action_exit_application is always enabled.
 
-        if self._app_state.is_first_pass:
-            self._main_window.pyssa_objects_panel.tree_view.setModel(self._app_state.pyssa_objects_model)
+        # -- Top-level menus -----------------------------------------------
+        self._main_window.menuPrediction.setEnabled(has_project)
+        # Prediction needs an input sequence to execute.
+        self._main_window.action_predict_monomer.setEnabled(has_sequences)
+        self._main_window.action_predict_multimer.setEnabled(has_sequences)
+        # Aborting requires an active background/cold database job.
+        self._main_window.action_abort_prediction.setEnabled(has_running_jobs)
 
+        self._main_window.menuAnalysis.setEnabled(has_project)
+        # Distance analysis operations computationally require 3D structure models.
+        self._main_window.action_distance_analysis.setEnabled(has_proteins or has_protein_pairs)
+
+        self._main_window.menuResults.setEnabled(has_project)
+        # Results summaries aggregate data from protein pair analysis/predictions.
+        self._main_window.action_results_summary.setEnabled(has_protein_pairs)
+
+        self._main_window.menuImage.setEnabled(has_project)
+        # Rendering commands mathematically require actual PyMOL coordinates.
+        self._main_window.action_preview_image.setEnabled(has_proteins)
+        self._main_window.action_ray_tracing_image.setEnabled(has_proteins)
+        self._main_window.action_simple_image.setEnabled(has_proteins)
+
+        self._main_window.menuHotspots.setEnabled(has_project)
+        # Protein region generation acts upon 3D coordinates.
+        self._main_window.action_protein_regions.setEnabled(has_proteins)
+        # Settings and Help menus are always enabled.
+
+        # -- Viewer toolbar actions ----------------------------------------
+        # Base scene and session commands act on the project environment.
+        _project_level_toolbar_keys = ["open_session", "create_scene", "save_scene", "delete_scene"]
+        for key in _project_level_toolbar_keys:
+            toolbar_action = self._main_window.viewer_toolbar_actions.get(key)
+            if toolbar_action is not None:
+                toolbar_action.get_action().setEnabled(has_project)
+
+        # PyMOL representation tools need a 3D structural model in the wrapper.
+        _protein_level_toolbar_keys = [
+            "cartoon", "sticks", "ribbon", "lines", "spheres", "dots",
+            "mesh", "surface", "color",
+        ]
+        for key in _protein_level_toolbar_keys:
+            toolbar_action = self._main_window.viewer_toolbar_actions.get(key)
+            if toolbar_action is not None:
+                toolbar_action.get_action().setEnabled(has_proteins)
+
+        # General viewer state indicators are active.
+        _status_level_toolbar_keys = ["running_jobs", "notifications"]
+        for key in _status_level_toolbar_keys:
+            toolbar_action = self._main_window.viewer_toolbar_actions.get(key)
+            if toolbar_action is not None:
+                toolbar_action.get_action().setEnabled(True)
+
+        # -- PySSA Objects Panel toolbar -----------------------------------
+        panel = self._main_window.pyssa_objects_panel
+        # Importing sequences or structural files requires an open project.
+        panel.import_file_action.get_action().setEnabled(has_project)
+        panel.add_sequence_action.get_action().setEnabled(has_project)
+        # Exporting or deleting explicitly requires at least one object to export/delete.
+        panel.export_file_action.get_action().setEnabled(has_any_objects)
+        panel.delete_object_action.get_action().setEnabled(has_any_objects)
+
+        # -- First-pass model binding --------------------------------------
+        if self._app_state.is_first_pass():
+            panel.tree_view.setModel(self._app_state.pyssa_objects_model)
+
+        # -- Window title --------------------------------------------------
         if has_project:
-            pass
+            self._main_window.setWindowTitle(
+                f"PySSA \u2014 {project.get_project_name()}"
+            )
         else:
-            pass
+            self._main_window.setWindowTitle("PySSA")
 
     # <editor-fold desc="Slot methods">
+    def __slot_create_project(self):
+        if not self._dialog_controllers.__contains__("create_project"):
+            self._dialog_controllers["create_project"] = create_project_view_controller.CreateProjectViewController(
+                self._app_state
+            )
+        self._dialog_controllers["create_project"].restore_default_view()
+        self._dialog_controllers["create_project"].get_view().show()
+
+    def __slot_delete_project(self):
+        if not self._dialog_controllers.__contains__("delete_project"):
+            from src.pyssa.controller import delete_project_view_controller
+            self._dialog_controllers["delete_project"] = delete_project_view_controller.DeleteProjectViewController(
+                self._app_state
+            )
+        self._dialog_controllers["delete_project"].restore_default_view()
+        self._dialog_controllers["delete_project"].get_view().show()
+
+    def __slot_use_project(self):
+        if not self._dialog_controllers.__contains__("use_project"):
+            from src.pyssa.controller import use_project_view_controller
+            self._dialog_controllers["use_project"] = use_project_view_controller.UseProjectViewController(
+                self._app_state
+            )
+        self._dialog_controllers["use_project"].restore_default_view()
+        self._dialog_controllers["use_project"].get_view().show()
+
     def __slot_open_project(self):
         if not self._dialog_controllers.__contains__("open_project"):
             self._dialog_controllers["open_project"] = open_project_view_controller.OpenProjectViewController(
@@ -446,6 +560,9 @@ class MainWindowController:
             )
         self._dialog_controllers["open_project"].restore_default_view()
         self._dialog_controllers["open_project"].get_view().show()
+
+    def __slot_close_project(self):
+        pass
 
     # <editor-fold desc="Left side panel slots">
     def __slot_close_left_side_panel(self) -> None:
