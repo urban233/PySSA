@@ -1,4 +1,3 @@
-# app_state.py
 """
 AppState: holds all mutable application-level state, including the
 currently open (hot) project and any cold projects with running jobs.
@@ -20,15 +19,16 @@ import glob
 import logging
 import os
 import pathlib
-from typing import Callable, TYPE_CHECKING
+from typing import Any, Callable, TYPE_CHECKING
 
 from src.pyssa.gui.qt import QtGui
 from src.pyssa.controller import settings_manager
 from src.pyssa.controller.job_scheduler import JobScheduler
+from src.pyssa.internal.data_structures.data_classes import job_descriptor
 from src.pyssa.io_pyssa.db_pyssa import ProjectDatabase
 from src.pyssa.io_pyssa.db_pyssa import ColdProjectHandle
 from src.pyssa.internal.data_structures import workspace, settings
-from src.pyssa.model import job_model as jm_module
+from src.pyssa.model import job_model
 from src.pyssa.model import psa_objects_model
 from src.pyssa.util import enums
 
@@ -73,7 +73,7 @@ class AppState:
 
     self._pyssa_objects_model = psa_objects_model.PSAObjectsModel()
 
-    self._job_model = jm_module.JobModel()
+    self._job_model = job_model.JobModel()
     self._job_scheduler = JobScheduler(self._job_model)
     self._job_model.job_finished.connect(self._on_job_finished)
 
@@ -128,22 +128,64 @@ class AppState:
           self,
           project: "project.Project",
           db: ProjectDatabase,
+          on_result: Callable[[Any], None] | None = None,
   ) -> None:
     """Store a newly loaded project and its database.
 
-    Closes any previously open hot project first.
+    Closes any previously open hot project first.  If the project being
+    opened has cold background jobs (i.e. it was closed while jobs were
+    running), those jobs are transitioned back to hot so their results
+    update the UI when they finish.
+
+    Args:
+        project: The project domain object.
+        db: The ``ProjectDatabase`` for this project.
+        on_result: Optional callback applied to every transitioned
+                   cold→hot job.  Invoked on the main thread when
+                   the job finishes.  If ``None``, the jobs will
+                   still emit ``JobModel.job_finished`` but no
+                   direct callback will fire.
+
     Notifies the UI via on_state_changed.
     """
     self._close_hot_db()
     self._hot_db = db
     self._project = project
-    logger.info("Hot project opened: '%s'.", project.get_project_name())
+
+    project_name = project.get_project_name()
+
+    transitioned = self._job_scheduler.transition_to_hot(
+      project_name, on_result=on_result,
+    )
+    if transitioned > 0:
+      cold_db = self._cold_dbs.pop(project_name, None)
+      if cold_db is not None:
+        cold_db.close()
+      logger.info(
+        "Transitioned %d cold job(s) to hot for project '%s'.",
+        transitioned, project_name,
+      )
+
+    logger.info("Hot project opened: '%s'.", project_name)
     self._first_pass = True
     self._on_state_changed()
     self._first_pass = False
 
   def close_project(self) -> None:
-    """Close the hot project and notify the UI."""
+    """Close the hot project and notify the UI.
+
+    If the scheduler still has running or queued jobs for this project,
+    they are transitioned to cold first so that their results are
+    persisted to the database instead of lost.
+    """
+    if self._project is not None and self._job_scheduler.has_running_jobs():
+      project_name = self._project.get_project_name()
+      db_path = str(
+        self._workspace.construct_project_db_path(project_name),
+      )
+      cold_handle = self.open_cold_project(db_path, project_name)
+      self._job_scheduler.transition_to_cold(project_name, cold_handle)
+
     self._close_hot_db()
     self._project = None
     logger.info("Hot project closed.")
@@ -220,7 +262,7 @@ class AppState:
   # ------------------------------------------------------------------
 
   @property
-  def job_model(self) -> jm_module.JobModel:
+  def job_model(self) -> "job_model.JobModel":
     """The application-wide job table model."""
     return self._job_model
 
@@ -231,7 +273,7 @@ class AppState:
 
   def _on_job_finished(
       self,
-      descriptor: "jd_module.JobDescriptor",
+      descriptor: "job_descriptor.JobDescriptor",
       result: object,
   ) -> None:
     """Handle a completed hot-project job by invoking its result callback.

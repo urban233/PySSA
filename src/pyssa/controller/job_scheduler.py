@@ -14,19 +14,20 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import Any
+from typing import Any, Callable, TYPE_CHECKING
 
 from src.pyssa.gui.qt import QtCore
 
-from src.pyssa.internal.data_structures.data_classes import (
-  job_descriptor as jd_module,
-)
+from src.pyssa.internal.data_structures.data_classes import job_descriptor
 from src.pyssa.internal.thread.thread_api.process_runtime import ProcessRuntime
 from src.pyssa.internal.thread.thread_api.thread_runtime import (
   get_singleton_thread_runtime,
 )
-from src.pyssa.model import job_model as jm_module
+from src.pyssa.model import job_model
 from src.pyssa.util import enums
+
+if TYPE_CHECKING:
+  from src.pyssa.io_pyssa.db_pyssa.cold_project_handle import ColdProjectHandle
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ class _TypeQueue:
   __slots__ = ("pending", "is_running")
 
   def __init__(self) -> None:
-    self.pending: list[tuple[int, jd_module.JobDescriptor]] = []
+    self.pending: list[tuple[int, job_descriptor.JobDescriptor]] = []
     self.is_running: bool = False
 
 
@@ -59,7 +60,7 @@ class JobScheduler(QtCore.QObject):
 
   def __init__(
       self,
-      model: jm_module.JobModel,
+      model: job_model.JobModel,
       process_runtime: ProcessRuntime | None = None,
       parent: QtCore.QObject | None = None,
   ) -> None:
@@ -76,7 +77,7 @@ class JobScheduler(QtCore.QObject):
   # Public API
   # ------------------------------------------------------------------
 
-  def submit(self, descriptor: jd_module.JobDescriptor) -> int:
+  def submit(self, descriptor: job_descriptor.JobDescriptor) -> int:
     """Enqueue a job and start its type-queue if idle.
 
     Args:
@@ -155,6 +156,128 @@ class JobScheduler(QtCore.QObject):
       type_queue.pending.clear()
     logger.info("JobScheduler shutdown: all pending queues cleared.")
 
+  def transition_to_cold(
+      self,
+      project_name: str,
+      cold_handle: "ColdProjectHandle",
+  ) -> None:
+    """Transition all jobs for *project_name* from hot to cold.
+
+    Called by ``AppState.close_project()`` when the user closes a project
+    that still has running or queued jobs.  For every matching job:
+
+    - ``descriptor.is_hot`` is set to ``False``.
+    - ``descriptor.cold_handle`` is set to the provided handle.
+    - ``descriptor.on_result`` is cleared (no UI callback after close).
+
+    When these jobs eventually finish, ``_on_job_success`` will see
+    ``is_hot=False`` and skip the ``on_result`` callback.  Instead it
+    will close the cold handle, persisting the results in the database.
+
+    Args:
+        project_name: The name of the project being closed.
+        cold_handle: A ``ColdProjectHandle`` that jobs should use to
+                     persist their results.
+
+    Raises:
+        ValueError: If *project_name* is empty or *cold_handle* is
+                    ``None``.
+    """
+    if not project_name:
+      raise ValueError("project_name must not be empty")
+    if cold_handle is None:
+      raise ValueError("cold_handle must not be None")
+
+    transitioned = 0
+
+    for type_queue in self._queues.values():
+      for row, descriptor in type_queue.pending:
+        if descriptor.project_name == project_name and descriptor.is_hot:
+          descriptor.is_hot = False
+          descriptor.cold_handle = cold_handle
+          descriptor.on_result = None
+          transitioned += 1
+
+    total_rows = self._model.rowCount()
+    for row in range(total_rows):
+      status = self._model.get_status(row)
+      if status != enums.JobStatus.RUNNING:
+        continue
+      descriptor = self._model.get_descriptor(row)
+      if descriptor.project_name == project_name and descriptor.is_hot:
+        descriptor.is_hot = False
+        descriptor.cold_handle = cold_handle
+        descriptor.on_result = None
+        transitioned += 1
+
+    logger.info(
+      "Transitioned %d job(s) for project '%s' from hot to cold.",
+      transitioned, project_name,
+    )
+
+  def transition_to_hot(
+      self,
+      project_name: str,
+      on_result: Callable[[Any], None] | None = None,
+  ) -> int:
+    """Transition all cold jobs for *project_name* back to hot.
+
+    Called by ``AppState.open_project()`` when the user opens a project
+    that still has running or queued cold jobs.  For every matching job:
+
+    - ``descriptor.is_hot`` is set to ``True``.
+    - ``descriptor.on_result`` is set to the provided callback.
+    - ``descriptor.cold_handle`` is set to ``None`` (the cold DB
+      is no longer needed since the hot DB is now open).
+
+    When these jobs eventually finish, ``_on_job_success`` will see
+    ``is_hot=True`` and invoke the ``on_result`` callback to update
+    the UI model.
+
+    Args:
+        project_name: The name of the project being opened.
+        on_result: Callback invoked on the **main thread** when a
+                   transitioned job finishes.  Receives the worker's
+                   return value.  May be ``None`` if the caller only
+                   needs the model signals.
+
+    Returns:
+        The number of jobs that were transitioned.
+
+    Raises:
+        ValueError: If *project_name* is empty.
+    """
+    if not project_name:
+      raise ValueError("project_name must not be empty")
+
+    transitioned = 0
+
+    for type_queue in self._queues.values():
+      for row, descriptor in type_queue.pending:
+        if descriptor.project_name == project_name and not descriptor.is_hot:
+          descriptor.is_hot = True
+          descriptor.on_result = on_result
+          descriptor.cold_handle = None
+          transitioned += 1
+
+    total_rows = self._model.rowCount()
+    for row in range(total_rows):
+      status = self._model.get_status(row)
+      if status != enums.JobStatus.RUNNING:
+        continue
+      descriptor = self._model.get_descriptor(row)
+      if descriptor.project_name == project_name and not descriptor.is_hot:
+        descriptor.is_hot = True
+        descriptor.on_result = on_result
+        descriptor.cold_handle = None
+        transitioned += 1
+
+    logger.info(
+      "Transitioned %d job(s) for project '%s' from cold to hot.",
+      transitioned, project_name,
+    )
+    return transitioned
+
   # ------------------------------------------------------------------
   # Internal: draining a type-queue one job at a time
   # ------------------------------------------------------------------
@@ -202,7 +325,7 @@ class JobScheduler(QtCore.QObject):
   def _on_job_success(
       self,
       row: int,
-      descriptor: jd_module.JobDescriptor,
+      descriptor: job_descriptor.JobDescriptor,
       job_type: enums.JobType,
       result: Any,
   ) -> None:
@@ -241,7 +364,7 @@ class JobScheduler(QtCore.QObject):
   def _on_job_error(
       self,
       row: int,
-      descriptor: jd_module.JobDescriptor,
+      descriptor: job_descriptor.JobDescriptor,
       job_type: enums.JobType,
       exc: Exception,
   ) -> None:

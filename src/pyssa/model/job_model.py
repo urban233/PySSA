@@ -11,7 +11,7 @@ import logging
 from typing import Any, Optional
 
 from src.pyssa.gui.qt import QtCore, pyqtSignal, Qt
-from src.pyssa.internal.data_structures.data_classes import job_descriptor as jd_module
+from src.pyssa.internal.data_structures.data_classes import job_descriptor
 from src.pyssa.util import enums
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class _JobEntry:
 
   def __init__(
       self,
-      descriptor: jd_module.JobDescriptor,
+      descriptor: job_descriptor.JobDescriptor,
       status: enums.JobStatus = enums.JobStatus.QUEUED,
   ) -> None:
     self.descriptor = descriptor
@@ -169,7 +169,7 @@ class JobModel(QtCore.QAbstractTableModel):
   # Public mutation API
   # ------------------------------------------------------------------
 
-  def add_job(self, descriptor: jd_module.JobDescriptor) -> int:
+  def add_job(self, descriptor: job_descriptor.JobDescriptor) -> int:
     """Append a new job to the model.
 
     Args:
@@ -244,7 +244,7 @@ class JobModel(QtCore.QAbstractTableModel):
     del self._entries[row]
     self.endRemoveRows()
 
-  def get_descriptor(self, row: int) -> jd_module.JobDescriptor:
+  def get_descriptor(self, row: int) -> job_descriptor.JobDescriptor:
     """Return the ``JobDescriptor`` for a given row.
 
     Args:
@@ -277,7 +277,7 @@ class JobModel(QtCore.QAbstractTableModel):
     return self._entries[row].status
 
   def find_row_for_descriptor(
-      self, descriptor: jd_module.JobDescriptor,
+      self, descriptor: job_descriptor.JobDescriptor,
   ) -> int:
     """Find the row index of a descriptor by identity comparison.
 

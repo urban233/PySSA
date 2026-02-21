@@ -96,7 +96,6 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # --- Prediction Actions ---
     self.action_predict_monomer = QtGui.QAction("Monomer", self)
     self.action_predict_multimer = QtGui.QAction("Multimer", self)
-    self.action_abort_prediction = QtGui.QAction("Abort", self)
 
     # --- Analysis Actions ---
     self.action_distance_analysis = QtGui.QAction("Distance", self)
@@ -384,7 +383,6 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # --- Prediction Menu ---
     self.menuPrediction.addAction(self.action_predict_monomer)
     self.menuPrediction.addAction(self.action_predict_multimer)
-    self.menuPrediction.addAction(self.action_abort_prediction)
 
     # --- Analysis Menu ---
     self.menuAnalysis.addAction(self.action_distance_analysis)

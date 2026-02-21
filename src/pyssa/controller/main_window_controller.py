@@ -25,56 +25,22 @@ Authors: Martin Urban, Hannah Kullik
 
 Version: 2.0.0
 """
-import collections
-import copy
 import logging
 import os
 import pathlib
 import shutil
-import subprocess
-import time
-import json
-from typing import Optional, Any
-from urllib import request
 
 # import pywinctl
-from Bio import SeqRecord
-from Bio.Seq import Seq
 
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.qt import QtCore
-from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.qt import QtGui
 
-from src.auxiliary_pymol import auxiliary_pymol_client
-from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
-from src.pyssa.gui.ui.custom_context_menus import protein_tree_context_menu, protein_pair_tree_context_menu, \
-    sequence_list_context_menu
-from src.pyssa.gui.ui.custom_dialogs import custom_message_box
-from src.pyssa.gui.ui.custom_widgets import job_entry
-from src.pyssa.internal.thread.async_pyssa import util_async, custom_signals, project_async, image_async, \
-    pymol_session_async, protein_async, sequence_async, protein_pair_async
-from src.pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
-    pymol_session_manager, add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, \
-    settings_view_controller, predict_protein_view_controller, import_sequence_view_controller, \
-    rename_sequence_view_controller, settings_manager
-from src.pyssa.internal.data_structures import chain, job
-from src.pyssa.internal.data_structures.data_classes import residue_color_config
-from src.pyssa.gui.ui.dialogs import dialog_settings_global, dialog_tutorial_videos, dialog_about
-from src.pyssa.internal.data_structures import project, settings, protein, protein_pair
-from src.pyssa.internal.data_structures.data_classes import database_operation
-from src.pyssa.internal.thread import database_thread
-from src.pyssa.io_pyssa import filesystem_io
-from src.pyssa.logging_pyssa import log_handlers, log_levels
-from src.pyssa.util import constants, enums, exit_codes, tools, ui_util, exception, main_window_util
+from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, pyssa_objects_panel_controller
+from src.pyssa.logging_pyssa import log_handlers
+from src.pyssa.util import constants, enums, tools, main_window_util
 from src.pyssa.gui import main_window, app_state
-from src.pyssa.controller import interface_manager, distance_analysis_view_controller, delete_project_view_controller, \
-    create_project_view_controller, open_project_view_controller, database_manager, pyssa_objects_panel_controller
-from src.pyssa.util import globals
-from src.pyssa_pymol import pymol_enums
 from src.pyssa.internal.pymol import pml_worker
-from src.pyssa.internal.thread import thread_util
-from src.tea.thread import tasks, task_result_factory, task_result, action
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -114,10 +80,10 @@ class MainWindowController:
             self._user_pymol
         )
         self.feedback_timer = QtCore.QTimer()
-        self.custom_progress_signal = custom_signals.ProgressSignal()
-        self.abort_signal = custom_signals.AbortSignal()
-        self.thread_pool = QtCore.QThreadPool()
-        self.thread_pool.setMaxThreadCount(os.cpu_count())
+        # self.custom_progress_signal = custom_signals.ProgressSignal()
+        # self.abort_signal = custom_signals.AbortSignal()
+        # self.thread_pool = QtCore.QThreadPool()
+        # self.thread_pool.setMaxThreadCount(os.cpu_count())
         # </editor-fold>
         # </editor-fold>
         # self._init_main_window()
@@ -128,6 +94,7 @@ class MainWindowController:
         # self._setup_statusbar()
         # self._init_generic_help_context_menus()
         self._setup_application_settings()
+        self.refresh_ui()
 
     # <editor-fold desc="Private methods">
     def _connect_all_signals_with_their_slots(self) -> None:
@@ -446,8 +413,6 @@ class MainWindowController:
         # Prediction needs an input sequence to execute.
         self._main_window.action_predict_monomer.setEnabled(has_sequences)
         self._main_window.action_predict_multimer.setEnabled(has_sequences)
-        # Aborting requires an active background/cold database job.
-        self._main_window.action_abort_prediction.setEnabled(has_running_jobs)
 
         self._main_window.menuAnalysis.setEnabled(has_project)
         # Distance analysis operations computationally require 3D structure models.

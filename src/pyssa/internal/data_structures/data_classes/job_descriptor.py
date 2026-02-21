@@ -1,8 +1,12 @@
 """Descriptor that carries all metadata the job scheduler needs to execute one job.
 
 A ``JobDescriptor`` is created by the caller (e.g. a controller) and handed to
-``JobScheduler.submit()``.  It is immutable after construction so it can be
-safely shared between the main thread and background workers.
+``JobScheduler.submit()``.
+
+The descriptor is **mutable** so that the scheduler can transition a running
+job from hot to cold when the user closes the project mid-execution (see
+``JobScheduler.transition_to_cold``).  Only the scheduler should mutate
+a descriptor after submission; callers treat it as effectively read-only.
 """
 from __future__ import annotations
 
@@ -15,9 +19,13 @@ if TYPE_CHECKING:
   from src.pyssa.io_pyssa.db_pyssa.cold_project_handle import ColdProjectHandle
 
 
-@dataclass(frozen=True)
+@dataclass
 class JobDescriptor:
-  """Immutable bundle of information required to schedule and execute a job.
+  """Bundle of information required to schedule and execute a job.
+
+  The ``is_hot`` and ``cold_handle`` fields may be mutated by the
+  scheduler when a project transitions from hot to cold while jobs
+  are still in-flight.
 
   Args:
       job_type: Determines the queue the job is placed into.
@@ -29,8 +37,12 @@ class JobDescriptor:
       run_args: Positional arguments forwarded to *run_fn*.
       run_kwargs: Keyword arguments forwarded to *run_fn*.
       is_hot: ``True`` when the job's project is currently open in the UI.
+              May be set to ``False`` by the scheduler during a
+              hot-to-cold transition.
       cold_handle: Write-only handle for persisting results into a cold
                    project's database.  ``None`` for hot-project jobs.
+                   May be set by the scheduler during a hot-to-cold
+                   transition.
       on_result: Callback invoked on the **main thread** when a hot-project
                  job finishes successfully.  Receives the worker's return
                  value.  ``None`` for cold-project jobs.
@@ -45,3 +57,4 @@ class JobDescriptor:
   is_hot: bool = True
   cold_handle: "ColdProjectHandle | None" = field(default=None, repr=False)
   on_result: "Callable[[Any], None] | None" = field(default=None, repr=False)
+
