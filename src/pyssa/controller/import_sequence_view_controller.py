@@ -25,6 +25,7 @@ from collections import defaultdict
 from Bio.SeqRecord import SeqRecord
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.ui.views import import_sequence_view
 from src.pyssa.controller import interface_manager, fasta_file_import_preview_view_controller
 from src.pyssa.internal.data_structures.data_classes import basic_seq_info
 from src.pyssa.logging_pyssa import log_levels, log_handlers
@@ -38,34 +39,37 @@ __docformat__ = "google"
 class ImportSequenceViewController(QtCore.QObject):
   """Class for the ImportSequenceViewController class."""
 
-  user_input = QtCore.pyqtSignal(tuple)
-  """Singal used to transfer data back to the previous window."""
+
 
   def __init__(
-      self, the_interface_manager: "interface_manager.InterfaceManager"
+      self, the_app_state: "app_state.AppState", a_parent=None
   ):
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        the_app_state (app_state.AppState): The AppState object.
+        a_parent: Parent widget to pass to the view.
 
     Raises:
-        exception.IllegalArgumentError: If `the_interface_manager` is None.
+        exception.IllegalArgumentError: If `the_app_state` is None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
 
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager = the_interface_manager
-    self._view = the_interface_manager.get_import_sequence_view()
+    self._app_state = the_app_state
+    self._view = import_sequence_view.ImportSequenceView(a_parent)
     self._external_controller = None
     self._parsed_sequences: list[basic_seq_info.BasicSeqInfo] = []
     self._parsed_seq_records = []
     self._connect_all_ui_elements_to_slot_functions()
+
+  def get_view(self):
+    return self._view
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
@@ -86,7 +90,7 @@ class ImportSequenceViewController(QtCore.QObject):
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
-    self._interface_manager.help_manager.open_sequence_import_page()
+    # self._interface_manager.help_manager.open_sequence_import_page()
 
   # @SLOT
   def _open_preview(self) -> None:
@@ -95,12 +99,14 @@ class ImportSequenceViewController(QtCore.QObject):
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Preview' button was clicked."
     )
     self._external_controller = fasta_file_import_preview_view_controller.FastaFileImportPreviewViewController(
-        self._interface_manager, self._parsed_sequences
+        the_app_state=self._app_state,
+        the_parsed_sequences=self._parsed_sequences,
+        on_save_callback=self._post_open_preview,
+        a_parent=self._view.window()
     )
-    self._external_controller.user_input.connect(self._post_open_preview)
     self._external_controller.restore_ui()
     self._external_controller.fill_sequence_table()
-    self._interface_manager.get_fasta_file_import_preview_view().show()
+    self._external_controller.get_view().show()
 
   def _post_open_preview(self, return_value: tuple) -> None:
     """Processes the return values from the 'open_preview' method.
@@ -267,9 +273,37 @@ class ImportSequenceViewController(QtCore.QObject):
     return tmp_seq_records
 
   def import_sequence(self) -> None:
-    """Imports a sequence by emitting a user_input signal with the sequence data."""
+    """Imports a sequence into the project."""
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Import' button was clicked."
     )
-    self._view.close()
-    self.user_input.emit((0, self._parsed_seq_records))
+
+    from src.pyssa.internal.thread.thread_api import thread_runtime
+    
+    if not self._parsed_seq_records:
+        logger.error("No sequences parsed to import.")
+        QtWidgets.QMessageBox.critical(self._view, "Import Error", "No sequences to import.")
+        return
+
+    self._view.ui.btn_import_sequence.setEnabled(False)
+
+    def import_task(progress_callback, is_cancelled):
+        for tmp_seq_record in self._parsed_seq_records:
+            logger.info(
+              f"Adding new sequence {tmp_seq_record.name} with {tmp_seq_record.seq} to the current project."
+            )
+            self._app_state.hot_db.insert_sequence(0, tmp_seq_record)
+
+    def on_success(result):
+        for tmp_seq_record in self._parsed_seq_records:
+            self._app_state.project.sequences.append(tmp_seq_record)
+            
+        self._app_state.pyssa_objects_model.build_model(self._app_state.project)
+        self._view.close()
+        
+    def on_error(exc):
+        logger.exception("Failed to insert sequence into database.", exc_info=exc)
+        QtWidgets.QMessageBox.critical(self._view, "Import Error", f"An error occurred: {exc}")
+        self._view.ui.btn_import_sequence.setEnabled(True)
+
+    thread_runtime.get_singleton_thread_runtime().run(import_task).on_success(on_success).on_error(on_error)

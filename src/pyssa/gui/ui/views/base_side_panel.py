@@ -140,8 +140,7 @@ class BaseSidePanel(QtWidgets.QWidget):
         self.layout_header.setContentsMargins(0, 0, 0, 0)
         self.layout_header.addWidget(self.lbl_header)
         self.layout_header.addStretch()
-        # TODO: Add this close button if this becomes relevant in PySSA
-        # self.layout_header.addWidget(self.btn_close)
+        self.layout_header.addWidget(self.btn_close)
 
     def _setup_content_frame(self) -> None:
         """Sets up the main content frame and its layout."""

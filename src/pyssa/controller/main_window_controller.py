@@ -37,7 +37,9 @@ from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtGui
 
 from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, \
-    pyssa_objects_panel_controller, selection_handler, welcome_screen_view_controller
+    pyssa_objects_panel_controller, selection_handler, welcome_screen_view_controller, help_panel_controller, \
+    status_bar_manager
+from src.pyssa.gui.ui.custom_filters import help_event_filter
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import constants, enums, tools, main_window_util
 from src.pyssa.gui import main_window, app_state
@@ -69,21 +71,18 @@ class MainWindowController:
         # <editor-fold desc="Private">
         self._main_window = a_main_window
         self._settings_manager = settings_manager.SettingsManager()
-        self._app_state = app_state.AppState(self._settings_manager, self.refresh_ui)
-        self._dialog_controllers = {}
-        # self._interface_manager = interface_manager.InterfaceManager(a_main_window)
-        # self._database_manager = database_manager.DatabaseManager("")
-        # self._database_manager.set_application_settings(
-        #     self._interface_manager.get_application_settings()
-        # )
-        # self._database_thread: "database_thread.DatabaseThread" = (
-        #     database_thread.DatabaseThread("")
-        # )
+        self._status_bar_manager = status_bar_manager.StatusBarManager(self._main_window)
+        self._app_state = app_state.AppState(self._settings_manager, self._status_bar_manager, self.refresh_ui)
         self._user_pymol = self._main_window.user_pymol
+        self._dialog_controllers = {}
         self._pyssa_objects_panel_controller = pyssa_objects_panel_controller.PySSAObjectsPanelController(
             self._app_state,
             self._main_window.pyssa_objects_panel,
             self._user_pymol
+        )
+        self._help_panel_controller = help_panel_controller.HelpPanelController(
+            self._main_window,
+            self._main_window.help_panel
         )
         self.feedback_timer = QtCore.QTimer()
         self._sequence_context_menu = sequence_list_context_menu.SequenceListContextMenu()
@@ -103,6 +102,13 @@ class MainWindowController:
         # self._setup_statusbar()
         # self._init_generic_help_context_menus()
         self._setup_application_settings()
+
+        help_map = {
+            "pyssa_objects_panel": "<h3>Save Button</h3><p>Saves the current document.</p>"
+        }
+        self.help_filter = help_event_filter.HelpEventFilter(self._main_window.help_panel.help_text_browser, help_map)
+        self._main_window.pyssa_objects_panel.installEventFilter(self.help_filter)
+
         self.refresh_ui()
         self.open_welcome_screen()
 
@@ -120,6 +126,7 @@ class MainWindowController:
         self._main_window.action_close_project.triggered.connect(self.__slot_close_project)
         # TODO: Add the right slot method! ;)
         # self._main_window.action_exit_application.triggered.connect(self.)
+        self._main_window.action_documentation.triggered.connect(self.__slot_toggle_help_panel)
 
         # # <editor-fold desc="Session ribbon slots">
         # # <editor-fold desc="Session slots">
@@ -628,7 +635,6 @@ class MainWindowController:
                 "An unknown error occurred while importing!"
             )
 
-
     def __slot_export_current_project(self) -> None:
         """Exports the current project to an importable format."""
         try:
@@ -654,7 +660,7 @@ class MainWindowController:
                 def on_success(result):
                     logger.info("Project exported successfully to %s", file_path)
                     try:
-                        self._main_window.statusBar().showMessage("The project was successfully exported.", 3000)
+                        self._status_bar_manager.show_temporary_message("The project was successfully exported.")
                     except Exception:
                         pass
                 
@@ -715,6 +721,11 @@ class MainWindowController:
             logger.error(f"Failed to toggle left side panel: {e}")
 
     # </editor-fold>
+
+    def __slot_toggle_help_panel(self):
+        layout = self._main_window.tool_window_layout
+        layout.set_right_panel_hidden(not layout.is_right_panel_hidden)
+
 
     # <editor-fold desc="Project tree selection handling">
     def __slot_on_project_tree_selection_changed(
@@ -801,7 +812,6 @@ class MainWindowController:
     # <editor-fold desc="Session slots">
     def __slot_open_session(self) -> None:
         """TODO: Change this implementation to correct session opening."""
-        self._interface_manager.status_bar_manager.show_temporary_message("Session opened")
         with pml_worker.PmlWorker.session(pml_worker.PmlWorker.cache_user_session(self._user_pymol, "my_test")) as worker:
             worker.do("color", ("red", "all"), sync=True)
             worker.do("draw", ("800", "600"), sync=True)

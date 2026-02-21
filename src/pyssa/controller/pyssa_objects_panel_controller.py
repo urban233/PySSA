@@ -25,9 +25,16 @@ Authors: Martin Urban, Hannah Kullik
 
 Version: 1.4.0
 """
+import logging
+
 from src.pyssa.gui.ui.views import pyssa_objects_panel
 from src.pyssa.gui import user_pymol, app_state
 from src.pyssa.gui.qt import QtCore, QtWidgets
+from src.pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class PySSAObjectsPanelController:
@@ -52,9 +59,12 @@ class PySSAObjectsPanelController:
     self._panel.tree_view.setModel(self._model)
 
   def _connect_signals(self) -> None:
+    # self._panel.import_seq_action.triggered.connect()
     self._panel.import_file_action.get_action().triggered.connect(
-      self.__slot_import_file
+      self.__slot_display_import_popup
     )
+    self._panel.import_prot_action.triggered.connect(self.__slot_import_protein)
+    self._panel.import_seq_action.triggered.connect(self.__slot_import_sequence)
     self._panel.export_file_action.get_action().triggered.connect(
       self.__slot_export_file
     )
@@ -62,69 +72,97 @@ class PySSAObjectsPanelController:
     # self.expand_all.clicked.connect(self._panel.tree_view.expandAll)
     # self.collapse_all.clicked.connect(self._panel.tree_view.collapseAll)
 
-  def __slot_import_file(self):
-    file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
-      self._panel,
-      "Open PDB/mmCIF File",
-      "",
-      "PDB/mmcif Files (*.pdb *.mmcif *.cif)"
+  def __slot_display_import_popup(self):
+    tmp_button = self._panel.get_toolbar().get_tool_button_for_action(
+      self._panel.import_file_action
     )
+    if tmp_button is not None and tmp_button.isVisible():
+      # Position just below the button
+      self._panel.import_seq_prot_menu.exec(
+        tmp_button.mapToGlobal(tmp_button.rect().bottomLeft())
+      )
 
-    if file_path:
-      print(file_path)
-      self._user_pymol.get_cmd_module().load(file_path)
-      self._model.add_protein(self._user_pymol.get_cmd_module().get_model())
+  def __slot_import_sequence(self):
+    from src.pyssa.controller.import_sequence_view_controller import ImportSequenceViewController
+    from src.pyssa.internal.thread.thread_api import thread_runtime
+    
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        "'Import sequence' button on the 'Sequence Tab' was clicked.",
+    )
+    self._external_controller = ImportSequenceViewController(
+      the_app_state=self._app_state,
+      a_parent=self._panel.window()
+    )
+    self._external_controller.restore_ui()
+    self._external_controller.get_view().show()
+    
+  def __slot_import_protein(self):
+    from src.pyssa.controller.add_protein_view_controller import AddProteinViewController
+    
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        "'Import protein' button was clicked.",
+    )
+    self._external_controller = AddProteinViewController(
+      the_app_state=self._app_state,
+      a_parent=self._panel.window()
+    )
+    self._external_controller.restore_ui()
+    self._external_controller.get_view().show()
 
   def __slot_export_file(self):
+    pass
+    # fixme: Legacy implementation
     # Determine selected top-level molecule name from tree view
-    selection_model = self._panel.tree_view.selectionModel()
-    if selection_model is None:
-      return
-    selected_indexes = selection_model.selectedIndexes()
-    if not selected_indexes:
-      QtWidgets.QMessageBox.information(
-        self._panel,
-        "Export",
-        "Please select a molecule (or any of its children) in the list to export.",
-      )
-      return
-
-    # Use the first selected index and climb to the top-level item to get the molecule name
-    index = selected_indexes[0]
-    model = self._panel.tree_view.model()
-    while index.isValid() and model.parent(index).isValid():
-      index = model.parent(index)
-
-    molecule_name = index.data(QtCore.Qt.ItemDataRole.DisplayRole) if index.isValid() else None
-    if not molecule_name:
-      QtWidgets.QMessageBox.warning(self._panel, "Export", "Could not determine the molecule name for export.")
-      return
-
-    # Ask for destination file path. Provide a default filename based on the molecule name.
-    default_filename = f"{molecule_name}.pdb"
-    file_path, selected_filter = QtWidgets.QFileDialog.getSaveFileName(
-      self._panel,
-      "Save Molecule As",
-      default_filename,
-      "PDB File (*.pdb);;mmCIF File (*.cif *.mmcif);;All Files (*.*)",
-    )
-
-    if not file_path:
-      return
-
-    # If no extension was provided, infer from the chosen filter.
-    if "." not in file_path.split("\\")[-1]:
-      if "mmCIF" in selected_filter:
-        file_path = file_path + ".cif"
-      else:
-        file_path = file_path + ".pdb"
-
-    try:
-      # Export the selected molecule by name from PyMOL
-      self._user_pymol.get_cmd_module().save(file_path, molecule_name)
-    except Exception as e:
-      QtWidgets.QMessageBox.critical(
-        self._panel,
-        "Export Failed",
-        f"Failed to export '{molecule_name}': {e}",
-      )
+    # selection_model = self._panel.tree_view.selectionModel()
+    # if selection_model is None:
+    #   return
+    # selected_indexes = selection_model.selectedIndexes()
+    # if not selected_indexes:
+    #   QtWidgets.QMessageBox.information(
+    #     self._panel,
+    #     "Export",
+    #     "Please select a molecule (or any of its children) in the list to export.",
+    #   )
+    #   return
+    #
+    # # Use the first selected index and climb to the top-level item to get the molecule name
+    # index = selected_indexes[0]
+    # model = self._panel.tree_view.model()
+    # while index.isValid() and model.parent(index).isValid():
+    #   index = model.parent(index)
+    #
+    # molecule_name = index.data(QtCore.Qt.ItemDataRole.DisplayRole) if index.isValid() else None
+    # if not molecule_name:
+    #   QtWidgets.QMessageBox.warning(self._panel, "Export", "Could not determine the molecule name for export.")
+    #   return
+    #
+    # # Ask for destination file path. Provide a default filename based on the molecule name.
+    # default_filename = f"{molecule_name}.pdb"
+    # file_path, selected_filter = QtWidgets.QFileDialog.getSaveFileName(
+    #   self._panel,
+    #   "Save Molecule As",
+    #   default_filename,
+    #   "PDB File (*.pdb);;mmCIF File (*.cif *.mmcif);;All Files (*.*)",
+    # )
+    #
+    # if not file_path:
+    #   return
+    #
+    # # If no extension was provided, infer from the chosen filter.
+    # if "." not in file_path.split("\\")[-1]:
+    #   if "mmCIF" in selected_filter:
+    #     file_path = file_path + ".cif"
+    #   else:
+    #     file_path = file_path + ".pdb"
+    #
+    # try:
+    #   # Export the selected molecule by name from PyMOL
+    #   self._user_pymol.get_cmd_module().save(file_path, molecule_name)
+    # except Exception as e:
+    #   QtWidgets.QMessageBox.critical(
+    #     self._panel,
+    #     "Export Failed",
+    #     f"Failed to export '{molecule_name}': {e}",
+    #   )

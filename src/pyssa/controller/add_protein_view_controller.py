@@ -25,6 +25,7 @@ import os
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.ui.views import add_protein_view
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.internal.thread import tasks
 from src.pyssa.internal.thread.async_pyssa import validate_async
@@ -39,31 +40,35 @@ __docformat__ = "google"
 class AddProteinViewController(QtCore.QObject):
   """Class for the AddProteinViewController."""
 
-  user_input = QtCore.pyqtSignal(tuple)
-  """Singal used to transfer data back to the previous window."""
+
 
   def __init__(
-      self, the_interface_manager: "interface_manager.InterfaceManager"
+      self, the_app_state: "app_state.AppState", a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        the_app_state (app_state.AppState): The AppState object.
+        a_parent: Parent widget to pass to the view.
 
     Raises:
-        exception.IllegalArgumentError: If `the_interface_manager` is None.
+        exception.IllegalArgumentError: If `the_app_state` is None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
 
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager = the_interface_manager
-    self._view = the_interface_manager.get_add_protein_view()
+    self._app_state = the_app_state
+    self._view = add_protein_view.AddProteinView(a_parent)
+    self._active_task = None
     self._connect_all_ui_elements_to_slot_functions()
+
+  def get_view(self):
+    return self._view
     # check internet connectivity
     if not tools.check_internet_connectivity():
       tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -106,7 +111,7 @@ class AddProteinViewController(QtCore.QObject):
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
-    self._interface_manager.help_manager.open_protein_import_page()
+    # self._interface_manager.help_manager.open_protein_import_page()
 
   # @SLOT
   def __slot_validate_input(self, the_entered_text: str) -> None:
@@ -148,15 +153,21 @@ class AddProteinViewController(QtCore.QObject):
       )
     # checks if a pdb id was entered
     else:
-      self._active_task = tasks.LegacyTask(
-          target=validate_async.validate_add_protein_view_input,
-          args=(
-              the_entered_text,
-              0,
-          ),
-          post_func=self.__await__slot_validate_input,
-      )
-      self._active_task.start()
+      from src.pyssa.internal.thread.thread_api import thread_runtime
+      
+      def validation_task(progress_callback, is_cancelled):
+          return validate_async.validate_add_protein_view_input(the_entered_text, 0)
+      
+      def on_success(result):
+          self.__await__slot_validate_input(result)
+          
+      def on_error(exc):
+          logger.exception("Validation failed.", exc_info=exc)
+          QtWidgets.QApplication.restoreOverrideCursor()
+
+      self._active_task = thread_runtime.get_singleton_thread_runtime().run(validation_task)
+      self._active_task.on_success(on_success).on_error(on_error)
+      
       QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
       self._view.ui.txt_add_protein.setStyleSheet(
           """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
@@ -218,7 +229,7 @@ class AddProteinViewController(QtCore.QObject):
       constants.PYSSA_LOGGER.error(
           "There is an unknown case, while validating the add protein view user input!"
       )
-    if tmp_name in self._interface_manager.watcher.protein_names_blacklist:
+    if tmp_name in [p.get_molecule_object() for p in self._app_state.project.proteins]:
       self._view.ui.txt_add_protein.setStyleSheet(
           """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
       )
@@ -226,8 +237,6 @@ class AddProteinViewController(QtCore.QObject):
           "Protein already exists in current project!"
       )
       self._view.ui.btn_add_protein.setEnabled(False)
-      self._view.ui.lbl_status.setText("")
-      self._view.ui.btn_add_protein.setEnabled(True)
     QtWidgets.QApplication.restoreOverrideCursor()
     self._view.ui.txt_add_protein.setFocus()
 
@@ -255,17 +264,62 @@ class AddProteinViewController(QtCore.QObject):
       self._view.ui.lbl_status.setText("Loading the protein structure failed!")
 
   def __slot_add_protein(self) -> None:
-    """Adds a protein to the global variable and closes the dialog."""
+    """Adds a protein to the project and closes the dialog."""
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked."
     )
-    self._view.close()
-    self.user_input.emit(
-        (
-            self._view.ui.txt_add_protein.text(),
-            len(self._view.ui.txt_add_protein.text()),
-        )
-    )
+    from src.pyssa.internal.thread.thread_api import thread_runtime
+    from src.pyssa.internal.data_structures import protein
+    import pathlib
+
+    tmp_protein_name = self._view.ui.txt_add_protein.text()
+    tmp_name_len = len(tmp_protein_name)
+
+    if not tmp_protein_name:
+        logger.error("No protein name to import.")
+        QtWidgets.QMessageBox.critical(self._view, "Import Error", "No data received!")
+        return
+
+    self._view.ui.btn_add_protein.setEnabled(False)
+
+    def import_task(progress_callback, is_cancelled):
+        # We can load directly through user_pymol which AppState doesn't hold directly,
+        # but PyMOL runs in the same process instance namespace basically via the global cmd module.
+        # It's cleaner to access PyMOL directly here or via an established interface.
+        from src.auxiliary_pymol import auxiliary_pymol_client
+        pymol_cmd = auxiliary_pymol_client._get_client()
+
+        if tmp_name_len == 4:
+            pdb_name = tmp_protein_name.upper()
+            tmp_ref_protein = protein.Protein(pdb_name)
+            tmp_ref_protein.set_id(0) # Let the model map it later
+            tmp_ref_protein.db_project_id = self._app_state.project.get_id()
+            pymol_cmd.fetch(pdb_name)
+        else:
+            pdb_filepath = pathlib.Path(tmp_protein_name)
+            pdb_name = pdb_filepath.name.replace(".pdb", "")
+            tmp_ref_protein = protein.Protein(pdb_name)
+            tmp_ref_protein.set_id(0)
+            tmp_ref_protein.db_project_id = self._app_state.project.get_id()
+            pymol_cmd.load(str(pdb_filepath))
+            
+        model = pymol_cmd.get_model(pdb_name)
+        
+        tmp_protein_id = self._app_state.hot_db.insert_protein(tmp_ref_protein)
+        tmp_ref_protein.set_id(tmp_protein_id)
+        return tmp_ref_protein
+        
+    def on_success(tmp_protein):
+        self._app_state.project.add_existing_protein(tmp_protein)
+        self._app_state.pyssa_objects_model.build_model(self._app_state.project)
+        self._view.close()
+        
+    def on_error(exc):
+        logger.exception("Failed to insert protein.", exc_info=exc)
+        QtWidgets.QMessageBox.critical(self._view, "Import Error", f"An error occurred: {exc}")
+        self._view.ui.btn_add_protein.setEnabled(True)
+
+    thread_runtime.get_singleton_thread_runtime().run(import_task).on_success(on_success).on_error(on_error)
 
   def _validate_scene_name(self, text: str) -> None:
     """Validates the given scene name and updates the UI elements accordingly.

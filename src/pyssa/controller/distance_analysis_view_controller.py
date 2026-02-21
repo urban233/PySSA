@@ -26,6 +26,10 @@ from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import pyqtSignal
 
 from src.pyssa.controller import add_protein_pair_view_controller
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+  from src.pyssa.gui import app_state
+  from src.pyssa.io_pyssa import watcher
 from src.pyssa.internal.data_structures.data_classes import prediction_configuration
 from src.pyssa.util import constants, exception
 from src.pyssa.util import gui_utils
@@ -39,27 +43,26 @@ __docformat__ = "google"
 class DistanceAnalysisViewController(QtCore.QObject):
   """Class for the DistanceAnalysisViewController."""
 
-  job_input = pyqtSignal(tuple)
-  """Singal used to transfer data back to the previous window."""
-
   def __init__(
       self,
-      the_interface_manager: "interface_manager.InterfaceManager",
+      the_app_state: "app_state.AppState",
       the_watcher: "watcher.Watcher",
+      a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        the_app_state (app_state.AppState): The AppState object.
         the_watcher (watcher.Watcher): The Watcher object.
+        a_parent: Parent widget to pass to the view.
 
     Raises:
         exception.IllegalArgumentError: If any of the arguments are None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
     if the_watcher is None:
       logger.error("the_watcher is None.")
       raise exception.IllegalArgumentError("the_watcher is None.")
@@ -67,11 +70,10 @@ class DistanceAnalysisViewController(QtCore.QObject):
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager = the_interface_manager
+    self._app_state = the_app_state
     self._watcher = the_watcher
-    self._view: "distance_analysis_view.DistanceAnalysisView" = (
-        the_interface_manager.get_distance_analysis_view()
-    )
+    from src.pyssa.gui.ui.views import distance_analysis_view
+    self._view: "distance_analysis_view.DistanceAnalysisView" = distance_analysis_view.DistanceAnalysisView(a_parent)
     self.prediction_configuration = (
         prediction_configuration.PredictionConfiguration(True, "pdb70")
     )
@@ -79,12 +81,15 @@ class DistanceAnalysisViewController(QtCore.QObject):
     self._connect_all_ui_elements_to_slot_functions()
     self.display_distance_analysis()
 
+  def get_view(self):
+    return self._view
+
   def _open_help_for_dialog(self) -> None:
     """Opens the help dialog window."""
-    logger.log(
-        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
-    )
-    self._interface_manager.help_manager.open_distance_analysis_page()
+    # logger.log(
+    #     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
+    # )
+    # self._interface_manager.help_manager.open_distance_analysis_page()
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
@@ -129,7 +134,39 @@ class DistanceAnalysisViewController(QtCore.QObject):
           self._view.ui.list_distance_analysis_overview.item(row_no).text()
       )
     self._view.close()
-    self.job_input.emit(("job_input", tmp_raw_analysis_run_names, False))
+
+    if not tmp_raw_analysis_run_names:
+      return
+
+    from src.pyssa.gui import main_window
+    interface_manager = main_window.controller._interface_manager
+
+    try:
+      interface_manager.watcher.add_protein_pairs_from_new_job(
+        tmp_raw_analysis_run_names
+      )
+      tmp_distance_analysis_job, tmp_distance_analysis_entry_widget = (
+        interface_manager.job_manager.create_distance_analysis_job(
+          self._app_state.project,
+          interface_manager.project_lock,
+          interface_manager,
+          tmp_raw_analysis_run_names,
+          self._app_state._settings_manager.settings.cutoff,
+          self._app_state._settings_manager.settings.cycles,
+        )
+      )
+      interface_manager.job_manager.put_job_into_queue(
+        tmp_distance_analysis_job
+      )
+      interface_manager.add_job_entry_to_job_overview_layout(
+        tmp_distance_analysis_entry_widget
+      )
+      interface_manager.get_main_view().job_dock_widget.show()
+    except Exception as e:
+      logger.error(f"An error occurred while submitting distance analysis: {e}")
+      interface_manager.status_bar_manager.show_error_message(
+        "An unknown error occurred while submitting distance analysis!"
+      )
 
   def _get_all_current_analysis_runs(self) -> list[str]:
     """Retrieves a list of all current analysis runs.
@@ -153,7 +190,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
     tmp_protein_pair_names = []
     for (
         tmp_protein_pair
-    ) in self._interface_manager.get_current_project().protein_pairs:
+    ) in self._app_state.project.protein_pairs:
       tmp_protein_pair_names.append(tmp_protein_pair.name)
     return tmp_protein_pair_names
 
@@ -164,15 +201,15 @@ class DistanceAnalysisViewController(QtCore.QObject):
     )
     self._external_controller = (
         add_protein_pair_view_controller.AddProteinPairViewController(
-            self._interface_manager,
-            self._watcher,
-            self._get_all_current_analysis_runs(),
-            self._get_all_current_protein_pair_names(),
+            the_app_state=self._app_state,
+            the_watcher=self._watcher,
+            a_list_of_used_run_names=self._get_all_current_analysis_runs(),
+            a_list_of_used_protein_pair_names=self._get_all_current_protein_pair_names(),
+            on_add_callback=self._post_add_protein_pair,
+            a_parent=self._view.window()
         )
     )
-    if self._external_controller.temporary_model_is_valid is True:
-      self._external_controller.user_input.connect(self._post_add_protein_pair)
-      self._interface_manager.get_add_protein_pair_view().show()
+    self._external_controller.get_view().show()
 
   def _post_add_protein_pair(self, return_value: tuple) -> None:
     """Adds the protein pair to the list widget and updates the UI.

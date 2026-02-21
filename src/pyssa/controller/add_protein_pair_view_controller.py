@@ -25,7 +25,10 @@ from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.qt import QtGui
 from src.pyssa.gui.qt import Qt
-from src.pyssa.controller import interface_manager, watcher
+from src.pyssa.controller import watcher
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+  from src.pyssa.gui import app_state
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.internal.data_structures import chain, protein
 from src.pyssa.logging_pyssa import log_levels, log_handlers
@@ -40,59 +43,62 @@ __docformat__ = "google"
 class AddProteinPairViewController(QtCore.QObject):
   """Class for the AddProteinPairViewController."""
 
-  user_input = QtCore.pyqtSignal(tuple)
-  """Singal used to transfer data back to the previous window."""
-
   def __init__(
       self,
-      the_interface_manager: "interface_manager.InterfaceManager",
+      the_app_state: "app_state.AppState",
       the_watcher: "watcher.Watcher",
-      the_existing_analysis_runs: list[str],
-      the_protein_pairs: list[str],
+      a_list_of_used_run_names: list[str],
+      a_list_of_used_protein_pair_names: list[str],
       a_list_of_extra_proteins: list[protein.Protein] = None,
+      on_add_callback = None,
+      a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): An instance of the InterfaceManager class.
+        the_app_state (app_state.AppState): An instance of the AppState class.
         the_watcher (watcher.Watcher): An instance of the Watcher class.
-        the_existing_analysis_runs (list[str]): A list of strings representing existing analysis runs.
-        the_protein_pairs (list[str]): A list of strings representing protein pairs.
+        a_list_of_used_run_names (list[str]): A list of strings representing existing analysis runs.
+        a_list_of_used_protein_pair_names (list[str]): A list of strings representing protein pairs.
         a_list_of_extra_proteins (list[protein.Protein]): (optional) A list of Protein objects.
+        a_parent: Parent widget to pass to the view.
 
     Raises:
         exception.IllegalArgumentError: If any of the arguments are None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
     if the_watcher is None:
       logger.error("the_watcher is None.")
       raise exception.IllegalArgumentError("the_watcher is None.")
-    if the_existing_analysis_runs is None:
-      logger.error("the_existing_analysis_runs is None.")
+    if a_list_of_used_run_names is None:
+      logger.error("a_list_of_used_run_names is None.")
       raise exception.IllegalArgumentError(
-          "the_existing_analysis_runs is None."
+          "a_list_of_used_run_names is None."
       )
-    if the_protein_pairs is None:
-      logger.error("the_protein_pairs is None.")
-      raise exception.IllegalArgumentError("the_protein_pairs is None.")
+    if a_list_of_used_protein_pair_names is None:
+      logger.error("a_list_of_used_protein_pair_names is None.")
+      raise exception.IllegalArgumentError("a_list_of_used_protein_pair_names is None.")
 
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager = the_interface_manager
+    self._app_state = the_app_state
     self._watcher = the_watcher
-    self._view = the_interface_manager.get_add_protein_pair_view()
+    self._on_add_callback = on_add_callback
+    from src.pyssa.gui.ui.views import add_protein_pair_view
+    self._view = add_protein_pair_view.AddProteinPairView(a_parent)
     self._temporary_model = (
         proteins_model.TemporaryProteinsModel()
     )  # is needed to not mess up the main model!
-    self._temporary_model.build_model_from_scratch(
-        self._interface_manager.get_current_project().proteins
-    )
-    self._existing_analysis_runs = the_existing_analysis_runs
-    self._existing_protein_pairs = the_protein_pairs
+    if self._app_state.has_open_project():
+      self._temporary_model.build_model_from_scratch(
+          self._app_state.project.proteins
+      )
+    self._existing_analysis_runs = a_list_of_used_run_names
+    self._existing_protein_pairs = a_list_of_used_protein_pair_names
     self._number_of_prot_1_selected_chains: int = 1
     self.restore_ui()
     self.temporary_model_is_valid = False
@@ -113,6 +119,9 @@ class AddProteinPairViewController(QtCore.QObject):
       self._hide_scenes_nodes()
       self._hide_non_protein_chains()
       self._connect_all_ui_elements_to_slot_functions()
+
+  def get_view(self):
+    return self._view
 
   def restore_ui(self) -> None:
     """Restores the UI."""
@@ -608,6 +617,7 @@ class AddProteinPairViewController(QtCore.QObject):
     )
     tmp_item = QtWidgets.QListWidgetItem(self._create_analysis_run_name())
     self._view.close()
-    self.user_input.emit((tmp_item, True))
+    if self._on_add_callback:
+        self._on_add_callback((tmp_item, True))
 
   # </editor-fold>

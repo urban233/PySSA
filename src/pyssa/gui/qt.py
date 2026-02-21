@@ -60,6 +60,8 @@ if IS_PYQT6:
     Qt.WindowModal = Qt.WindowModality.WindowModal
     Qt.DisplayRole = Qt.ItemDataRole.DisplayRole
     Qt.WaitCursor = Qt.CursorShape.WaitCursor
+    QtCore.QItemSelectionModel = QtCore.QItemSelectionModel.SelectionFlag
+    # QtCore.Qt = QtCore.Qt.MatchFlag
 
     QtWidgets.QActionGroup = QtGui.QActionGroup
     QtWidgets.QAction = QtGui.QAction

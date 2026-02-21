@@ -45,24 +45,26 @@ class ResultsViewController(QtCore.QObject):
 
   def __init__(
       self,
-      the_interface_manager: "interface_manager.InterfaceManager",
       the_protein_pair: "protein_pair.ProteinPair",
       the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
+      the_app_state: "app_state.AppState",
+      a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): An instance of the interface manager class.
         the_protein_pair (protein_pair.ProteinPair): An instance of the protein pair class.
         the_pymol_session_manager (pymol_session_manager.PymolSessionManager): An instance of the Pymol session manager class.
+        the_app_state (app_state.AppState): The AppState object.
+        a_parent: Parent widget to pass to the view.
 
     Raises:
         exception.IllegalArgumentError: If any of the arguments are None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
     if the_protein_pair is None:
       logger.error("the_protein_pair is None.")
       raise exception.IllegalArgumentError("the_protein_pair is None.")
@@ -73,22 +75,24 @@ class ResultsViewController(QtCore.QObject):
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager = the_interface_manager
+    self._app_state = the_app_state
     self._pymol_session_manager = the_pymol_session_manager
     self._protein_pair = the_protein_pair
     self._color_configuration_protein_pair: tuple[list, list] = ([], [])
-    self._view: "results_view.ResultsView" = (
-        the_interface_manager.get_results_view()
-    )
+    from src.pyssa.gui.ui.views import results_view
+    self._view: "results_view.ResultsView" = results_view.ResultsView(a_parent)
     self._distance_data_visualizer = None
     self.cb_protein_pair_color = QtWidgets.QComboBox()
+
+  def get_view(self):
+    return self._view
 
     self._connect_all_ui_elements_to_slot_functions()
     self._build_table_widget()
     self._fill_table_widget()
     
     if not self._pymol_session_manager.is_the_current_protein_pair_in_session(
-        self._interface_manager.get_current_active_protein_pair_object().name
+        self._protein_pair.name
     ):
       self.cb_protein_pair_color.setEnabled(False)
     else:
@@ -100,7 +104,7 @@ class ResultsViewController(QtCore.QObject):
 
   def _open_help_for_dialog(self) -> None:
     """Opens the help dialog."""
-    self._interface_manager.help_manager.open_results_summary_page()
+    # self._interface_manager.help_manager.open_results_summary_page()
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
@@ -274,9 +278,9 @@ class ResultsViewController(QtCore.QObject):
     )
     self._distance_data_visualizer = plot_view.PlotView(
         self._protein_pair,
-        self._interface_manager.get_current_project(),
+        self._app_state.project,
         self._protein_pair,
-        self._interface_manager.help_manager
+        None
     )
     self._distance_data_visualizer.show()
 
@@ -294,7 +298,7 @@ class ResultsViewController(QtCore.QObject):
   def _get_color_configuration_of_protein_pair(self) -> None:
     """Retrieves the color configuration for the protein pair from the database."""
     tmp_database_filepath: str = str(
-        self._interface_manager.get_current_project().get_database_filepath()
+        self._app_state.project.get_database_filepath()
     )
     with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
       for tmp_chain in self._protein_pair.protein_1.chains:
@@ -350,9 +354,11 @@ class ResultsViewController(QtCore.QObject):
     # </editor-fold>
 
     if result[0] == "":
-      self._interface_manager.status_bar_manager.show_error_message(
-          "Coloring the protein pair failed!"
-      )
+      custom_message_box.CustomMessageBoxOk(
+          "Coloring the protein pair failed!",
+          "Error",
+          custom_message_box.CustomMessageBoxIcons.ERROR.value,
+      ).exec_()
 
   def _color_protein_back_to_normal(self) -> None:
     """Reverts the color of the protein back to its original state."""
@@ -363,7 +369,7 @@ class ResultsViewController(QtCore.QObject):
       self._protein_pair.protein_1.pymol_selection.set_selection_for_a_single_chain(
           tmp_chain.chain_letter
       )
-      self._interface_manager.pymol_session_manager.color_protein(
+      self._pymol_session_manager.color_protein(
           "green",  # tmp_protein_1_colors[i],
           self._protein_pair.protein_1.pymol_selection.selection_string,
       )
@@ -376,7 +382,7 @@ class ResultsViewController(QtCore.QObject):
       self._protein_pair.protein_2.pymol_selection.set_selection_for_a_single_chain(
           tmp_chain.chain_letter
       )
-      self._interface_manager.pymol_session_manager.color_protein(
+      self._pymol_session_manager.color_protein(
           "blue",  # tmp_protein_2_colors[i],
           self._protein_pair.protein_2.pymol_selection.selection_string,
       )

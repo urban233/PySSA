@@ -35,6 +35,7 @@ TODO: Work in progress, this panel is not yet functional.
 from src.pyssa.gui.ui.styles.icon_manager import IconManager
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
 from src.pyssa.gui.ui.views import base_side_panel
 from src.pyssa.gui.ui.custom_widgets import quick_access_bar_action, quick_access_bar, dropdown_menu
 
@@ -65,6 +66,9 @@ class PySSAObjectsPanel(base_side_panel.BaseSidePanel):
         # </editor-fold>
         self._setup_panel_extra_ui()
     # </editor-fold>
+
+    def get_toolbar(self) -> "quick_access_bar.QuickAccessBar":
+        return self._quick_access_bar
 
     # <editor-fold desc="Private methods">
     def _setup_extra_styles(self) -> None:
@@ -126,6 +130,13 @@ class PySSAObjectsPanel(base_side_panel.BaseSidePanel):
             self.import_file_action, self.add_sequence_action, self.export_file_action, self.delete_object_action
         ], horizontal=True, button_size=(24, 24))
 
+    def _setup_import_popup(self):
+        self.import_seq_prot_menu = dropdown_menu.DropDownMenu()
+        self.import_seq_action = QtGui.QAction("Sequence")
+        self.import_prot_action = QtGui.QAction("Protein")
+        self.import_seq_prot_menu.addAction(self.import_seq_action)
+        self.import_seq_prot_menu.addAction(self.import_prot_action)
+
     def _setup_expand_collapse_header(self) -> None:
         """Configures the header layout for expand/collapse controls.
 
@@ -170,11 +181,14 @@ class PySSAObjectsPanel(base_side_panel.BaseSidePanel):
         the main layout.
         """
         self._setup_top_toolbar()
+        self._setup_import_popup()
         # self._setup_expand_collapse_header()
         self._setup_tree_view()
         # self._set_icons()
         self._setup_extra_styles()
         self._setup_container_widget()
+        # This panel should always be shown to make it easier for the end-user
+        self.btn_close.hide()
         self.layout_content_frame.addWidget(self.container_widget)
 
     # </editor-fold>

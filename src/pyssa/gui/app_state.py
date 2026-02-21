@@ -22,7 +22,7 @@ import pathlib
 from typing import Any, Callable, TYPE_CHECKING
 
 from src.pyssa.gui.qt import QtGui
-from src.pyssa.controller import settings_manager
+from src.pyssa.controller import settings_manager, status_bar_manager
 from src.pyssa.controller.job_scheduler import JobScheduler
 from src.pyssa.internal.data_structures.data_classes import job_descriptor
 from src.pyssa.io_pyssa.db_pyssa import ProjectDatabase
@@ -52,9 +52,11 @@ class AppState:
   def __init__(
           self,
           a_settings_manager: "settings_manager.SettingsManager",
+          a_status_bar_manager: "status_bar_manager.StatusBarManager",
           on_state_changed: Callable[[], None] = lambda: None,
   ) -> None:
     self._settings_manager = a_settings_manager
+    self.status_bar_manager = a_status_bar_manager
     self._on_state_changed = on_state_changed
 
     self._workspace: "workspace.Workspace" = workspace.Workspace(

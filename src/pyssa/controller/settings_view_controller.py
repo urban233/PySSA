@@ -29,8 +29,9 @@ from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_handlers, log_levels
 from src.pyssa.util import constants
 
+from src.pyssa.gui.ui.views import settings_view
 if TYPE_CHECKING:
-  from src.pyssa.controller import interface_manager
+  from src.pyssa.gui import app_state
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -40,38 +41,40 @@ __docformat__ = "google"
 class SettingsViewController(QtCore.QObject):
   """Class for the SettingsViewController."""
 
-  user_input = QtCore.pyqtSignal(tuple)
-  """Singal used to transfer data back to the previous window."""
-
   def __init__(
-      self, the_interface_manager: "interface_manager.InterfaceManager"
+      self, the_app_state: "app_state.AppState", a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        the_app_state (app_state.AppState): The AppState object.
+        a_parent: Parent widget to pass to the view.
 
     Raises:
-        exception.IllegalArgumentError: If `the_interface_manager` is None.
+        exception.IllegalArgumentError: If `the_app_state` is None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
 
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
-    self._settings_manager = the_interface_manager.get_settings_manager()
-    self._view = the_interface_manager.get_settings_view()
+    self._app_state = the_app_state
+    self._parent = a_parent
+    self._settings_manager = the_app_state._settings_manager
+    self._view = settings_view.SettingsView(a_parent)
     self._initialize_ui()
     self.restore_ui()
     self._connect_all_ui_elements_to_slot_functions()
-    if self._interface_manager.job_manager.there_are_jobs_running():
+    if self._app_state.job_scheduler.has_running_jobs():
       self._view.ui.btn_workspace_dir.setEnabled(False)
     else:
       self._view.ui.btn_workspace_dir.setEnabled(True)
+
+  def get_view(self):
+    return self._view
 
   # <editor-fold desc="Util methods">
   def _open_help_for_dialog(self) -> None:
@@ -79,7 +82,7 @@ class SettingsViewController(QtCore.QObject):
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
-    self._interface_manager.help_manager.open_pyssa_settings_page()
+    # self._interface_manager.help_manager.open_pyssa_settings_page()
 
   def restore_ui(self) -> None:
     """Restores the UI."""
@@ -183,7 +186,7 @@ class SettingsViewController(QtCore.QObject):
         "'Choose workspace' button was clicked.",
     )
     gui_utils.choose_directory(
-        self._interface_manager.get_settings_view(),
+        self._view,
         self._view.ui.txt_workspace_dir,
     )
 
@@ -215,7 +218,12 @@ class SettingsViewController(QtCore.QObject):
     self._settings_manager.settings.serialize_settings()
     logging.info("Settings were successfully saved.")
     self._view.close()
-    self.user_input.emit((0, True))
+
+    # Rebuild the workspace model inside the app state and trigger a UI update
+    if hasattr(self._app_state, "_build_workspace_model"):
+      self._app_state._build_workspace_model()
+    self._app_state._on_state_changed()
 
   def toggle_pymol_expert_mode(self):
-    self._interface_manager.pymol_session_manager.toggle_pymol_expert_mode()
+    if hasattr(self._parent, "user_pymol"):
+      self._parent.user_pymol.get_user_pymol_connector().toggle_pymol_expert_mode()

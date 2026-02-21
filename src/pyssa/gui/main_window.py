@@ -41,7 +41,7 @@ from pmg_qt import keymapping
 from src.pyssa.controller import main_window_controller, welcome_screen_view_controller
 from src.pyssa.gui import user_pymol
 
-from src.pyssa.gui.ui.views import pyssa_objects_panel, welcome_screen_view
+from src.pyssa.gui.ui.views import pyssa_objects_panel, welcome_screen_view, help_panel
 
 from src.pyssa.gui.ui.styles.icon_manager import IconManager
 from src.pyssa.gui.qt import QtCore
@@ -327,6 +327,8 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # <editor-fold desc="Panels">
     self.left_side_panel_stacked_widget = QtWidgets.QStackedWidget()
     self.pyssa_objects_panel = pyssa_objects_panel.PySSAObjectsPanel()
+    self.pyssa_objects_panel.setObjectName("pyssa_objects_panel")
+    self.help_panel = help_panel.HelpPanel()
     self.right_side_panel_stacked_widget = QtWidgets.QStackedWidget()
     self.bottom_panel_stacked_widget = QtWidgets.QStackedWidget()
     # </editor-fold>
@@ -353,6 +355,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # Register panels in ToolWindowLayout in enum order
     # Left stack
     self.tool_window_layout.add_left_panel(self.pyssa_objects_panel)  # LeftSidePanel.PROTEIN_STRUCTURE = 0
+    self.tool_window_layout.add_right_panel(self.help_panel)
 
     self._main_content_layout.addWidget(self.tool_window_layout)
     self._main_layout.addLayout(self._main_content_layout)

@@ -2782,65 +2782,21 @@ class MainViewController:
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
         "Menu entry 'Analysis/Distance' clicked.",
       )
+      from src.pyssa.gui import main_window
+      the_app_state = main_window.controller._app_state
+
       self._external_controller = (
         distance_analysis_view_controller.DistanceAnalysisViewController(
-          self._interface_manager,
-          self._interface_manager.watcher,
+          the_app_state,
+          main_window.controller._interface_manager.watcher,
         )
       )
-      self._external_controller.job_input.connect(self._post_distance_analysis)
-      self._interface_manager.get_distance_analysis_view().show()
+      self._external_controller.get_view().show()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
         "An unknown error occurred!"
       )
-
-  def _post_distance_analysis(self, job_input: tuple) -> None:
-    """Sets up the worker for the analysis task.
-
-    Args:
-        job_input (tuple): A tuple with the data needed for the distance analysis.
-    """
-    # <editor-fold desc="Checks">
-    if job_input is None:
-      logger.error("job_input is None.")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "No data received!"
-      )
-      return
-
-    # </editor-fold>
-
-    try:
-      _, tmp_raw_analysis_run_names, tmp_checkbox_state = job_input
-      # --- New job approach
-      self._interface_manager.watcher.add_protein_pairs_from_new_job(
-        tmp_raw_analysis_run_names
-      )
-      tmp_distance_analysis_job, tmp_distance_analysis_entry_widget = (
-        self._interface_manager.job_manager.create_distance_analysis_job(
-          self._interface_manager.get_current_project(),
-          self._interface_manager.project_lock,
-          self._interface_manager,
-          tmp_raw_analysis_run_names,
-          self._interface_manager.get_settings_manager().settings.cutoff,
-          self._interface_manager.get_settings_manager().settings.cycles,
-        )
-      )
-    except Exception as e:
-      logger.error(f"An error occurred: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred!"
-      )
-    else:
-      self._interface_manager.job_manager.put_job_into_queue(
-        tmp_distance_analysis_job
-      )
-      self._interface_manager.add_job_entry_to_job_overview_layout(
-        tmp_distance_analysis_entry_widget
-      )
-      self.open_job_overview_panel()
 
     # tmp_distance_analysis_task = tasks.Task(
     #     target=main_tasks_async.run_distance_analysis,
@@ -2970,16 +2926,15 @@ class MainViewController:
         tmp_indexes = self._view.ui.seqs_list_view.selectedIndexes()
       self._external_controller = (
         predict_protein_view_controller.PredictProteinViewController(
-          self._interface_manager,
-          self._interface_manager.watcher,
+          the_app_state,
+          main_window.controller._interface_manager.watcher,
           tmp_indexes,
           "monomer",
         )
       )
       if self._external_controller.has_internet_connection is False:
         return
-      self._external_controller.job_input.connect(self._post_predict_protein)
-      self._interface_manager.get_predict_protein_view().show()
+      self._external_controller.get_view().show()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -3009,194 +2964,20 @@ class MainViewController:
         tmp_indexes = self._view.ui.seqs_list_view.selectedIndexes()
       self._external_controller = (
         predict_protein_view_controller.PredictProteinViewController(
-          self._interface_manager,
-          self._interface_manager.watcher,
+          the_app_state,
+          main_window.controller._interface_manager.watcher,
           tmp_indexes,
           "multimer",
         )
       )
       if self._external_controller.has_internet_connection is False:
         return
-      self._external_controller.job_input.connect(self._post_predict_protein)
-      self._interface_manager.get_predict_protein_view().show()
+      self._external_controller.get_view().show()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
         "An unknown error occurred!"
       )
-
-  def _setup_prediction_job(
-          self, result: tuple
-  ) -> Optional[tuple["job.PredictionJob", "job_entry.JobEntryWidget"]]:
-    """Sets up the prediction job with the data from the predict protein dialog.
-
-    Args:
-        result (tuple): The user inputs form the predict protein dialog.
-
-    Returns:
-        A tuple with the job and job entry widget or None if the argument is None.
-    """
-    # <editor-fold desc="Checks">
-    if result is None:
-      logger.error("result is None.")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "No data received!"
-      )
-      return
-
-    # </editor-fold>
-
-    _, tmp_prediction_protein_infos, tmp_prediction_configuration, _ = result
-    self._interface_manager.watcher.add_proteins_from_new_job(
-      tmp_prediction_protein_infos
-    )
-    return self._interface_manager.job_manager.create_prediction_job(
-      self._interface_manager.get_current_project(),
-      tmp_prediction_protein_infos,
-      tmp_prediction_configuration,
-      self._interface_manager.project_lock,
-      self._interface_manager,
-    )
-
-  def _setup_prediction_and_analysis_job(
-          self, result: tuple
-  ) -> Optional[
-    tuple["job.PredictionAndDistanceAnalysisJob", "job_entry.JobEntryWidget"]
-  ]:
-    """Sets up the prediction and analysis job with the data from the predict protein dialog.
-
-    Args:
-        result (tuple): The user inputs form the predict protein dialog.
-
-    Returns:
-        A tuple with the job and job entry widget or None if the argument is None.
-    """
-    # <editor-fold desc="Checks">
-    if result is None:
-      logger.error("result is None.")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "No data received!"
-      )
-      return
-
-    # </editor-fold>
-
-    _, tmp_prediction_protein_infos, tmp_prediction_configuration, _ = result
-    self._interface_manager.watcher.add_proteins_from_new_job(
-      tmp_prediction_protein_infos
-    )
-    tmp_prediction_job, _ = (
-      self._interface_manager.job_manager.create_prediction_job(
-        self._interface_manager.get_current_project(),
-        tmp_prediction_protein_infos,
-        tmp_prediction_configuration,
-        self._interface_manager.project_lock,
-        self._interface_manager,
-      )
-    )
-    tmp_raw_analysis_run_names: list = []
-    for row_no in range(
-            self._interface_manager.get_predict_protein_view().ui.list_analysis_overview.count()
-    ):
-      tmp_raw_analysis_run_names.append(
-        self._interface_manager.get_predict_protein_view()
-        .ui.list_analysis_overview.item(row_no)
-        .text()
-      )
-
-    self._interface_manager.watcher.add_protein_pairs_from_new_job(
-      tmp_raw_analysis_run_names
-    )
-    tmp_distance_analysis_job, _ = (
-      self._interface_manager.job_manager.create_distance_analysis_job(
-        self._interface_manager.get_current_project(),
-        self._interface_manager.project_lock,
-        self._interface_manager,
-        tmp_raw_analysis_run_names,
-        self._interface_manager.get_settings_manager().settings.cutoff,
-        self._interface_manager.get_settings_manager().settings.cycles,
-      )
-    )
-    tmp_job = self._interface_manager.job_manager.create_prediction_and_distance_analysis_job(
-      tmp_prediction_job,
-      tmp_distance_analysis_job,
-      self._interface_manager,
-    )
-    return tmp_job
-
-  def _post_predict_protein(self, result: tuple) -> None:
-    """Sets up and starts the job with the data from the predict protein dialog.
-
-    Args:
-        result (tuple): A tuple with the user input needed for the job.
-    """
-    # <editor-fold desc="Checks">
-    if result is None:
-      logger.error("result is None.")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "No data received!"
-      )
-      self._interface_manager.refresh_main_view()
-      return
-
-    # </editor-fold>
-
-    try:
-      # <editor-fold desc="Check if WSL2 and ColabFold are installed">
-      if globals.g_os == "win32":
-        constants.PYSSA_LOGGER.info("Checking if WSL2 is installed ...")
-        if not dialog_settings_global.is_wsl2_installed():
-          constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
-          self._interface_manager.get_application_settings().wsl_install = 0
-          tmp_dialog = custom_message_box.CustomMessageBoxOk(
-            "Prediction failed because the WSL2 environment is not installed!",
-            "Structure Prediction",
-            custom_message_box.CustomMessageBoxIcons.DANGEROUS.value,
-          )
-          tmp_dialog.exec_()
-          return
-        constants.PYSSA_LOGGER.info(
-          "Checking if Local Colabfold is installed ..."
-        )
-        if not dialog_settings_global.is_local_colabfold_installed():
-          constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
-          self._interface_manager.get_application_settings().local_colabfold = 0
-          tmp_dialog = custom_message_box.CustomMessageBoxOk(
-            "Prediction failed because the ColabFold is not installed!",
-            "Structure Prediction",
-            custom_message_box.CustomMessageBoxIcons.DANGEROUS.value,
-          )
-          tmp_dialog.exec_()
-          return
-
-      # </editor-fold>
-
-      constants.PYSSA_LOGGER.info("Begin prediction process.")
-      if result[3] is True:
-        constants.PYSSA_LOGGER.info(
-          "Running prediction with subsequent analysis."
-        )
-        tmp_job, tmp_job_widget = self._setup_prediction_and_analysis_job(
-          result
-        )
-      else:
-        constants.PYSSA_LOGGER.info(
-          "Running prediction without subsequent analysis."
-        )
-        tmp_job, tmp_job_widget = self._setup_prediction_job(result)
-    except Exception as e:
-      logger.error(f"An error occurred: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred!"
-      )
-    else:
-      self._interface_manager.job_manager.put_job_into_queue(tmp_job)
-      self._interface_manager.add_job_entry_to_job_overview_layout(
-        tmp_job_widget
-      )
-      self.open_job_overview_panel()
-    finally:
-      self._interface_manager.refresh_main_view()
 
   def __slot_abort_prediction(self, a_prediction_task_was_aborted: bool = False) -> None:
     """Aborts the running prediction."""
@@ -3270,16 +3051,16 @@ class MainViewController:
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
         "Menu entry 'Settings/Edit' clicked.",
       )
+      from src.pyssa.gui import main_window
+      the_app_state = main_window.controller._app_state
+
       self._external_controller = (
         settings_view_controller.SettingsViewController(
-          self._interface_manager
+          the_app_state, self._view
         )
       )
-      self._external_controller.user_input.connect(
-        self.post_open_settings_global
-      )
       self._external_controller.restore_ui()
-      self._interface_manager.get_settings_view().show()
+      self._external_controller.get_view().show()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -3289,32 +3070,6 @@ class MainViewController:
     # dialog.exec_()
     # self._interface_manager.update_settings()
     # self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
-
-  def post_open_settings_global(self) -> None:
-    """Refreshes the workspace model and the main view after the settings dialog closed."""
-    try:
-      self._interface_manager.refresh_workspace_model()
-      self._interface_manager.refresh_main_view()
-      self._interface_manager.status_bar_manager.show_temporary_message(
-        "Settings successfully saved."
-      )
-      try:
-        tmp_type = self._interface_manager.get_current_protein_tree_index_type()
-      except AttributeError:
-        return
-      if tmp_type == "chain":
-        self._interface_manager.set_current_chain_color_for_ui_for_proteins(
-          self._interface_manager.pymol_session_manager
-        )
-        self._interface_manager.set_repr_state_in_ui_for_protein_chain(
-          self._interface_manager.pymol_session_manager
-        )
-        self._interface_manager.show_protein_pymol_scene_configuration()
-    except Exception as e:
-      logger.error(f"An error occurred: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred!"
-      )
 
   def __slot_restore_settings(self) -> None:
     """Restores the settings.xml file to the default values."""
@@ -3948,63 +3703,21 @@ class MainViewController:
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
         "'Add sequence' button on the 'Sequence Tab' was clicked.",
       )
+      from src.pyssa.gui import main_window
+      the_app_state = main_window.controller._app_state
+
       self._external_controller = (
         add_sequence_view_controller.AddSequenceViewController(
-          self._interface_manager
+          the_app_state, self._view
         )
       )
-      self._external_controller.return_value.connect(self._post_add_sequence)
       self._external_controller.restore_default_view()
-      self._interface_manager.get_add_sequence_view().show()
+      self._external_controller.get_view().show()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
         "An unknown error occurred!"
       )
-
-  def _post_add_sequence(self, return_value: tuple) -> None:
-    """Inserts the new sequence in the database and refreshes the sequence model.
-
-    Args:
-        return_value (tuple): The result data from the async method.
-    """
-    # <editor-fold desc="Checks">
-    if return_value is None:
-      logger.error("return_value is None.")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "No data received!"
-      )
-      self._interface_manager.refresh_main_view()
-      return
-
-    # </editor-fold>
-
-    try:
-      logger.info(
-        f"Adding new sequence {return_value[0]} with {return_value[1]} to the current project."
-      )
-      tmp_seq_name = return_value[0]
-      tmp_sequence = return_value[1]
-      tmp_seq_record = SeqRecord.SeqRecord(tmp_sequence, name=tmp_seq_name)
-      self._interface_manager.get_current_project().sequences.append(
-        tmp_seq_record
-      )
-      tmp_database_operation = database_operation.DatabaseOperation(
-        enums.SQLQueryType.INSERT_NEW_SEQUENCE,
-        (0, tmp_seq_record),
-      )
-    except Exception as e:
-      logger.error(f"An error occurred: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred!"
-      )
-    else:
-      self._database_thread.put_database_operation_into_queue(
-        tmp_database_operation
-      )
-      self._interface_manager.refresh_sequence_model()
-    finally:
-      self._interface_manager.refresh_main_view()
 
   # </editor-fold>
 
@@ -4178,66 +3891,26 @@ class MainViewController:
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
         "'Rename sequence' context menu action was clicked.",
       )
+      from src.pyssa.gui import main_window
+      the_app_state = main_window.controller._app_state
+      
+      tmp_seq_obj = (
+        self._view.ui.seqs_list_view.currentIndex()
+        .data(enums.ModelEnum.OBJECT_ROLE)
+      )
+
       self._external_controller = (
         rename_sequence_view_controller.RenameSequenceViewController(
-          self._interface_manager
+          the_app_state, tmp_seq_obj, self._view
         )
       )
-      self._external_controller.user_input.connect(
-        self.post_rename_selected_sequence_structure
-      )
       self._external_controller.restore_ui()
-      self._interface_manager.get_rename_sequence_view().show()
+      self._external_controller.get_view().show()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
         "An unknown error occurred!"
       )
-
-  def post_rename_selected_sequence_structure(
-          self, return_value: tuple
-  ) -> None:
-    """Finishes the rename sequence process.
-
-    Args:
-        return_value (tuple): The result data from the async method.
-    """
-    try:
-      tmp_new_name = return_value[0]
-      tmp_old_name = (
-        self._view.ui.seqs_list_view.currentIndex()
-        .data(enums.ModelEnum.OBJECT_ROLE)
-        .name
-      )
-      tmp_seq = (
-        self._view.ui.seqs_list_view.currentIndex()
-        .data(enums.ModelEnum.OBJECT_ROLE)
-        .seq
-      )
-      self._view.ui.seqs_list_view.currentIndex().data(
-        enums.ModelEnum.OBJECT_ROLE
-      ).name = tmp_new_name
-      self._view.ui.seqs_list_view.model().setData(
-        self._view.ui.seqs_list_view.currentIndex(),
-        tmp_new_name,
-        Qt.DisplayRole,
-      )
-      tmp_database_operation = database_operation.DatabaseOperation(
-        enums.SQLQueryType.UPDATE_SEQUENCE_NAME,
-        (0, tmp_new_name, tmp_old_name, tmp_seq),
-      )
-    except Exception as e:
-      logger.error(f"An error occurred: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred!"
-      )
-    else:
-      self._database_thread.put_database_operation_into_queue(
-        tmp_database_operation
-      )
-      self._view.ui.seqs_table_widget.item(0, 1).setText(tmp_new_name)
-    finally:
-      self._interface_manager.refresh_main_view()
 
   # </editor-fold>
 
@@ -6984,71 +6657,20 @@ class MainViewController:
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
         "'Rename protein' context menu action was clicked.",
       )
+      from src.pyssa.gui import main_window
+      the_app_state = main_window.controller._app_state
+
+      tmp_protein_obj = (
+        self._interface_manager.get_current_protein_tree_index_object()
+      )
+
       self._external_controller = (
         rename_protein_view_controller.RenameProteinViewController(
-          self._interface_manager
+          the_app_state, tmp_protein_obj, self._view
         )
-      )
-      self._external_controller.user_input.connect(
-        self.post_rename_selected_protein_structure
       )
       self._external_controller.restore_ui()
-      self._interface_manager.get_rename_protein_view().show()
-    except Exception as e:
-      logger.error(f"An error occurred: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred!"
-      )
-
-  def post_rename_selected_protein_structure(self, return_value: tuple) -> None:
-    """Renames a selected protein structure."""
-    try:
-      if return_value[1] is True:
-        self._active_task = tasks.LegacyTask(
-          target=protein_async.rename_selected_protein_structure,
-          args=(
-            self._interface_manager.get_current_protein_tree_index_object(),
-            return_value[0],
-            self._interface_manager.get_current_project().get_database_filepath(),
-          ),
-          post_func=self.__await_post_rename_selected_protein_structure,
-        )
-        self._interface_manager.block_gui(with_wait_cursor=True)
-        self.update_status("Renaming protein ...")
-      else:
-        pass
-    except Exception as e:
-      logger.error(f"An error occurred: {e}")
-      self._interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred!"
-      )
-
-  def __await_post_rename_selected_protein_structure(
-          self, result: tuple
-  ) -> None:
-    try:
-      self._view.ui.proteins_tree_view.model().setData(
-        self._interface_manager.get_current_protein_tree_index(),
-        result[1],
-        enums.ModelEnum.OBJECT_ROLE,
-      )
-      tmp_database_operation = database_operation.DatabaseOperation(
-        enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN,
-        (
-          0,
-          self._view.ui.proteins_tree_view.model().data(
-            self._interface_manager.get_current_protein_tree_index(),
-            enums.ModelEnum.OBJECT_ROLE,
-          ),
-        ),
-      )
-      self._database_thread.put_database_operation_into_queue(
-        tmp_database_operation
-      )
-      self._interface_manager.refresh_protein_model()
-      self._interface_manager.refresh_main_view()
-      self._interface_manager.stop_wait_cursor()
-      self.update_status("Renaming protein finished.")
+      self._external_controller.get_view().show()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -7215,14 +6837,16 @@ class MainViewController:
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
         "'Create pymol scene' button on the 'Proteins or Protein Pairs Tab' was clicked.",
       )
+      from src.pyssa.gui import main_window
+      the_app_state = main_window.controller._app_state
+
       self._external_controller = (
         add_scene_view_controller.AddSceneViewController(
-          self._interface_manager
+          the_app_state
         )
       )
-      self._external_controller.user_input.connect(self._post_save_scene)
       self._external_controller.restore_ui()
-      self._interface_manager.get_add_scene_view().show()
+      self._external_controller.get_view().show()
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
@@ -7261,11 +6885,6 @@ class MainViewController:
           a_task_scheduler=self._interface_manager.get_task_scheduler(),
         )
       )
-      # self._active_task = tasks.LegacyTask(
-      #     target=pymol_session_async.create_new_scene,
-      #     args=(tmp_scene_name, self._interface_manager.pymol_session_manager),
-      #     post_func=self.__await_create_new_scene_for_protein_session,
-      # )
     except Exception as e:
       logger.error(f"An error occurred: {e}")
       self._interface_manager.status_bar_manager.show_error_message(

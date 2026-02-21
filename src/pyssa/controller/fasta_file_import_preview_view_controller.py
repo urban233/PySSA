@@ -24,7 +24,9 @@ import logging
 
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtWidgets
-from src.pyssa.controller import interface_manager
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+  from src.pyssa.gui import app_state
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.internal.data_structures.data_classes import basic_seq_info
 from src.pyssa.logging_pyssa import log_levels, log_handlers
@@ -38,27 +40,28 @@ __docformat__ = "google"
 class FastaFileImportPreviewViewController(QtCore.QObject):
   """Class for the FastaFileImportPreviewViewController."""
 
-  user_input = QtCore.pyqtSignal(tuple)
-  """Singal used to transfer data back to the previous window."""
 
   def __init__(
       self,
-      the_interface_manager: "interface_manager.InterfaceManager",
+      the_app_state: "app_state.AppState",
       the_parsed_sequences: list["basic_seq_info.BasicSeqInfo"],
+      on_save_callback=None,
+      a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        the_app_state (app_state.AppState): The AppState object.
         the_parsed_sequences (list[basic_seq_info.BasicSeqInfo]): A list of BasicSeqInfo objects representing parsed sequences.
+        a_parent: Parent widget to pass to the view.
 
     Raises:
-        exception.IllegalArgumentError: If `the_interface_manager` is None.
+        exception.IllegalArgumentError: If `the_app_state` is None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
     if the_parsed_sequences is None:
       logger.error("the_parsed_sequences is None.")
       raise exception.IllegalArgumentError("the_parsed_sequences is None.")
@@ -66,12 +69,17 @@ class FastaFileImportPreviewViewController(QtCore.QObject):
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager = the_interface_manager
-    self._view = the_interface_manager.get_fasta_file_import_preview_view()
+    self._app_state = the_app_state
+    self._on_save_callback = on_save_callback
+    from src.pyssa.gui.ui.views import fasta_file_import_preview_view
+    self._view = fasta_file_import_preview_view.FastaFileImportPreviewView(a_parent)
     self._parsed_sequences: list[basic_seq_info.BasicSeqInfo] = (
         the_parsed_sequences
     )
     self._connect_all_ui_elements_to_slot_functions()
+
+  def get_view(self):
+    return self._view
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
@@ -182,7 +190,8 @@ class FastaFileImportPreviewViewController(QtCore.QObject):
       self._parsed_sequences.append(tmp_seq_info)
 
     self._view.close()
-    self.user_input.emit((0, self._parsed_sequences))
+    if self._on_save_callback:
+        self._on_save_callback((0, self._parsed_sequences))
 
   def __slot_delete_sequence_from_table(self) -> None:
     """Delete selected rows from the table."""

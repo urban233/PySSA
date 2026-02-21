@@ -23,6 +23,7 @@
 import logging
 
 from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.ui.views import add_scene_view
 
 from src.pyssa.controller import interface_manager
 from src.pyssa.logging_pyssa import log_levels, log_handlers
@@ -36,36 +37,39 @@ __docformat__ = "google"
 class AddSceneViewController(QtCore.QObject):
   """Class for the AddSceneViewController."""
 
-  user_input = QtCore.pyqtSignal(tuple)
-  """Singal used to transfer data back to the previous window."""
-
   def __init__(
-      self, the_interface_manager: "interface_manager.InterfaceManager"
+      self, the_app_state: "app_state.AppState", a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        the_app_state (app_state.AppState): The AppState object.
+        a_parent: The parent widget for the view.
 
     Raises:
-        exception.IllegalArgumentError: If `the_interface_manager` is None.
+        exception.IllegalArgumentError: If `the_app_state` is None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
 
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager = the_interface_manager
-    self._view = the_interface_manager.get_add_scene_view()
-    self._interface_manager.pymol_session_manager.get_all_scenes_in_current_session()
-    self._all_current_scenes = (
-        self._interface_manager.pymol_session_manager.all_scenes
-    )
+    self._app_state = the_app_state
+    self._view = add_scene_view.AddSceneView(a_parent)
+
+    from src.auxiliary_pymol import auxiliary_pymol_client
+    self._pymol_cmd = auxiliary_pymol_client._get_client()
+
+    self._all_current_scenes = self._pymol_cmd.get_scene_list() or []
+
     self._view.lbl_status.setStyleSheet("color: #ba1a1a; font-size: 11px;")
     self._connect_all_ui_elements_to_slot_functions()
+
+  def get_view(self):
+    return self._view
 
   def restore_ui(self) -> None:
     """Restores the UI."""
@@ -87,8 +91,35 @@ class AddSceneViewController(QtCore.QObject):
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked."
     )
+    scene_name = self._view.line_edit_scene_name.text()
     self._view.close()
-    self.user_input.emit((self._view.line_edit_scene_name.text(), True))
+
+    from src.pyssa.gui import main_window
+    interface_manager = main_window.controller._interface_manager
+    interface_manager.block_gui()
+
+    from src.pyssa.internal.task import pymol_session_async
+    from src.pyssa.internal.thread.thread_api import thread_runtime
+
+    def do_work(progress_callback, is_cancelled):
+      return pymol_session_async.create_new_scene(scene_name, interface_manager.pymol_session_manager)
+
+    def on_success(result):
+      interface_manager.stop_wait_cursor()
+      interface_manager.refresh_main_view()
+
+    def on_error(exc):
+      interface_manager.stop_wait_cursor()
+      interface_manager.refresh_main_view()
+      logger.error(f"Failed to append scene in PyMOL: {exc}")
+      interface_manager.status_bar_manager.show_error_message("An unknown error occurred while adding scene!")
+
+    (
+      thread_runtime.get_singleton_thread_runtime()
+      .run(do_work)
+      .on_success(on_success)
+      .on_error(on_error)
+    )
 
   def _validate_scene_name(self, text: str) -> None:
     """Validates the scene name entered by the user.

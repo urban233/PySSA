@@ -22,6 +22,7 @@
 """Module for the status bar manager."""
 import logging
 
+from src.pyssa.gui import main_window
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.ui.custom_widgets import custom_label
@@ -37,7 +38,7 @@ __docformat__ = "google"
 class StatusBarManager:
   """A class to manage the statusbar style and messages."""
 
-  def __init__(self, the_main_view: QtWidgets.QMainWindow) -> None:
+  def __init__(self, the_main_view: main_window.MainWindow) -> None:
     """Constructor.
 
     Args:
@@ -56,26 +57,60 @@ class StatusBarManager:
     self._view = the_main_view
     self._update_signal = None
 
-    self._progress_bar = QtWidgets.QProgressBar()
+    self._progress_bar = GradientProgressBar()
+    # self._progress_bar.setRange(0, 100)
+    # self._progress_bar.setValue(0)
     self._permanent_message = custom_label.PermanentMessageLabel()
 
     self._view.status_bar.addPermanentWidget(self._progress_bar)
     self._view.status_bar.addPermanentWidget(self._permanent_message)
+    self._progress_bar.setMaximumWidth(100)
     self._progress_bar.hide()
+    self._permanent_message.hide()
     self.temp_message_timer = QtCore.QTimer()
     self._restore_status_bar()
 
   # <editor-fold desc="Util methods">
 
+  def _setup_progress_bar_animation(self):
+    self.timer = QtCore.QTimer()
+    self.timer.timeout.connect(self.update_progress)
+    self.timer.start(100)  # 100 ms per step (slower than default)
+
+  def update_progress(self):
+    value = (self._progress_bar.value() + 2) % 101  # loop from 0→100
+    self._progress_bar.setValue(value)
+
   # <editor-fold desc="Methods for styling the status bar">
+  def _style_progress_bar(self):
+    self._progress_bar.setStyleSheet(
+      """
+      QProgressBar {
+          border-style: solid;
+          border-width: 2px;
+          border-radius: 4px;
+          border-color: #DCDBE3;
+          background-color: #efefef;
+          max-height: 17px;
+          max-width: 80px;
+          text-align: center;
+          color: black;
+      }
+      QProgressBar::chunk {
+          background-color: #367af6;
+          width: 50px;
+      }
+      """
+    )
+
   def _style_status_bar_for_normal_message(self) -> None:
     """Sets custom style sheet for a normal message."""
     self._view.status_bar.setStyleSheet(
         """
             QStatusBar {
                 background-color: #eeeff0;
-                min-height: 1.1em;
-                max-height: 1.1em;
+                min-height: 1.3em;
+                max-height: 1.3em;
             }
         """
     )
@@ -160,11 +195,16 @@ class StatusBarManager:
     raise NotImplementedError()
 
   # <editor-fold desc="Public methods">
-  def show_permanent_message(self, a_message: str) -> None:
+  def show_permanent_message(
+          self,
+          a_message: str,
+          a_with_progress_bar: bool = False
+  ) -> None:
     """Shows a permanent message in the statusbar.
 
     Args:
         a_message: A string representing the message that will be displayed as a permanent message.
+        a_with_progress_bar: A boolean flag for whether to show a progress bar along with the message.
 
     Raises:
         exception.IllegalArgumentError: If `a_message` is None.
@@ -176,7 +216,16 @@ class StatusBarManager:
 
     # </editor-fold>
 
-    self._permanent_message.setText(a_message)
+    if a_message == "":
+      self._permanent_message.hide()
+    else:
+      self._permanent_message.show()
+      self._permanent_message.setText(a_message)
+
+    if a_with_progress_bar:
+      self._progress_bar.show()
+    else:
+      self._progress_bar.hide()
 
   def show_error_message(
       self, a_message: str, overwrite_permanent_message: bool = True
@@ -209,12 +258,13 @@ class StatusBarManager:
       self._permanent_message.setText(a_message)
     else:
       self._view.status_bar.showMessage(a_message, 999999)
+    self._progress_bar.hide()
 
   def show_temporary_message(
       self,
       a_temporary_message: str,
       a_with_timeout_flag: bool = True,
-      a_timeout: int = constants.STATUS_MESSAGE_TIMEOUT,
+      a_timeout: int = constants.STATUS_MESSAGE_TIMEOUT
   ) -> None:
     """Shows a temporary message in the statusbar.
 
@@ -246,32 +296,6 @@ class StatusBarManager:
     else:
       self._view.status_bar.showMessage(a_temporary_message, 999999)
 
-  def update_progress_bar(self, a_message_value_tuple: tuple) -> None:
-    """Updates the progress bar with the given message and value.
-
-    Args:
-        a_message_value_tuple (tuple): A tuple containing the message and value to be displayed on the progress bar. The message should be a string, and the value should be an integer between 0 and 100 (inclusive).
-
-    Raises:
-        exception.IllegalArgumentError: If `a_message_value_tuple` is None.
-        ValueError: If the value is less than 0 or greater than 100.
-    """
-    # <editor-fold desc="Checks">
-    if a_message_value_tuple is None:
-      logger.error("a_message_value_tuple is None.")
-      raise exception.IllegalArgumentError("a_message_value_tuple is None.")
-    tmp_message, tmp_value = a_message_value_tuple
-    if tmp_value < 0 or tmp_value > 100:
-      raise ValueError("Value for progress bar must be between 0 and 100!")
-
-    # </editor-fold>
-
-    self._progress_bar.show()
-    self._progress_bar.setFormat(f"{tmp_value}%")
-    self._progress_bar.setValue(tmp_value)
-    self._permanent_message.show()
-    self._permanent_message.setText(tmp_message)
-
   def hide_progress_bar(self) -> None:
     """Hides the progress bar and reset the permanent message."""
     self._progress_bar.hide()
@@ -279,3 +303,46 @@ class StatusBarManager:
     self._permanent_message.setText("")
 
   # </editor-fold>
+
+
+class GradientProgressBar(QtWidgets.QProgressBar):
+  def __init__(self):
+    super().__init__()
+    self.setRange(0, 100)
+    self.setValue(0)
+    self.setTextVisible(False)
+    self.setFixedWidth(180)
+    self.setFixedHeight(10)
+    self.setStyleSheet(self.get_stylesheet(0))
+
+    self.offset = 0
+    self.timer = QtCore.QTimer()
+    self.timer.timeout.connect(self.update_gradient)
+    self.timer.start(50)  # slower movement: increase interval to slow down
+
+  def update_gradient(self):
+    # Move the gradient slowly
+    self.offset = (self.offset + 2) % 100
+    self.setStyleSheet(self.get_stylesheet(self.offset))
+    # Increment value for continuous bar fill illusion
+    self.setValue((self.value() + 1) % 101)
+
+  def get_stylesheet(self, offset):
+    # Use offset to shift gradient position
+    return f"""
+        QProgressBar {{
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: #f0f0f0;
+        }}
+        QProgressBar::chunk {{
+            border-radius: 6px;
+            background: qlineargradient(
+                x1:0, y1:0, x2:1, y2:0,
+                stop:0.0 rgba(90, 173, 226, 255),
+                stop:{0.3 + offset/200:.2f} rgba(150, 200, 255, 255),
+                stop:{0.7 + offset/200:.2f} rgba(90, 173, 226, 255),
+                stop:1.0 rgba(90, 173, 226, 255)
+            );
+        }}
+        """

@@ -138,6 +138,8 @@ class WelcomeScreenViewController(QtCore.QObject):
       tmp_project, tmp_db, tmp_pyssa_objects_model = result
       self._app_state.pyssa_objects_model = tmp_pyssa_objects_model
       self._app_state.open_project(tmp_project, tmp_db)
+      self._app_state.status_bar_manager.show_permanent_message("", False)
+      self._app_state.status_bar_manager.show_temporary_message("Project loaded.")
 
     def on_error(exc):
       logger.exception("Failed to open project.", exc_info=exc)
@@ -148,6 +150,9 @@ class WelcomeScreenViewController(QtCore.QObject):
         "Failed to open project",
         f"Could not open the project:\n{exc}",
       )
+      self._app_state.status_bar_manager.show_error_message(
+        "Failed to open project", True
+      )
 
     (
       thread_runtime.get_singleton_thread_runtime()
@@ -156,6 +161,9 @@ class WelcomeScreenViewController(QtCore.QObject):
       .on_error(on_error)
     )
     self._view.close()
+    self._app_state.status_bar_manager.show_permanent_message(
+      "Loading project ...", True
+    )
 
   def _create_new_project(self):
     self._create_project_controller = create_project_view_controller.CreateProjectViewController(
