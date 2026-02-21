@@ -127,19 +127,9 @@ class MainWindowController:
         # self.protein_model.add_protein(self._user_pymol.get_cmd_module().get_model())
         # self._setup_statusbar()
         # self._init_generic_help_context_menus()
-        self._init_main_window()
         self._setup_application_settings()
 
     # <editor-fold desc="Private methods">
-    def _init_main_window(self) -> None:
-        """Sets up the main window."""
-        self._set_models_to_views()
-
-    def _set_models_to_views(self) -> None:
-        """Sets all models to their corresponding views."""
-        # self._main_window.side_panel_molecule_objects.tree_view.setModel(self.protein_model)
-        pass
-
     def _connect_all_signals_with_their_slots(self) -> None:
         """Connects all relevant widget signals with their appropriate slots."""
         # self._main_window.dialogClosed.connect(self.__slot_close_application)
@@ -150,11 +140,9 @@ class MainWindowController:
         self._main_window.action_delete_project.triggered.connect(self.__slot_delete_project)
         # self._main_window.action_import_project.triggered.connect(self.__slot_import_project)
         # self._main_window.action_export_project.triggered.connect(self.__slot_export_current_project)
-        # self._main_window.action_close_project.triggered.connect(self.__slot_close_project)
+        self._main_window.action_close_project.triggered.connect(self.__slot_close_project)
         # TODO: Add the right slot method! ;)
         # self._main_window.action_exit_application.triggered.connect(self.)
-
-
 
         # # <editor-fold desc="Session ribbon slots">
         # # <editor-fold desc="Session slots">
@@ -535,6 +523,14 @@ class MainWindowController:
         self._dialog_controllers["create_project"].restore_default_view()
         self._dialog_controllers["create_project"].get_view().show()
 
+    def __slot_open_project(self):
+        if not self._dialog_controllers.__contains__("open_project"):
+            self._dialog_controllers["open_project"] = open_project_view_controller.OpenProjectViewController(
+                self._app_state
+            )
+        self._dialog_controllers["open_project"].restore_default_view()
+        self._dialog_controllers["open_project"].get_view().show()
+
     def __slot_delete_project(self):
         if not self._dialog_controllers.__contains__("delete_project"):
             from src.pyssa.controller import delete_project_view_controller
@@ -553,16 +549,12 @@ class MainWindowController:
         self._dialog_controllers["use_project"].restore_default_view()
         self._dialog_controllers["use_project"].get_view().show()
 
-    def __slot_open_project(self):
-        if not self._dialog_controllers.__contains__("open_project"):
-            self._dialog_controllers["open_project"] = open_project_view_controller.OpenProjectViewController(
-                self._app_state
-            )
-        self._dialog_controllers["open_project"].restore_default_view()
-        self._dialog_controllers["open_project"].get_view().show()
+    # TODO: Add the import and export slot method here
 
     def __slot_close_project(self):
-        pass
+        if self._app_state.has_open_project():
+            self._app_state.close_project()
+            self._user_pymol.get_cmd_module().reinitialize()
 
     # <editor-fold desc="Left side panel slots">
     def __slot_close_left_side_panel(self) -> None:
