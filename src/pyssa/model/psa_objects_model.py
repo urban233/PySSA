@@ -56,9 +56,16 @@ from src.pyssa.model.protein_subtree_mixin import (
   TYPE_PROTEIN_PAIR,
   TYPE_SEQUENCE,
   TYPE_SECTION,
+  TYPE_HEADER,
+  TYPE_SCENE,
+  TYPE_CHAIN,
+  TYPE_RESIDUE,
+  TYPE_ATOM,
   LABEL_SEQUENCES,
   LABEL_PROTEINS,
   LABEL_PROTEIN_PAIRS,
+  LABEL_SCENES,
+  LABEL_CHAINS,
 )
 from src.pyssa.model import psa_sequence_model
 from src.pyssa.model import psa_protein_model
@@ -371,6 +378,85 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
   def get_protein_pairs_section_index(self) -> QtCore.QModelIndex:
     """Return the model index of the "Protein Pairs" section node."""
     return self.indexFromItem(self._protein_pairs_section)
+
+  # ------------------------------------------------------------------
+  # Public API — PyMOL selection string construction
+  # ------------------------------------------------------------------
+
+  def construct_selection_string(self, a_model_index: QtCore.QModelIndex) -> str:
+    """Build a PyMOL selection expression from a tree node.
+
+    Walks the node's ``TYPE_ROLE`` and its ancestors to produce a valid
+    PyMOL selection string.  The returned string is suitable for use with
+    ``cmd.select("sele", <string>)``.
+
+    Supported node types and their resulting formats:
+
+    * ``TYPE_PROTEIN`` / ``TYPE_PROTEIN_PAIR``
+        → ``"<molecule_object_name>"``
+    * ``TYPE_CHAIN``
+        → ``"(<protein> and chain <letter>)"``
+    * ``TYPE_RESIDUE``
+        → ``"(<protein> and chain <letter> and resi <number>)"``
+    * ``TYPE_ATOM``
+        → ``"(<protein> and chain <letter> and resi <number> and name <atom>)"``
+
+    All other node types (sections, headers, scenes, sequences) return an
+    empty string because they have no direct PyMOL 3-D representation.
+
+    Args:
+        a_model_index: Index of a node in this model.
+
+    Returns:
+        A PyMOL selection expression, or ``""`` for non-selectable node types.
+
+    Raises:
+        exception.IllegalArgumentError: If ``a_model_index`` is ``None``.
+    """
+    if a_model_index is None:
+      logger.error("a_model_index is None.")
+      raise exception.IllegalArgumentError("a_model_index is None.")
+
+    node_type = a_model_index.data(enums.ModelEnum.TYPE_ROLE)
+
+    if node_type == TYPE_PROTEIN:
+      return f"/{a_model_index.data(QtCore.Qt.ItemDataRole.DisplayRole)}"
+
+    if node_type == TYPE_PROTEIN_PAIR:
+      pair_object = a_model_index.data(enums.ModelEnum.OBJECT_ROLE)
+      if pair_object is not None:
+        return (
+          f"/{pair_object.protein_1.get_molecule_object()} or "
+          f"/{pair_object.protein_2.get_molecule_object()}"
+        )
+      return f"/{a_model_index.data(QtCore.Qt.ItemDataRole.DisplayRole)}"
+
+    if node_type == TYPE_CHAIN:
+      # Chain → parent is "Chains" header → parent is protein node.
+      protein_index = a_model_index.parent().parent()
+      protein_name = protein_index.data(QtCore.Qt.ItemDataRole.DisplayRole)
+      chain_letter = a_model_index.data(QtCore.Qt.ItemDataRole.DisplayRole)
+      return f"/{protein_name}//{chain_letter}"
+
+    if node_type == TYPE_RESIDUE:
+      chain_index = a_model_index.parent()
+      protein_index = chain_index.parent().parent()
+      protein_name = protein_index.data(QtCore.Qt.ItemDataRole.DisplayRole)
+      chain_letter = chain_index.data(QtCore.Qt.ItemDataRole.DisplayRole)
+      resi = a_model_index.data(QtCore.Qt.ItemDataRole.DisplayRole).split(" - ")[0]
+      return f"/{protein_name}//{chain_letter}/{resi}"
+
+    if node_type == TYPE_ATOM:
+      residue_index = a_model_index.parent()
+      chain_index = residue_index.parent()
+      protein_index = chain_index.parent().parent()
+      protein_name = protein_index.data(QtCore.Qt.ItemDataRole.DisplayRole)
+      chain_letter = chain_index.data(QtCore.Qt.ItemDataRole.DisplayRole)
+      resi = residue_index.data(QtCore.Qt.ItemDataRole.DisplayRole).split(" - ")[0]
+      atom_name = a_model_index.data(QtCore.Qt.ItemDataRole.DisplayRole)
+      return f"/{protein_name}//{chain_letter}/{resi}/{atom_name}"
+
+    return ""
 
   # ------------------------------------------------------------------
   # Private helpers

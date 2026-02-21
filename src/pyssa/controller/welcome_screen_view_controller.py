@@ -19,13 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the open project view controller."""
+"""Module for the welcome screen view controller."""
 import logging
 
 from src.pyssa.gui import app_state
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import Qt
-from src.pyssa.gui.ui.views import open_project_view
+from src.pyssa.gui.ui.views import welcome_screen_view
 from src.pyssa.model import psa_objects_model
 from src.pyssa.util import ui_util, exception
 from src.pyssa.logging_pyssa import log_levels, log_handlers
@@ -37,7 +37,7 @@ logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 
-class OpenProjectViewController(QtCore.QObject):
+class WelcomeScreenViewController(QtCore.QObject):
   """Controller for the Open Project dialog."""
 
   def __init__(self, the_app_state: "app_state.AppState") -> None:
@@ -48,7 +48,7 @@ class OpenProjectViewController(QtCore.QObject):
     """
     super().__init__()
     self._app_state = the_app_state
-    self._view = open_project_view.OpenProjectView()
+    self._view = welcome_screen_view.WelcomeScreenView()
     self._fill_projects_list_view()
     self._project_names = self._convert_model_into_set()
     self._connect_all_ui_elements_to_slot_functions()
@@ -63,10 +63,6 @@ class OpenProjectViewController(QtCore.QObject):
 
   def restore_default_view(self) -> None:
     """Restores the default UI."""
-    self._view.ui.label_28.hide()
-    self._view.ui.txt_open_search.setPlaceholderText("Search")
-    self._view.ui.txt_open_search.clear()
-    self._view.ui.txt_open_selected_project.clear()
     self._view.ui.btn_open_project.setEnabled(False)
     self._set_ui_loading(False)
 
@@ -86,11 +82,8 @@ class OpenProjectViewController(QtCore.QObject):
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their slot functions."""
-    self._view.ui.txt_open_search.textChanged.connect(self._validate_open_search)
-    self._view.ui.projects_list_view.clicked.connect(self._select_project_from_open_list)
-    self._view.ui.txt_open_selected_project.textChanged.connect(self._activate_open_button)
-    self._view.ui.btn_open_project.clicked.connect(self._open_selected_project)
     self._view.ui.projects_list_view.doubleClicked.connect(self._open_selected_project)
+    self._view.ui.btn_open_project.clicked.connect(self._open_selected_project)
     self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
 
   # ------------------------------------------------------------------
@@ -120,21 +113,6 @@ class OpenProjectViewController(QtCore.QObject):
       self._view.ui.txt_open_selected_project,
     )
 
-  def _select_project_from_open_list(self) -> None:
-    """Copies the clicked project name into the selection text box."""
-    tmp_project_name = self._view.ui.projects_list_view.model().data(
-      self._view.ui.projects_list_view.currentIndex(),
-      Qt.DisplayRole,
-    )
-    logger.log(
-      log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-      f"Project '{tmp_project_name}' selected from list.",
-    )
-    try:
-      self._view.ui.txt_open_selected_project.setText(tmp_project_name)
-    except AttributeError:
-      self._view.ui.txt_open_selected_project.setText("")
-
   def _activate_open_button(self) -> None:
     """Enables the Open button when a project name is present."""
     has_selection = bool(self._view.ui.txt_open_selected_project.text())
@@ -142,7 +120,7 @@ class OpenProjectViewController(QtCore.QObject):
 
   def _open_selected_project(self) -> None:
     """Starts the async project load and closes the dialog on success."""
-    project_name = self._view.ui.txt_open_selected_project.text()
+    project_name = self._view.ui.projects_list_view.currentIndex().data(Qt.DisplayRole)
     db_path = str(self._app_state.workspace.construct_project_db_path(project_name))
     logger.log(
       log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -198,7 +176,6 @@ class OpenProjectViewController(QtCore.QObject):
   def _set_ui_loading(self, loading: bool) -> None:
     self._view.ui.btn_open_project.setEnabled(not loading)
     self._view.ui.projects_list_view.setEnabled(not loading)
-    self._view.ui.txt_open_search.setEnabled(not loading)
 
 
 class _ProgressCallable:

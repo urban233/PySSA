@@ -36,10 +36,15 @@ from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtGui
 
-from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, pyssa_objects_panel_controller
+from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, pyssa_objects_panel_controller, selection_handler
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import constants, enums, tools, main_window_util
 from src.pyssa.gui import main_window, app_state
+from src.pyssa.gui.ui.custom_context_menus import (
+    sequence_list_context_menu,
+    protein_tree_context_menu,
+    protein_pair_tree_context_menu,
+)
 from src.pyssa.internal.pymol import pml_worker
 
 logger = logging.getLogger(__file__)
@@ -80,6 +85,9 @@ class MainWindowController:
             self._user_pymol
         )
         self.feedback_timer = QtCore.QTimer()
+        self._sequence_context_menu = sequence_list_context_menu.SequenceListContextMenu()
+        self._protein_context_menu = protein_tree_context_menu.ProteinTreeContextMenu()
+        self._protein_pair_context_menu = protein_pair_tree_context_menu.ProteinPairTreeContextMenu()
         # self.custom_progress_signal = custom_signals.ProgressSignal()
         # self.abort_signal = custom_signals.AbortSignal()
         # self.thread_pool = QtCore.QThreadPool()
@@ -300,8 +308,18 @@ class MainWindowController:
         # # </editor-fold>
 
         # # </editor-fold>
-        self._main_window.pyssa_objects_panel.tree_view.clicked.connect(
-            self.__slot_select_pymol_object
+        tree_view = self._main_window.pyssa_objects_panel.tree_view
+        tree_view.setContextMenuPolicy(
+            QtCore.Qt.ContextMenuPolicy.CustomContextMenu
+        )
+        tree_view.selectionModel().selectionChanged.connect(
+            self.__slot_on_project_tree_selection_changed
+        )
+        tree_view.doubleClicked.connect(
+            self.__slot_on_tree_double_clicked
+        )
+        tree_view.customContextMenuRequested.connect(
+            self.__slot_show_tree_context_menu
         )
         # </editor-fold>
         # self.feedback_timer.setSingleShot(True)
@@ -551,18 +569,84 @@ class MainWindowController:
 
     # </editor-fold>
 
-    # <editor-fold desc="Protein structure panel">
-    def __slot_select_pymol_object(self) -> None:
-        selected_indexes = self._main_window.pyssa_objects_panel.tree_view.selectionModel().selectedIndexes()
-        selection_strings = []
-        for idx in selected_indexes:
-            selection_strings.append(
-                self._main_window.pyssa_objects_panel.tree_view.model().construct_selection_string(
-                    idx
-                )
+    # <editor-fold desc="Project tree selection handling">
+    def __slot_on_project_tree_selection_changed(
+        self,
+        selected: QtCore.QItemSelection,
+        deselected: QtCore.QItemSelection,
+    ) -> None:
+        """Respond to a changed item selection in the project QTreeView.
+
+        Delegates all classification, handler dispatch, and UI state
+        management to :func:`selection_handler.on_project_tree_selection_changed`.
+
+        Args:
+            selected: Newly selected items in this signal emission.
+            deselected: Items deselected in this emission.
+        """
+        selection_handler.on_project_tree_selection_changed(
+            self, selected, deselected,
+        )
+
+    def __slot_on_tree_double_clicked(
+        self, index: QtCore.QModelIndex,
+    ) -> None:
+        """Handle a double-click on a node in the project QTreeView.
+
+        Delegates to :func:`selection_handler.on_tree_double_clicked` which
+        opens the sequence viewer for sequences and loads the PyMOL session
+        for proteins and protein pairs.
+
+        Args:
+            index: The ``QModelIndex`` that was double-clicked.
+        """
+        selection_handler.on_tree_double_clicked(self, index)
+
+    def __slot_show_tree_context_menu(
+        self, position: QtCore.QPoint,
+    ) -> None:
+        """Display the appropriate context menu for a right-click in the tree.
+
+        Determines the node type of the clicked item and shows the
+        corresponding context menu (sequence, protein, or protein pair).
+
+        Args:
+            position: The widget-relative position of the right-click.
+        """
+        tree_view = self._main_window.pyssa_objects_panel.tree_view
+        index = tree_view.indexAt(position)
+        if not index.isValid():
+            return
+
+        node_type = index.data(enums.ModelEnum.TYPE_ROLE)
+        from src.pyssa.model.protein_subtree_mixin import (
+            TYPE_SEQUENCE,
+            TYPE_PROTEIN,
+            TYPE_PROTEIN_PAIR,
+        )
+
+        if node_type == TYPE_SEQUENCE:
+            menu = self._sequence_context_menu.get_context_menu(
+                tree_view.selectionModel().selectedIndexes(),
             )
-        combined_selection_string = " or ".join(selection_strings)
-        self._user_pymol.get_cmd_module().select("sele", combined_selection_string, enable=1)
+            menu.exec(tree_view.viewport().mapToGlobal(position))
+        elif node_type == TYPE_PROTEIN:
+            menu = self._protein_context_menu.get_context_menu(
+                tree_view.selectionModel().selectedIndexes(),
+                the_type="protein",
+                is_protein_in_any_pair_flag=False,
+                is_protein_in_session_flag=True,
+                is_protein_expanded=tree_view.isExpanded(index),
+                is_database_thread_running=False,
+            )
+            menu.exec(tree_view.viewport().mapToGlobal(position))
+        elif node_type == TYPE_PROTEIN_PAIR:
+            menu = self._protein_pair_context_menu.get_context_menu(
+                tree_view.selectionModel().selectedIndexes(),
+                is_protein_pair_in_current_session_flag=True,
+                is_protein_pair_expanded=tree_view.isExpanded(index),
+            )
+            menu.exec(tree_view.viewport().mapToGlobal(position))
 
     # </editor-fold>
 

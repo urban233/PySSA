@@ -38,10 +38,10 @@ from pymol.Qt.utils import MainThreadCaller
 from pmg_qt.pymol_gl_widget import PyMOLGLWidget
 from pmg_qt import keymapping
 
-from src.pyssa.controller import main_window_controller
+from src.pyssa.controller import main_window_controller, welcome_screen_view_controller
 from src.pyssa.gui import user_pymol
 
-from src.pyssa.gui.ui.views import pyssa_objects_panel
+from src.pyssa.gui.ui.views import pyssa_objects_panel, welcome_screen_view
 
 from src.pyssa.gui.ui.styles.icon_manager import IconManager
 from src.pyssa.gui.qt import QtCore
@@ -347,7 +347,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
       list(self.viewer_toolbar_actions.values()),
       self.pymolwidget, self
     )
-    self.pymolwidget.cmd.fetch("3bmp")
+
     self.tool_window_layout.set_right_panel_hidden(True)
     self.tool_window_layout.set_bottom_panel_hidden(True)
     # Register panels in ToolWindowLayout in enum order
@@ -674,6 +674,12 @@ def exec_app():
   pymol.cmd.set("internal_feedback", 0)
 
   window.show()
+
+  welcome = welcome_screen_view_controller.WelcomeScreenViewController(
+    controller._app_state
+  )
+  welcome.get_view().exec()
+
   # window.raise_()
   #
   # # window size according to -W -H options

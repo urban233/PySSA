@@ -76,6 +76,7 @@ class UseProjectViewController(QtCore.QObject):
     self._initialize_ui()
     self._fill_projects_list_view()
     self._fill_projects_combobox()
+    self._set_ui_loading(False)
 
   def _open_help_for_dialog(self) -> None:
     """Opens the help dialog for the corresponding dialog."""

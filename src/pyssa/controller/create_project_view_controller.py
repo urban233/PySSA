@@ -93,6 +93,7 @@ class CreateProjectViewController(QtCore.QObject):
     # self._view.ui.cb_new_add_reference.setCheckState(False)
     self._view.ui.txt_new_choose_reference.clear()
     self._hide_add_protein_options()
+    self._set_ui_loading(False)
 
   def _fill_projects_list_view(self) -> None:
     """Lists all projects."""
