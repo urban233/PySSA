@@ -11,8 +11,6 @@ Placing this logic here avoids duplicating it in both model classes while
 keeping each model class focused on its own domain.
 """
 from typing import Optional
-
-import zmq
 from chempy.models import Indexed
 
 from src.auxiliary_pymol import auxiliary_pymol_client
@@ -205,11 +203,6 @@ class ProteinSubtreeMixin:
         an_item_type_value=TYPE_CHAIN,
         an_item_object_value=chain_object,
       )
-      if chain_object is not None:
-        chain_node.setData(
-          chain_object.pymol_parameters[enums.PymolParameterEnum.COLOR.value],
-          enums.ModelEnum.CHAIN_COLOR_ROLE,
-        )
 
       sorted_residues = sorted(
         residues.items(),

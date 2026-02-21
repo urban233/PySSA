@@ -63,7 +63,7 @@ from src.pyssa.model.protein_subtree_mixin import (
 from src.pyssa.model import psa_sequence_model
 from src.pyssa.model import psa_protein_model
 from src.pyssa.model import psa_protein_pair_model
-from src.pyssa.internal.data_structures import protein, protein_pair
+from src.pyssa.internal.data_structures import protein, protein_pair, project
 from src.pyssa.util import enums, exception
 
 logger = logging.getLogger(__file__)
@@ -115,37 +115,27 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
 
   def build_model(
           self,
-          the_sequences: list[SeqRecord],
-          the_protein_objects: list["protein.Protein"],
-          the_protein_pair_objects: list["protein_pair.ProteinPair"]
+          the_project: "project.Project",
   ) -> None:
     """Populate the model from all project data in one call.
 
     Args:
-        the_sequences: Amino acid sequence SeqRecords to add under "Sequences".
-        the_protein_objects: Standalone proteins to add under "Proteins".
-        the_protein_pair_objects: Protein pairs to add under "Protein Pairs".
+        the_project: The project that contains all PySSA objects.
 
     Raises:
         exception.IllegalArgumentError: If any argument is ``None``.
     """
-    if the_sequences is None:
-      logger.error("the_sequences is None.")
-      raise exception.IllegalArgumentError("the_sequences is None.")
-    if the_protein_objects is None:
-      logger.error("the_protein_objects is None.")
-      raise exception.IllegalArgumentError("the_protein_objects is None.")
-    if the_protein_pair_objects is None:
-      logger.error("the_protein_pair_objects is None.")
-      raise exception.IllegalArgumentError("the_protein_pair_objects is None.")
+    if the_project is None:
+      logger.error("the_project is None.")
+      raise exception.IllegalArgumentError("the_project is None.")
 
-    for sequence in the_sequences:
+    for sequence in the_project.sequences:
       self.add_sequence(sequence.name)
 
-    for tmp_protein in the_protein_objects:
+    for tmp_protein in the_project.proteins:
       self.add_protein(tmp_protein)
 
-    for tmp_pair in the_protein_pair_objects:
+    for tmp_pair in the_project.protein_pairs:
       self.add_protein_pair(tmp_pair)
 
   # ------------------------------------------------------------------

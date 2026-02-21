@@ -25,9 +25,8 @@ Authors: Martin Urban, Hannah Kullik
 
 Version: 1.4.0
 """
-from pyssa.controller import interface_manager
-from pyssa.gui.ui.views import pyssa_objects_panel
-from src.pyssa.gui import user_pymol
+from src.pyssa.gui.ui.views import pyssa_objects_panel
+from src.pyssa.gui import user_pymol, app_state
 from src.pyssa.gui.qt import QtCore, QtWidgets
 
 
@@ -36,16 +35,15 @@ class PySSAObjectsPanelController:
 
   def __init__(
           self,
+          the_app_state: "app_state.AppState",
           a_pyssa_objects_panel: "pyssa_objects_panel.PySSAObjectsPanel",
-          an_interface_manager: "interface_manager.InterfaceManager",
           a_user_pymol: "user_pymol.UserPyMOL"
   ):
     """Constructor."""
     # <editor-fold desc="Instance attributes">
     self._panel = a_pyssa_objects_panel
-    self._interface_manager = an_interface_manager
     self._user_pymol: "user_pymol.UserPyMOL" = a_user_pymol
-    self._model = self._interface_manager.get_pyssa_objects_model()
+    self._model = the_app_state.pyssa_objects_model
     # </editor-fold>
     self._set_model()
     self._connect_signals()
