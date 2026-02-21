@@ -38,7 +38,9 @@ class CreateProjectViewController(QtCore.QObject):
   """Class for the CreateProjectViewController."""
 
   def __init__(
-      self, the_app_state: "app_state.AppState"
+          self,
+          the_app_state: "app_state.AppState",
+          a_parent=None
   ) -> None:
     """Constructor.
 
@@ -57,7 +59,7 @@ class CreateProjectViewController(QtCore.QObject):
 
     super().__init__()
     self._app_state = the_app_state
-    self._view = create_project_view.CreateProjectView()
+    self._view = create_project_view.CreateProjectView(a_parent)
     self.restore_default_view()
     self._project_names: set = self._convert_model_into_set()
     self._connect_all_ui_elements_to_slot_functions()

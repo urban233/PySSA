@@ -22,8 +22,9 @@
 """Module for the welcome screen view controller."""
 import logging
 
-from src.pyssa.gui import app_state
-from src.pyssa.gui.qt import QtCore
+from src.pyssa.controller import create_project_view_controller
+from src.pyssa.gui import app_state, main_window
+from src.pyssa.gui.qt import QtCore, QtWidgets
 from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.ui.views import welcome_screen_view
 from src.pyssa.model import psa_objects_model
@@ -40,7 +41,11 @@ __docformat__ = "google"
 class WelcomeScreenViewController(QtCore.QObject):
   """Controller for the Open Project dialog."""
 
-  def __init__(self, the_app_state: "app_state.AppState") -> None:
+  def __init__(
+          self,
+          the_main_window: "main_window.MainWindow",
+          the_app_state: "app_state.AppState"
+  ) -> None:
     """Constructor.
 
     Args:
@@ -48,7 +53,7 @@ class WelcomeScreenViewController(QtCore.QObject):
     """
     super().__init__()
     self._app_state = the_app_state
-    self._view = welcome_screen_view.WelcomeScreenView()
+    self._view = welcome_screen_view.WelcomeScreenView(the_main_window)
     self._fill_projects_list_view()
     self._project_names = self._convert_model_into_set()
     self._connect_all_ui_elements_to_slot_functions()
@@ -63,8 +68,8 @@ class WelcomeScreenViewController(QtCore.QObject):
 
   def restore_default_view(self) -> None:
     """Restores the default UI."""
-    self._view.ui.btn_open_project.setEnabled(False)
     self._set_ui_loading(False)
+    self._view.ui.btn_open_project.setEnabled(False)
 
   def _fill_projects_list_view(self) -> None:
     """Lists all projects from the workspace model."""
@@ -83,6 +88,8 @@ class WelcomeScreenViewController(QtCore.QObject):
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their slot functions."""
     self._view.ui.projects_list_view.doubleClicked.connect(self._open_selected_project)
+    self._view.ui.projects_list_view.clicked.connect(self._activate_open_button)
+    self._view.ui.btn_new_project.clicked.connect(self._create_new_project)
     self._view.ui.btn_open_project.clicked.connect(self._open_selected_project)
     self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
 
@@ -94,28 +101,9 @@ class WelcomeScreenViewController(QtCore.QObject):
     """Opens the help page for this dialog."""
     logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
 
-  def _validate_open_search(self, the_entered_text: str) -> None:
-    """Filters the project list as the user types.
-
-    Args:
-        the_entered_text: The text currently in the search box.
-
-    Raises:
-        exception.IllegalArgumentError: If the_entered_text is None.
-    """
-    if the_entered_text is None:
-      logger.error("the_entered_text is None.")
-      raise exception.IllegalArgumentError("the_entered_text is None.")
-
-    ui_util.select_matching_string_in_q_list_view(
-      self._view.ui.txt_open_search.text(),
-      self._view.ui.projects_list_view,
-      self._view.ui.txt_open_selected_project,
-    )
-
   def _activate_open_button(self) -> None:
     """Enables the Open button when a project name is present."""
-    has_selection = bool(self._view.ui.txt_open_selected_project.text())
+    has_selection = bool(self._view.ui.projects_list_view.selectionModel().hasSelection())
     self._view.ui.btn_open_project.setEnabled(has_selection)
 
   def _open_selected_project(self) -> None:
@@ -167,6 +155,16 @@ class WelcomeScreenViewController(QtCore.QObject):
       .on_success(on_success)
       .on_error(on_error)
     )
+    self._view.close()
+
+  def _create_new_project(self):
+    self._create_project_controller = create_project_view_controller.CreateProjectViewController(
+      self._app_state, self._view
+    )
+    self._create_project_controller.restore_default_view()
+    self._create_project_controller.get_view().exec()
+    # TODO: Fix the issue with the cancel of the create project dialog
+    # also closes the welcome screen
     self._view.close()
 
   # ------------------------------------------------------------------

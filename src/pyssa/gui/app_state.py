@@ -188,6 +188,7 @@ class AppState:
 
     self._close_hot_db()
     self._project = None
+    self.clear_pyssa_objects_model()
     logger.info("Hot project closed.")
     self._on_state_changed()
 

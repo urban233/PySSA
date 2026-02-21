@@ -67,8 +67,8 @@ class OpenProjectViewController(QtCore.QObject):
     self._view.ui.txt_open_search.setPlaceholderText("Search")
     self._view.ui.txt_open_search.clear()
     self._view.ui.txt_open_selected_project.clear()
-    self._view.ui.btn_open_project.setEnabled(False)
     self._set_ui_loading(False)
+    self._view.ui.btn_open_project.setEnabled(False)
 
   def _fill_projects_list_view(self) -> None:
     """Lists all projects from the workspace model."""

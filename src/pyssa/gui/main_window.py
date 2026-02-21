@@ -675,11 +675,6 @@ def exec_app():
 
   window.show()
 
-  welcome = welcome_screen_view_controller.WelcomeScreenViewController(
-    controller._app_state
-  )
-  welcome.get_view().exec()
-
   # window.raise_()
   #
   # # window size according to -W -H options

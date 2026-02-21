@@ -32,7 +32,7 @@ import json
 from typing import Optional, Any
 from urllib import request
 
-import pywinctl
+# import pywinctl
 from Bio import SeqRecord
 from Bio.Seq import Seq
 

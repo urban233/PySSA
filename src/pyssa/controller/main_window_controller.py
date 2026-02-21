@@ -36,7 +36,8 @@ from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtGui
 
-from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, pyssa_objects_panel_controller, selection_handler
+from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, \
+    pyssa_objects_panel_controller, selection_handler, welcome_screen_view_controller
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import constants, enums, tools, main_window_util
 from src.pyssa.gui import main_window, app_state
@@ -103,6 +104,7 @@ class MainWindowController:
         # self._init_generic_help_context_menus()
         self._setup_application_settings()
         self.refresh_ui()
+        self.open_welcome_screen()
 
     # <editor-fold desc="Private methods">
     def _connect_all_signals_with_their_slots(self) -> None:
@@ -113,8 +115,8 @@ class MainWindowController:
         self._main_window.action_open_project.triggered.connect(self.__slot_open_project)
         self._main_window.action_use_project.triggered.connect(self.__slot_use_project)
         self._main_window.action_delete_project.triggered.connect(self.__slot_delete_project)
-        # self._main_window.action_import_project.triggered.connect(self.__slot_import_project)
-        # self._main_window.action_export_project.triggered.connect(self.__slot_export_current_project)
+        self._main_window.action_import_project.triggered.connect(self.__slot_import_project)
+        self._main_window.action_export_project.triggered.connect(self.__slot_export_current_project)
         self._main_window.action_close_project.triggered.connect(self.__slot_close_project)
         # TODO: Add the right slot method! ;)
         # self._main_window.action_exit_application.triggered.connect(self.)
@@ -392,6 +394,14 @@ class MainWindowController:
 
     # </editor-fold>
 
+    def open_welcome_screen(self):
+        if not self._dialog_controllers.__contains__("welcome_screen"):
+            self._dialog_controllers["welcome_screen"] = welcome_screen_view_controller.WelcomeScreenViewController(
+                self._main_window, self._app_state
+            )
+        self._dialog_controllers["welcome_screen"].restore_default_view()
+        self._dialog_controllers["welcome_screen"].get_view().show()
+
     def refresh_ui(self) -> None:
         """Sync every piece of the main window to the current AppState.
 
@@ -532,7 +542,144 @@ class MainWindowController:
         self._dialog_controllers["use_project"].restore_default_view()
         self._dialog_controllers["use_project"].get_view().show()
 
-    # TODO: Add the import and export slot method here
+    def __slot_import_project(self) -> None:
+        """Imports a project into the current workspace."""
+        try:
+            logger.info("Menu entry 'Project/Import' clicked.")
+            file_dialog = QtWidgets.QFileDialog()
+            desktop_path = QtCore.QDir.homePath()
+            file_dialog.setDirectory(desktop_path)
+            file_path, _ = file_dialog.getOpenFileName(
+                self._main_window,
+                "Select a project file to import",
+                "",
+                "Project Database File (*.db)",
+            )
+            if not file_path:
+                return
+            tmp_import_filepath = pathlib.Path(file_path)
+            tmp_project_name_input_dialog = QtWidgets.QInputDialog()
+            tmp_new_project_name, ok_pressed = tmp_project_name_input_dialog.getText(
+                self._main_window,
+                "Project Name",
+                "Enter A Project Name:",
+                text=tmp_import_filepath.name.replace(".db", ""),
+            )
+            if not ok_pressed or not tmp_new_project_name.strip():
+                return
+            tmp_new_project_name = tmp_new_project_name.strip()
+
+            db_path = str(self._app_state.workspace.construct_project_db_path(tmp_new_project_name))
+
+            from src.pyssa.io_pyssa.db_pyssa import ProjectDatabase
+            from src.pyssa.model import psa_objects_model
+            from src.pyssa.internal.thread.thread_api import thread_runtime
+
+            def import_project_task(progress_callback, is_cancelled):
+                shutil.copyfile(str(tmp_import_filepath), db_path)
+                
+                if is_cancelled():
+                    raise InterruptedError("Cancelled during project import.")
+
+                tmp_db = ProjectDatabase(db_path=db_path, project_id=tmp_new_project_name)
+                
+                # Assume the new project has an id of 1 in the freshly copied database.
+                tmp_db.update_project_name(tmp_new_project_name, 1)
+
+                from src.pyssa.internal.data_structures import project
+                tmp_project = project.Project(tmp_new_project_name, pathlib.Path(self._app_state.get_settings().workspace_path))
+                tmp_project.set_id(1)
+
+                if is_cancelled():
+                    tmp_db.close()
+                    raise InterruptedError("Cancelled after configuring project.")
+
+                tmp_pyssa_objects_model = psa_objects_model.PSAObjectsModel()
+                tmp_pyssa_objects_model.build_model(tmp_project)
+                return tmp_project, tmp_db, tmp_pyssa_objects_model
+
+            def on_success(result):
+                tmp_project, tmp_db, tmp_pyssa_objects_model = result
+                # self._app_state.pyssa_objects_model = tmp_pyssa_objects_model
+                # self._app_state.open_project(tmp_project, tmp_db)
+                self._app_state._build_workspace_model()
+                self.refresh_ui()
+
+            def on_error(exc):
+                logger.exception("Failed to import project.", exc_info=exc)
+                QtWidgets.QMessageBox.critical(
+                    self._main_window,
+                    "Failed to import project",
+                    f"Could not import the project:\n{exc}",
+                )
+
+            (
+                thread_runtime.get_singleton_thread_runtime()
+                .run(import_project_task)
+                .on_success(on_success)
+                .on_error(on_error)
+            )
+
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            QtWidgets.QMessageBox.critical(
+                self._main_window,
+                "Error",
+                "An unknown error occurred while importing!"
+            )
+
+
+    def __slot_export_current_project(self) -> None:
+        """Exports the current project to an importable format."""
+        try:
+            logger.info("Menu entry 'Project/Export' clicked.")
+            file_dialog = QtWidgets.QFileDialog()
+            desktop_path = QtCore.QDir.homePath()
+            file_dialog.setDirectory(desktop_path)
+            file_path, _ = file_dialog.getSaveFileName(
+                self._main_window,
+                "Export current project",
+                "",
+                "Project Database File (*.db)",
+            )
+            if file_path:
+                current_project_name = self._app_state.project.get_project_name()
+                db_path = str(self._app_state.workspace.construct_project_db_path(current_project_name))
+
+                from src.pyssa.internal.thread.thread_api import thread_runtime
+
+                def export_project_task(progress_callback, is_cancelled):
+                    shutil.copyfile(db_path, file_path)
+                    
+                def on_success(result):
+                    logger.info("Project exported successfully to %s", file_path)
+                    try:
+                        self._main_window.statusBar().showMessage("The project was successfully exported.", 3000)
+                    except Exception:
+                        pass
+                
+                def on_error(exc):
+                    logger.exception("Failed to export project.", exc_info=exc)
+                    QtWidgets.QMessageBox.critical(
+                        self._main_window,
+                        "Failed to export project",
+                        f"Could not export the project:\n{exc}",
+                    )
+
+                (
+                    thread_runtime.get_singleton_thread_runtime()
+                    .run(export_project_task)
+                    .on_success(on_success)
+                    .on_error(on_error)
+                )
+
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            QtWidgets.QMessageBox.critical(
+                self._main_window,
+                "Error",
+                "An unknown error occurred while exporting!"
+            )
 
     def __slot_close_project(self):
         if self._app_state.has_open_project():
