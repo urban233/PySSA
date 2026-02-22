@@ -48,7 +48,7 @@ from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.qt import QtGui
 
-from src.pyssa.gui.ui.custom_widgets import dropdown_menu, psa_color_config
+from src.pyssa.gui.ui.custom_widgets import dropdown_menu, psa_color_config, job_panel
 from src.pyssa.gui.ui.custom_widgets import color_grid
 from src.pyssa.gui.ui.custom_widgets import tool_window_layout
 from src.pyssa.gui.ui.custom_widgets import quick_access_bar
@@ -286,6 +286,14 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.color_grid_menu = dropdown_menu.DropDownMenu()
     self.color_grid_action = QtWidgets.QWidgetAction(None)
 
+    self.active_jobs = job_panel.JobPanel()
+    self.active_jobs_menu = dropdown_menu.DropDownMenu()
+    self.active_jobs_action = QtWidgets.QWidgetAction(None)
+
+    self.complete_jobs = job_panel.JobPanel()
+    self.complete_jobs_menu = dropdown_menu.DropDownMenu()
+    self.complete_jobs_action = QtWidgets.QWidgetAction(None)
+
     # <editor-fold desc="PyMOL OpenGL widget">
     # For thread-safe viewport command
     self.viewportsignal.connect(self.pymolviewport)
@@ -338,6 +346,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # self._setup_right_side_panels()
     # self._setup_bottom_panels()
     self._setup_color_grid()
+    self._setup_job_popups()
     self._central_widget = QtWidgets.QWidget()
     self._main_layout = QtWidgets.QVBoxLayout(self._central_widget)
     self._main_layout.setContentsMargins(4, 2, 4, 2)
@@ -452,6 +461,29 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     QMenuBar::item:pressed {
         background-color: #e5e7eb; /* Slightly darker gray when clicked */
     }
+    /* Disabled Menu Bar */
+    QMenuBar:disabled {
+        background-color: #ebecf0;
+        color: #9ca3af; /* Gray text */
+    }
+    
+    /* Disabled Menu Bar Items */
+    QMenuBar::item:disabled {
+        color: #9ca3af;              /* Medium gray text */
+        background-color: transparent;
+    }
+    
+    /* Disabled + Hover (prevents highlight when disabled) */
+    QMenuBar::item:disabled:selected {
+        background-color: transparent;
+        color: #9ca3af;
+    }
+    
+    /* Disabled + Pressed (safety override) */
+    QMenuBar::item:disabled:pressed {
+        background-color: transparent;
+        color: #9ca3af;
+    }
     """
     self.menuBar().setStyleSheet(modern_light_menu_style)
     tmp_menu_style = """
@@ -502,6 +534,12 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     """Sets up the color grid on the ribbon bar."""
     self.color_grid_action.setDefaultWidget(self.color_config)
     self.color_grid_menu.addAction(self.color_grid_action)
+
+  def _setup_job_popups(self):
+    self.active_jobs_action.setDefaultWidget(self.active_jobs)
+    self.active_jobs_menu.addAction(self.active_jobs_action)
+    self.complete_jobs_action.setDefaultWidget(self.complete_jobs)
+    self.complete_jobs_menu.addAction(self.complete_jobs_action)
 
   def _setup_left_side_panels(self) -> None:
     """Sets up the left side panel."""

@@ -38,9 +38,12 @@ from src.pyssa.gui.qt import QtGui
 
 from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, \
     pyssa_objects_panel_controller, selection_handler, welcome_screen_view_controller, help_panel_controller, \
-    status_bar_manager
+    status_bar_manager, job_popup_controller
+from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.gui.ui.custom_filters import help_event_filter
-from src.pyssa.logging_pyssa import log_handlers
+from src.pyssa.gui.ui.dialogs import dialog_about
+from src.pyssa.logging_pyssa import log_handlers, log_levels
+from src.pyssa.model import job_model
 from src.pyssa.util import constants, enums, tools, main_window_util
 from src.pyssa.gui import main_window, app_state
 from src.pyssa.gui.ui.custom_context_menus import (
@@ -84,6 +87,15 @@ class MainWindowController:
             self._main_window,
             self._main_window.help_panel
         )
+        self._jobs_model = job_model.JobModel()
+        self._active_jobs_controller = job_popup_controller.JobPopupController(
+            self._main_window.active_jobs, self._jobs_model
+        )
+        self._active_jobs_controller.show_active_jobs()
+        self._complete_jobs_controller = job_popup_controller.JobPopupController(
+            self._main_window.complete_jobs, self._jobs_model
+        )
+        self._complete_jobs_controller.show_completed_jobs()
         self.feedback_timer = QtCore.QTimer()
         self._sequence_context_menu = sequence_list_context_menu.SequenceListContextMenu()
         self._protein_context_menu = protein_tree_context_menu.ProteinTreeContextMenu()
@@ -127,6 +139,10 @@ class MainWindowController:
         # TODO: Add the right slot method! ;)
         # self._main_window.action_exit_application.triggered.connect(self.)
         self._main_window.action_documentation.triggered.connect(self.__slot_toggle_help_panel)
+        self._main_window.action_show_log_in_explorer.triggered.connect(self.__slot_open_logs)
+        self._main_window.action_clear_logs.triggered.connect(self.__slot_clear_all_log_files)
+        # TODO: Add connection for the demo project action in the help menu
+        self._main_window.action_about.triggered.connect(self.__slot_open_about)
 
         # # <editor-fold desc="Session ribbon slots">
         # # <editor-fold desc="Session slots">
@@ -315,6 +331,13 @@ class MainWindowController:
         # )
         # # </editor-fold>
         # # </editor-fold>
+
+        self._main_window.viewer_toolbar_actions.get("running_jobs").get_action().triggered.connect(
+            self.__slot_open_active_jobs_popup
+        )
+        self._main_window.viewer_toolbar_actions.get("notifications").get_action().triggered.connect(
+            self.__slot_open_completed_jobs_popup
+        )
 
         # # </editor-fold>
         tree_view = self._main_window.pyssa_objects_panel.tree_view
@@ -816,22 +839,9 @@ class MainWindowController:
     # </editor-fold>
 
     # # <editor-fold desc="Scene slots">
-    def _save_a_scene(self, scene_name: str):
-        pass
-
     def __slot_save_scene(self) -> None:
       """Saves a pymol scene."""
-      text, ok_pressed = QtWidgets.QInputDialog.getText(
-        self._main_window,
-        "Save Scene",
-        "Enter scene name:",
-        # QtWidgets.QLineEdit,
-        # ""
-      )
-      if ok_pressed and text != '':
-        self._user_pymol.get_cmd_module().scene(key=text, action="store")
-        tmp_image_filepath = self._save_a_scene(text)
-        self._main_window.side_panel_pymol_scenes.scenes_list.add_scene(text, pathlib.Path(tmp_image_filepath))
+      self._user_pymol.get_cmd_module().scene(key="new", action="append")
 
     def __slot_recall_scene(self, an_item) -> None:
       """Recalls an already created PyMOL scene."""
@@ -1159,6 +1169,98 @@ class MainWindowController:
                 for _, tmp_atom in residue_atom_map[tmp_key]:
                     selection_model.select(tmp_atom, selection_model.Select | selection_model.Rows)
 
+    # </editor-fold>
+
+    def __slot_open_active_jobs_popup(self):
+        self._main_window.active_jobs_menu.exec(
+            self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("running_jobs"))
+        )
+
+    def __slot_open_completed_jobs_popup(self):
+        self._main_window.complete_jobs_menu.exec(
+            self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("notifications"))
+        )
+
+    # <editor-fold desc="Help menu">
+    def __slot_open_logs(self) -> None:
+        """Opens a file explorer with all log files and can open a log file in the default application."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Help/Show Logs in Explorer' clicked.",
+            )
+            file_dialog = QtWidgets.QFileDialog()
+            log_path = str(constants.LOG_PATH)
+            file_dialog.setDirectory(log_path)
+            file_path, _ = file_dialog.getOpenFileName(
+                self._main_window, "Select a log file to open", "", "LOG File (*.log)"
+            )
+            if file_path:
+                os.startfile(file_path)
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+
+    def __slot_clear_all_log_files(self) -> None:
+        """Clears all log files generated under .pyssa/logs."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Help/Clear All Logs' clicked.",
+            )
+            tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+                "Are you sure you want to delete all log files?",
+                "Clear Log Files",
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
+            )
+            tmp_dialog.exec()
+            if tmp_dialog.response:
+                try:
+                    shutil.rmtree(str(constants.LOG_PATH))
+                except PermissionError:
+                    print("The active log file was not deleted.")
+                if len(os.listdir(str(constants.LOG_PATH))) == 1:
+                    # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    #     "All log files could be deleted.", "Clear Log Files",
+                    #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                    # )
+                    # tmp_dialog.exec_()
+                    self._status_bar_manager.show_temporary_message(
+                        "All log files could be deleted."
+                    )
+                    constants.PYSSA_LOGGER.info("All log files were deleted.")
+                else:
+                    tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                        "Not all log files could be deleted.",
+                        "Clear Log Files",
+                        custom_message_box.CustomMessageBoxIcons.WARNING.value,
+                    )
+                    tmp_dialog.exec()
+                    constants.PYSSA_LOGGER.warning("Not all log files were deleted!")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+
+    # TODO: Add here the slot method for getting the demo projects
+
+    def __slot_open_about(self) -> None:
+        """Opens the About dialog."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Help/About' clicked.",
+            )
+            dialog = dialog_about.DialogAbout()
+            dialog.exec()
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
     # </editor-fold>
 
     # </editor-fold>

@@ -9,12 +9,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from src.pyssa.gui.qt import QtWidgets, QtCore, Qt
-from src.pyssa.model.job_model import (
-  JobModel,
-  ActiveJobsProxyModel,
-  CompletedJobsProxyModel,
-)
+from src.pyssa.gui.qt import QtWidgets, QtCore
 
 
 class JobPanel(QtWidgets.QWidget):
@@ -27,21 +22,13 @@ class JobPanel(QtWidgets.QWidget):
 
   def __init__(
       self,
-      model: JobModel,
       parent: Optional[QtWidgets.QWidget] = None,
   ) -> None:
-    super().__init__(parent, Qt.Popup | Qt.FramelessWindowHint)
-    if model is None:
-      raise ValueError("model must not be None")
-
-    self._model = model
-    self._active_proxy = ActiveJobsProxyModel(self)
-    self._active_proxy.setSourceModel(model)
-    self._completed_proxy = CompletedJobsProxyModel(self)
-    self._completed_proxy.setSourceModel(model)
-
+    super().__init__(parent)
+    self._lbl_jobs = QtWidgets.QLabel("Active Jobs")
+    self._table_view = self._create_table_view()
     self._build_ui()
-    self.setMinimumSize(520, 320)
+    self.setMinimumSize(450, 250)
 
   # ------------------------------------------------------------------
   # UI construction
@@ -53,19 +40,9 @@ class JobPanel(QtWidgets.QWidget):
     layout.setContentsMargins(8, 8, 8, 8)
     layout.setSpacing(6)
 
-    active_label = QtWidgets.QLabel("Active Jobs")
-    active_label.setStyleSheet("font-weight: bold; font-size: 12px;")
-    layout.addWidget(active_label)
-
-    self._active_view = self._create_table_view(self._active_proxy)
-    layout.addWidget(self._active_view, stretch=1)
-
-    completed_label = QtWidgets.QLabel("Completed Jobs")
-    completed_label.setStyleSheet("font-weight: bold; font-size: 12px;")
-    layout.addWidget(completed_label)
-
-    self._completed_view = self._create_table_view(self._completed_proxy)
-    layout.addWidget(self._completed_view, stretch=1)
+    self._lbl_jobs.setStyleSheet("font-weight: bold; font-size: 12px;")
+    layout.addWidget(self._lbl_jobs)
+    layout.addWidget(self._table_view, stretch=1)
 
     self.setLayout(layout)
     self.setStyleSheet(
@@ -100,9 +77,19 @@ class JobPanel(QtWidgets.QWidget):
       """
     )
 
+  def show_active_jobs(self, an_active_proxy):
+    self._lbl_jobs.setText("Active Jobs")
+    self._table_view.setModel(an_active_proxy)
+    self._table_view.resizeColumnsToContents()
+
+  def show_completed_jobs(self, an_completed_proxy):
+    self._lbl_jobs.setText("Completed Jobs")
+    self._table_view.setModel(an_completed_proxy)
+    self._table_view.resizeColumnsToContents()
+
   @staticmethod
   def _create_table_view(
-      proxy: QtCore.QSortFilterProxyModel,
+      proxy: QtCore.QSortFilterProxyModel | None = None,
   ) -> QtWidgets.QTableView:
     """Create and configure a read-only ``QTableView``.
 
@@ -113,7 +100,6 @@ class JobPanel(QtWidgets.QWidget):
         A configured ``QTableView`` instance.
     """
     view = QtWidgets.QTableView()
-    view.setModel(proxy)
     view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
     view.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
     view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -121,6 +107,7 @@ class JobPanel(QtWidgets.QWidget):
     view.horizontalHeader().setStretchLastSection(True)
     view.setAlternatingRowColors(True)
     view.setShowGrid(False)
+    view.resizeColumnsToContents()
     return view
 
   # ------------------------------------------------------------------
