@@ -60,8 +60,15 @@ if IS_PYQT6:
     Qt.WindowModal = Qt.WindowModality.WindowModal
     Qt.DisplayRole = Qt.ItemDataRole.DisplayRole
     Qt.WaitCursor = Qt.CursorShape.WaitCursor
+
+    QtCore.Qt.AscendingOrder = QtCore.Qt.SortOrder.AscendingOrder
+
+    QtWidgets.QAbstractItemView.NoEditTriggers = QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
+
     QtCore.QItemSelectionModel = QtCore.QItemSelectionModel.SelectionFlag
-    # QtCore.Qt = QtCore.Qt.MatchFlag
+    # QtCore.Qt.MatchFlag = QtCore.Qt
+    QtGui.QPalette.Highlight = QtGui.QPalette.ColorRole.Highlight
+    QtGui.QPalette.HighlightedText = QtGui.QPalette.ColorRole.HighlightedText
 
     QtWidgets.QActionGroup = QtGui.QActionGroup
     QtWidgets.QAction = QtGui.QAction

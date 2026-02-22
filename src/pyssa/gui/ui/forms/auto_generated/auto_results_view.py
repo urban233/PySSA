@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'src/pyssa/gui/ui/forms/results_view.ui'
+# Form implementation generated from reading ui file '.\results_view.ui'
 #
 # Created by: PyQt6 UI code generator 6.10.0
 #
@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(375, 449)
+        Dialog.resize(489, 497)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -24,14 +24,22 @@ class Ui_Dialog(object):
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
-        self.label = QtWidgets.QLabel(parent=self.frame)
-        self.label.setObjectName("label")
-        self.verticalLayout.addWidget(self.label)
         self.table_widget_results = QtWidgets.QTableWidget(parent=self.frame)
         self.table_widget_results.setObjectName("table_widget_results")
         self.table_widget_results.setColumnCount(0)
         self.table_widget_results.setRowCount(0)
         self.verticalLayout.addWidget(self.table_widget_results)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.label = QtWidgets.QLabel(parent=self.frame)
+        self.label.setObjectName("label")
+        self.horizontalLayout_2.addWidget(self.label)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem)
+        self.btn_color_by_rmsd = QtWidgets.QPushButton(parent=self.frame)
+        self.btn_color_by_rmsd.setObjectName("btn_color_by_rmsd")
+        self.horizontalLayout_2.addWidget(self.btn_color_by_rmsd)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.verticalLayout_2.addLayout(self.verticalLayout)
         self.verticalLayout_4.addWidget(self.frame)
         self.frame_bottom = QtWidgets.QFrame(parent=Dialog)
@@ -45,8 +53,8 @@ class Ui_Dialog(object):
         self.btn_help = QtWidgets.QPushButton(parent=self.frame_bottom)
         self.btn_help.setObjectName("btn_help")
         self.horizontalLayout.addWidget(self.btn_help)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        self.horizontalLayout.addItem(spacerItem)
+        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        self.horizontalLayout.addItem(spacerItem1)
         self.btn_view_plots = QtWidgets.QPushButton(parent=self.frame_bottom)
         self.btn_view_plots.setObjectName("btn_view_plots")
         self.horizontalLayout.addWidget(self.btn_view_plots)
@@ -65,7 +73,8 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.label.setText(_translate("Dialog", "Results"))
+        self.label.setText(_translate("Dialog", "Protein Pair By RMSD"))
+        self.btn_color_by_rmsd.setText(_translate("Dialog", "Color"))
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_view_plots.setText(_translate("Dialog", "View Plots"))
         self.btn_export_data.setText(_translate("Dialog", "Export Data"))

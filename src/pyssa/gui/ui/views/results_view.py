@@ -48,6 +48,7 @@ class ResultsView(QtWidgets.QDialog):
     self.ui.setupUi(self)
     self._initialize_ui()
     self.ui.btn_cancel.clicked.connect(self.close)
+    self.resize(325, 250)
     self.setWindowModality(Qt.WindowModal)
 
   def _initialize_ui(self) -> None:

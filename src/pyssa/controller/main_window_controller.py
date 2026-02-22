@@ -41,7 +41,7 @@ from src.pyssa.gui.qt import QtGui
 from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, \
     pyssa_objects_panel_controller, welcome_screen_view_controller, help_panel_controller, \
     status_bar_manager, job_popup_controller, predict_protein_view_controller, settings_view_controller, \
-    distance_analysis_view_controller
+    distance_analysis_view_controller, results_view_controller
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.gui.ui.custom_filters import help_event_filter
 from src.pyssa.gui.ui.dialogs import dialog_about
@@ -194,12 +194,24 @@ class MainWindowController:
         self._main_window.action_predict_multimer.triggered.connect(self.__slot_predict_multimer)
         # </editor-fold>
 
+        # <editor-fold desc="Analysis menu">
         self._main_window.action_distance_analysis.triggered.connect(self.__slot_distance_analysis)
+        # </editor-fold>
+
+        # <editor-fold desc="Results menu">
+        self._main_window.action_results_summary.triggered.connect(self.__slot_results_summary)
+        # </editor-fold>
 
         # <editor-fold desc="Image menu">
         self._main_window.action_preview_image.triggered.connect(self.__slot_preview_image)
         self._main_window.action_simple_image.triggered.connect(self.__slot_draw_image)
         self._main_window.action_ray_tracing_image.triggered.connect(self.__slot_ray_trace_image)
+        # </editor-fold>
+
+        # <editor-fold desc="Hotspots menu">
+        self._main_window.action_protein_regions.triggered.connect(
+            self.__slot_protein_hotspots
+        )
         # </editor-fold>
 
         # <editor-fold desc="Settings menu">
@@ -1014,14 +1026,6 @@ class MainWindowController:
             self._user_pymol.get_cmd_module().reinitialize()
     # </editor-fold>
 
-    def __slot_distance_analysis(self):
-        if not self._dialog_controllers.__contains__("distance_analysis_dialog"):
-            self._dialog_controllers["distance_analysis_dialog"] = distance_analysis_view_controller.DistanceAnalysisViewController(
-                self._app_state
-            )
-        self._dialog_controllers["distance_analysis_dialog"].restore_default_view()
-        self._dialog_controllers["distance_analysis_dialog"].get_view().show()
-
     # <editor-fold desc="Prediction menu">
     def _get_sequences_for_prediction(self, is_multimer: bool) -> list:
         """Return the sequence list to pre-populate the prediction dialog.
@@ -1109,6 +1113,26 @@ class MainWindowController:
         self._dialog_controllers["predict_multimer"].get_view().show()
     # </editor-fold>
 
+    # <editor-fold desc="Analysis menu">
+    def __slot_distance_analysis(self):
+        if not self._dialog_controllers.__contains__("distance_analysis_dialog"):
+            self._dialog_controllers["distance_analysis_dialog"] = distance_analysis_view_controller.DistanceAnalysisViewController(
+                self._app_state
+            )
+        self._dialog_controllers["distance_analysis_dialog"].restore_default_view()
+        self._dialog_controllers["distance_analysis_dialog"].get_view().show()
+    # </editor-fold>
+
+    # <editor-fold desc="Results menu">
+    def __slot_results_summary(self):
+        if not self._dialog_controllers.__contains__("results_summary_dialog"):
+            self._dialog_controllers["results_summary_dialog"] = results_view_controller.ResultsViewController(
+                self._get_selected_protein_pairs()[0], self._app_state, self._user_pymol, self._main_window
+            )
+        self._dialog_controllers["results_summary_dialog"].restore_default_view()
+        self._dialog_controllers["results_summary_dialog"].get_view().show()
+    # </editor-fold>
+
     # <editor-fold desc="Image menu">
     def __slot_preview_image(self):
         self._user_pymol.get_cmd_module().ray(800, 600)
@@ -1172,6 +1196,14 @@ class MainWindowController:
             )
         )
 
+    # </editor-fold>
+
+    # <editor-fold desc="Hotspots menu">
+    def __slot_protein_hotspots(self):
+        self._user_pymol.get_cmd_module().show("sticks", "sele")
+        self._user_pymol.get_cmd_module().color("atomic", "sele and not elem C")
+        self._user_pymol.get_cmd_module().color("grey70", "sele and elem C")
+        self._user_pymol.get_cmd_module().zoom("sele")
     # </editor-fold>
 
     # <editor-fold desc="Settings menu">

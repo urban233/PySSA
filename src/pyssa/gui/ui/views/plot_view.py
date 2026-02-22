@@ -486,6 +486,7 @@ class PlotView(QtWidgets.QDialog):
     self.vertical_splitter.addWidget(plot_area)
     # Right side (table)
     self.vertical_splitter.addWidget(self.container_widget)
+    self.vertical_splitter.setOrientation(Qt.Orientation.Horizontal)
     # Second splitter within the plot area to split it horizontally
     self.horizontal_splitter = QtWidgets.QSplitter()
     plot_area_layout = QtWidgets.QVBoxLayout()
@@ -495,7 +496,7 @@ class PlotView(QtWidgets.QDialog):
     self.horizontal_splitter.addWidget(self.plot_widget_dplot)
     # Right part of the plot area
     self.horizontal_splitter.addWidget(self.scroll_area)
-    self.horizontal_splitter.setOrientation(0)  # Set orientation to horizontal
+    self.horizontal_splitter.setOrientation(Qt.Orientation.Vertical)  # Set orientation to horizontal
 
     self.vertical_splitter.setCollapsible(0, False)
     self.main_layout.setMenuBar(self.menubar)
@@ -1243,7 +1244,7 @@ class PlotView(QtWidgets.QDialog):
     self.hide_selected_column.triggered.connect(self._hide_selected_column)
 
     # Set the context menu for the buttons
-    self.table_view.setContextMenuPolicy(3)
+    self.table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     self.table_view.customContextMenuRequested.connect(self._show_context_menu)
 
     # <editor-fold desc="Context menu setup for histogram">
