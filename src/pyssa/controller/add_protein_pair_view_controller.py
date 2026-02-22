@@ -25,10 +25,10 @@ from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.qt import QtGui
 from src.pyssa.gui.qt import Qt
-from src.pyssa.controller import watcher
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
   from src.pyssa.gui import app_state
+from src.pyssa.gui import name_registry as name_registry_module
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.internal.data_structures import chain, protein
 from src.pyssa.logging_pyssa import log_levels, log_handlers
@@ -46,7 +46,6 @@ class AddProteinPairViewController(QtCore.QObject):
   def __init__(
       self,
       the_app_state: "app_state.AppState",
-      the_watcher: "watcher.Watcher",
       a_list_of_used_run_names: list[str],
       a_list_of_used_protein_pair_names: list[str],
       a_list_of_extra_proteins: list[protein.Protein] = None,
@@ -57,7 +56,6 @@ class AddProteinPairViewController(QtCore.QObject):
 
     Args:
         the_app_state (app_state.AppState): An instance of the AppState class.
-        the_watcher (watcher.Watcher): An instance of the Watcher class.
         a_list_of_used_run_names (list[str]): A list of strings representing existing analysis runs.
         a_list_of_used_protein_pair_names (list[str]): A list of strings representing protein pairs.
         a_list_of_extra_proteins (list[protein.Protein]): (optional) A list of Protein objects.
@@ -70,9 +68,6 @@ class AddProteinPairViewController(QtCore.QObject):
     if the_app_state is None:
       logger.error("the_app_state is None.")
       raise exception.IllegalArgumentError("the_app_state is None.")
-    if the_watcher is None:
-      logger.error("the_watcher is None.")
-      raise exception.IllegalArgumentError("the_watcher is None.")
     if a_list_of_used_run_names is None:
       logger.error("a_list_of_used_run_names is None.")
       raise exception.IllegalArgumentError(
@@ -86,7 +81,6 @@ class AddProteinPairViewController(QtCore.QObject):
 
     super().__init__()
     self._app_state = the_app_state
-    self._watcher = the_watcher
     self._on_add_callback = on_add_callback
     from src.pyssa.gui.ui.views import add_protein_pair_view
     self._view = add_protein_pair_view.AddProteinPairView(a_parent)
@@ -446,9 +440,9 @@ class AddProteinPairViewController(QtCore.QObject):
           in self._existing_protein_pairs
       ):
         self._view.ui.btn_add.setEnabled(False)
-      elif (
-          tmp_analysis_run_name_without_semicolon_and_comma
-          in self._watcher.protein_pair_names_blacklist
+      elif self._app_state.name_registry.is_reserved(
+          name_registry_module.PROTEIN_PAIR,
+          tmp_analysis_run_name_without_semicolon_and_comma,
       ):
         self._view.ui.btn_add.setEnabled(False)
       else:
@@ -480,9 +474,9 @@ class AddProteinPairViewController(QtCore.QObject):
         in self._existing_protein_pairs
     ):
       self._view.ui.btn_add.setEnabled(False)
-    elif (
-        tmp_analysis_run_name_without_semicolon_and_comma
-        in self._watcher.protein_pair_names_blacklist
+    elif self._app_state.name_registry.is_reserved(
+        name_registry_module.PROTEIN_PAIR,
+        tmp_analysis_run_name_without_semicolon_and_comma,
     ):
       self._view.ui.btn_add.setEnabled(False)
     else:

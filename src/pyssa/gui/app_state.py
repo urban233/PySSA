@@ -24,6 +24,7 @@ from typing import Any, Callable, TYPE_CHECKING
 from src.pyssa.gui.qt import QtGui
 from src.pyssa.controller import settings_manager, status_bar_manager
 from src.pyssa.controller.job_scheduler import JobScheduler
+from src.pyssa.gui import name_registry
 from src.pyssa.internal.data_structures.data_classes import job_descriptor
 from src.pyssa.io_pyssa.db_pyssa import ProjectDatabase
 from src.pyssa.io_pyssa.db_pyssa import ColdProjectHandle
@@ -75,8 +76,10 @@ class AppState:
 
     self._pyssa_objects_model = psa_objects_model.PSAObjectsModel()
 
+    self._name_registry = name_registry.NameRegistry()
+
     self._job_model = job_model.JobModel()
-    self._job_scheduler = JobScheduler(self._job_model)
+    self._job_scheduler = JobScheduler(self._job_model, name_registry=self._name_registry)
     self._job_model.job_finished.connect(self._on_job_finished)
 
     self._build_workspace_model()
@@ -156,6 +159,10 @@ class AppState:
 
     project_name = project.get_project_name()
 
+    # Rebuild the name registry from the freshly loaded project so that all
+    # existing object names are immediately reserved.
+    self._name_registry.rebuild(project)
+
     transitioned = self._job_scheduler.transition_to_hot(
       project_name, on_result=on_result,
     )
@@ -179,6 +186,8 @@ class AppState:
     If the scheduler still has running or queued jobs for this project,
     they are transitioned to cold first so that their results are
     persisted to the database instead of lost.
+    After closing, the name registry is cleared so stale reservations
+    do not persist into the next session.
     """
     if self._project is not None and self._job_scheduler.has_running_jobs():
       project_name = self._project.get_project_name()
@@ -191,6 +200,7 @@ class AppState:
     self._close_hot_db()
     self._project = None
     self.clear_pyssa_objects_model()
+    self._name_registry.clear()
     logger.info("Hot project closed.")
     self._on_state_changed()
 
@@ -265,12 +275,23 @@ class AppState:
   # ------------------------------------------------------------------
 
   @property
+  def name_registry(self) -> "name_registry.NameRegistry":
+    """The application-wide name registry.
+
+    Tracks which names are currently unavailable for new objects within
+    the active project.  Names are reserved from existing project objects
+    (rebuilt on ``open_project``) and from queued/running jobs (managed
+    automatically by the ``JobScheduler``).
+    """
+    return self._name_registry
+
+  @property
   def job_model(self) -> "job_model.JobModel":
     """The application-wide job table model."""
     return self._job_model
 
   @property
-  def job_scheduler(self) -> JobScheduler:
+  def job_scheduler(self) -> "JobScheduler":
     """The application-wide job scheduler."""
     return self._job_scheduler
 

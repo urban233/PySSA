@@ -28,6 +28,7 @@ from src.pyssa.util import enums
 
 if TYPE_CHECKING:
   from src.pyssa.io_pyssa.db_pyssa.cold_project_handle import ColdProjectHandle
+  from src.pyssa.gui.name_registry import NameRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,10 @@ class JobScheduler(QtCore.QObject):
 
   Args:
       model: The ``JobModel`` that tracks all jobs.
+      name_registry: The application-wide ``NameRegistry`` used to
+                     automatically reserve and release names as jobs
+                     are submitted and complete.  Pass ``None`` to
+                     disable name-reservation (e.g. in tests).
       process_runtime: The ``ProcessRuntime`` used for executing jobs in
                        child processes.  A default instance is created if
                        ``None``.
@@ -61,6 +66,7 @@ class JobScheduler(QtCore.QObject):
   def __init__(
       self,
       model: "job_model.JobModel",
+      name_registry: "NameRegistry | None" = None,
       process_runtime: ProcessRuntime | None = None,
       parent: QtCore.QObject | None = None,
   ) -> None:
@@ -69,6 +75,7 @@ class JobScheduler(QtCore.QObject):
       raise ValueError("model must not be None")
 
     self._model = model
+    self._name_registry = name_registry
     self._process_runtime = process_runtime or ProcessRuntime()
     self._thread_runtime = get_singleton_thread_runtime()
     self._queues: dict[enums.JobType, _TypeQueue] = defaultdict(_TypeQueue)
@@ -96,6 +103,12 @@ class JobScheduler(QtCore.QObject):
     row = self._model.add_job(descriptor)
     type_queue = self._queues[descriptor.job_type]
     type_queue.pending.append((row, descriptor))
+
+    # Reserve the names this job will produce so they cannot be re-used
+    # until the job completes, fails, or is cancelled.
+    if self._name_registry is not None:
+      for category, names in descriptor.reserved_names.items():
+        self._name_registry.reserve_many(category, names)
 
     logger.info(
       "Job submitted: row=%d, type=%s, project=%s",
@@ -133,6 +146,11 @@ class JobScheduler(QtCore.QObject):
       type_queue.pending = [
         (r, d) for r, d in type_queue.pending if r != row
       ]
+
+    # Release names that were reserved for this cancelled job.
+    if self._name_registry is not None:
+      for category, names in descriptor.reserved_names.items():
+        self._name_registry.release_many(category, names)
 
     self._model.update_status(row, enums.JobStatus.CANCELLED)
     logger.info("Job at row %d cancelled.", row)
@@ -350,6 +368,11 @@ class JobScheduler(QtCore.QObject):
     self._model.update_status(row, enums.JobStatus.FINISHED, result)
     logger.info("Job at row %d finished successfully.", row)
 
+    # Release names reserved by this job; they are now part of the project.
+    if self._name_registry is not None:
+      for category, names in descriptor.reserved_names.items():
+        self._name_registry.release_many(category, names)
+
     if descriptor.is_hot and descriptor.on_result is not None:
       try:
         descriptor.on_result(result)
@@ -391,6 +414,11 @@ class JobScheduler(QtCore.QObject):
 
     self._model.update_status(row, enums.JobStatus.FAILED, exc)
     logger.error("Job at row %d failed: %s", row, exc)
+
+    # Release names reserved by the failed job so they become available again.
+    if self._name_registry is not None:
+      for category, names in descriptor.reserved_names.items():
+        self._name_registry.release_many(category, names)
 
     if descriptor.cold_handle is not None:
       try:

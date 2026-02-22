@@ -46,6 +46,13 @@ class JobDescriptor:
       on_result: Callback invoked on the **main thread** when a hot-project
                  job finishes successfully.  Receives the worker's return
                  value.  ``None`` for cold-project jobs.
+      reserved_names: Mapping of category → list of names that this job will
+                      produce as new project objects.  The ``JobScheduler``
+                      calls ``NameRegistry.reserve_many`` on these entries
+                      when the job is submitted and ``release_many`` when the
+                      job finishes, fails, or is cancelled.  Use the category
+                      constants from ``src.pyssa.gui.name_registry``
+                      (``SEQUENCE``, ``PROTEIN``, ``PROTEIN_PAIR``).
   """
 
   job_type: enums.JobType
@@ -57,4 +64,5 @@ class JobDescriptor:
   is_hot: bool = True
   cold_handle: "ColdProjectHandle | None" = field(default=None, repr=False)
   on_result: "Callable[[Any], None] | None" = field(default=None, repr=False)
+  reserved_names: dict[str, list[str]] = field(default_factory=dict)
 

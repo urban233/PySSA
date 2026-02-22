@@ -28,7 +28,7 @@ import time
 import shutil
 from typing import Optional
 
-from src.pyssa.controller import database_manager, watcher, interface_manager, pymol_session_manager
+from src.pyssa.controller import database_manager, interface_manager, pymol_session_manager
 from src.pyssa.internal.data_structures import project, protein
 from src.pyssa.internal.data_structures.data_classes import database_operation
 from src.pyssa.internal.thread import database_thread
@@ -44,12 +44,10 @@ __docformat__ = "google"
 def create_new_project(
     the_project_name: str,
     the_workspace_path: pathlib.Path,
-    the_watcher: "watcher.Watcher",
     the_interface_manager: "interface_manager.InterfaceManager",
 ) -> tuple[
     str,
     Optional["project.Project"],
-    Optional["watcher.Watcher"],
     Optional["interface_manager.InterfaceManager"],
 ]:
   """Creates a new project object.
@@ -57,29 +55,24 @@ def create_new_project(
   Args:
       the_project_name (str): The name of the new project.
       the_workspace_path (pathlib.Path): The path of the workspace where the project will be created.
-      the_watcher (watcher.Watcher): An instance of the "watcher.Watcher" class used for setting up blacklists.
       the_interface_manager (interface_manager.InterfaceManager): The instance of the "interface_manager.InterfaceManager" class used in the application.
 
   Returns:
       A tuple containing:
       - A string denoting the result of creating the new project.
       - An optional instance of the "project.Project" class representing the newly created project.
-      - An optional instance of the "watcher.Watcher" class.
       - An optional instance of the "interface_manager.InterfaceManager" class.
   """
   # <editor-fold desc="Checks">
   if the_project_name is None or the_project_name == "":
     logger.error("the_project_name is either None or an empty string.")
-    return "", None, None, None
+    return "", None, None
   if the_workspace_path is None:
     logger.error("the_workspace_path is None.")
-    return "", None, None, None
-  if the_watcher is None:
-    logger.error("the_watcher is None.")
-    return "", None, None, None
+    return "", None, None
   if the_interface_manager is None:
     logger.error("the_interface_manager is None.")
-    return "", None, None, None
+    return "", None, None
 
   # </editor-fold>
 
@@ -96,62 +89,47 @@ def create_new_project(
           )
       )
     constants.PYSSA_LOGGER.info("Create empty project finished.")
-    the_watcher.setup_blacklists(
-        tmp_project,
-        the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
-        the_interface_manager.job_manager.get_queue(
-            enums.JobType.DISTANCE_ANALYSIS
-        ),
-        the_interface_manager.job_manager.current_prediction_job,
-        the_interface_manager.job_manager.current_distance_analysis_job,
-    )
   except Exception as e:
     logger.error(e)
-    return "", None, None, None
+    return "", None, None
   else:
-    return "result", tmp_project, the_watcher, the_interface_manager
+    return "result", tmp_project, the_interface_manager
 
 
 def create_use_project(
     the_project_name: str,
     the_workspace_path: pathlib.Path,
     the_proteins_to_add: list,
-    the_watcher: "watcher.Watcher",
     the_interface_manager: "interface_manager.InterfaceManager",
 ) -> tuple[
     str,
     Optional["project.Project"],
-    Optional["watcher.Watcher"],
     Optional["interface_manager.InterfaceManager"],
 ]:
-  """Creates a new project object.
+  """Creates a new project based on an existing set of proteins.
 
   Args:
       the_project_name (str): The name of the project.
       the_workspace_path (pathlib.Path): The path to the workspace.
       the_proteins_to_add (list): The list of proteins to add.
-      the_watcher (watcher.Watcher): The watcher object.
       the_interface_manager (interface_manager.InterfaceManager): The interface manager object.
 
   Returns:
-      A tuple containing the result, the project object, the watcher object, and the interface manager object.
+      A tuple containing the result, the project object, and the interface manager object.
   """
   # <editor-fold desc="Checks">
   if the_project_name is None or the_project_name == "":
     logger.error("the_project_name is either None or an empty string.")
-    return "", None, None, None
+    return "", None, None
   if the_workspace_path is None:
     logger.error("the_workspace_path is None.")
-    return "", None, None, None
+    return "", None, None
   if the_proteins_to_add is None:
     logger.error("the_proteins_to_add is None.")
-    return "", None, None, None
-  if the_watcher is None:
-    logger.error("the_watcher is None.")
-    return "", None, None, None
+    return "", None, None
   if the_interface_manager is None:
     logger.error("the_interface_manager is None.")
-    return "", None, None, None
+    return "", None, None
 
   # </editor-fold>
 
@@ -174,20 +152,11 @@ def create_use_project(
         tmp_protein_copy.set_id(db_manager.insert_new_protein(tmp_protein_copy))
 
     constants.PYSSA_LOGGER.info("Use project finished.")
-    the_watcher.setup_blacklists(
-        tmp_project,
-        the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
-        the_interface_manager.job_manager.get_queue(
-            enums.JobType.DISTANCE_ANALYSIS
-        ),
-        the_interface_manager.job_manager.current_prediction_job,
-        the_interface_manager.job_manager.current_distance_analysis_job,
-    )
   except Exception as e:
     logger.error(e)
-    return "", None, None, None
+    return "", None, None
   else:
-    return "result", tmp_project, the_watcher, the_interface_manager
+    return "result", tmp_project, the_interface_manager
 
 
 def import_project(
@@ -251,12 +220,10 @@ def open_project(
     the_interface_manager: "interface_manager.InterfaceManager",
     the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
     the_custom_progress_signal: "custom_signals.ProgressSignal",
-    the_watcher: "watcher.Watcher",
 ) -> tuple[
     str,
     Optional["project.Project"],
     Optional["interface_manager.InterfaceManager"],
-    Optional["watcher.Watcher"],
 ]:
   """Opens a project.
 
@@ -266,16 +233,15 @@ def open_project(
       the_interface_manager (interface_manager.InterfaceManager): The interface manager object.
       the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PyMOL session manager object.
       the_custom_progress_signal (custom_signals.ProgressSignal): The custom progress signal object.
-      the_watcher (watcher.Watcher): The watcher object.
 
   Returns:
-      A tuple containing the result as a string, the temporary project object, the interface manager object, and the watcher object.
+      A tuple containing the result as a string, the temporary project object, and the interface manager object.
       If an exception occurs during the execution of the method, an empty string and None values will be returned.
   """
   # <editor-fold desc="Checks">
   if tmp_project_name is None or tmp_project_name == "":
     logger.error("tmp_project_name is either None or an empty string.")
-    return "", None, None, None
+    return "", None, None
   if (
       tmp_project_database_filepath is None
       or tmp_project_database_filepath == ""
@@ -283,19 +249,16 @@ def open_project(
     logger.error(
         "tmp_project_database_filepath is either None or an empty string."
     )
-    return "", None, None, None
+    return "", None, None
   if the_interface_manager is None:
     logger.error("the_interface_manager is None.")
-    return "", None, None, None
+    return "", None, None
   if the_pymol_session_manager is None:
     logger.error("the_pymol_session_manager is None.")
-    return "", None, None, None
+    return "", None, None
   if the_custom_progress_signal is None:
     logger.error("the_custom_progress_signal is None.")
-    return "", None, None, None
-  if the_watcher is None:
-    logger.error("the_watcher is None.")
-    return "", None, None, None
+    return "", None, None
 
   # </editor-fold>
 
@@ -316,20 +279,11 @@ def open_project(
         "Reinitializing PyMOL session ...", 96
     )
     the_pymol_session_manager.reinitialize_session()
-    the_watcher.setup_blacklists(
-        tmp_project,
-        the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
-        the_interface_manager.job_manager.get_queue(
-            enums.JobType.DISTANCE_ANALYSIS
-        ),
-        the_interface_manager.job_manager.current_prediction_job,
-        the_interface_manager.job_manager.current_distance_analysis_job,
-    )
   except Exception as e:
     logger.error(e)
-    return "", None, None, None
+    return "", None, None
   else:
-    return "result", tmp_project, the_interface_manager, the_watcher
+    return "result", tmp_project, the_interface_manager
 
 
 def close_project(

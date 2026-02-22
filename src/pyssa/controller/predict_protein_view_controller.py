@@ -35,12 +35,12 @@ from src.pyssa.internal import job_definitions
 
 if TYPE_CHECKING:
   from src.pyssa.gui import app_state
-  from src.pyssa.io_pyssa import watcher
   
 from src.pyssa.internal.data_structures import protein, chain
 from src.pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration, \
   job_descriptor
-from src.pyssa.util import tools, constants, prediction_util, enums, exception
+from src.pyssa.gui import name_registry as name_registry_module
+from src.pyssa.util import constants, prediction_util, exception, tools, enums
 from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_levels, log_handlers
 
@@ -55,18 +55,18 @@ class PredictProteinViewController(QtCore.QObject):
   def __init__(
       self,
       the_app_state: "app_state.AppState",
-      the_watcher: "watcher.Watcher",
-      the_selected_indexes: list,
-      a_prediction_type: str,
+      the_sequences: list,
       a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
         the_app_state (app_state.AppState): An instance of the AppState class.
-        the_watcher (watcher.Watcher): An instance of the watcher.Watcher class.
-        the_selected_indexes (list): A list of selected indexes.
-        a_prediction_type (str): A string representing the prediction type.
+        the_sequences (list): A pre-filtered list of ``SeqRecord`` objects to
+            populate the prediction table with.  The caller is responsible for
+            selecting the correct sequence type (monomer vs. multimer) and for
+            applying any project-level or selection-level filtering before
+            passing the list here.
         a_parent: Parent widget to pass to the view.
 
     Raises:
@@ -76,21 +76,14 @@ class PredictProteinViewController(QtCore.QObject):
     if the_app_state is None:
       logger.error("the_app_state is None.")
       raise exception.IllegalArgumentError("the_app_state is None.")
-    if the_watcher is None:
-      logger.error("the_watcher is None.")
-      raise exception.IllegalArgumentError("the_watcher is None.")
-    if the_selected_indexes is None:
-      logger.error("the_selected_indexes is None.")
-      raise exception.IllegalArgumentError("the_selected_indexes is None.")
-    if a_prediction_type is None:
-      logger.error("a_prediction_type is None.")
-      raise exception.IllegalArgumentError("a_prediction_type is None.")
+    if the_sequences is None:
+      logger.error("the_sequences is None.")
+      raise exception.IllegalArgumentError("the_sequences is None.")
 
     # </editor-fold>
 
     super().__init__()
     self._app_state = the_app_state
-    self._watcher = the_watcher
     from src.pyssa.gui.ui.views import predict_protein_view
     self._view: "predict_protein_view.PredictProteinView" = predict_protein_view.PredictProteinView(a_parent)
     self.prediction_configuration = (
@@ -103,9 +96,7 @@ class PredictProteinViewController(QtCore.QObject):
     except exception.NoInternetConnectionError:
       logger.warning("No internet connection")
       self.has_internet_connection = False
-    self._fill_protein_to_predict_table_with_sequences(
-        the_selected_indexes, a_prediction_type, the_watcher
-    )
+    self._fill_protein_to_predict_table_with_sequences(the_sequences)
     self._connect_all_ui_elements_to_slot_functions()
 
   def get_view(self):
@@ -164,7 +155,7 @@ class PredictProteinViewController(QtCore.QObject):
           "Internet Connection",
           custom_message_box.CustomMessageBoxIcons.ERROR.value,
       )
-      tmp_dialog.exec_()
+      tmp_dialog.exec()
       raise exception.NoInternetConnectionError(
           "No working internet connection."
       )
@@ -252,71 +243,41 @@ class PredictProteinViewController(QtCore.QObject):
   # <editor-fold desc="Prediction section">
   def _fill_protein_to_predict_table_with_sequences(
       self,
-      tmp_selected_indices: list,
-      a_prediction_type: str,
-      the_watcher: "watcher.Watcher",
+      the_sequences: list,
   ) -> None:
-    """Fills the prediction table with the selected sequences.
+    """Fills the prediction table with the provided sequences.
+
+    Each sequence whose name is already reserved in the name registry is
+    skipped — this covers both proteins that already exist in the project
+    and names claimed by queued or running jobs.
+
+    The caller is expected to have pre-filtered *the_sequences* to contain
+    only sequences of the appropriate type (monomer vs. multimer) and to
+    apply any desired selection-level filtering before calling this method.
 
     Args:
-        tmp_selected_indices (list): List of QModelIndex objects representing the selected indices in a table.
-        a_prediction_type (str): String representing the type of prediction ('monomer' or 'multimer').
-        the_watcher (watcher.Watcher): An instance of the `watcher.Watcher` class.
+        the_sequences (list): A list of ``SeqRecord`` objects to display.
 
     Raises:
-        exception.IllegalArgumentError: If any of the arguments are None or if `a_prediction_type` is an empty string.
-        ValueError: If prediction type is unknown.
+        exception.IllegalArgumentError: If ``the_sequences`` is ``None``.
     """
     # <editor-fold desc="Checks">
-    if tmp_selected_indices is None:
-      logger.error("tmp_selected_indices is None.")
-      raise exception.IllegalArgumentError("tmp_selected_indices is None.")
-    if a_prediction_type is None or a_prediction_type == "":
-      logger.error("a_prediction_type is either None or an empty string.")
-      raise exception.IllegalArgumentError(
-          "a_prediction_type is either None or an empty string."
-      )
-    if the_watcher is None:
-      logger.error("the_watcher is None.")
-      raise exception.IllegalArgumentError("the_watcher is None.")
+    if the_sequences is None:
+      logger.error("the_sequences is None.")
+      raise exception.IllegalArgumentError("the_sequences is None.")
 
     # </editor-fold>
 
-    tmp_sequences_to_predict_monomer: list = []
-    tmp_sequences_to_predict_multimer: list = []
-    for tmp_model_index in tmp_selected_indices:
-      if (
-          tmp_model_index.data(enums.ModelEnum.TYPE_ROLE)
-          == enums.ModelTypeEnum.MONOMER_SEQ
-      ):
-        tmp_sequences_to_predict_monomer.append(
-            tmp_model_index.data(enums.ModelEnum.OBJECT_ROLE)
-        )
-      elif (
-          tmp_model_index.data(enums.ModelEnum.TYPE_ROLE)
-          == enums.ModelTypeEnum.MULTIMER_SEQ
-      ):
-        tmp_sequences_to_predict_multimer.append(
-            tmp_model_index.data(enums.ModelEnum.OBJECT_ROLE)
-        )
     self._view.ui.table_proteins_to_predict.setColumnCount(2)
-
-    if a_prediction_type == "monomer":
-      tmp_sequences_to_predict = tmp_sequences_to_predict_monomer
-    elif a_prediction_type == "multimer":
-      tmp_sequences_to_predict = tmp_sequences_to_predict_multimer
-    else:
-      raise ValueError(f"Unknown prediction type: {a_prediction_type}")
 
     tmp_row_no = 0
     self.temporary_protein_objs.clear()
-    for tmp_seq_record in tmp_sequences_to_predict:
-      if self._app_state.project and self._app_state.project.is_sequence_as_protein_in_project(
-          tmp_seq_record.name
+    for tmp_seq_record in the_sequences:
+      # Skip names that are already reserved in the registry.  This covers
+      # both proteins persisted in the project and names from queued jobs.
+      if self._app_state.name_registry.is_reserved(
+          name_registry_module.PROTEIN, tmp_seq_record.name
       ):
-        # Continues if a protein with the name of the given sequence already exists
-        continue
-      if the_watcher.is_protein_name_on_blacklist(tmp_seq_record.name):
         continue
 
       tmp_seqs: list[str] = str(tmp_seq_record.seq).split(",")
@@ -465,13 +426,8 @@ class PredictProteinViewController(QtCore.QObject):
       logger.log(
           log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Predict' button was clicked."
       )
-      tmp_prediction_runs: list[
-          prediction_protein_info.PredictionProteinInfo
-      ] = prediction_util.get_prediction_name_and_seq_from_table(
-          self._view.ui.table_proteins_to_predict
-      )
       self._view.close()
-      self._submit_prediction_job(False, tmp_prediction_runs)
+      self._start_prediction_analysis()
     else:
       logger.log(
           log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Go' button was clicked."
@@ -580,7 +536,6 @@ class PredictProteinViewController(QtCore.QObject):
     self._external_controller = (
         add_protein_pair_view_controller.AddProteinPairViewController(
             the_app_state=self._app_state,
-            the_watcher=self._watcher,
             a_list_of_used_run_names=self._get_all_current_analysis_runs(),
             a_list_of_used_protein_pair_names=self._get_all_current_protein_pair_names(),
             a_list_of_extra_proteins=self.temporary_protein_objs,
@@ -669,6 +624,10 @@ class PredictProteinViewController(QtCore.QObject):
       self._view.ui.table_proteins_to_predict
     )
 
+    # Collect the names of proteins that will be produced so they can be
+    # reserved in the name registry for the duration of the job.
+    tmp_predicted_protein_names = [info.name for info in tmp_prediction_runs]
+
     if self._view.ui.checkbox_add_analysis.isChecked():
       tmp_raw_analysis_run_names: list = []
       for row_no in range(self._view.ui.list_analysis_overview.count()):
@@ -688,7 +647,10 @@ class PredictProteinViewController(QtCore.QObject):
             tmp_raw_analysis_run_names,
             self._app_state.get_settings().cutoff,
             self._app_state.get_settings().cycles
-          )
+          ),
+          reserved_names={
+            name_registry_module.PROTEIN: tmp_predicted_protein_names,
+          },
         )
       )
     else:
@@ -700,6 +662,9 @@ class PredictProteinViewController(QtCore.QObject):
           display_name="",
           run_fn=job_definitions.run_prediction_job,
           run_args=(tmp_prediction_runs, self.prediction_configuration),
+          reserved_names={
+            name_registry_module.PROTEIN: tmp_predicted_protein_names,
+          },
         )
       )
 

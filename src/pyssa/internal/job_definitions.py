@@ -28,17 +28,21 @@ side effects (no database updates, no UI signals, no logging).
 These functions are designed to be used with the JobScheduler and are
 picklable for execution in child processes via ProcessRuntime.
 """
+import pathlib
 import time
 from typing import Any, TYPE_CHECKING
 import subprocess
 
-from src.pyssa.internal.data_structures import structure_prediction, structure_analysis
-from src.pyssa.util import analysis_util
+from src.pyssa.internal.data_structures import structure_prediction, structure_analysis, protein
+from src.pyssa.internal.pymol import pml_worker, pml_enums
+from src.pyssa.io_pyssa import bio_data
+from src.pyssa.util import analysis_util, constants
 
 if TYPE_CHECKING:
   from src.pyssa.internal.data_structures.data_classes import prediction_protein_info
   from src.pyssa.internal.data_structures.data_classes import prediction_configuration
   from src.pyssa.internal.data_structures import project
+  from src.pyssa.internal.data_structures import protein_pair
 
 
 def run_prediction_job(
@@ -67,11 +71,26 @@ def run_prediction_job(
   structure_prediction_obj.run_prediction()
   best_prediction_models = structure_prediction_obj.move_best_prediction_models()
 
+  tmp_proteins = []
+  for tmp_prediction_model in best_prediction_models:
+    tmp_protein = protein.Protein(tmp_prediction_model[0].name)
+    tmp_pdb_filepath = pathlib.Path(
+      f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction_model[0].name}.pdb"
+    )
+    tmp_protein.add_protein_structure_data_from_local_pdb_file(tmp_pdb_filepath)
+    bio_data.build_pdb_file(tmp_protein.get_pdb_data(), str(tmp_pdb_filepath))
+    tmp_reply_data = pml_worker.PmlWorker.one_shot_do(
+      pml_enums.PmlCommand.CREATE_NEW_SESSION,
+      args=(str(tmp_pdb_filepath),)
+    )
+    tmp_protein.pymol_session = tmp_reply_data
+    tmp_proteins.append(tmp_protein)
+
   subprocess.run(["wsl", "--shutdown"], creationflags=subprocess.CREATE_NO_WINDOW)
 
   return {
       "success": True,
-      "best_prediction_models": best_prediction_models,
+      "predicted_proteins": tmp_proteins,
   }
 
 
@@ -80,7 +99,7 @@ def run_distance_analysis_job(
     list_with_analysis_names: list,
     cutoff: float,
     cycles: int,
-) -> dict[str, Any]:
+) -> dict[str, bool | list["protein_pair.ProteinPair"]]:
   """Run distance analysis job.
 
   Args:
@@ -163,7 +182,7 @@ def run_prediction_and_distance_analysis_job(
 
   return {
       "success": True,
-      "best_prediction_models": prediction_result["best_prediction_models"],
+      "predicted_proteins": prediction_result["predicted_proteins"],
       "protein_pairs": analysis_result["protein_pairs"],
   }
 

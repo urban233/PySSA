@@ -22,22 +22,24 @@
 """Module for the distance analysis view controller."""
 import copy
 import logging
+from typing import TYPE_CHECKING
 
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import pyqtSignal
 
 from src.pyssa.controller import add_protein_pair_view_controller
-from typing import TYPE_CHECKING
 
 from src.pyssa.internal import job_definitions
-
-if TYPE_CHECKING:
-  from src.pyssa.gui import app_state
-  from src.pyssa.io_pyssa import watcher
 from src.pyssa.internal.data_structures.data_classes import prediction_configuration, job_descriptor
+from src.pyssa.io_pyssa.db_pyssa import WriteOperation, OperationType
 from src.pyssa.util import constants, exception, enums
 from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_levels, log_handlers
+
+if TYPE_CHECKING:
+  from src.pyssa.gui import app_state
+  from src.pyssa.internal.data_structures import protein_pair
+from src.pyssa.gui import name_registry as name_registry_module
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -50,14 +52,12 @@ class DistanceAnalysisViewController(QtCore.QObject):
   def __init__(
       self,
       the_app_state: "app_state.AppState",
-      the_watcher: "watcher.Watcher",
       a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
         the_app_state (app_state.AppState): The AppState object.
-        the_watcher (watcher.Watcher): The Watcher object.
         a_parent: Parent widget to pass to the view.
 
     Raises:
@@ -67,15 +67,11 @@ class DistanceAnalysisViewController(QtCore.QObject):
     if the_app_state is None:
       logger.error("the_app_state is None.")
       raise exception.IllegalArgumentError("the_app_state is None.")
-    if the_watcher is None:
-      logger.error("the_watcher is None.")
-      raise exception.IllegalArgumentError("the_watcher is None.")
 
     # </editor-fold>
 
     super().__init__()
     self._app_state = the_app_state
-    self._watcher = the_watcher
     from src.pyssa.gui.ui.views import distance_analysis_view
     self._view: "distance_analysis_view.DistanceAnalysisView" = distance_analysis_view.DistanceAnalysisView(a_parent)
     self.prediction_configuration = (
@@ -161,7 +157,6 @@ class DistanceAnalysisViewController(QtCore.QObject):
     self._external_controller = (
         add_protein_pair_view_controller.AddProteinPairViewController(
             the_app_state=self._app_state,
-            the_watcher=self._watcher,
             a_list_of_used_run_names=self._get_all_current_analysis_runs(),
             a_list_of_used_protein_pair_names=self._get_all_current_protein_pair_names(),
             on_add_callback=self._post_add_protein_pair,
@@ -243,7 +238,15 @@ class DistanceAnalysisViewController(QtCore.QObject):
       tmp_raw_analysis_run_names.append(
         self._view.ui.list_distance_analysis_overview.item(row_no).text()
       )
-    # Running with an analysis
+
+    # Derive the protein pair names that this job will produce.  The analysis
+    # run names use the raw semicolon/comma format from the UI; the produced
+    # ProteinPair objects receive names where those are replaced by underscores.
+    tmp_protein_pair_names = [
+        name.replace(";", "_").replace(",", "_")
+        for name in tmp_raw_analysis_run_names
+    ]
+
     self._app_state.job_scheduler.submit(
       job_descriptor.JobDescriptor(
         enums.JobType.DISTANCE_ANALYSIS,
@@ -255,6 +258,9 @@ class DistanceAnalysisViewController(QtCore.QObject):
           tmp_raw_analysis_run_names,
           self._app_state.get_settings().cutoff,
           self._app_state.get_settings().cycles
-        )
+        ),
+        reserved_names={
+          name_registry_module.PROTEIN_PAIR: tmp_protein_pair_names,
+        },
       )
     )

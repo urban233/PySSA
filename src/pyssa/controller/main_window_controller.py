@@ -29,6 +29,7 @@ import logging
 import os
 import pathlib
 import shutil
+from typing import Union
 
 import pymol
 # import pywinctl
@@ -39,12 +40,15 @@ from src.pyssa.gui.qt import QtGui
 
 from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, \
     pyssa_objects_panel_controller, welcome_screen_view_controller, help_panel_controller, \
-    status_bar_manager, job_popup_controller
+    status_bar_manager, job_popup_controller, predict_protein_view_controller
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.gui.ui.custom_filters import help_event_filter
 from src.pyssa.gui.ui.dialogs import dialog_about
+from src.pyssa.gui.ui.views import predict_protein_view
 from src.pyssa.internal import job_definitions
+from src.pyssa.internal.data_structures import protein_pair, protein
 from src.pyssa.internal.data_structures.data_classes import job_descriptor
+from src.pyssa.io_pyssa.db_pyssa import WriteOperation, OperationType
 from src.pyssa.logging_pyssa import log_handlers, log_levels
 from src.pyssa.model import job_model, selection_snapshot
 from src.pyssa.util import constants, enums, tools, main_window_util
@@ -188,6 +192,8 @@ class MainWindowController:
         self._main_window.action_clear_logs.triggered.connect(self.__slot_clear_all_log_files)
         # TODO: Add connection for the demo project action in the help menu
         self._main_window.action_about.triggered.connect(self.__slot_open_about)
+        self._main_window.action_predict_monomer.triggered.connect(self.__slot_predict_monomer)
+        self._main_window.action_predict_multimer.triggered.connect(self.__slot_predict_multimer)
 
         # # <editor-fold desc="Session ribbon slots">
         # # <editor-fold desc="Session slots">
@@ -397,6 +403,7 @@ class MainWindowController:
         )
         # </editor-fold>
         self.feedback_timer.timeout.connect(self.__slot_sync_pymol_selection_to_tree)
+        self._app_state.job_model.job_finished.connect(self._handle_job_results)
 
     def _setup_application_settings(self):
         # self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
@@ -675,7 +682,7 @@ class MainWindowController:
         has_sequences = has_project and len(project.sequences) > 0
         has_monomer_sequences_in_project = has_sequences and any("," not in s for s in project.sequences)
         has_multimer_sequences_in_project = has_sequences and any("," in s for s in project.sequences)
-        
+
         has_proteins = has_project and len(project.proteins) > 0
         has_protein_pairs = has_project and len(project.protein_pairs) > 0
         has_any_objects = has_sequences or has_proteins or has_protein_pairs
@@ -692,7 +699,7 @@ class MainWindowController:
         self._main_window.action_use_project.setEnabled(True)
         self._main_window.action_delete_project.setEnabled(True)
         self._main_window.action_import_project.setEnabled(True)
-        
+
         # Export and close specifically act upon the *current* project.
         self._main_window.action_export_project.setEnabled(has_project)
         self._main_window.action_close_project.setEnabled(has_project)
@@ -709,8 +716,8 @@ class MainWindowController:
         # -- Top-level menus -----------------------------------------------
         self._main_window.menuPrediction.setEnabled(has_project)
         # Prediction needs an input sequence to execute. Prefer active selection, fallback to project existence.
-        can_predict_monomer = has_active_monomer_selection or (has_monomer_sequences_in_project and not snapshot)
-        can_predict_multimer = has_active_multimer_selection or (has_multimer_sequences_in_project and not snapshot)
+        can_predict_monomer = has_active_monomer_selection or has_monomer_sequences_in_project
+        can_predict_multimer = has_active_multimer_selection or has_multimer_sequences_in_project
         self._main_window.action_predict_monomer.setEnabled(can_predict_monomer)
         self._main_window.action_predict_multimer.setEnabled(can_predict_multimer)
 
@@ -739,17 +746,17 @@ class MainWindowController:
         # Base scene and session commands act on the project environment.
         toolbar_action_open_session = self._main_window.viewer_toolbar_actions.get("open_session")
         if toolbar_action_open_session: toolbar_action_open_session.get_action().setEnabled(has_project)
-        
+
         toolbar_action_create_scene = self._main_window.viewer_toolbar_actions.get("create_scene")
         if toolbar_action_create_scene: toolbar_action_create_scene.get_action().setEnabled(
             has_project and can_image and has_loaded_session
         )
-        
+
         toolbar_action_save_scene = self._main_window.viewer_toolbar_actions.get("save_scene")
         if toolbar_action_save_scene: toolbar_action_save_scene.get_action().setEnabled(
             has_active_scene_selection and has_loaded_session
         )
-        
+
         toolbar_action_delete_scene = self._main_window.viewer_toolbar_actions.get("delete_scene")
         if toolbar_action_delete_scene: toolbar_action_delete_scene.get_action().setEnabled(
             has_active_scene_selection and has_loaded_session
@@ -866,12 +873,12 @@ class MainWindowController:
 
             def import_project_task(progress_callback, is_cancelled):
                 shutil.copyfile(str(tmp_import_filepath), db_path)
-                
+
                 if is_cancelled():
                     raise InterruptedError("Cancelled during project import.")
 
                 tmp_db = ProjectDatabase(db_path=db_path, project_id=tmp_new_project_name)
-                
+
                 # Assume the new project has an id of 1 in the freshly copied database.
                 tmp_db.update_project_name(tmp_new_project_name, 1)
 
@@ -944,12 +951,12 @@ class MainWindowController:
 
                 def export_project_task(progress_callback, is_cancelled):
                     shutil.copyfile(db_path, file_path)
-                    
+
                 def on_success(result):
                     logger.info("Project exported successfully to %s", file_path)
                     self._app_state.status_bar_manager.show_permanent_message("", False)
                     self._app_state.status_bar_manager.show_temporary_message("Project exported.")
-                
+
                 def on_error(exc):
                     logger.exception("Failed to export project.", exc_info=exc)
                     QtWidgets.QMessageBox.critical(
@@ -983,6 +990,91 @@ class MainWindowController:
             self._user_pymol.get_cmd_module().reinitialize()
     # </editor-fold>
 
+    def _get_sequences_for_prediction(self, is_multimer: bool) -> list:
+        """Return the sequence list to pre-populate the prediction dialog.
+
+        Selection strategy:
+
+        1. If sequences of the requested type are currently selected in the
+           tree view, use exactly those selected sequences.
+        2. Otherwise fall back to *all* project sequences of the requested
+           type whose names are **not** reserved in the name registry.  This
+           covers both proteins that already exist in the project and names
+           claimed by queued or running jobs.
+
+        Args:
+            is_multimer: ``True`` to collect multimer sequences (SeqRecord.seq
+                contains a comma), ``False`` for monomers.
+
+        Returns:
+            A list of ``SeqRecord`` objects ready to pass directly to
+            ``PredictProteinViewController``.
+        """
+        project = self._app_state.project
+        if project is None:
+            return []
+
+        # Helper: decides whether a SeqRecord belongs to the requested type.
+        def _is_right_type(seq_record) -> bool:
+            has_comma = "," in str(seq_record.seq)
+            return has_comma if is_multimer else not has_comma
+
+        snapshot = self._get_current_snapshot()
+        if snapshot and snapshot.raw_sequences:
+            # Convert the name-set from the snapshot to SeqRecord objects.
+            selected_names: set[str] = snapshot.raw_sequences
+            selected_sequences = [
+                seq for seq in project.sequences
+                if seq.name in selected_names and _is_right_type(seq)
+            ]
+            if selected_sequences:
+                return selected_sequences
+
+        # No relevant selection — fall back to all qualifying sequences.
+        registry = self._app_state.name_registry
+        from src.pyssa.gui import name_registry as name_registry_module
+        return [
+            seq for seq in project.sequences
+            if _is_right_type(seq)
+            and not registry.is_reserved(name_registry_module.PROTEIN, seq.name)
+        ]
+
+    def __slot_predict_monomer(self) -> None:
+        """Opens the prediction dialog pre-populated with monomer sequences."""
+        sequences = self._get_sequences_for_prediction(is_multimer=False)
+        if not self._dialog_controllers.__contains__("predict_monomer"):
+            self._dialog_controllers["predict_monomer"] = predict_protein_view_controller.PredictProteinViewController(
+                self._app_state,
+                sequences,
+                a_parent=self._main_window,
+            )
+        else:
+            # Re-create when called again so it reflects the current state.
+            self._dialog_controllers["predict_monomer"] = predict_protein_view_controller.PredictProteinViewController(
+                self._app_state,
+                sequences,
+                a_parent=self._main_window,
+            )
+        self._dialog_controllers["predict_monomer"].get_view().show()
+
+    def __slot_predict_multimer(self) -> None:
+        """Opens the prediction dialog pre-populated with multimer sequences."""
+        sequences = self._get_sequences_for_prediction(is_multimer=True)
+        if not self._dialog_controllers.__contains__("predict_multimer"):
+            self._dialog_controllers["predict_multimer"] = predict_protein_view_controller.PredictProteinViewController(
+                self._app_state,
+                sequences,
+                a_parent=self._main_window,
+            )
+        else:
+            # Re-create when called again so it reflects the current state.
+            self._dialog_controllers["predict_multimer"] = predict_protein_view_controller.PredictProteinViewController(
+                self._app_state,
+                sequences,
+                a_parent=self._main_window,
+            )
+        self._dialog_controllers["predict_multimer"].get_view().show()
+
     def __slot_ray_trace_image(self):
         self._app_state.job_scheduler.submit(
             job_descriptor.JobDescriptor(
@@ -993,7 +1085,6 @@ class MainWindowController:
                 run_args=("", "", 0, 0, "")
             )
         )
-        self.refresh_ui(self._get_current_snapshot())
 
     # <editor-fold desc="Help menu">
     def __slot_open_logs(self) -> None:
@@ -1595,6 +1686,136 @@ class MainWindowController:
             self._is_syncing_selection = False
 
     # </editor-fold>
+
+    # <editor-fold desc="Handle job results">
+    def _handle_job_results(self, descriptor: "job_descriptor.JobDescriptor", result: dict):
+        match descriptor.job_type:
+            case enums.JobType.PREDICTION:
+                self._handle_prediction_job_result(descriptor, result)
+            case enums.JobType.DISTANCE_ANALYSIS:
+                self._handle_distance_analysis_job_result(descriptor, result)
+            case enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS:
+                self._handle_prediction_and_distance_analysis_job_result(descriptor, result)
+            case enums.JobType.RAY_TRACING:
+                self._handle_ray_tracing_job_result(descriptor, result)
+                self._status_bar_manager.show_temporary_message(
+                    "Raytracing job completed."
+                )
+            case _:
+                logger.warning(f"Unhandled job type: {descriptor.job_type}")
+
+    # <editor-fold desc="Handle specific job results">
+    def _handle_distance_analysis_job_result(
+            self,
+            descriptor: "job_descriptor.JobDescriptor",
+            result: dict[str, Union["protein_pair.ProteinPair", bool]]
+    ):
+        if descriptor.is_hot:
+            # Results belong to the hot project
+            for tmp_protein_pair in result["protein_pairs"]:
+                self._app_state.project.add_protein_pair(tmp_protein_pair)
+                self._app_state.pyssa_objects_model.add_protein_pair(tmp_protein_pair)
+                self._app_state.hot_db.write_queue.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
+                )
+        else:
+            # Results belong to a cold project
+            for tmp_protein_pair in result["protein_pairs"]:
+                descriptor.cold_handle.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
+                )
+
+    def _handle_prediction_job_result(
+            self,
+            descriptor: "job_descriptor.JobDescriptor",
+            result: dict[str, Union["protein.Protein", bool]]
+    ):
+        if descriptor.is_hot:
+            for tmp_protein in result["predicted_proteins"]:
+                self._app_state.project.add_existing_protein(tmp_protein)
+                self._app_state.pyssa_objects_model.add_protein(tmp_protein)
+                self._app_state.hot_db.write_queue.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
+                )
+        else:
+            for tmp_protein in result["predicted_proteins"]:
+                descriptor.cold_handle.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
+                )
+
+    def _handle_prediction_and_distance_analysis_job_result(
+            self,
+            descriptor: "job_descriptor.JobDescriptor",
+            result: dict[str, Union[bool, "protein.Protein", "protein_pair.ProteinPair"]]
+    ):
+        if descriptor.is_hot:
+            for tmp_protein in result["predicted_proteins"]:
+                self._app_state.project.add_existing_protein(tmp_protein)
+                self._app_state.pyssa_objects_model.add_protein(tmp_protein)
+                self._app_state.hot_db.write_queue.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
+                )
+            for tmp_protein_pair in result["protein_pairs"]:
+                self._app_state.project.add_protein_pair(tmp_protein_pair)
+                self._app_state.pyssa_objects_model.add_protein_pair(tmp_protein_pair)
+                self._app_state.hot_db.write_queue.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
+                )
+        else:
+            # Results belong to a cold project
+            for tmp_protein in result["predicted_proteins"]:
+                descriptor.cold_handle.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
+                )
+            for tmp_protein_pair in result["protein_pairs"]:
+                descriptor.cold_handle.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
+                )
+
+    def _handle_ray_tracing_job_result(
+            self,
+            descriptor: "job_descriptor.JobDescriptor",
+            result: dict
+    ):
+        print("Hi")
+    # </editor-fold>
+    # </editor-fold>
+
+    def save_pymol_session_to_project(self) -> None:
+        """Saves the current PyMOL session to the active project object and database.
+
+        Retrieves the current PyMOL session as a base64 string, assigns it to the
+        currently loaded Protein or ProteinPair object, and asynchronously updates
+        the corresponding record in the project database.
+        """
+        current_object = self._user_pymol.get_currently_loaded_object()
+        if not current_object:
+            return
+
+        try:
+            session_str = self._user_pymol.save_session()
+            current_object.pymol_session = session_str
+
+            from src.pyssa.io_pyssa.db_pyssa.write_queue import WriteOperation, OperationType
+            from src.pyssa.internal.data_structures.protein import Protein
+            from src.pyssa.internal.data_structures.protein_pair import ProteinPair
+
+            hot_db = self._app_state.hot_db
+            if hot_db:
+                if isinstance(current_object, Protein):
+                    hot_db.write_queue.submit(
+                        WriteOperation(OperationType.UPDATE_PROTEIN_SESSION, current_object)
+                    )
+                elif isinstance(current_object, ProteinPair):
+                    hot_db.write_queue.submit(
+                        WriteOperation(OperationType.UPDATE_PAIR_SESSION, current_object)
+                    )
+
+            logger.info("Saved PyMOL session to project database successfully.")
+            self._app_state.status_bar_manager.show_temporary_message("PyMOL session saved.")
+
+        except Exception as e:
+            logger.error(f"Failed to capture or trigger PyMOL session save: {e}")
 
     def shutdown_application_processes(self) -> None:
         """Closes all threads and process as well as the application itself."""
