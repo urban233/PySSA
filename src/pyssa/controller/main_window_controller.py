@@ -37,13 +37,13 @@ from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtGui
 
 from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, \
-    pyssa_objects_panel_controller, selection_handler, welcome_screen_view_controller, help_panel_controller, \
+    pyssa_objects_panel_controller, welcome_screen_view_controller, help_panel_controller, \
     status_bar_manager, job_popup_controller
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.gui.ui.custom_filters import help_event_filter
 from src.pyssa.gui.ui.dialogs import dialog_about
 from src.pyssa.logging_pyssa import log_handlers, log_levels
-from src.pyssa.model import job_model
+from src.pyssa.model import job_model, selection_snapshot
 from src.pyssa.util import constants, enums, tools, main_window_util
 from src.pyssa.gui import main_window, app_state
 from src.pyssa.gui.ui.custom_context_menus import (
@@ -56,6 +56,39 @@ from src.pyssa.internal.pymol import pml_worker
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
+
+
+class _PyMOLClickFilter(QtCore.QObject):
+    """Event filter that detects mouse-button releases on the PyMOL widget.
+
+    When a left-button release is detected the associated *feedback_timer*
+    is (re-)started so the controller can synchronise the PyMOL selection
+    back into the tree view after a short debounce.
+    """
+
+    def __init__(self, a_feedback_timer: QtCore.QTimer) -> None:
+        """Constructor.
+
+        Args:
+            a_feedback_timer: The single-shot timer to start on each click.
+        """
+        super().__init__()
+        self._feedback_timer = a_feedback_timer
+
+    def eventFilter(self, obj: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        """Intercept mouse-button release events.
+
+        Args:
+            obj: The watched object (the PyMOL widget).
+            event: The incoming event.
+
+        Returns:
+            Always ``False`` so the event continues to propagate to PyMOL.
+        """
+        if event.type() == QtCore.QEvent.Type.MouseButtonRelease:
+            if event.button() == QtCore.Qt.MouseButton.LeftButton:
+                self._feedback_timer.start(250)
+        return False
 
 
 class MainWindowController:
@@ -97,9 +130,12 @@ class MainWindowController:
         )
         self._complete_jobs_controller.show_completed_jobs()
         self.feedback_timer = QtCore.QTimer()
+        self.feedback_timer.setSingleShot(True)
+        self._is_syncing_selection: bool = False
         self._sequence_context_menu = sequence_list_context_menu.SequenceListContextMenu()
         self._protein_context_menu = protein_tree_context_menu.ProteinTreeContextMenu()
         self._protein_pair_context_menu = protein_pair_tree_context_menu.ProteinPairTreeContextMenu()
+        self._current_selection_snapshot: "selection_snapshot.SelectionSnapshot | None" = None
         # self.custom_progress_signal = custom_signals.ProgressSignal()
         # self.abort_signal = custom_signals.AbortSignal()
         # self.thread_pool = QtCore.QThreadPool()
@@ -108,6 +144,11 @@ class MainWindowController:
         # </editor-fold>
         # self._init_main_window()
         self._connect_all_signals_with_their_slots()
+        # Install an event filter on the PyMOL widget to detect mouse clicks.
+        # PyMOLGLWidget does not expose a click signal, so we catch
+        # MouseButtonRelease at the Qt level and start the feedback timer.
+        self._pymol_click_filter = _PyMOLClickFilter(self.feedback_timer)
+        self._main_window.pymolwidget.installEventFilter(self._pymol_click_filter)
         # self.aux_pymol_client = aux_pymol_client.AuxPyMOLClient(self.context)
         # self.protein_model = protein_model.ProteinModel()
         # self.protein_model.add_protein(self._user_pymol.get_cmd_module().get_model())
@@ -344,19 +385,14 @@ class MainWindowController:
         tree_view.setContextMenuPolicy(
             QtCore.Qt.ContextMenuPolicy.CustomContextMenu
         )
-        tree_view.selectionModel().selectionChanged.connect(
-            self.__slot_on_project_tree_selection_changed
+        self._pyssa_objects_panel_controller.selectionSnapshotUpdated.connect(
+            self.__slot_on_selection_snapshot_updated
         )
-        tree_view.doubleClicked.connect(
-            self.__slot_on_tree_double_clicked
-        )
-        tree_view.customContextMenuRequested.connect(
-            self.__slot_show_tree_context_menu
+        self._main_window.pyssa_objects_panel.tree_view.clicked.connect(
+            self.__slot_pyssa_objects_view_clicked
         )
         # </editor-fold>
-        # self.feedback_timer.setSingleShot(True)
-        # self.feedback_timer.timeout.connect(self.update_protein_structure_tree_view) # TODO: Refactor the method update_protein_structure_tree_view() first!
-        # </editor-fold>
+        self.feedback_timer.timeout.connect(self.__slot_sync_pymol_selection_to_tree)
 
     def _setup_application_settings(self):
         # self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
@@ -422,6 +458,191 @@ class MainWindowController:
         """
         return self._main_window
 
+    def get_application_settings(self):
+        """Returns the application settings.
+
+        Returns:
+            The application settings object
+        """
+        return self._settings_manager.settings
+
+    # </editor-fold>
+
+    # <editor-fold desc="Selection snapshot helper methods">
+    def _get_current_snapshot(self) -> "selection_snapshot.SelectionSnapshot | None":
+        """Returns the currently cached selection snapshot.
+
+        Returns:
+            The current selection snapshot or None if no selection exists.
+        """
+        return self._current_selection_snapshot
+
+    def _get_selected_protein_names(self) -> list[str]:
+        """Extract protein names from the current selection snapshot.
+
+        Returns:
+            A list of protein names from the currently selected proteins.
+            Returns an empty list if no snapshot or proteins are selected.
+        """
+        snapshot = self._get_current_snapshot()
+        if not snapshot:
+            return []
+
+        protein_names = []
+        for protein in snapshot.distinct_proteins:
+            protein_names.append(protein.get_molecule_object())
+        return protein_names
+
+    def _get_pymol_selection_string(self) -> str:
+        """Build a PyMOL selection string from the current snapshot.
+
+        Returns:
+            A PyMOL selection string targeting the selected proteins.
+            Returns "sele" as fallback if no proteins are selected.
+        """
+        protein_names = self._get_selected_protein_names()
+        if not protein_names:
+            return "sele"
+
+        # Build selection string: "protein_name_1 or protein_name_2 or ..."
+        return " or ".join(protein_names)
+
+    def _has_valid_selection(self) -> bool:
+        """Check if there is any valid selection in the current snapshot.
+
+        Returns:
+            True if proteins, chains, residues, or atoms are selected, False otherwise.
+        """
+        snapshot = self._get_current_snapshot()
+        if not snapshot:
+            return False
+
+        return (len(snapshot.distinct_proteins) > 0 or
+                len(snapshot.raw_chains) > 0 or
+                len(snapshot.raw_residues) > 0 or
+                len(snapshot.raw_atoms) > 0)
+
+    def _apply_pymol_command_to_selection(self, command_name: str, *args) -> None:
+        """Apply a PyMOL command to the current selection.
+
+        This method applies PyMOL commands to proteins selected in the tree view.
+        Falls back to the default "sele" selection if no proteins are selected.
+
+        Args:
+            command_name: Name of the PyMOL command (e.g., "show", "hide", "color")
+            *args: Additional arguments for the PyMOL command
+        """
+        selection_string = self._get_pymol_selection_string()
+        cmd = self._user_pymol.get_cmd_module()
+
+        # Get the command method from pymol
+        pymol_command = getattr(cmd, command_name, None)
+        if pymol_command is None:
+            logger.error(f"PyMOL command '{command_name}' not found")
+            return
+
+        # Apply the command with the selection string and additional arguments
+        try:
+            pymol_command(*args, selection_string)
+        except Exception as e:
+            logger.error(f"Failed to apply PyMOL command '{command_name}': {e}")
+
+    def _get_protein_context(self, protein) -> dict:
+        """Get context information about a protein (standalone or part of a pair).
+
+        Args:
+            protein: The protein to get context for.
+
+        Returns:
+            A dictionary containing:
+            - 'is_standalone': bool - True if protein is standalone
+            - 'is_pair_child': bool - True if protein is part of a pair
+            - 'protein_pair': ProteinPair | None - The pair if protein is part of one
+            - 'protein': Protein - The original protein object
+        """
+        snapshot = self._get_current_snapshot()
+        if not snapshot:
+            return {
+                'is_standalone': False,
+                'is_pair_child': False,
+                'protein_pair': None,
+                'protein': protein
+            }
+
+        is_standalone = protein in snapshot.raw_standalone_proteins
+        is_pair_child = protein in snapshot.raw_protein_pair_children
+        protein_pair = snapshot.get_protein_pair_for_protein(protein) if is_pair_child else None
+
+        return {
+            'is_standalone': is_standalone,
+            'is_pair_child': is_pair_child,
+            'protein_pair': protein_pair,
+            'protein': protein
+        }
+
+    def _get_all_protein_contexts(self) -> list[dict]:
+        """Get context information for all currently selected proteins.
+
+        Returns:
+            A list of context dictionaries (see _get_protein_context for structure).
+            Each entry indicates whether the protein is standalone or part of a pair.
+        """
+        snapshot = self._get_current_snapshot()
+        if not snapshot:
+            return []
+
+        contexts = []
+        for protein in snapshot.distinct_proteins:
+            contexts.append(self._get_protein_context(protein))
+
+        return contexts
+
+    def _get_selected_protein_pairs(self) -> list:
+        """Get all protein pairs from the current selection.
+
+        Returns:
+            A list of ProteinPair objects that are currently selected.
+        """
+        snapshot = self._get_current_snapshot()
+        if not snapshot:
+            return []
+
+        return list(snapshot.raw_protein_pairs)
+
+    def _group_proteins_by_context(self) -> dict:
+        """Group selected proteins by their context (standalone vs pair).
+
+        Returns:
+            A dictionary with keys:
+            - 'standalone_proteins': list[Protein] - Standalone proteins
+            - 'pair_proteins': list[dict] - Proteins that are part of pairs, each dict contains:
+                - 'protein': Protein
+                - 'protein_pair': ProteinPair
+            - 'protein_pairs': list[ProteinPair] - All protein pairs involved
+        """
+        snapshot = self._get_current_snapshot()
+        if not snapshot:
+            return {
+                'standalone_proteins': [],
+                'pair_proteins': [],
+                'protein_pairs': []
+            }
+
+        pair_proteins = []
+        for protein in snapshot.raw_protein_pair_children:
+            protein_pair = snapshot.get_protein_pair_for_protein(protein)
+            if protein_pair:
+                pair_proteins.append({
+                    'protein': protein,
+                    'protein_pair': protein_pair
+                })
+
+        return {
+            'standalone_proteins': list(snapshot.raw_standalone_proteins),
+            'pair_proteins': pair_proteins,
+            'protein_pairs': list(snapshot.raw_protein_pairs)
+        }
+
     # </editor-fold>
 
     def open_welcome_screen(self):
@@ -432,26 +653,33 @@ class MainWindowController:
         self._dialog_controllers["welcome_screen"].restore_default_view()
         self._dialog_controllers["welcome_screen"].get_view().show()
 
-    def refresh_ui(self) -> None:
+    def refresh_ui(self, snapshot: "selection_snapshot.SelectionSnapshot | None" = None) -> None:
         """Sync every piece of the main window to the current AppState.
 
-        Called automatically by AppState whenever state changes.
-        Also safe to call manually at any time.
+        Called automatically by AppState whenever state changes, natively triggered
+        by full model refreshes, or by the PySSAObjectsPanelController passing a
+        `SelectionSnapshot` during user interaction.
 
-        This method is fully declarative and idempotent: it reads
-        the current ``AppState`` and unconditionally sets every relevant
-        widget property based on specific object-level rules (e.g., proteins or sequences).
-        UI elements that are not applicable in a given state are **disabled** (never hidden).
+        This method is fully declarative: it reads the current ``AppState`` and the
+        passed selection snapshot to unconditionally set every relevant widget
+        property (e.g. enabling predicting monomer only if monomers exist and/or are selected).
         """
         has_project = self._app_state.has_open_project()
         project = self._app_state.project
 
         # Derived booleans from detailed project data.
         has_sequences = has_project and len(project.sequences) > 0
+        has_monomer_sequences_in_project = has_sequences and any("," not in s for s in project.sequences)
+        has_multimer_sequences_in_project = has_sequences and any("," in s for s in project.sequences)
+        
         has_proteins = has_project and len(project.proteins) > 0
         has_protein_pairs = has_project and len(project.protein_pairs) > 0
         has_any_objects = has_sequences or has_proteins or has_protein_pairs
         has_running_jobs = len(self._app_state._cold_dbs) > 0
+        if self._user_pymol.get_currently_loaded_object() is None:
+            has_loaded_session = False
+        else:
+            has_loaded_session = True
 
         # -- Project menu actions ------------------------------------------
         # Actions that replace or manage the active project context are always available.
@@ -466,38 +694,62 @@ class MainWindowController:
         self._main_window.action_close_project.setEnabled(has_project)
         # action_exit_application is always enabled.
 
+        # -- Selection Snapshot context ------------------------------------
+        has_active_monomer_selection = snapshot.has_monomer_sequences if snapshot else False
+        has_active_multimer_selection = snapshot.has_multimer_sequences if snapshot else False
+        has_active_protein_selection = len(snapshot.distinct_proteins) > 0 if snapshot else False
+        has_active_pair_selection = len(snapshot.raw_protein_pairs) > 0 if snapshot else False
+        has_active_pair_child_selection = len(snapshot.raw_protein_pair_children) > 0 if snapshot else False
+        has_active_scene_selection = len(snapshot.raw_scenes) > 0 if snapshot else False
+
         # -- Top-level menus -----------------------------------------------
         self._main_window.menuPrediction.setEnabled(has_project)
-        # Prediction needs an input sequence to execute.
-        self._main_window.action_predict_monomer.setEnabled(has_sequences)
-        self._main_window.action_predict_multimer.setEnabled(has_sequences)
+        # Prediction needs an input sequence to execute. Prefer active selection, fallback to project existence.
+        can_predict_monomer = has_active_monomer_selection or (has_monomer_sequences_in_project and not snapshot)
+        can_predict_multimer = has_active_multimer_selection or (has_multimer_sequences_in_project and not snapshot)
+        self._main_window.action_predict_monomer.setEnabled(can_predict_monomer)
+        self._main_window.action_predict_multimer.setEnabled(can_predict_multimer)
 
         self._main_window.menuAnalysis.setEnabled(has_project)
         # Distance analysis operations computationally require 3D structure models.
-        self._main_window.action_distance_analysis.setEnabled(has_proteins or has_protein_pairs)
+        can_analyze = has_active_protein_selection or has_active_pair_selection or (has_proteins or has_protein_pairs)
+        self._main_window.action_distance_analysis.setEnabled(can_analyze)
 
         self._main_window.menuResults.setEnabled(has_project)
         # Results summaries aggregate data from protein pair analysis/predictions.
-        self._main_window.action_results_summary.setEnabled(has_protein_pairs)
+        self._main_window.action_results_summary.setEnabled(has_active_pair_selection or has_active_pair_child_selection or (has_protein_pairs and not snapshot))
 
         self._main_window.menuImage.setEnabled(has_project)
         # Rendering commands mathematically require actual PyMOL coordinates.
-        self._main_window.action_preview_image.setEnabled(has_proteins)
-        self._main_window.action_ray_tracing_image.setEnabled(has_proteins)
-        self._main_window.action_simple_image.setEnabled(has_proteins)
+        can_image = has_active_protein_selection or has_active_pair_child_selection or (has_proteins and not snapshot)
+        self._main_window.action_preview_image.setEnabled(can_image)
+        self._main_window.action_ray_tracing_image.setEnabled(can_image)
+        self._main_window.action_simple_image.setEnabled(can_image)
 
         self._main_window.menuHotspots.setEnabled(has_project)
         # Protein region generation acts upon 3D coordinates.
-        self._main_window.action_protein_regions.setEnabled(has_proteins)
+        self._main_window.action_protein_regions.setEnabled(can_image)
         # Settings and Help menus are always enabled.
 
         # -- Viewer toolbar actions ----------------------------------------
         # Base scene and session commands act on the project environment.
-        _project_level_toolbar_keys = ["open_session", "create_scene", "save_scene", "delete_scene"]
-        for key in _project_level_toolbar_keys:
-            toolbar_action = self._main_window.viewer_toolbar_actions.get(key)
-            if toolbar_action is not None:
-                toolbar_action.get_action().setEnabled(has_project)
+        toolbar_action_open_session = self._main_window.viewer_toolbar_actions.get("open_session")
+        if toolbar_action_open_session: toolbar_action_open_session.get_action().setEnabled(has_project)
+        
+        toolbar_action_create_scene = self._main_window.viewer_toolbar_actions.get("create_scene")
+        if toolbar_action_create_scene: toolbar_action_create_scene.get_action().setEnabled(
+            has_project and can_image and has_loaded_session
+        )
+        
+        toolbar_action_save_scene = self._main_window.viewer_toolbar_actions.get("save_scene")
+        if toolbar_action_save_scene: toolbar_action_save_scene.get_action().setEnabled(
+            has_active_scene_selection and has_loaded_session
+        )
+        
+        toolbar_action_delete_scene = self._main_window.viewer_toolbar_actions.get("delete_scene")
+        if toolbar_action_delete_scene: toolbar_action_delete_scene.get_action().setEnabled(
+            has_active_scene_selection and has_loaded_session
+        )
 
         # PyMOL representation tools need a 3D structural model in the wrapper.
         _protein_level_toolbar_keys = [
@@ -507,7 +759,7 @@ class MainWindowController:
         for key in _protein_level_toolbar_keys:
             toolbar_action = self._main_window.viewer_toolbar_actions.get(key)
             if toolbar_action is not None:
-                toolbar_action.get_action().setEnabled(has_proteins)
+                toolbar_action.get_action().setEnabled(can_image)
 
         # General viewer state indicators are active.
         _status_level_toolbar_keys = ["running_jobs", "notifications"]
@@ -528,6 +780,8 @@ class MainWindowController:
         # -- First-pass model binding --------------------------------------
         if self._app_state.is_first_pass():
             panel.tree_view.setModel(self._app_state.pyssa_objects_model)
+            # Reconnect selection signal after model is replaced
+            self._pyssa_objects_panel_controller._connect_selection_signal()
 
         # -- Window title --------------------------------------------------
         if has_project:
@@ -538,6 +792,7 @@ class MainWindowController:
             self._main_window.setWindowTitle("PySSA")
 
     # <editor-fold desc="Slot methods">
+    # <editor-fold desc="Project management">
     def __slot_create_project(self):
         if not self._dialog_controllers.__contains__("create_project"):
             self._dialog_controllers["create_project"] = create_project_view_controller.CreateProjectViewController(
@@ -722,100 +977,61 @@ class MainWindowController:
         if self._app_state.has_open_project():
             self._app_state.close_project()
             self._user_pymol.get_cmd_module().reinitialize()
+    # </editor-fold>
 
     def __slot_toggle_help_panel(self):
         layout = self._main_window.tool_window_layout
         layout.set_right_panel_hidden(not layout.is_right_panel_hidden)
 
-    # <editor-fold desc="Project tree selection handling">
-    def __slot_on_project_tree_selection_changed(
-        self,
-        selected: QtCore.QItemSelection,
-        deselected: QtCore.QItemSelection,
-    ) -> None:
-        """Respond to a changed item selection in the project QTreeView.
-
-        Delegates all classification, handler dispatch, and UI state
-        management to :func:`selection_handler.on_project_tree_selection_changed`.
-
-        Args:
-            selected: Newly selected items in this signal emission.
-            deselected: Items deselected in this emission.
-        """
-        selection_handler.on_project_tree_selection_changed(
-            self, selected, deselected,
-        )
-
-    def __slot_on_tree_double_clicked(
-        self, index: QtCore.QModelIndex,
-    ) -> None:
-        """Handle a double-click on a node in the project QTreeView.
-
-        Delegates to :func:`selection_handler.on_tree_double_clicked` which
-        opens the sequence viewer for sequences and loads the PyMOL session
-        for proteins and protein pairs.
-
-        Args:
-            index: The ``QModelIndex`` that was double-clicked.
-        """
-        selection_handler.on_tree_double_clicked(self, index)
-
-    def __slot_show_tree_context_menu(
-        self, position: QtCore.QPoint,
-    ) -> None:
-        """Display the appropriate context menu for a right-click in the tree.
-
-        Determines the node type of the clicked item and shows the
-        corresponding context menu (sequence, protein, or protein pair).
-
-        Args:
-            position: The widget-relative position of the right-click.
-        """
-        tree_view = self._main_window.pyssa_objects_panel.tree_view
-        index = tree_view.indexAt(position)
-        if not index.isValid():
-            return
-
-        node_type = index.data(enums.ModelEnum.TYPE_ROLE)
-        from src.pyssa.model.protein_subtree_mixin import (
-            TYPE_SEQUENCE,
-            TYPE_PROTEIN,
-            TYPE_PROTEIN_PAIR,
-        )
-
-        if node_type == TYPE_SEQUENCE:
-            menu = self._sequence_context_menu.get_context_menu(
-                tree_view.selectionModel().selectedIndexes(),
-            )
-            menu.exec(tree_view.viewport().mapToGlobal(position))
-        elif node_type == TYPE_PROTEIN:
-            menu = self._protein_context_menu.get_context_menu(
-                tree_view.selectionModel().selectedIndexes(),
-                the_type="protein",
-                is_protein_in_any_pair_flag=False,
-                is_protein_in_session_flag=True,
-                is_protein_expanded=tree_view.isExpanded(index),
-                is_database_thread_running=False,
-            )
-            menu.exec(tree_view.viewport().mapToGlobal(position))
-        elif node_type == TYPE_PROTEIN_PAIR:
-            menu = self._protein_pair_context_menu.get_context_menu(
-                tree_view.selectionModel().selectedIndexes(),
-                is_protein_pair_in_current_session_flag=True,
-                is_protein_pair_expanded=tree_view.isExpanded(index),
-            )
-            menu.exec(tree_view.viewport().mapToGlobal(position))
-
-    # </editor-fold>
-
     # <editor-fold desc="Session ribbon slots">
     # <editor-fold desc="Session slots">
     def __slot_open_session(self) -> None:
-        """TODO: Change this implementation to correct session opening."""
-        with pml_worker.PmlWorker.session(pml_worker.PmlWorker.cache_user_session(self._user_pymol, "my_test")) as worker:
-            worker.do("color", ("red", "all"), sync=True)
-            worker.do("draw", ("800", "600"), sync=True)
-            worker.do("png", ("test.png", ), sync=True)
+        """Opens a PyMOL session based on the current selection.
+
+        Behavior depends on selection context:
+        - If protein pair(s) selected: Opens session bound to the protein pair
+        - If standalone protein(s) selected: Opens session bound directly to the protein
+        - If no selection: Operates on all objects
+        """
+        # Get detailed protein context information
+        grouped_context = self._group_proteins_by_context()
+        protein_pairs = grouped_context['protein_pairs']
+        standalone_proteins = grouped_context['standalone_proteins']
+        pair_proteins = grouped_context['pair_proteins']
+
+        # Determine session context and log appropriate information
+        if protein_pairs:
+            # Protein pairs are selected - session is bound to the pair
+            for pair in protein_pairs:
+                logger.info(f"Opening session for protein pair: {pair.name}")
+                logger.info(f"  - Protein 1: {pair.protein_1.get_molecule_object()}")
+                logger.info(f"  - Protein 2: {pair.protein_2.get_molecule_object()}")
+                self._user_pymol.load_session(pair.pymol_session, pair)
+
+        elif pair_proteins:
+            # Individual proteins from pairs are selected - identify their parent pairs
+            for protein_info in pair_proteins:
+                protein = protein_info['protein']
+                protein_pair = protein_info['protein_pair']
+                logger.info(f"Opening session for protein {protein.get_molecule_object()} "
+                           f"(part of pair: {protein_pair.name})")
+                self._user_pymol.load_session(protein_pair.pymol_session, protein_pair)
+
+        elif standalone_proteins:
+            # Standalone proteins are selected - session is bound directly to protein
+            for protein in standalone_proteins:
+                logger.info(f"Opening session for standalone protein: {protein.get_molecule_object()}")
+                self._user_pymol.load_session(protein.pymol_session, protein)
+
+        else:
+            # No selection - operate on all objects
+            logger.info("Opening session for all objects (no specific selection)")
+
+        # Example implementation (replace with actual logic)
+        # with pml_worker.PmlWorker.session(pml_worker.PmlWorker.cache_user_session(self._user_pymol, "my_test")) as worker:
+        #     worker.do("color", ("red", "all"), sync=True)
+        #     worker.do("draw", ("800", "600"), sync=True)
+        #     worker.do("png", ("test.png", ), sync=True)
         # print(pml_worker.one_shot_do(
         #     self._user_pymol, "my_test", "color", ("red", "all"), True
         # ))
@@ -840,49 +1056,62 @@ class MainWindowController:
 
     # # <editor-fold desc="Scene slots">
     def __slot_save_scene(self) -> None:
-      """Saves a pymol scene."""
-      self._user_pymol.get_cmd_module().scene(key="new", action="append")
+        """Saves a PyMOL scene.
 
-    def __slot_recall_scene(self, an_item) -> None:
-      """Recalls an already created PyMOL scene."""
-      tmp_widget = self._main_window.side_panel_pymol_scenes.scenes_list.list_widget.itemWidget(
-        an_item)
-      self._user_pymol.get_cmd_module().scene(tmp_widget.label.text(), "recall")
+        The scene includes the current view and all visible objects.
+        Selection context is available via _get_current_snapshot() if needed.
+        """
+        tmp_input_dialog = QtWidgets.QInputDialog()
+        tmp_name, ok_pressed = tmp_input_dialog.getText(
+            self._main_window,
+            "Scene Name",
+            "Enter A Scene Name:",
+            text="",
+        )
+        if not ok_pressed or not tmp_name.strip():
+            return
+        tmp_scene_name = tmp_name.strip()
+
+        self._user_pymol.get_cmd_module().scene(key=tmp_scene_name, action="append")
+
+        self._app_state.pyssa_objects_model.add_scene(
+            tmp_scene_name, self._user_pymol.get_currently_loaded_object()
+        )
+
+        # # Log selection context for debugging
+        # snapshot = self._get_current_snapshot()
+        # if snapshot and len(snapshot.distinct_proteins) > 0:
+        #     logger.info(f"Scene saved with {len(snapshot.distinct_proteins)} protein(s) selected")
+
+    def __slot_recall_scene(self) -> None:
+        """Recalls an already created PyMOL scene."""
+        snapshot = self._get_current_snapshot()
+        if snapshot:
+            for tmp_raw_scene in snapshot.raw_scenes:
+                self._user_pymol.get_cmd_module().scene(tmp_raw_scene, "recall")
+                # Log scene recall
+                logger.info(f"Recalled scene: {tmp_raw_scene}")
 
     def __slot_update_scene(self):
         """Update the currently selected PyMOL scene and refresh its thumbnail."""
-        try:
-            scene_name = self._main_window.side_panel_pymol_scenes.scenes_list.get_scene_name_from_item(
-                self._main_window.side_panel_pymol_scenes.scenes_list.get_selected_item()
-            )
-            self._user_pymol.get_cmd_module().scene(key=scene_name, action="update")
-            image_filepath = self._save_a_scene(scene_name)
-            self._main_window.side_panel_pymol_scenes.scenes_list.update_scene_thumbnail(
-                scene_name, pathlib.Path(image_filepath)
-            )
-        except Exception as error:
-            logger.error(f"Failed to update scene: {error}")
-            QtWidgets.QMessageBox.critical(
-                self._main_window,
-                "Error",
-                f"Failed to update scene: {error}"
-            )
+        snapshot = self._get_current_snapshot()
+        if snapshot:
+            for tmp_raw_scene in snapshot.raw_scenes:
+                self._user_pymol.get_cmd_module().scene(tmp_raw_scene, "update")
+                # Log scene recall
+                logger.info(f"Updated scene: {tmp_raw_scene}")
 
     def __slot_delete_scene(self):
         """Deletes the currently selected PyMOL scene and removes it from the list."""
-        try:
-            scene_name = self._main_window.side_panel_pymol_scenes.scenes_list.get_scene_name_from_item(
-                self._main_window.side_panel_pymol_scenes.scenes_list.get_selected_item()
-            )
-            self._user_pymol.get_cmd_module().scene(key=scene_name, action="clear")
-            self._main_window.side_panel_pymol_scenes.scenes_list.remove_scene(scene_name)
-        except Exception as error:
-            logger.error(f"Failed to update scene: {error}")
-            QtWidgets.QMessageBox.critical(
-                self._main_window,
-                "Error",
-                f"Failed to update scene: {error}"
-            )
+        snapshot = self._get_current_snapshot()
+        if snapshot:
+            for tmp_raw_scene in snapshot.raw_scenes:
+                self._user_pymol.get_cmd_module().scene(tmp_raw_scene, "clear")
+                # Log scene recall
+                logger.info(f"Updated scene: {tmp_raw_scene}")
+                self._app_state.pyssa_objects_model.remove_scene(
+                    tmp_raw_scene, self._user_pymol.get_currently_loaded_object()
+                )
 
     # # </editor-fold>
 
@@ -1171,6 +1400,7 @@ class MainWindowController:
 
     # </editor-fold>
 
+    # <editor-fold desc="Job popups">
     def __slot_open_active_jobs_popup(self):
         self._main_window.active_jobs_menu.exec(
             self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("running_jobs"))
@@ -1180,6 +1410,7 @@ class MainWindowController:
         self._main_window.complete_jobs_menu.exec(
             self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("notifications"))
         )
+    # </editor-fold>
 
     # <editor-fold desc="Help menu">
     def __slot_open_logs(self) -> None:
@@ -1262,6 +1493,87 @@ class MainWindowController:
                 "An unknown error occurred!"
             )
     # </editor-fold>
+
+    def __slot_on_selection_snapshot_updated(self, snapshot: "selection_snapshot.SelectionSnapshot") -> None:
+        """Slot that receives the SelectionSnapshot when the project tree selection changes.
+
+        This snapshot simplifies evaluating what the user currently has selected in the PySSA Objects Panel.
+        Instead of traversing tree nodes, UI logic can query the snapshot directly.
+
+        Args:
+            snapshot: An immutable snapshot of the current tree selection.
+        """
+        # Cache the snapshot for use in other slot methods
+        self._current_selection_snapshot = snapshot
+        # Skip PyMOL sync when the tree is being updated from the PyMOL side
+        # to prevent an infinite feedback loop.
+        if not self._is_syncing_selection:
+            if snapshot.pymol_selection_string:
+                self._user_pymol.get_cmd_module().select(
+                    "sele",
+                    selection=snapshot.pymol_selection_string,
+                    enable=1,
+                )
+            else:
+                # No 3-D selectable items chosen; clear PyMOL selection
+                self._user_pymol.get_cmd_module().select("sele", "none", enable=0)
+
+        # We defer all UI enabling/disabling logic to refresh_ui, allowing a single
+        # source of truth for the entire application state.
+        self.refresh_ui(snapshot)
+
+    def __slot_pyssa_objects_view_clicked(self):
+        snapshot = self._get_current_snapshot()
+        if snapshot and snapshot.raw_scenes:
+            self.__slot_recall_scene()
+
+    def __slot_sync_pymol_selection_to_tree(self) -> None:
+        """Sync the current PyMOL 'sele' selection into the tree view.
+
+        Triggered by the ``feedback_timer`` after a PyMOL left-click event.
+        Reads the atoms in ``sele`` via ``cmd.get_model``, finds the
+        corresponding tree-view indexes through
+        :meth:`PSAObjectsModel.find_indexes_for_pymol_atoms`, and updates
+        the tree selection accordingly.
+
+        The panel controller's selection signal is suppressed during the
+        update to prevent a feedback loop (PyMOL → tree → PyMOL).
+        """
+        try:
+            self._is_syncing_selection = True
+            cmd = self._user_pymol.get_cmd_module()
+            chempy_model = cmd.get_model("sele")
+
+            model = self._app_state.pyssa_objects_model
+            tree_view = self._main_window.pyssa_objects_panel.tree_view
+            selection_model = tree_view.selectionModel()
+            if selection_model is None:
+                return
+
+            # Suppress tree → PyMOL sync while we modify the tree selection.
+            self._pyssa_objects_panel_controller.suppress_selection_signal()
+            try:
+                selection_model.clearSelection()
+                indexes = model.find_indexes_for_pymol_atoms(chempy_model)
+                for index in indexes:
+                    selection_model.select(
+                        index,
+                        selection_model.SelectionFlag.Select | selection_model.SelectionFlag.Rows,
+                    )
+            finally:
+                self._pyssa_objects_panel_controller.restore_selection_signal()
+
+            # Because we suppressed the panel signal, the normal
+            # snapshot → refresh_ui path was skipped.  Resolve a snapshot
+            # from the tree's current selection and refresh the UI manually.
+            current_indexes = list(selection_model.selectedIndexes())
+            snapshot = model.resolve_selection(current_indexes)
+            self._current_selection_snapshot = snapshot
+            self.refresh_ui(snapshot)
+        except Exception as e:
+            logger.error(f"Failed to sync PyMOL selection to tree: {e}")
+        finally:
+            self._is_syncing_selection = False
 
     # </editor-fold>
 

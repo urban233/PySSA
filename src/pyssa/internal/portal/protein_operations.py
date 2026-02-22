@@ -24,7 +24,7 @@ import logging
 
 from src.pyssa.internal.pymol.pml_worker import PmlWorker
 from src.pyssa.internal.pymol.pml_enums import PmlCommand
-from src.pyssa.internal.data_structures import chain, job
+from src.pyssa.internal.data_structures import chain
 from src.pyssa.util import enums, exception
 from src.pyssa.util import protein_util
 from src.pyssa.logging_pyssa import log_handlers

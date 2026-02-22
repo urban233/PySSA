@@ -23,6 +23,7 @@
 import logging
 import pathlib
 from typing import Any, Optional
+# from warnings import deprecated
 
 import numpy as np
 from src.pyssa.gui.qt import QtCore
@@ -39,6 +40,7 @@ logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 
+# @deprecated
 class PyssaDatabaseInterface:
   """Custom interface layer to the project database.
 
@@ -149,6 +151,7 @@ class PyssaDatabaseInterface:
     return a_qsql_query
 
 
+# @deprecated
 class PyssaSqlQuery:
   """Contains all SQL queries needed for the PySSA application in form of static functions."""
 
@@ -233,6 +236,7 @@ class PyssaSqlQuery:
     raise ValueError("The SQL statement could not be prepared!")
 
 
+# @deprecated
 class DatabaseManager:
   """Provides high-level access to the project's database by using the PyssaDatabaseInterface.
 

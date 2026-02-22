@@ -32,7 +32,7 @@ from src.pyssa.internal.pymol.pml_worker import PmlWorker
 from src.pyssa.internal.pymol.pml_enums import PmlCommand
 from src.pyssa.controller import database_manager
 from src.pyssa.internal.data_structures.data_classes import prediction_protein_info
-from src.pyssa.internal.data_structures import protein, job
+from src.pyssa.internal.data_structures import protein
 from src.pyssa.internal.data_structures import project
 from src.pyssa.internal.data_structures.data_classes import prediction_configuration
 from src.pyssa.internal.data_processing import data_transformer

@@ -28,7 +28,6 @@ from typing import Optional
 import zmq
 from src.pyssa.gui.qt import QtCore
 
-from src.pyssa.controller import database_manager
 from src.pyssa.gui.ui.custom_widgets import job_entry
 from src.pyssa.internal.data_structures import project, structure_prediction, structure_analysis, protein_pair
 from src.pyssa.logging_pyssa import log_handlers

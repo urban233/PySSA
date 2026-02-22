@@ -127,7 +127,8 @@ class PySSAObjectsPanel(base_side_panel.BaseSidePanel):
         # Horizontal quick access bar above the editor
         self._quick_access_bar = quick_access_bar.QuickAccessBar([
             # self.expand_all, self.collapse_all,
-            self.import_file_action, self.add_sequence_action, self.export_file_action, self.delete_object_action
+            self.import_file_action, self.add_sequence_action,
+            self.export_file_action, self.delete_object_action
         ], horizontal=True, button_size=(24, 24))
 
     def _setup_import_popup(self):

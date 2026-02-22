@@ -22,6 +22,8 @@
 """Module to start Auxiliary PyMOL."""
 import threading
 import queue
+from warnings import deprecated
+
 import zmq
 import sys
 import pathlib

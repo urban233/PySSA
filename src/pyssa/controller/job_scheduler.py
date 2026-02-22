@@ -60,7 +60,7 @@ class JobScheduler(QtCore.QObject):
 
   def __init__(
       self,
-      model: job_model.JobModel,
+      model: "job_model.JobModel",
       process_runtime: ProcessRuntime | None = None,
       parent: QtCore.QObject | None = None,
   ) -> None:
@@ -77,7 +77,7 @@ class JobScheduler(QtCore.QObject):
   # Public API
   # ------------------------------------------------------------------
 
-  def submit(self, descriptor: job_descriptor.JobDescriptor) -> int:
+  def submit(self, descriptor: "job_descriptor.JobDescriptor") -> int:
     """Enqueue a job and start its type-queue if idle.
 
     Args:

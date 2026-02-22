@@ -22,6 +22,8 @@
 """Module contains the database thread class."""
 import logging
 import queue
+from warnings import deprecated
+
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.controller import database_manager
 from src.pyssa.internal.thread import tasks
@@ -34,6 +36,7 @@ logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 
+@deprecated
 class DatabaseThread(QtCore.QObject):
   """Custom class that can handle the database from a different thread."""
 

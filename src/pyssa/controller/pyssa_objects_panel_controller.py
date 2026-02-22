@@ -31,14 +31,18 @@ from src.pyssa.gui.ui.views import pyssa_objects_panel
 from src.pyssa.gui import user_pymol, app_state
 from src.pyssa.gui.qt import QtCore, QtWidgets
 from src.pyssa.logging_pyssa import log_levels, log_handlers
+from src.pyssa.model.selection_snapshot import SelectionSnapshot
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 
-class PySSAObjectsPanelController:
+class PySSAObjectsPanelController(QtCore.QObject):
   """Controller class for the PySSAObjectsPanel."""
+  
+  # Custom signal emitted whenever the debounced selection changes
+  selectionSnapshotUpdated = QtCore.Signal(object)
 
   def __init__(
           self,
@@ -47,20 +51,44 @@ class PySSAObjectsPanelController:
           a_user_pymol: "user_pymol.UserPyMOL"
   ):
     """Constructor."""
+    super().__init__()
     # <editor-fold desc="Instance attributes">
     self._app_state = the_app_state
     self._panel = a_pyssa_objects_panel
     self._user_pymol: "user_pymol.UserPyMOL" = a_user_pymol
     self._model = the_app_state.pyssa_objects_model
+    
+    # Setup debounce timer for selection changes
+    self._selection_debounce_timer = QtCore.QTimer(self)
+    self._selection_debounce_timer.setSingleShot(True)
+    self._selection_debounce_timer.setInterval(50)  # 50ms debounce
+    self._selection_debounce_timer.timeout.connect(self._evaluate_tree_selection)
+    
     # </editor-fold>
     self._set_model()
     self._connect_signals()
 
   def _set_model(self) -> None:
     self._panel.tree_view.setModel(self._model)
+    self._connect_selection_signal()
+
+  def _connect_selection_signal(self) -> None:
+    """Connect (or reconnect) the selection changed signal to the tree view's selection model."""
+    selection_model = self._panel.tree_view.selectionModel()
+    if selection_model:
+        # Disconnect any existing connections to avoid duplicates
+        try:
+            selection_model.selectionChanged.disconnect(self._on_tree_selection_changed)
+        except (RuntimeError, TypeError):
+            # No previous connection exists, which is fine
+            pass
+        # Now connect
+        selection_model.selectionChanged.connect(self._on_tree_selection_changed)
+        logger.info("Selection model signal connected successfully")
+    else:
+        logger.warning("Selection model is None, cannot connect signal")
 
   def _connect_signals(self) -> None:
-    # self._panel.import_seq_action.triggered.connect()
     self._panel.import_file_action.get_action().triggered.connect(
       self.__slot_display_import_popup
     )
@@ -72,6 +100,44 @@ class PySSAObjectsPanelController:
 
     # self.expand_all.clicked.connect(self._panel.tree_view.expandAll)
     # self.collapse_all.clicked.connect(self._panel.tree_view.collapseAll)
+
+  def suppress_selection_signal(self) -> None:
+    """Temporarily disconnect the tree's selectionChanged signal and stop the debounce timer.
+
+    Call this before programmatically modifying the tree selection from the
+    reverse-sync path (PyMOL → tree) to prevent re-entrant snapshot updates.
+    Must be paired with a subsequent call to :meth:`restore_selection_signal`.
+    """
+    self._selection_debounce_timer.stop()
+    selection_model = self._panel.tree_view.selectionModel()
+    if selection_model:
+      try:
+        selection_model.selectionChanged.disconnect(self._on_tree_selection_changed)
+      except (RuntimeError, TypeError):
+        pass
+
+  def restore_selection_signal(self) -> None:
+    """Reconnect the tree's selectionChanged signal after a suppressed update.
+
+    This is the counterpart to :meth:`suppress_selection_signal`.  It
+    reconnects the debounced selection handling so normal tree interactions
+    resume producing snapshots.
+    """
+    self._connect_selection_signal()
+
+  def _on_tree_selection_changed(self) -> None:
+    """Triggered on every selection change, resets the debounce timer."""
+    self._selection_debounce_timer.start()
+
+  def _evaluate_tree_selection(self) -> None:
+    """Triggered by the debounce timer to safely resolve selection and emit snapshot."""
+    selection_model = self._panel.tree_view.selectionModel()
+    if not selection_model:
+        return
+        
+    indexes = selection_model.selectedIndexes()
+    snapshot = self._model.resolve_selection(indexes)
+    self.selectionSnapshotUpdated.emit(snapshot)
 
   def __slot_display_import_popup(self):
     tmp_button = self._panel.get_toolbar().get_tool_button_for_action(

@@ -28,14 +28,12 @@ from typing import Optional, Callable
 
 from src.pyssa.gui.qt import QtCore
 
-from src.application_process import application_process_manager
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.internal.data_structures import protein, protein_pair
 from src.pyssa.internal.data_structures.data_classes import residue_color_config
 from src.pyssa.io_pyssa import binary_data
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import constants, exception, protein_pair_util
-from src.pyssa_pymol import user_pymol_connector
 from src.pyssa_pymol import pymol_enums
 from src.tea.thread import action, task_result_factory, task_manager, task_scheduler
 from src.tea.thread import task_result
@@ -67,8 +65,7 @@ class PymolSessionManager:
   # </editor-fold>
 
   def __init__(
-      self,
-      the_app_process_manager: "application_process_manager.ApplicationProcessManager",
+      self
   ) -> None:
     """Constructor.
 
@@ -78,25 +75,11 @@ class PymolSessionManager:
     Raises:
         exception.IllegalArgumentError: If `the_app_process_manager` is None.
     """
-    # <editor-fold desc="Checks">
-    if the_app_process_manager is None:
-      logger.error("the_app_process_manager is None.")
-      raise exception.IllegalArgumentError("the_app_process_manager is None.")
-
-    # </editor-fold>
-
     self.session_name = ""
     self.session_object_type = ""
     self.session_objects = []
     self.current_scene_name: str = ""
     self.all_scenes: list[str] = []
-    self._app_process_manager = the_app_process_manager
-    self.user_pymol_connector: "user_pymol_connector.UserPyMOLConnector" = (
-        user_pymol_connector.UserPyMOLConnector(
-            self._app_process_manager,
-        )
-    )
-    self.lock_user_pymol_connector: QtCore.QMutex = QtCore.QMutex()
 
   # <editor-fold desc="Private methods">
   def _check_session_integrity(self, a_protein_name: str) -> bool:

@@ -21,6 +21,7 @@
 #
 """Module contains the protein pairs model."""
 import logging
+from warnings import deprecated
 
 import zmq
 from src.pyssa.gui.qt import QtGui
@@ -38,6 +39,7 @@ logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 
+@deprecated("Use PSAProteinPairModel instead.")
 class ProteinPairsModel(QtGui.QStandardItemModel):
   """Contains the protein pairs of the project in form of a QStandardItemModel."""
 

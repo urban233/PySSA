@@ -51,6 +51,7 @@ from src.pyssa.gui.qt import QtCore
 
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.model import base_tree_model
+from src.pyssa.model.selection_snapshot import SelectionSnapshot
 from src.pyssa.model.protein_subtree_mixin import (
   TYPE_PROTEIN,
   TYPE_PROTEIN_PAIR,
@@ -149,56 +150,43 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
   # Public API — adding items
   # ------------------------------------------------------------------
 
-  def add_sequence(self, a_sequence: str) -> None:
+  def add_sequence(self, sequence: str | SeqRecord) -> None:
     """Add an amino acid sequence under the "Sequences" section.
 
-    The sequence string is used as both the display name and the stored
-    value.  Use :meth:`add_named_sequence` when a name is
-    available.
-
     Args:
-        a_sequence: The amino acid sequence string to add.
+        sequence: Either a string sequence (used as display name and value)
+                  or a SeqRecord object (name and sequence extracted automatically).
 
     Raises:
-        exception.IllegalArgumentError: If ``a_sequence`` is ``None`` or empty.
+        exception.IllegalArgumentError: If ``sequence`` is ``None`` or empty.
     """
-    if not a_sequence:
-      logger.error("a_sequence is either None or an empty string.")
-      raise exception.IllegalArgumentError(
-        "a_sequence is either None or an empty string."
-      )
-    self._with_root(
-      self._sequences_model,
-      self._sequences_section,
-      lambda: self._sequences_model.add_sequence(a_sequence),
-    )
+    if sequence is None:
+      logger.error("sequence is None.")
+      raise exception.IllegalArgumentError("sequence is None.")
 
-  def add_named_sequence(self, a_name: str, a_sequence: str) -> None:
-    """Add a sequence with a separate display name under the "Sequences" section.
-
-    Args:
-        a_name: The human-readable name shown in the tree view.
-        a_sequence: The amino acid sequence string stored in ``OBJECT_ROLE``.
-
-    Raises:
-        exception.IllegalArgumentError: If ``a_name`` or ``a_sequence`` is
-            ``None`` or empty.
-    """
-    if not a_name:
-      logger.error("a_name is either None or an empty string.")
-      raise exception.IllegalArgumentError(
-        "a_name is either None or an empty string."
+    if isinstance(sequence, str):
+      if not sequence:
+        logger.error("sequence is an empty string.")
+        raise exception.IllegalArgumentError("sequence is an empty string.")
+      self._with_root(
+        self._sequences_model,
+        self._sequences_section,
+        lambda: self._sequences_model.add_sequence(sequence),
       )
-    if not a_sequence:
-      logger.error("a_sequence is either None or an empty string.")
-      raise exception.IllegalArgumentError(
-        "a_sequence is either None or an empty string."
+    elif isinstance(sequence, SeqRecord):
+      name = sequence.id or str(sequence.seq)
+      seq_str = str(sequence.seq)
+      if not seq_str:
+        logger.error("SeqRecord has empty sequence.")
+        raise exception.IllegalArgumentError("SeqRecord has empty sequence.")
+      self._with_root(
+        self._sequences_model,
+        self._sequences_section,
+        lambda: self._sequences_model.add_named_sequence(name, seq_str),
       )
-    self._with_root(
-      self._sequences_model,
-      self._sequences_section,
-      lambda: self._sequences_model.add_named_sequence(a_name, a_sequence),
-    )
+    else:
+      logger.error("sequence must be a string or SeqRecord.")
+      raise exception.IllegalArgumentError("sequence must be a string or SeqRecord.")
 
   def add_protein(
           self,
@@ -244,57 +232,133 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
       lambda: self._protein_pairs_model.add_protein_pair(a_protein_pair),
     )
 
+  def add_protein_pair_from_proteins(
+          self,
+          protein_1_name: str,
+          protein_2_name: str,
+  ) -> "protein_pair.ProteinPair | None":
+    """Create and add a protein pair from two existing standalone proteins.
+
+    This method looks up both proteins by name in the Proteins section,
+    creates a deep copy of each for the pair, creates the ProteinPair
+    object, and adds it to the model.
+
+    Args:
+        protein_1_name: The name of the first protein.
+        protein_2_name: The name of the second protein.
+
+    Returns:
+        The newly created ProteinPair object, or None if either protein
+        was not found.
+
+    Raises:
+        exception.IllegalArgumentError: If either protein name is None or empty.
+    """
+    if not protein_1_name:
+      logger.error("protein_1_name is either None or an empty string.")
+      raise exception.IllegalArgumentError(
+        "protein_1_name is either None or an empty string."
+      )
+    if not protein_2_name:
+      logger.error("protein_2_name is either None or an empty string.")
+      raise exception.IllegalArgumentError(
+        "protein_2_name is either None or an empty string."
+      )
+
+    # Look up both proteins
+    protein_1 = self.get_protein_by_name(protein_1_name)
+    protein_2 = self.get_protein_by_name(protein_2_name)
+
+    if protein_1 is None:
+      logger.error(f"Protein '{protein_1_name}' not found in Proteins section.")
+      return None
+    if protein_2 is None:
+      logger.error(f"Protein '{protein_2_name}' not found in Proteins section.")
+      return None
+
+    # Create the protein pair (ProteinPair constructor handles deep copying)
+    new_pair = protein_pair.ProteinPair(protein_1, protein_2)
+
+    # Add to model
+    self.add_protein_pair(new_pair)
+
+    return new_pair
+
   # ------------------------------------------------------------------
   # Public API — removing items
   # ------------------------------------------------------------------
 
-  def remove_sequence(self, a_model_index: QtCore.QModelIndex) -> None:
-    """Remove the sequence at *a_model_index* from the "Sequences" section.
+  def remove_sequence(self, sequence: str) -> None:
+    """Remove a sequence from the "Sequences" section.
 
     Args:
-        a_model_index: Index of a sequence node.
+        sequence: The sequence string to remove.
+
+    Raises:
+        exception.IllegalArgumentError: If the argument is ``None`` or empty.
+        ValueError: If the sequence is not found in the model.
+    """
+    if not sequence:
+      logger.error("sequence is either None or an empty string.")
+      raise exception.IllegalArgumentError("sequence is either None or an empty string.")
+
+    # Find the sequence in the Sequences section
+    for row in range(self._sequences_section.rowCount()):
+      item = self._sequences_section.child(row)
+      if item.data(enums.ModelEnum.OBJECT_ROLE) == sequence:
+        self._sequences_section.removeRow(row)
+        return
+
+    logger.error(f"Sequence not found in model.")
+    raise ValueError("Sequence not found in model.")
+
+  def remove_protein(self, a_protein: "protein.Protein") -> None:
+    """Remove a protein from the "Proteins" section.
+
+    Args:
+        a_protein: The protein to remove.
 
     Raises:
         exception.IllegalArgumentError: If the argument is ``None``.
-        ValueError: If the node is not a sequence node.
+        ValueError: If the protein is not found in the model.
     """
-    if a_model_index.data(enums.ModelEnum.TYPE_ROLE) != TYPE_SEQUENCE:
-      raise ValueError("The provided index does not point to a sequence node.")
+    if a_protein is None:
+      logger.error("a_protein is None.")
+      raise exception.IllegalArgumentError("a_protein is None.")
 
-    sequence_item = self.itemFromIndex(a_model_index)
-    sequence_item.parent().removeRow(sequence_item.row())
+    # Find the protein in the Proteins section
+    for row in range(self._proteins_section.rowCount()):
+      item = self._proteins_section.child(row)
+      if item.data(enums.ModelEnum.OBJECT_ROLE) is a_protein:
+        self._proteins_section.removeRow(row)
+        return
 
-  def remove_protein(self, a_model_index: QtCore.QModelIndex) -> None:
-    """Remove the protein at *a_model_index* from the "Proteins" section.
+    logger.error(f"Protein not found in model.")
+    raise ValueError("Protein not found in model.")
+
+  def remove_protein_pair(self, a_protein_pair: "protein_pair.ProteinPair") -> None:
+    """Remove a protein pair from the "Protein Pairs" section.
 
     Args:
-        a_model_index: Index of a protein node.
+        a_protein_pair: The protein pair to remove.
 
     Raises:
         exception.IllegalArgumentError: If the argument is ``None``.
-        ValueError: If the node is not a protein node.
+        ValueError: If the protein pair is not found in the model.
     """
-    if a_model_index.data(enums.ModelEnum.TYPE_ROLE) != TYPE_PROTEIN:
-      raise ValueError("The provided index does not point to a protein node.")
+    if a_protein_pair is None:
+      logger.error("a_protein_pair is None.")
+      raise exception.IllegalArgumentError("a_protein_pair is None.")
 
-    protein_item = self.itemFromIndex(a_model_index)
-    protein_item.parent().removeRow(protein_item.row())
+    # Find the protein pair in the Protein Pairs section
+    for row in range(self._protein_pairs_section.rowCount()):
+      item = self._protein_pairs_section.child(row)
+      if item.data(enums.ModelEnum.OBJECT_ROLE) is a_protein_pair:
+        self._protein_pairs_section.removeRow(row)
+        return
 
-  def remove_protein_pair(self, a_model_index: QtCore.QModelIndex) -> None:
-    """Remove the protein pair at *a_model_index* from the "Protein Pairs" section.
-
-    Args:
-        a_model_index: Index of a protein-pair node.
-
-    Raises:
-        exception.IllegalArgumentError: If the argument is ``None``.
-        ValueError: If the node is not a protein-pair node.
-    """
-    if a_model_index.data(enums.ModelEnum.TYPE_ROLE) != TYPE_PROTEIN_PAIR:
-      raise ValueError("The provided index does not point to a protein-pair node.")
-
-    pair_item = self.itemFromIndex(a_model_index)
-    pair_item.parent().removeRow(pair_item.row())
+    logger.error(f"Protein pair not found in model.")
+    raise ValueError("Protein pair not found in model.")
 
   # ------------------------------------------------------------------
   # Public API — scene management (delegates to protein/pair sub-models)
@@ -302,50 +366,143 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
 
   def add_scene(
           self,
-          a_model_index: QtCore.QModelIndex,
-          the_scene_item: QtGui.QStandardItem,
+          scene_name: str,
+          target: "protein.Protein | protein_pair.ProteinPair",
   ) -> None:
-    """Add *the_scene_item* to the correct Scenes header for *a_model_index*.
-
-    The section (protein vs protein-pair) is determined automatically.
-    Sequence nodes have no scenes and will raise ``ValueError``.
+    """Add a scene to a protein or protein pair.
 
     Args:
-        a_model_index: Any index within a protein or protein-pair subtree.
-        the_scene_item: A pre-built ``QStandardItem`` for the scene.
+        scene_name: The name of the scene to add.
+        target: The protein or protein pair to add the scene to.
 
     Raises:
-        exception.IllegalArgumentError: If any argument is ``None``.
-        ValueError: If the section cannot be determined or is "Sequences".
+        exception.IllegalArgumentError: If any argument is ``None`` or scene_name is empty.
+        ValueError: If the target object is not found in the model.
     """
-    sub_model = self._scene_capable_sub_model_for_index(a_model_index)
-    sub_model.add_scene(a_model_index, the_scene_item)
+    if not scene_name:
+      logger.error("scene_name is either None or an empty string.")
+      raise exception.IllegalArgumentError("scene_name is either None or an empty string.")
+    if target is None:
+      logger.error("target is None.")
+      raise exception.IllegalArgumentError("target is None.")
 
-  def remove_scene(self, the_model_index_of_the_scene: QtCore.QModelIndex) -> None:
-    """Remove the scene at *the_model_index_of_the_scene*.
+    # Create the scene item
+    scene_item = QtGui.QStandardItem(scene_name)
+    scene_item.setData(TYPE_SCENE, enums.ModelEnum.TYPE_ROLE)
+
+    # Find the target in the model
+    target_index = self._find_object_index(target)
+    if target_index is None or not target_index.isValid():
+      logger.error(f"Target object not found in model.")
+      raise ValueError("Target object not found in model.")
+
+    # Find the Scenes header and add the scene item directly
+    target_item = self.itemFromIndex(target_index)
+    scenes_header = self._find_scenes_header_item(target_item)
+    if scenes_header is None:
+      logger.error("Could not find Scenes header for target.")
+      raise ValueError("Could not find Scenes header for target.")
+
+    scenes_header.appendRow(scene_item)
+
+  def remove_scene(
+          self,
+          scene_name: str,
+          target: "protein.Protein | protein_pair.ProteinPair",
+  ) -> None:
+    """Remove a scene from a protein or protein pair.
 
     Args:
-        the_model_index_of_the_scene: Index of a scene node.
+        scene_name: The name of the scene to remove.
+        target: The protein or protein pair to remove the scene from.
 
     Raises:
-        exception.IllegalArgumentError: If the argument is ``None``.
-        ValueError: If the node is not a scene node or is in the Sequences section.
+        exception.IllegalArgumentError: If any argument is ``None`` or scene_name is empty.
+        ValueError: If the target object or scene is not found in the model.
     """
-    sub_model = self._scene_capable_sub_model_for_index(the_model_index_of_the_scene)
-    sub_model.remove_scene(the_model_index_of_the_scene)
+    if not scene_name:
+      logger.error("scene_name is either None or an empty string.")
+      raise exception.IllegalArgumentError("scene_name is either None or an empty string.")
+    if target is None:
+      logger.error("target is None.")
+      raise exception.IllegalArgumentError("target is None.")
 
-  def check_if_scratch_scene_exists(self, a_model_index: QtCore.QModelIndex) -> bool:
-    """Return ``True`` if a ``_scratch_`` scene exists in the relevant subtree.
+    # Find the target in the model
+    target_index = self._find_object_index(target)
+    if target_index is None or not target_index.isValid():
+      logger.error(f"Target object not found in model.")
+      raise ValueError("Target object not found in model.")
+
+    # Find the Scenes header
+    target_item = self.itemFromIndex(target_index)
+    scenes_header = self._find_scenes_header_item(target_item)
+    if scenes_header is None:
+      logger.error("Could not find Scenes header for target.")
+      raise ValueError("Could not find Scenes header for target.")
+
+    # Find and remove the scene by name
+    for row in range(scenes_header.rowCount()):
+      scene_item = scenes_header.child(row)
+      if scene_item.text() == scene_name:
+        scenes_header.removeRow(row)
+        return
+
+    logger.error(f"Scene '{scene_name}' not found for target.")
+    raise ValueError(f"Scene '{scene_name}' not found for target.")
+
+  def check_if_scratch_scene_exists(
+          self, target: "protein.Protein | protein_pair.ProteinPair"
+  ) -> bool:
+    """Return ``True`` if a ``_scratch_`` scene exists for the given protein or protein pair.
 
     Args:
-        a_model_index: Any index within a protein or protein-pair subtree.
+        target: The protein or protein pair to check.
 
     Raises:
-        exception.IllegalArgumentError: If ``a_model_index`` is ``None``.
-        ValueError: If the section cannot be determined or is "Sequences".
+        exception.IllegalArgumentError: If ``target`` is ``None``.
+        ValueError: If the target object is not found in the model.
     """
-    sub_model = self._scene_capable_sub_model_for_index(a_model_index)
-    return sub_model.check_if_scratch_scene_exists(a_model_index)
+    if target is None:
+      logger.error("target is None.")
+      raise exception.IllegalArgumentError("target is None.")
+
+    # Find the target in the model
+    target_index = self._find_object_index(target)
+    if target_index is None or not target_index.isValid():
+      logger.error(f"Target object not found in model.")
+      raise ValueError("Target object not found in model.")
+
+    sub_model = self._scene_capable_sub_model_for_index(target_index)
+    return sub_model.check_if_scratch_scene_exists(target_index)
+
+  # ------------------------------------------------------------------
+  # Public API — protein lookup
+  # ------------------------------------------------------------------
+
+  def get_protein_by_name(self, protein_name: str) -> "protein.Protein | None":
+    """Search for a protein by name in the Proteins section.
+
+    Args:
+        protein_name: The name of the protein to find.
+
+    Returns:
+        The Protein object if found, None otherwise.
+
+    Raises:
+        exception.IllegalArgumentError: If protein_name is None or empty.
+    """
+    if not protein_name:
+      logger.error("protein_name is either None or an empty string.")
+      raise exception.IllegalArgumentError(
+        "protein_name is either None or an empty string."
+      )
+
+    # Iterate through the Proteins section
+    for row in range(self._proteins_section.rowCount()):
+      protein_item = self._proteins_section.child(row)
+      if protein_item.data(QtCore.Qt.ItemDataRole.DisplayRole) == protein_name:
+        return protein_item.data(enums.ModelEnum.OBJECT_ROLE)
+    return None
 
   # ------------------------------------------------------------------
   # Public API — sequence data access
@@ -459,6 +616,198 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
     return ""
 
   # ------------------------------------------------------------------
+  # Public API — selection resolution
+  # ------------------------------------------------------------------
+
+  def resolve_selection(
+          self, selected_indexes: list[QtCore.QModelIndex]
+  ) -> SelectionSnapshot:
+    """Parse a list of selected QModelIndex elements into an immutable SelectionSnapshot.
+    
+    This method iterates over the provided indices, extracting the underlying objects based
+    on the TYPE_ROLE. It also resolves parent references recursively to ensure that if a 
+    child (e.g., atom) is selected, its parent Protein is also added to the snapshot so that
+    downstream logic works seamlessly.
+    
+    Args:
+        selected_indexes: A list of selected model indices from the view.
+        
+    Returns:
+        An immutable SelectionSnapshot populated with the exact semantic selection state.
+    """
+    raw_sequences = set()
+    raw_standalone_proteins = set()
+    raw_protein_pair_children = set()
+    raw_protein_pairs = set()
+    raw_chains = set()
+    raw_residues = set()
+    raw_atoms = set()
+    raw_scenes = set()
+
+    # We need a helper to safely extract the upper-level Protein and its parent TYPE from any node in the tree.
+    def _resolve_protein_and_parent_type(index: QtCore.QModelIndex) -> tuple["protein.Protein | None", int | None]:
+        current_idx = index
+        while current_idx.isValid():
+            node_type = current_idx.data(enums.ModelEnum.TYPE_ROLE)
+            if node_type == TYPE_PROTEIN:
+                parent_idx = current_idx.parent()
+                parent_type = parent_idx.data(enums.ModelEnum.TYPE_ROLE) if parent_idx.isValid() else None
+                return current_idx.data(enums.ModelEnum.OBJECT_ROLE), parent_type
+            current_idx = current_idx.parent()
+        return None, None
+
+    for index in selected_indexes:
+        if not index.isValid():
+            continue
+
+        node_type = index.data(enums.ModelEnum.TYPE_ROLE)
+        obj_data = index.data(enums.ModelEnum.OBJECT_ROLE)
+
+        if node_type == TYPE_SEQUENCE:
+            # For sequences, OBJECT_ROLE stores the string.
+            raw_sequences.add(obj_data)
+        elif node_type == TYPE_PROTEIN:
+            parent_idx = index.parent()
+            parent_type = parent_idx.data(enums.ModelEnum.TYPE_ROLE) if parent_idx.isValid() else None
+            if parent_type == TYPE_PROTEIN_PAIR:
+                raw_protein_pair_children.add(obj_data)
+            else:
+                raw_standalone_proteins.add(obj_data)
+        elif node_type == TYPE_PROTEIN_PAIR:
+            raw_protein_pairs.add(obj_data)
+        elif node_type == TYPE_CHAIN:
+            raw_chains.add(obj_data)
+        elif node_type == TYPE_RESIDUE:
+            raw_residues.add(obj_data)
+        elif node_type == TYPE_ATOM:
+            raw_atoms.add(obj_data)
+        elif node_type == TYPE_SCENE:
+            # Sequences don't have scenes; the tree text defines the scene.
+            raw_scenes.add(index.data(QtCore.Qt.ItemDataRole.DisplayRole))
+
+        # IMPORTANT: Regardless of what child object is selected (chain, residue, atom), 
+        # we resolve the host Protein and place it into the appropriate set (standalone vs pair-child). 
+        # This gives the snapshot its power: a user can select a single atom, 
+        # and downstream code knows immediately which protein it belongs to and its context.
+        if node_type in (TYPE_CHAIN, TYPE_RESIDUE, TYPE_ATOM, TYPE_SCENE):
+            parent_prot, parent_prot_parent_type = _resolve_protein_and_parent_type(index)
+            if parent_prot:
+                if parent_prot_parent_type == TYPE_PROTEIN_PAIR:
+                    raw_protein_pair_children.add(parent_prot)
+                else:
+                    raw_standalone_proteins.add(parent_prot)
+
+    # Build the combined PyMOL selection string from all selectable indexes.
+    selection_fragments: list[str] = []
+    for index in selected_indexes:
+        if not index.isValid():
+            continue
+        fragment = self.construct_selection_string(index)
+        if fragment:
+            selection_fragments.append(fragment)
+    pymol_selection = " or ".join(selection_fragments)
+
+    return SelectionSnapshot(
+        raw_sequences=raw_sequences,
+        raw_standalone_proteins=raw_standalone_proteins,
+        raw_protein_pair_children=raw_protein_pair_children,
+        raw_protein_pairs=raw_protein_pairs,
+        raw_chains=raw_chains,
+        raw_residues=raw_residues,
+        raw_atoms=raw_atoms,
+        raw_scenes=raw_scenes,
+        pymol_selection_string=pymol_selection,
+    )
+
+  # ------------------------------------------------------------------
+  # Public API — reverse selection (PyMOL → tree indexes)
+  # ------------------------------------------------------------------
+
+  def find_indexes_for_pymol_atoms(
+          self,
+          a_chempy_model: "Indexed",
+  ) -> list[QtCore.QModelIndex]:
+    """Find tree-view indexes that match atoms from a PyMOL selection.
+
+    Given a chempy ``Indexed`` model (typically from ``cmd.get_model("sele")``),
+    this method walks the Proteins and Protein Pairs sections of the tree to
+    locate the corresponding chain → residue → atom nodes.
+
+    **Upward collapsing:** if every atom of a residue is selected, the method
+    returns the residue's ``QModelIndex`` instead of the individual atom
+    indexes.  This mirrors how the legacy demo rolled up full-residue
+    selections.
+
+    Args:
+        a_chempy_model: The chempy ``Indexed`` model containing the selected
+            atoms.  May be ``None`` or have an empty ``atom`` list, in which
+            case an empty list is returned.
+
+    Returns:
+        A list of ``QModelIndex`` objects suitable for passing to a
+        ``QItemSelectionModel.select()`` call.
+    """
+    if a_chempy_model is None:
+      return []
+    atoms_list = getattr(a_chempy_model, "atom", [])
+    if not atoms_list:
+      return []
+
+    # Step 1 — Build a hierarchy map from the incoming atoms:
+    #   { object_name → { chain_id → { (resi, resn) → { atom_names } } } }
+    hierarchy: dict[str, dict[str, dict[tuple[str, str], set[str]]]] = {}
+    for atom in atoms_list:
+      obj_name = getattr(atom, "model", None) or ""
+      chain_id = getattr(atom, "chain", None) or ""
+      resi = str(getattr(atom, "resi", ""))
+      resn = str(getattr(atom, "resn", ""))
+      atom_name = str(getattr(atom, "name", ""))
+      (
+        hierarchy
+        .setdefault(obj_name, {})
+        .setdefault(chain_id, {})
+        .setdefault((resi, resn), set())
+        .add(atom_name)
+      )
+
+    # Step 2 — Walk sections that can contain protein nodes.
+    result_indexes: list[QtCore.QModelIndex] = []
+    sections = [self._proteins_section, self._protein_pairs_section]
+
+    for section in sections:
+      for sec_row in range(section.rowCount()):
+        top_item = section.child(sec_row)
+        top_type = top_item.data(enums.ModelEnum.TYPE_ROLE)
+
+        # Collect protein items to inspect.
+        protein_items: list[QtGui.QStandardItem] = []
+        if top_type == TYPE_PROTEIN:
+          protein_items.append(top_item)
+        elif top_type == TYPE_PROTEIN_PAIR:
+          # A pair's children include headers and two protein nodes.
+          for pair_child_row in range(top_item.rowCount()):
+            pair_child = top_item.child(pair_child_row)
+            if pair_child.data(enums.ModelEnum.TYPE_ROLE) == TYPE_PROTEIN:
+              protein_items.append(pair_child)
+
+        for protein_item in protein_items:
+          protein_display = protein_item.text()
+          if protein_display not in hierarchy:
+            continue
+          chains_for_protein = hierarchy[protein_display]
+
+          # Find the "Chains" header under this protein node.
+          chains_header = self._find_chains_header_item(protein_item)
+          if chains_header is None:
+            continue
+
+          self._match_chain_hierarchy(
+            chains_header, chains_for_protein, result_indexes
+          )
+
+    return result_indexes
+
+  # ------------------------------------------------------------------
   # Private helpers
   # ------------------------------------------------------------------
 
@@ -523,3 +872,117 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
           return self._protein_pairs_model
       item = item.parent()
     raise ValueError("Could not determine the section for the given index.")
+
+  def _find_object_index(
+          self, target_object: "protein.Protein | protein_pair.ProteinPair"
+  ) -> QtCore.QModelIndex | None:
+    """Find the QModelIndex for a given protein or protein pair object.
+
+    Args:
+        target_object: The protein or protein pair to find.
+
+    Returns:
+        The QModelIndex if found, None otherwise.
+    """
+    # Determine which section to search
+    if isinstance(target_object, protein.Protein):
+      # Search in Proteins section
+      for row in range(self._proteins_section.rowCount()):
+        item = self._proteins_section.child(row)
+        if item.data(enums.ModelEnum.OBJECT_ROLE) is target_object:
+          return self.indexFromItem(item)
+    elif isinstance(target_object, protein_pair.ProteinPair):
+      # Search in Protein Pairs section
+      for row in range(self._protein_pairs_section.rowCount()):
+        item = self._protein_pairs_section.child(row)
+        if item.data(enums.ModelEnum.OBJECT_ROLE) is target_object:
+          return self.indexFromItem(item)
+    return None
+
+  def _find_scenes_header_item(
+          self, protein_or_pair_item: QtGui.QStandardItem
+  ) -> QtGui.QStandardItem | None:
+    """Find the Scenes header item under a protein or protein pair item.
+
+    Args:
+        protein_or_pair_item: The protein or protein pair item.
+
+    Returns:
+        The Scenes header item if found, None otherwise.
+    """
+    # The Scenes header is always the first child of a protein or protein pair node
+    for row in range(protein_or_pair_item.rowCount()):
+      child = protein_or_pair_item.child(row)
+      if (child.data(enums.ModelEnum.TYPE_ROLE) == TYPE_HEADER and
+          child.text() == LABEL_SCENES):
+        return child
+    return None
+
+  def _find_chains_header_item(
+          self, protein_item: QtGui.QStandardItem
+  ) -> QtGui.QStandardItem | None:
+    """Find the Chains header item under a protein item.
+
+    Args:
+        protein_item: The protein item to search within.
+
+    Returns:
+        The Chains header ``QStandardItem`` if found, ``None`` otherwise.
+    """
+    for row in range(protein_item.rowCount()):
+      child = protein_item.child(row)
+      if (child.data(enums.ModelEnum.TYPE_ROLE) == TYPE_HEADER and
+          child.text() == LABEL_CHAINS):
+        return child
+    return None
+
+  def _match_chain_hierarchy(
+          self,
+          chains_header: QtGui.QStandardItem,
+          chains_map: dict[str, dict[tuple[str, str], set[str]]],
+          result_indexes: list[QtCore.QModelIndex],
+  ) -> None:
+    """Match a PyMOL atom hierarchy against chain→residue→atom tree nodes.
+
+    For each chain in *chains_map*, this method locates the corresponding
+    chain node under *chains_header*, then walks its residue children.
+    If **all** atoms of a residue are present in the map, the residue's
+    ``QModelIndex`` is appended (upward collapse); otherwise only matching
+    atom indexes are appended.
+
+    Args:
+        chains_header: The "Chains" header ``QStandardItem`` to walk.
+        chains_map: Per-chain data ``{chain_id → {(resi, resn) → {atom_names}}}``.
+        result_indexes: Accumulator list; matched indexes are appended in place.
+    """
+    for chain_row in range(chains_header.rowCount()):
+      chain_item = chains_header.child(chain_row)
+      chain_letter = chain_item.text()
+      if chain_letter not in chains_map:
+        continue
+      residues_map = chains_map[chain_letter]
+
+      for resi_row in range(chain_item.rowCount()):
+        residue_item = chain_item.child(resi_row)
+        residue_label = residue_item.text()
+
+        # Parse residue label "resi - resn" back into the (resi, resn) key.
+        parts = residue_label.split(" - ", 1)
+        if len(parts) != 2:
+          continue
+        resi_key = (parts[0], parts[1])
+        if resi_key not in residues_map:
+          continue
+
+        selected_atoms = residues_map[resi_key]
+        total_atoms_in_tree = residue_item.rowCount()
+
+        if len(selected_atoms) >= total_atoms_in_tree and total_atoms_in_tree > 0:
+          # All atoms of this residue are selected → collapse to residue node.
+          result_indexes.append(self.indexFromItem(residue_item))
+        else:
+          # Only some atoms are selected → append individual atom indexes.
+          for atom_row in range(total_atoms_in_tree):
+            atom_item = residue_item.child(atom_row)
+            if atom_item.text() in selected_atoms:
+              result_indexes.append(self.indexFromItem(atom_item))

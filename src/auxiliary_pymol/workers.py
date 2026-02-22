@@ -21,6 +21,8 @@
 #
 """Contains workers that are handling the requests to the auxiliary PyMOL."""
 import queue
+from warnings import deprecated
+
 import zmq
 
 from src.auxiliary_pymol import auxiliary_pymol_base
@@ -29,6 +31,7 @@ from src.auxiliary_pymol import local_enums
 __docformat__ = "google"
 
 
+@deprecated("Use PmlWorker instead.")
 def handle_request(a_job_type: str, a_queue: queue.Queue, a_socket: zmq.Socket) -> bool:
     """Handles a request to the auxiliary PyMOL server.
     

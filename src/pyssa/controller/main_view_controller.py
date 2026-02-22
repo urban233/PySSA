@@ -19,7 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the main view controller."""
+"""Module for the main view controller.
+
+Deprecated
+"""
 import collections
 import copy
 import logging
@@ -69,12 +72,13 @@ from src.pyssa.util import globals
 from src.pyssa_pymol import pymol_enums
 from src.pyssa.internal.thread import thread_util
 from src.tea.thread import tasks, task_result_factory, task_result, action
+from warnings import deprecated
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
-
+@deprecated("Use MainWindowController")
 class MainViewController:
   """Class for main presenter of the pyssa plugin."""
 

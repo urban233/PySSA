@@ -317,7 +317,8 @@ class AddProteinViewController(QtCore.QObject):
         
     def on_success(tmp_protein):
         self._app_state.project.add_existing_protein(tmp_protein)
-        self._app_state.pyssa_objects_model.build_model(self._app_state.project)
+        # Use incremental update instead of full rebuild to preserve tree state
+        self._app_state.pyssa_objects_model.add_protein(tmp_protein)
         self._app_state.status_bar_manager.show_permanent_message("", False)
         self._app_state.status_bar_manager.show_temporary_message("Protein imported.")
         

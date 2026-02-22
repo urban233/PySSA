@@ -24,6 +24,7 @@ import os
 import subprocess
 import time
 from typing import Callable, Optional
+from warnings import deprecated
 
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.util import constants, exception
@@ -31,6 +32,7 @@ from src.pyssa.util import constants, exception
 __docformat__ = "google"
 
 
+@deprecated
 class ApplicationProcessManager:
   """Manages the application's processes, including the initiation, checking, and closing of the PyMOL and PySSA processes.
 

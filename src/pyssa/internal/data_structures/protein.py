@@ -25,12 +25,10 @@ import pathlib
 import logging
 from typing import TYPE_CHECKING, TextIO, Optional
 
-import zmq
-
 from src.pyssa.internal.pymol.pml_worker import PmlWorker
 from src.pyssa.internal.pymol.pml_enums import PmlCommand
 from src.pyssa.internal.portal import protein_operations
-from src.pyssa.internal.data_structures import selection, job
+from src.pyssa.internal.data_structures import selection
 from src.pyssa.util import enums
 from src.pyssa.util import exception
 from src.pyssa.io_pyssa import bio_data

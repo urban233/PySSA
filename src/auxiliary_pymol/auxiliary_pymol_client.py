@@ -22,6 +22,7 @@
 """Module for the interaction with the auxiliary pymol."""
 from typing import Union
 from typing import TYPE_CHECKING
+from warnings import deprecated
 
 import zmq
 
@@ -33,6 +34,7 @@ if TYPE_CHECKING:
     from src.pyssa.internal.data_structures import job
 
 
+@deprecated("Use PmlWorker instead.")
 def send_request_to_auxiliary_pymol(
         the_main_socket: zmq.Socket,
         a_socket: zmq.Socket,
