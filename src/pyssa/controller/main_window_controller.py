@@ -40,7 +40,8 @@ from src.pyssa.gui.qt import QtGui
 
 from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, \
     pyssa_objects_panel_controller, welcome_screen_view_controller, help_panel_controller, \
-    status_bar_manager, job_popup_controller, predict_protein_view_controller
+    status_bar_manager, job_popup_controller, predict_protein_view_controller, settings_view_controller, \
+    distance_analysis_view_controller
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.gui.ui.custom_filters import help_event_filter
 from src.pyssa.gui.ui.dialogs import dialog_about
@@ -48,6 +49,7 @@ from src.pyssa.gui.ui.views import predict_protein_view
 from src.pyssa.internal import job_definitions
 from src.pyssa.internal.data_structures import protein_pair, protein
 from src.pyssa.internal.data_structures.data_classes import job_descriptor
+from src.pyssa.internal.pymol import pml_worker
 from src.pyssa.io_pyssa.db_pyssa import WriteOperation, OperationType
 from src.pyssa.logging_pyssa import log_handlers, log_levels
 from src.pyssa.model import job_model, selection_snapshot
@@ -175,6 +177,7 @@ class MainWindowController:
         """Connects all relevant widget signals with their appropriate slots."""
         # self._main_window.dialogClosed.connect(self.__slot_close_application)
 
+        # <editor-fold desc="Project menu">
         self._main_window.action_new_project.triggered.connect(self.__slot_create_project)
         self._main_window.action_open_project.triggered.connect(self.__slot_open_project)
         self._main_window.action_use_project.triggered.connect(self.__slot_use_project)
@@ -182,18 +185,39 @@ class MainWindowController:
         self._main_window.action_import_project.triggered.connect(self.__slot_import_project)
         self._main_window.action_export_project.triggered.connect(self.__slot_export_current_project)
         self._main_window.action_close_project.triggered.connect(self.__slot_close_project)
+        # </editor-fold>
         # TODO: Add the right slot method! ;)
         # self._main_window.action_exit_application.triggered.connect(self.)
 
-        self._main_window.action_ray_tracing_image.triggered.connect(self.__slot_ray_trace_image)
+        # <editor-fold desc="Prediction menu">
+        self._main_window.action_predict_monomer.triggered.connect(self.__slot_predict_monomer)
+        self._main_window.action_predict_multimer.triggered.connect(self.__slot_predict_multimer)
+        # </editor-fold>
 
+        self._main_window.action_distance_analysis.triggered.connect(self.__slot_distance_analysis)
+
+        # <editor-fold desc="Image menu">
+        self._main_window.action_preview_image.triggered.connect(self.__slot_preview_image)
+        self._main_window.action_simple_image.triggered.connect(self.__slot_draw_image)
+        self._main_window.action_ray_tracing_image.triggered.connect(self.__slot_ray_trace_image)
+        # </editor-fold>
+
+        # <editor-fold desc="Settings menu">
+        self._main_window.action_edit_settings.triggered.connect(
+            self.__slot_open_settings_dialog
+        )
+        self._main_window.action_restore_settings.triggered.connect(
+            self.__slot_restore_settings
+        )
+        # </editor-fold>
+
+        # <editor-fold desc="Help menu">
         self._main_window.action_documentation.triggered.connect(self.__slot_toggle_help_panel)
         self._main_window.action_show_log_in_explorer.triggered.connect(self.__slot_open_logs)
         self._main_window.action_clear_logs.triggered.connect(self.__slot_clear_all_log_files)
         # TODO: Add connection for the demo project action in the help menu
         self._main_window.action_about.triggered.connect(self.__slot_open_about)
-        self._main_window.action_predict_monomer.triggered.connect(self.__slot_predict_monomer)
-        self._main_window.action_predict_multimer.triggered.connect(self.__slot_predict_multimer)
+        # </editor-fold>
 
         # # <editor-fold desc="Session ribbon slots">
         # # <editor-fold desc="Session slots">
@@ -990,6 +1014,15 @@ class MainWindowController:
             self._user_pymol.get_cmd_module().reinitialize()
     # </editor-fold>
 
+    def __slot_distance_analysis(self):
+        if not self._dialog_controllers.__contains__("distance_analysis_dialog"):
+            self._dialog_controllers["distance_analysis_dialog"] = distance_analysis_view_controller.DistanceAnalysisViewController(
+                self._app_state
+            )
+        self._dialog_controllers["distance_analysis_dialog"].restore_default_view()
+        self._dialog_controllers["distance_analysis_dialog"].get_view().show()
+
+    # <editor-fold desc="Prediction menu">
     def _get_sequences_for_prediction(self, is_multimer: bool) -> list:
         """Return the sequence list to pre-populate the prediction dialog.
 
@@ -1074,17 +1107,110 @@ class MainWindowController:
                 a_parent=self._main_window,
             )
         self._dialog_controllers["predict_multimer"].get_view().show()
+    # </editor-fold>
+
+    # <editor-fold desc="Image menu">
+    def __slot_preview_image(self):
+        self._user_pymol.get_cmd_module().ray(800, 600)
 
     def __slot_ray_trace_image(self):
+        logger.log(
+            log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+            "Menu entry 'Image/Ray' clicked.",
+        )
+        save_dialog = QtWidgets.QFileDialog()
+        full_file_name = save_dialog.getSaveFileName(
+            caption="Save Image", filter="Image (*.png)"
+        )
+        if full_file_name == ("", ""):
+            logger.info("No file has been selected.")
+            return
+
         self._app_state.job_scheduler.submit(
             job_descriptor.JobDescriptor(
                 enums.JobType.RAY_TRACING,
                 self._app_state.project.get_project_name(),
-                display_name="",
+                display_name=pathlib.Path(full_file_name[0]).name,
                 run_fn=job_definitions.run_ray_tracing_job,
-                run_args=("", "", 0, 0, "")
+                run_args=(
+                    full_file_name[0],
+                    pml_worker.PmlWorker.cache_user_session(
+                        self._user_pymol, "simple_image"
+                    ),
+                    self._app_state.get_settings().image_ray_trace_mode,
+                    self._app_state.get_settings().image_ray_texture,
+                    self._app_state.get_settings().image_renderer
+                )
             )
         )
+
+    def __slot_draw_image(self):
+        logger.log(
+            log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+            "Menu entry 'Image/Simple' clicked.",
+        )
+        save_dialog = QtWidgets.QFileDialog()
+        full_file_name = save_dialog.getSaveFileName(
+            caption="Save Image", filter="Image (*.png)"
+        )
+        if full_file_name == ("", ""):
+            logger.info("No file has been selected.")
+            return
+
+        self._app_state.job_scheduler.submit(
+            job_descriptor.JobDescriptor(
+                enums.JobType.SIMPLE_IMAGE,
+                self._app_state.project.get_project_name(),
+                display_name=pathlib.Path(full_file_name[0]).name,
+                run_fn=job_definitions.run_simple_image_job,
+                run_args=(
+                    full_file_name[0],
+                    pml_worker.PmlWorker.cache_user_session(
+                        self._user_pymol, "simple_image"
+                    )
+                )
+            )
+        )
+
+    # </editor-fold>
+
+    # <editor-fold desc="Settings menu">
+    def __slot_open_settings_dialog(self):
+        if not self._dialog_controllers.__contains__("settings_dialog"):
+            self._dialog_controllers["settings_dialog"] = settings_view_controller.SettingsViewController(
+                self._app_state
+            )
+        self._dialog_controllers["settings_dialog"].restore_default_view()
+        self._dialog_controllers["settings_dialog"].get_view().show()
+
+    def __slot_restore_settings(self) -> None:
+        """Restores the settings.xml file to the default values."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Settings/Restore' clicked.",
+            )
+            tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+                "Are you sure you want to restore all settings?",
+                "Restore Settings",
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value,
+            )
+            tmp_dialog.exec()
+            if tmp_dialog.response:
+                tools.restore_default_settings(self._app_state.get_settings())
+                self._status_bar_manager.show_temporary_message(
+                    "Settings were successfully restored."
+                )
+                logging.info("Settings were successfully restored.")
+            else:
+                self._status_bar_manager.show_temporary_message(
+                    "Settings were not modified."
+                )
+                logging.info("Settings were not modified.")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._status_bar_manager.show_error_message("An unknown error occurred!")
+    # </editor-fold>
 
     # <editor-fold desc="Help menu">
     def __slot_open_logs(self) -> None:

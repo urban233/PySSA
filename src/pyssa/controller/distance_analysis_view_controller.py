@@ -79,7 +79,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
     )
 
     self._connect_all_ui_elements_to_slot_functions()
-    self.display_distance_analysis()
+    self.restore_default_view()
 
   def get_view(self):
     return self._view
@@ -107,7 +107,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
         self.structure_analysis_overview_clicked
     )
 
-  def display_distance_analysis(self) -> None:
+  def restore_default_view(self) -> None:
     """Displays the job analysis work area."""
     gui_elements_to_show = [
         self._view.ui.btn_distance_analysis_add,
@@ -264,3 +264,4 @@ class DistanceAnalysisViewController(QtCore.QObject):
         },
       )
     )
+    self._view.close()

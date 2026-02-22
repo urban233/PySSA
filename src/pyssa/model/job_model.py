@@ -28,6 +28,7 @@ _JOB_TYPE_LABELS: dict[enums.JobType, str] = {
   enums.JobType.DISTANCE_ANALYSIS: "Distance Analysis",
   enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS: "Prediction + Dist. Analysis",
   enums.JobType.RAY_TRACING: "Ray Tracing",
+  enums.JobType.SIMPLE_IMAGE: "Simple Image",
   enums.JobType.GENERAL_PURPOSE: "General Purpose",
 }
 

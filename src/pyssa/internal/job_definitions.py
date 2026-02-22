@@ -124,7 +124,7 @@ def run_distance_analysis_job(
       )
   )
 
-  analysis_runs.run_analysis("distance", False, None, None)
+  analysis_runs.run_analysis("distance", False)
 
   protein_pairs = []
   for tmp_protein_pair in analysis_runs.analysis_list:
@@ -211,10 +211,49 @@ def run_ray_tracing_job(
           - "success": bool (currently always False)
           - "error_message": str indicating deprecation
   """
-  for i in range(100):
-    print(f"Working {i}")
-    time.sleep(0.1)
+  with pml_worker.PmlWorker.session(cached_session_filepath) as worker:
+    worker.do(
+      pml_enums.PmlCommand.SET,
+      args=("ray_trace_mode", image_ray_trace_mode)
+    )
+    worker.do(
+      pml_enums.PmlCommand.SET,
+      args=("ray_texture", image_ray_texture)
+    )
+    worker.do(
+      pml_enums.PmlCommand.RAY,
+      args=(1920, 1080, image_renderer),
+      sync=True
+    )
+    worker.do(pml_enums.PmlCommand.PNG, args=(dest_image_filepath, 1920, 1080, 300, 1), sync=True)
   return {
       "success": False,
       "error_message": "RayTracingJob functionality is no longer supported.",
+  }
+
+
+def run_simple_image_job(
+        dest_image_filepath: str,
+        cached_session_filepath: str,
+) -> dict[str, Any]:
+  """Run a simple image job.
+
+  Note:
+      This functionality is currently deprecated and does nothing.
+
+  Args:
+      dest_image_filepath: Destination path for rendered image.
+      cached_session_filepath: Path to cached session file.
+
+  Returns:
+      Dictionary containing:
+          - "success": bool (currently always False)
+          - "error_message": str indicating deprecation
+  """
+  with pml_worker.PmlWorker.session(cached_session_filepath) as worker:
+    worker.do(pml_enums.PmlCommand.DRAW, args=(1920, 1080), sync=True)
+    worker.do(pml_enums.PmlCommand.PNG, args=(dest_image_filepath, 1920, 1080), sync=True)
+  return {
+    "success": False,
+    "error_message": "RayTracingJob functionality is no longer supported.",
   }

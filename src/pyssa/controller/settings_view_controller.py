@@ -66,7 +66,7 @@ class SettingsViewController(QtCore.QObject):
     self._settings_manager = the_app_state._settings_manager
     self._view = settings_view.SettingsView(a_parent)
     self._initialize_ui()
-    self.restore_ui()
+    self.restore_default_view()
     self._connect_all_ui_elements_to_slot_functions()
     if self._app_state.job_scheduler.has_running_jobs():
       self._view.ui.btn_workspace_dir.setEnabled(False)
@@ -84,7 +84,7 @@ class SettingsViewController(QtCore.QObject):
     )
     # self._interface_manager.help_manager.open_pyssa_settings_page()
 
-  def restore_ui(self) -> None:
+  def restore_default_view(self) -> None:
     """Restores the UI."""
     self._view.ui.tabWidget.setCurrentIndex(0)
 

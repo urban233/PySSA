@@ -27,6 +27,7 @@ __docformat__ = "google"
 
 class PmlCommand(enum.Enum):
   """Contains enumeration for pymol commands."""
+  SET = "set"
   TOGGLE_EXPERT_MODE = "toggle_expert_mode"
 
   CLOSE_USER_PYMOL = "close_user_pymol"

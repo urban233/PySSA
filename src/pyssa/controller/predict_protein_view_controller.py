@@ -426,7 +426,6 @@ class PredictProteinViewController(QtCore.QObject):
       logger.log(
           log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Predict' button was clicked."
       )
-      self._view.close()
       self._start_prediction_analysis()
     else:
       logger.log(
@@ -667,6 +666,7 @@ class PredictProteinViewController(QtCore.QObject):
           },
         )
       )
+    self._view.close()
 
   # </editor-fold>
   # </editor-fold>

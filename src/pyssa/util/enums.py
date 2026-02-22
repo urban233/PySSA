@@ -370,6 +370,7 @@ class JobType(enum.Enum):
   DISTANCE_ANALYSIS = "distance analysis"
   PREDICTION_AND_DISTANCE_ANALYSIS = "prediction and distance analysis"
   RAY_TRACING = "ray-tracing"
+  SIMPLE_IMAGE = "simple image"
   GENERAL_PURPOSE = "general-purpose"
   ABORT = "abort"
 
