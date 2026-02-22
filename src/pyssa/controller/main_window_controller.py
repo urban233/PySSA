@@ -30,6 +30,7 @@ import os
 import pathlib
 import shutil
 
+import pymol
 # import pywinctl
 
 from src.pyssa.gui.qt import QtWidgets
@@ -42,6 +43,8 @@ from src.pyssa.controller import settings_manager, create_project_view_controlle
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.gui.ui.custom_filters import help_event_filter
 from src.pyssa.gui.ui.dialogs import dialog_about
+from src.pyssa.internal import job_definitions
+from src.pyssa.internal.data_structures.data_classes import job_descriptor
 from src.pyssa.logging_pyssa import log_handlers, log_levels
 from src.pyssa.model import job_model, selection_snapshot
 from src.pyssa.util import constants, enums, tools, main_window_util
@@ -51,7 +54,6 @@ from src.pyssa.gui.ui.custom_context_menus import (
     protein_tree_context_menu,
     protein_pair_tree_context_menu,
 )
-from src.pyssa.internal.pymol import pml_worker
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -120,13 +122,12 @@ class MainWindowController:
             self._main_window,
             self._main_window.help_panel
         )
-        self._jobs_model = job_model.JobModel()
         self._active_jobs_controller = job_popup_controller.JobPopupController(
-            self._main_window.active_jobs, self._jobs_model
+            self._main_window.active_jobs, self._app_state.job_model
         )
         self._active_jobs_controller.show_active_jobs()
         self._complete_jobs_controller = job_popup_controller.JobPopupController(
-            self._main_window.complete_jobs, self._jobs_model
+            self._main_window.complete_jobs, self._app_state.job_model
         )
         self._complete_jobs_controller.show_completed_jobs()
         self.feedback_timer = QtCore.QTimer()
@@ -179,6 +180,9 @@ class MainWindowController:
         self._main_window.action_close_project.triggered.connect(self.__slot_close_project)
         # TODO: Add the right slot method! ;)
         # self._main_window.action_exit_application.triggered.connect(self.)
+
+        self._main_window.action_ray_tracing_image.triggered.connect(self.__slot_ray_trace_image)
+
         self._main_window.action_documentation.triggered.connect(self.__slot_toggle_help_panel)
         self._main_window.action_show_log_in_explorer.triggered.connect(self.__slot_open_logs)
         self._main_window.action_clear_logs.triggered.connect(self.__slot_clear_all_log_files)
@@ -792,7 +796,7 @@ class MainWindowController:
             self._main_window.setWindowTitle("PySSA")
 
     # <editor-fold desc="Slot methods">
-    # <editor-fold desc="Project management">
+    # <editor-fold desc="Project menu">
     def __slot_create_project(self):
         if not self._dialog_controllers.__contains__("create_project"):
             self._dialog_controllers["create_project"] = create_project_view_controller.CreateProjectViewController(
@@ -977,6 +981,100 @@ class MainWindowController:
         if self._app_state.has_open_project():
             self._app_state.close_project()
             self._user_pymol.get_cmd_module().reinitialize()
+    # </editor-fold>
+
+    def __slot_ray_trace_image(self):
+        self._app_state.job_scheduler.submit(
+            job_descriptor.JobDescriptor(
+                enums.JobType.RAY_TRACING,
+                self._app_state.project.get_project_name(),
+                display_name="",
+                run_fn=job_definitions.run_ray_tracing_job,
+                run_args=("", "", 0, 0, "")
+            )
+        )
+        self.refresh_ui(self._get_current_snapshot())
+
+    # <editor-fold desc="Help menu">
+    def __slot_open_logs(self) -> None:
+        """Opens a file explorer with all log files and can open a log file in the default application."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Help/Show Logs in Explorer' clicked.",
+            )
+            file_dialog = QtWidgets.QFileDialog()
+            log_path = str(constants.LOG_PATH)
+            file_dialog.setDirectory(log_path)
+            file_path, _ = file_dialog.getOpenFileName(
+                self._main_window, "Select a log file to open", "", "LOG File (*.log)"
+            )
+            if file_path:
+                os.startfile(file_path)
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+
+    def __slot_clear_all_log_files(self) -> None:
+        """Clears all log files generated under .pyssa/logs."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Help/Clear All Logs' clicked.",
+            )
+            tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+                "Are you sure you want to delete all log files?",
+                "Clear Log Files",
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
+            )
+            tmp_dialog.exec()
+            if tmp_dialog.response:
+                try:
+                    shutil.rmtree(str(constants.LOG_PATH))
+                except PermissionError:
+                    print("The active log file was not deleted.")
+                if len(os.listdir(str(constants.LOG_PATH))) == 1:
+                    # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    #     "All log files could be deleted.", "Clear Log Files",
+                    #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                    # )
+                    # tmp_dialog.exec_()
+                    self._status_bar_manager.show_temporary_message(
+                        "All log files could be deleted."
+                    )
+                    constants.PYSSA_LOGGER.info("All log files were deleted.")
+                else:
+                    tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                        "Not all log files could be deleted.",
+                        "Clear Log Files",
+                        custom_message_box.CustomMessageBoxIcons.WARNING.value,
+                    )
+                    tmp_dialog.exec()
+                    constants.PYSSA_LOGGER.warning("Not all log files were deleted!")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
+
+    # TODO: Add here the slot method for getting the demo projects
+
+    def __slot_open_about(self) -> None:
+        """Opens the About dialog."""
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Help/About' clicked.",
+            )
+            dialog = dialog_about.DialogAbout()
+            dialog.exec()
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
     # </editor-fold>
 
     def __slot_toggle_help_panel(self):
@@ -1412,88 +1510,6 @@ class MainWindowController:
         )
     # </editor-fold>
 
-    # <editor-fold desc="Help menu">
-    def __slot_open_logs(self) -> None:
-        """Opens a file explorer with all log files and can open a log file in the default application."""
-        try:
-            logger.log(
-                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                "Menu entry 'Help/Show Logs in Explorer' clicked.",
-            )
-            file_dialog = QtWidgets.QFileDialog()
-            log_path = str(constants.LOG_PATH)
-            file_dialog.setDirectory(log_path)
-            file_path, _ = file_dialog.getOpenFileName(
-                self._main_window, "Select a log file to open", "", "LOG File (*.log)"
-            )
-            if file_path:
-                os.startfile(file_path)
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._status_bar_manager.show_error_message(
-                "An unknown error occurred!"
-            )
-
-    def __slot_clear_all_log_files(self) -> None:
-        """Clears all log files generated under .pyssa/logs."""
-        try:
-            logger.log(
-                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                "Menu entry 'Help/Clear All Logs' clicked.",
-            )
-            tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
-                "Are you sure you want to delete all log files?",
-                "Clear Log Files",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value,
-            )
-            tmp_dialog.exec()
-            if tmp_dialog.response:
-                try:
-                    shutil.rmtree(str(constants.LOG_PATH))
-                except PermissionError:
-                    print("The active log file was not deleted.")
-                if len(os.listdir(str(constants.LOG_PATH))) == 1:
-                    # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                    #     "All log files could be deleted.", "Clear Log Files",
-                    #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-                    # )
-                    # tmp_dialog.exec_()
-                    self._status_bar_manager.show_temporary_message(
-                        "All log files could be deleted."
-                    )
-                    constants.PYSSA_LOGGER.info("All log files were deleted.")
-                else:
-                    tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                        "Not all log files could be deleted.",
-                        "Clear Log Files",
-                        custom_message_box.CustomMessageBoxIcons.WARNING.value,
-                    )
-                    tmp_dialog.exec()
-                    constants.PYSSA_LOGGER.warning("Not all log files were deleted!")
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._status_bar_manager.show_error_message(
-                "An unknown error occurred!"
-            )
-
-    # TODO: Add here the slot method for getting the demo projects
-
-    def __slot_open_about(self) -> None:
-        """Opens the About dialog."""
-        try:
-            logger.log(
-                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                "Menu entry 'Help/About' clicked.",
-            )
-            dialog = dialog_about.DialogAbout()
-            dialog.exec()
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._status_bar_manager.show_error_message(
-                "An unknown error occurred!"
-            )
-    # </editor-fold>
-
     def __slot_on_selection_snapshot_updated(self, snapshot: "selection_snapshot.SelectionSnapshot") -> None:
         """Slot that receives the SelectionSnapshot when the project tree selection changes.
 
@@ -1509,11 +1525,14 @@ class MainWindowController:
         # to prevent an infinite feedback loop.
         if not self._is_syncing_selection:
             if snapshot.pymol_selection_string:
-                self._user_pymol.get_cmd_module().select(
-                    "sele",
-                    selection=snapshot.pymol_selection_string,
-                    enable=1,
-                )
+                try:
+                    self._user_pymol.get_cmd_module().select(
+                        "sele",
+                        selection=snapshot.pymol_selection_string,
+                        enable=1,
+                    )
+                except pymol.CmdException:
+                    logger.warning(f"The PyMOL selection string '{snapshot.pymol_selection_string}' is invalid!")
             else:
                 # No 3-D selectable items chosen; clear PyMOL selection
                 self._user_pymol.get_cmd_module().select("sele", "none", enable=0)

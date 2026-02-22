@@ -326,14 +326,15 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
       logger.error("a_protein is None.")
       raise exception.IllegalArgumentError("a_protein is None.")
 
-    # Find the protein in the Proteins section
+    target_name = a_protein.get_molecule_object()
     for row in range(self._proteins_section.rowCount()):
       item = self._proteins_section.child(row)
-      if item.data(enums.ModelEnum.OBJECT_ROLE) is a_protein:
+      stored = item.data(enums.ModelEnum.OBJECT_ROLE)
+      if stored is not None and stored.get_molecule_object() == target_name:
         self._proteins_section.removeRow(row)
         return
 
-    logger.error(f"Protein not found in model.")
+    logger.error("Protein '%s' not found in model.", target_name)
     raise ValueError("Protein not found in model.")
 
   def remove_protein_pair(self, a_protein_pair: "protein_pair.ProteinPair") -> None:
@@ -350,14 +351,15 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
       logger.error("a_protein_pair is None.")
       raise exception.IllegalArgumentError("a_protein_pair is None.")
 
-    # Find the protein pair in the Protein Pairs section
+    target_name = a_protein_pair.name
     for row in range(self._protein_pairs_section.rowCount()):
       item = self._protein_pairs_section.child(row)
-      if item.data(enums.ModelEnum.OBJECT_ROLE) is a_protein_pair:
+      stored = item.data(enums.ModelEnum.OBJECT_ROLE)
+      if stored is not None and stored.name == target_name:
         self._protein_pairs_section.removeRow(row)
         return
 
-    logger.error(f"Protein pair not found in model.")
+    logger.error("Protein pair '%s' not found in model.", target_name)
     raise ValueError("Protein pair not found in model.")
 
   # ------------------------------------------------------------------

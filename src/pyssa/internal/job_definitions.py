@@ -28,22 +28,28 @@ side effects (no database updates, no UI signals, no logging).
 These functions are designed to be used with the JobScheduler and are
 picklable for execution in child processes via ProcessRuntime.
 """
-from typing import Any
+import time
+from typing import Any, TYPE_CHECKING
 import subprocess
 
 from src.pyssa.internal.data_structures import structure_prediction, structure_analysis
 from src.pyssa.util import analysis_util
 
+if TYPE_CHECKING:
+  from src.pyssa.internal.data_structures.data_classes import prediction_protein_info
+  from src.pyssa.internal.data_structures.data_classes import prediction_configuration
+  from src.pyssa.internal.data_structures import project
+
 
 def run_prediction_job(
-    prediction_protein_infos: Any,
-    prediction_configuration: Any,
+    a_list_of_prediction_protein_infos: list["prediction_protein_info.PredictionProteinInfo"],
+    a_prediction_configuration: "prediction_configuration.PredictionConfiguration",
 ) -> dict[str, Any]:
   """Run structure prediction job.
 
   Args:
-      prediction_protein_infos: Protein information for prediction.
-      prediction_configuration: Configuration for prediction.
+      a_list_of_prediction_protein_infos: Protein information for prediction.
+      a_prediction_configuration: Configuration for prediction.
 
   Returns:
       Dictionary containing:
@@ -52,8 +58,8 @@ def run_prediction_job(
           - "error_message": str with error details if failed
   """
   structure_prediction_obj = structure_prediction.StructurePrediction(
-      prediction_protein_infos,
-      prediction_configuration,
+      a_list_of_prediction_protein_infos,
+      a_prediction_configuration,
   )
 
   structure_prediction_obj.create_tmp_directories()
@@ -113,9 +119,9 @@ def run_distance_analysis_job(
 
 
 def run_prediction_and_distance_analysis_job(
-    prediction_protein_infos: Any,
-    prediction_configuration: Any,
-    frozen_project: Any,
+    a_list_of_prediction_protein_infos: list["prediction_protein_info.PredictionProteinInfo"],
+    a_prediction_configuration: "prediction_configuration.PredictionConfiguration",
+    frozen_project: "project.Project",
     list_with_analysis_names: list,
     cutoff: float,
     cycles: int,
@@ -123,8 +129,8 @@ def run_prediction_and_distance_analysis_job(
   """Run combined prediction and distance analysis job.
 
   Args:
-      prediction_protein_infos: Protein information for prediction.
-      prediction_configuration: Configuration for prediction.
+      a_list_of_prediction_protein_infos: Protein information for prediction.
+      a_prediction_configuration: Configuration for prediction.
       frozen_project: Frozen snapshot of project state.
       list_with_analysis_names: List of analysis names to perform.
       cutoff: Distance cutoff value.
@@ -138,8 +144,8 @@ def run_prediction_and_distance_analysis_job(
           - "error_message": str with error details if failed
   """
   prediction_result = run_prediction_job(
-      prediction_protein_infos,
-      prediction_configuration,
+      a_list_of_prediction_protein_infos,
+      a_prediction_configuration,
   )
 
   if not prediction_result["success"]:
@@ -186,6 +192,9 @@ def run_ray_tracing_job(
           - "success": bool (currently always False)
           - "error_message": str indicating deprecation
   """
+  for i in range(100):
+    print(f"Working {i}")
+    time.sleep(0.1)
   return {
       "success": False,
       "error_message": "RayTracingJob functionality is no longer supported.",

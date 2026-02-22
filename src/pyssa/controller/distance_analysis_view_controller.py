@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the distance analysis view controller."""
+import copy
 import logging
 
 from src.pyssa.gui.qt import QtCore
@@ -27,11 +28,14 @@ from src.pyssa.gui.qt import pyqtSignal
 
 from src.pyssa.controller import add_protein_pair_view_controller
 from typing import TYPE_CHECKING
+
+from src.pyssa.internal import job_definitions
+
 if TYPE_CHECKING:
   from src.pyssa.gui import app_state
   from src.pyssa.io_pyssa import watcher
-from src.pyssa.internal.data_structures.data_classes import prediction_configuration
-from src.pyssa.util import constants, exception
+from src.pyssa.internal.data_structures.data_classes import prediction_configuration, job_descriptor
+from src.pyssa.util import constants, exception, enums
 from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_levels, log_handlers
 
@@ -122,51 +126,6 @@ class DistanceAnalysisViewController(QtCore.QObject):
     gui_utils.hide_gui_elements(gui_elements_to_hide)
 
     self._view.ui.list_distance_analysis_overview.clear()
-
-  def start_process_batch(self) -> None:
-    """Starts the process batch based on selected items in the distance analysis overview."""
-    logger.log(
-        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Start' button was clicked."
-    )
-    tmp_raw_analysis_run_names: list = []
-    for row_no in range(self._view.ui.list_distance_analysis_overview.count()):
-      tmp_raw_analysis_run_names.append(
-          self._view.ui.list_distance_analysis_overview.item(row_no).text()
-      )
-    self._view.close()
-
-    if not tmp_raw_analysis_run_names:
-      return
-
-    from src.pyssa.gui import main_window
-    interface_manager = main_window.controller._interface_manager
-
-    try:
-      interface_manager.watcher.add_protein_pairs_from_new_job(
-        tmp_raw_analysis_run_names
-      )
-      tmp_distance_analysis_job, tmp_distance_analysis_entry_widget = (
-        interface_manager.job_manager.create_distance_analysis_job(
-          self._app_state.project,
-          interface_manager.project_lock,
-          interface_manager,
-          tmp_raw_analysis_run_names,
-          self._app_state._settings_manager.settings.cutoff,
-          self._app_state._settings_manager.settings.cycles,
-        )
-      )
-      interface_manager.job_manager.put_job_into_queue(
-        tmp_distance_analysis_job
-      )
-      interface_manager.add_job_entry_to_job_overview_layout(
-        tmp_distance_analysis_entry_widget
-      )
-      interface_manager.get_main_view().job_dock_widget.show()
-    except Exception as e:
-      logger.error(f"An error occurred while submitting distance analysis: {e}")
-      interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred while submitting distance analysis!"
-      )
 
   def _get_all_current_analysis_runs(self) -> list[str]:
     """Retrieves a list of all current analysis runs.
@@ -276,3 +235,26 @@ class DistanceAnalysisViewController(QtCore.QObject):
               "No selection in struction analysis overview."
           )
     self._view.ui.btn_distance_analysis_remove.setEnabled(False)
+
+  def start_process_batch(self) -> None:
+    """Starts the process batch based on selected items in the distance analysis overview."""
+    tmp_raw_analysis_run_names: list = []
+    for row_no in range(self._view.ui.list_distance_analysis_overview.count()):
+      tmp_raw_analysis_run_names.append(
+        self._view.ui.list_distance_analysis_overview.item(row_no).text()
+      )
+    # Running with an analysis
+    self._app_state.job_scheduler.submit(
+      job_descriptor.JobDescriptor(
+        enums.JobType.DISTANCE_ANALYSIS,
+        self._app_state.project.get_project_name(),
+        display_name="",
+        run_fn=job_definitions.run_distance_analysis_job,
+        run_args=(
+          copy.deepcopy(self._app_state.project),
+          tmp_raw_analysis_run_names,
+          self._app_state.get_settings().cutoff,
+          self._app_state.get_settings().cycles
+        )
+      )
+    )

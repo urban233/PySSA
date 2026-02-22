@@ -27,6 +27,7 @@ from src.pyssa.internal.data_structures import (
     structure_analysis as analysis_module,
 )
 from Bio import SeqRecord
+from Bio.Seq import Seq
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +86,19 @@ class ProjectService:
     # ------------------------------------------------------------------
 
     def _load_sequences(self, project_id: int) -> list[SeqRecord.SeqRecord]:
+        """Load all sequences for a project from the database.
+
+        Args:
+            project_id: The database ID of the project.
+
+        Returns:
+            A list of fully constructed ``SeqRecord`` objects, with the
+            sequence wrapped in a ``Bio.Seq.Seq`` instance and the
+            sequence name used as both ``id`` and ``name``.
+        """
         raw = self._db.get_all_sequences(project_id)
         return [
-            SeqRecord.SeqRecord(id=r["id"], seq=r["seq"], name=r["name"])
+            SeqRecord.SeqRecord(Seq(r["seq"]), id=r["name"], name=r["name"])
             for r in raw
         ]
 
@@ -103,12 +114,23 @@ class ProjectService:
         return proteins
 
     def _build_protein(self, raw: dict) -> "protein.Protein":
+        """Reconstruct a single Protein domain object from raw DB data.
+
+        Args:
+            raw: A dict with keys ``id``, ``name``, and ``pymol_session``
+                 as returned by :class:`ProteinRepository`.
+
+        Returns:
+            A fully populated :class:`Protein` instance, including chains,
+            PyMOL selection string, and PDB atom data loaded from the DB.
+        """
         from src.pyssa.internal.data_structures import protein as protein_module
         p = protein_module.Protein(raw["name"])
         p.set_id(raw["id"])
         p.pymol_session = raw["pymol_session"]
         p.chains = self._load_chains(raw["id"], raw["name"])
         p.pymol_selection.selection_string = self._load_selection(raw["id"])
+        p.set_pdb_data(self._load_pdb_atoms(raw["id"]))
         return p
 
     def _load_chains(self, protein_id: int, protein_name: str) -> list:
@@ -123,6 +145,36 @@ class ProjectService:
                 c.pymol_parameters = self._db._repo_pymol_params.get(db, rc["id"])
                 chains.append(c)
         return chains
+
+    def _load_pdb_atoms(self, protein_id: int) -> list[dict]:
+        """Load and convert PDB atom rows for one protein from the database.
+
+        The repository returns raw tuples whose column order matches the
+        ``SELECT`` column list in :data:`_SQL.GET_PDB_ATOMS`:
+        ``record_type, atom_number, atom_name, alternate_location_indicator,
+        residue_name, chain_identifier, residue_sequence_number,
+        code_for_insertions_of_residues, x_coord, y_coord, z_coord,
+        occupancy, temperature_factor, segment_identifier,
+        element_symbol, charge``.
+
+        Args:
+            protein_id: The database ID of the protein.
+
+        Returns:
+            A list of atom dicts ready for use with :meth:`Protein.set_pdb_data`.
+        """
+        _FIELDS = (
+            "record_type", "atom_number", "atom_name",
+            "alternate_location_indicator", "residue_name",
+            "chain_identifier", "residue_sequence_number",
+            "code_for_insertions_of_residues",
+            "x_coord", "y_coord", "z_coord",
+            "occupancy", "temperature_factor",
+            "segment_identifier", "element_symbol", "charge",
+        )
+        with self._db._conn() as db:
+            raw_rows = self._db._repo_pdb_atoms.get_all(db, protein_id)
+        return [dict(zip(_FIELDS, row)) for row in raw_rows]
 
     def _load_selection(self, protein_id: int) -> str:
         with self._db._conn() as db:

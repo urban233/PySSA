@@ -104,25 +104,15 @@ class JobPanel(QtWidgets.QWidget):
     view.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
     view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
     view.verticalHeader().setVisible(False)
+    view.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
     view.horizontalHeader().setStretchLastSection(True)
     view.setAlternatingRowColors(True)
     view.setShowGrid(False)
-    view.resizeColumnsToContents()
     return view
 
   # ------------------------------------------------------------------
   # Public helpers
   # ------------------------------------------------------------------
-
-  @property
-  def active_view(self) -> QtWidgets.QTableView:
-    """The table view displaying queued and running jobs."""
-    return self._active_view
-
-  @property
-  def completed_view(self) -> QtWidgets.QTableView:
-    """The table view displaying finished, failed, and cancelled jobs."""
-    return self._completed_view
 
   def show_below(self, widget: QtWidgets.QWidget) -> None:
     """Position the panel below *widget* and show it.

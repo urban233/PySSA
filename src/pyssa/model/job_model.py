@@ -220,8 +220,9 @@ class JobModel(QtCore.QAbstractTableModel):
     entry.status = status
     entry.result = result
 
-    status_index = self.index(row, _COL_STATUS)
-    self.dataChanged.emit(status_index, status_index, [Qt.DisplayRole])
+    first_index = self.index(row, 0)
+    last_index = self.index(row, _COLUMN_COUNT - 1)
+    self.dataChanged.emit(first_index, last_index, [Qt.DisplayRole])
 
     if status == enums.JobStatus.FINISHED:
       self.job_finished.emit(entry.descriptor, result)

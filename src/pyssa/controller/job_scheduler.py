@@ -72,6 +72,7 @@ class JobScheduler(QtCore.QObject):
     self._process_runtime = process_runtime or ProcessRuntime()
     self._thread_runtime = get_singleton_thread_runtime()
     self._queues: dict[enums.JobType, _TypeQueue] = defaultdict(_TypeQueue)
+    self._active_tasks: dict[int, Any] = {}  # row -> ProcessTask, prevents GC
 
   # ------------------------------------------------------------------
   # Public API
@@ -311,6 +312,9 @@ class JobScheduler(QtCore.QObject):
       descriptor.run_fn, *descriptor.run_args, **descriptor.run_kwargs,
     )
 
+    # Store reference to prevent garbage collection before signals fire
+    self._active_tasks[row] = process_task
+
     process_task.on_success(
       lambda result, _r=row, _d=descriptor, _jt=job_type: self._on_job_success(
         _r, _d, _jt, result,
@@ -340,6 +344,9 @@ class JobScheduler(QtCore.QObject):
         job_type: The type used to look up the queue.
         result: The return value from the worker function.
     """
+    # Clean up task reference now that callback has fired
+    self._active_tasks.pop(row, None)
+
     self._model.update_status(row, enums.JobStatus.FINISHED, result)
     logger.info("Job at row %d finished successfully.", row)
 
@@ -379,6 +386,9 @@ class JobScheduler(QtCore.QObject):
         job_type: The type used to look up the queue.
         exc: The exception raised by the worker.
     """
+    # Clean up task reference now that callback has fired
+    self._active_tasks.pop(row, None)
+
     self._model.update_status(row, enums.JobStatus.FAILED, exc)
     logger.error("Job at row %d failed: %s", row, exc)
 

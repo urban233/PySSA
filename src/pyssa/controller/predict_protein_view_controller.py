@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the predict protein view controller."""
+import copy
 import logging
 
 from src.pyssa.gui.qt import QtWidgets
@@ -29,12 +30,16 @@ from src.pyssa.gui.qt import Qt
 from src.pyssa.controller import add_protein_pair_view_controller, advanced_prediction_configurations_view_controller
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from typing import TYPE_CHECKING
+
+from src.pyssa.internal import job_definitions
+
 if TYPE_CHECKING:
   from src.pyssa.gui import app_state
   from src.pyssa.io_pyssa import watcher
   
 from src.pyssa.internal.data_structures import protein, chain
-from src.pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
+from src.pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration, \
+  job_descriptor
 from src.pyssa.util import tools, constants, prediction_util, enums, exception
 from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_levels, log_handlers
@@ -658,103 +663,45 @@ class PredictProteinViewController(QtCore.QObject):
 
   def _start_prediction_analysis(self) -> None:
     """Starts the process batch based on selected items in the prediction and distance analysis overview."""
-    logger.log(
-        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Start' button was clicked."
+    tmp_prediction_runs: list[
+      prediction_protein_info.PredictionProteinInfo
+    ] = prediction_util.get_prediction_name_and_seq_from_table(
+      self._view.ui.table_proteins_to_predict
     )
-    tmp_prediction_runs: list[prediction_protein_info.PredictionProteinInfo] = (
-        prediction_util.get_prediction_name_and_seq_from_table(
-            self._view.ui.table_proteins_to_predict
-        )
-    )
-    self._view.close()
-    self._submit_prediction_job(True, tmp_prediction_runs)
 
-  def _submit_prediction_job(self, with_analysis: bool, prediction_runs: list) -> None:
-    """Submits the prediction job."""
-    from src.pyssa.gui.qt import custom_message_box
-    from src.pyssa.gui.dialogs import dialog_settings_global
-    import globals
-    from src.pyssa.gui import main_window
-    interface_manager = main_window.controller._interface_manager
-
-    # Check if WSL2 and ColabFold are installed
-    if globals.g_os == "win32":
-      constants.PYSSA_LOGGER.info("Checking if WSL2 is installed ...")
-      if not dialog_settings_global.is_wsl2_installed():
-        constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
-        interface_manager.get_application_settings().wsl_install = 0
-        tmp_dialog = custom_message_box.CustomMessageBoxOk(
-          "Prediction failed because the WSL2 environment is not installed!",
-          "Structure Prediction",
-          custom_message_box.CustomMessageBoxIcons.DANGEROUS.value,
+    if self._view.ui.checkbox_add_analysis.isChecked():
+      tmp_raw_analysis_run_names: list = []
+      for row_no in range(self._view.ui.list_analysis_overview.count()):
+        tmp_raw_analysis_run_names.append(
+          self._view.ui.list_analysis_overview.item(row_no).text()
         )
-        tmp_dialog.exec_()
-        return
-      constants.PYSSA_LOGGER.info("Checking if Local Colabfold is installed ...")
-      if not dialog_settings_global.is_local_colabfold_installed():
-        constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
-        interface_manager.get_application_settings().local_colabfold = 0
-        tmp_dialog = custom_message_box.CustomMessageBoxOk(
-          "Prediction failed because the ColabFold is not installed!",
-          "Structure Prediction",
-          custom_message_box.CustomMessageBoxIcons.DANGEROUS.value,
+      # Running with an analysis
+      self._app_state.job_scheduler.submit(
+        job_descriptor.JobDescriptor(
+          enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS,
+          self._app_state.project.get_project_name(),
+          display_name="",
+          run_fn=job_definitions.run_prediction_and_distance_analysis_job,
+          run_args=(
+            tmp_prediction_runs, self.prediction_configuration,
+            copy.deepcopy(self._app_state.project),
+            tmp_raw_analysis_run_names,
+            self._app_state.get_settings().cutoff,
+            self._app_state.get_settings().cycles
+          )
         )
-        tmp_dialog.exec_()
-        return
-
-    try:
-      constants.PYSSA_LOGGER.info("Begin prediction process.")
-      interface_manager.watcher.add_proteins_from_new_job(prediction_runs)
-
-      if with_analysis:
-        constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
-        tmp_prediction_job, _ = interface_manager.job_manager.create_prediction_job(
-          self._app_state.project,
-          prediction_runs,
-          self.prediction_configuration,
-          interface_manager.project_lock,
-          interface_manager,
-        )
-        tmp_raw_analysis_run_names = []
-        for row_no in range(self._view.ui.list_analysis_overview.count()):
-          tmp_raw_analysis_run_names.append(self._view.ui.list_analysis_overview.item(row_no).text())
-        interface_manager.watcher.add_protein_pairs_from_new_job(tmp_raw_analysis_run_names)
-        tmp_distance_analysis_job, _ = interface_manager.job_manager.create_distance_analysis_job(
-          self._app_state.project,
-          interface_manager.project_lock,
-          interface_manager,
-          tmp_raw_analysis_run_names,
-          self._app_state._settings_manager.settings.cutoff,
-          self._app_state._settings_manager.settings.cycles,
-        )
-        tmp_job, tmp_job_widget = interface_manager.job_manager.create_prediction_and_distance_analysis_job(
-          tmp_prediction_job,
-          tmp_distance_analysis_job,
-          interface_manager,
-        )
-      else:
-        constants.PYSSA_LOGGER.info("Running prediction without subsequent analysis.")
-        tmp_job, tmp_job_widget = interface_manager.job_manager.create_prediction_job(
-          self._app_state.project,
-          prediction_runs,
-          self.prediction_configuration,
-          interface_manager.project_lock,
-          interface_manager,
-        )
-
-      interface_manager.job_manager.put_job_into_queue(tmp_job)
-      interface_manager.add_job_entry_to_job_overview_layout(tmp_job_widget)
-      if hasattr(main_window.controller, "open_job_overview_panel"):
-        main_window.controller.open_job_overview_panel()
-      else:
-        interface_manager.get_main_view().job_dock_widget.show()
-    except Exception as e:
-      logger.error(f"An error occurred: {e}")
-      interface_manager.status_bar_manager.show_error_message(
-        "An unknown error occurred!"
       )
-    finally:
-      interface_manager.refresh_main_view()
+    else:
+      # Running only a prediction
+      self._app_state.job_scheduler.submit(
+        job_descriptor.JobDescriptor(
+          enums.JobType.PREDICTION,
+          self._app_state.project.get_project_name(),
+          display_name="",
+          run_fn=job_definitions.run_prediction_job,
+          run_args=(tmp_prediction_runs, self.prediction_configuration),
+        )
+      )
 
   # </editor-fold>
   # </editor-fold>
