@@ -105,6 +105,11 @@ class AppState:
       tmp_project_item.setData(tmp_filepath, enums.ModelEnum.FILEPATH_ROLE)
       tmp_root_item.appendRow(tmp_project_item)
 
+  def refresh_workspace_model(self) -> None:
+    """Clears the workspace model and rebuilds it with current files."""
+    self._workspace.get_model().clear()
+    self._build_workspace_model()
+
   # ------------------------------------------------------------------
   # Read-only project access
   # ------------------------------------------------------------------

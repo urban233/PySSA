@@ -29,9 +29,12 @@ import logging
 import os
 import pathlib
 import shutil
+from io import BytesIO
 from typing import Union
 
 import pymol
+import requests
+
 # import pywinctl
 
 from src.pyssa.gui.qt import QtWidgets
@@ -60,6 +63,7 @@ from src.pyssa.gui.ui.custom_context_menus import (
     protein_tree_context_menu,
     protein_pair_tree_context_menu,
 )
+from src.pyssa.internal.thread.thread_api import thread_runtime
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -227,7 +231,7 @@ class MainWindowController:
         self._main_window.action_documentation.triggered.connect(self.__slot_toggle_help_panel)
         self._main_window.action_show_log_in_explorer.triggered.connect(self.__slot_open_logs)
         self._main_window.action_clear_logs.triggered.connect(self.__slot_clear_all_log_files)
-        # TODO: Add connection for the demo project action in the help menu
+        self._main_window.action_get_demo_projects.triggered.connect(self.__slot_get_demo_projects)
         self._main_window.action_about.triggered.connect(self.__slot_open_about)
         # </editor-fold>
 
@@ -1308,7 +1312,199 @@ class MainWindowController:
                 "An unknown error occurred!"
             )
 
-    # TODO: Add here the slot method for getting the demo projects
+    def __slot_get_demo_projects(self) -> None:
+        """Downloads, extracts, and integrates demo projects into the workspace.
+
+        This method:
+        1. Checks for internet connectivity
+        2. Downloads the demo projects ZIP file from the configured URL
+        3. Extracts the ZIP file to the settings directory
+        4. Copies all project database files to the user's workspace
+        5. Refreshes the workspace model to display the new projects
+
+        All operations run asynchronously with proper error handling and user feedback.
+        """
+        try:
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                "Menu entry 'Help/Get Demo Projects' clicked.",
+            )
+
+            # Check internet connectivity first
+            if not tools.check_internet_connectivity():
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    "You do not have a working internet connection\nbut that is necessary for this operation!",
+                    "Internet Connection",
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value,
+                )
+                tmp_dialog.exec()
+                return
+
+            workspace_path = self._app_state.get_settings().workspace_path
+
+            def download_demo_projects_task(progress_callback, is_cancelled):
+                """Async task to download, extract and import demo projects."""
+                import zipfile
+
+                download_dest = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")
+                extract_dest = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
+
+                try:
+                    # Step 1: Download the ZIP file
+                    constants.PYSSA_LOGGER.info("Starting download of demo projects...")
+
+                    if is_cancelled():
+                        raise InterruptedError("Download cancelled by user.")
+
+                    # Remove old files if they exist
+                    if os.path.exists(download_dest):
+                        os.remove(download_dest)
+                    if os.path.exists(extract_dest):
+                        shutil.rmtree(extract_dest)
+
+                    # Download with streaming
+                    response = requests.get(constants.DEMO_PROJECT_URL, stream=True, timeout=60)
+                    response.raise_for_status()
+
+                    with open(download_dest, 'wb') as file:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if is_cancelled():
+                                raise InterruptedError("Download cancelled by user.")
+                            if chunk:
+                                file.write(chunk)
+
+                    constants.PYSSA_LOGGER.info("Demo projects downloaded successfully.")
+
+                    if is_cancelled():
+                        raise InterruptedError("Operation cancelled by user.")
+
+                    # Step 2: Extract the ZIP file
+                    constants.PYSSA_LOGGER.info("Extracting demo projects...")
+
+                    with zipfile.ZipFile(download_dest, "r") as zip_ref:
+                        zip_ref.extractall(extract_dest)
+
+                    constants.PYSSA_LOGGER.info("Demo projects extracted successfully.")
+
+                    if is_cancelled():
+                        raise InterruptedError("Operation cancelled by user.")
+
+                    # Step 3: Import projects into workspace
+                    constants.PYSSA_LOGGER.info("Importing demo projects into workspace...")
+
+                    imported_count = 0
+                    for tmp_filename in os.listdir(extract_dest):
+                        if is_cancelled():
+                            raise InterruptedError("Operation cancelled by user.")
+
+                        # Only process .db files
+                        if not tmp_filename.endswith('.db'):
+                            continue
+
+                        tmp_src_filepath = pathlib.Path(extract_dest / tmp_filename)
+                        tmp_dest_filepath = pathlib.Path(workspace_path) / tmp_filename
+
+                        # Copy database file to workspace
+                        shutil.copyfile(str(tmp_src_filepath), str(tmp_dest_filepath))
+                        imported_count += 1
+                        constants.PYSSA_LOGGER.info(f"Imported project: {tmp_filename}")
+
+                    constants.PYSSA_LOGGER.info(
+                        f"Import process finished. {imported_count} demo project(s) imported."
+                    )
+
+                    # Clean up downloaded files
+                    if os.path.exists(download_dest):
+                        os.remove(download_dest)
+                    if os.path.exists(extract_dest):
+                        shutil.rmtree(extract_dest)
+
+                    return (True, imported_count)
+
+                except requests.exceptions.HTTPError as e:
+                    constants.PYSSA_LOGGER.error(f"HTTP Error during download: {e}")
+                    return (False, f"HTTP Error: {e}")
+                except requests.exceptions.ConnectionError as e:
+                    constants.PYSSA_LOGGER.error(f"Connection Error during download: {e}")
+                    return (False, f"Connection Error: {e}")
+                except requests.exceptions.Timeout as e:
+                    constants.PYSSA_LOGGER.error(f"Timeout Error during download: {e}")
+                    return (False, f"Timeout Error: {e}")
+                except requests.exceptions.RequestException as e:
+                    constants.PYSSA_LOGGER.error(f"Request Error during download: {e}")
+                    return (False, f"Request Error: {e}")
+                except zipfile.BadZipFile as e:
+                    constants.PYSSA_LOGGER.error(f"Invalid ZIP file: {e}")
+                    return (False, f"Invalid ZIP file: {e}")
+                except InterruptedError as e:
+                    constants.PYSSA_LOGGER.info(f"Operation cancelled: {e}")
+                    return (False, "Operation cancelled by user.")
+                except Exception as e:
+                    constants.PYSSA_LOGGER.error(f"Unexpected error: {e}")
+                    return (False, f"Unexpected error: {e}")
+
+            def on_success(result):
+                """Callback when download completes successfully."""
+                success, data = result
+
+                if success:
+                    # Rebuild workspace model to show new projects
+                    self._app_state._build_workspace_model()
+                    self.refresh_ui()
+
+                    self._app_state.status_bar_manager.show_permanent_message("", False)
+                    self._app_state.status_bar_manager.show_temporary_message(
+                        f"Demo projects downloaded and imported successfully. {data} project(s) added."
+                    )
+                else:
+                    # Show error message
+                    error_msg = str(data)
+                    tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                        f"The download of the demo projects failed.\n\n{error_msg}",
+                        "Get Demo Projects",
+                        custom_message_box.CustomMessageBoxIcons.ERROR.value,
+                    )
+                    tmp_dialog.exec()
+
+                    self._app_state.status_bar_manager.show_permanent_message("", False)
+                    self._app_state.status_bar_manager.show_error_message(
+                        "Failed to download demo projects."
+                    )
+
+            def on_error(exc):
+                """Callback when download encounters an error."""
+                logger.exception("Failed to download demo projects.", exc_info=exc)
+
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    f"An error occurred while downloading demo projects:\n\n{exc}",
+                    "Get Demo Projects",
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value,
+                )
+                tmp_dialog.exec()
+
+                self._app_state.status_bar_manager.show_permanent_message("", False)
+                self._app_state.status_bar_manager.show_error_message(
+                    "Failed to download demo projects."
+                )
+
+            # Start the async operation
+            (
+                thread_runtime.get_singleton_thread_runtime()
+                .run(download_demo_projects_task)
+                .on_success(on_success)
+                .on_error(on_error)
+            )
+
+            # Show progress message
+            self._app_state.status_bar_manager.show_permanent_message(
+                "Downloading demo projects ...", True
+            )
+
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._app_state.status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
 
     def __slot_open_about(self) -> None:
         """Opens the About dialog."""
