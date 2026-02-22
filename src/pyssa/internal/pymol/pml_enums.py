@@ -62,5 +62,11 @@ class PmlCommand(enum.Enum):
   DRAW = "draw"
   PNG = "png"
 
-  # Session commands
   RESET = "reset"
+
+  # Macro commands
+  CONSOLIDATE_MOLECULE = "consolidate_molecule"
+  CLEAN_PROTEIN_UPDATE_STRUCTURE = "clean_protein_update_structure"
+  CREATE_NEW_SESSION = "create_new_session"
+  GET_CHAINS = "get_chains"
+  DISTANCE_ANALYSIS = "distance_analysis"

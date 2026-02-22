@@ -27,7 +27,8 @@ from typing import TYPE_CHECKING, TextIO, Optional
 
 import zmq
 
-from src.auxiliary_pymol import auxiliary_pymol_client
+from src.pyssa.internal.pymol.pml_worker import PmlWorker
+from src.pyssa.internal.pymol.pml_enums import PmlCommand
 from src.pyssa.internal.portal import protein_operations
 from src.pyssa.internal.data_structures import selection, job
 from src.pyssa.util import enums
@@ -104,14 +105,12 @@ class Protein:
     self._pdb_data = []
 
   def add_protein_structure_data_from_pdb_db(
-      self, a_pdb_id: str, the_main_socket: zmq.Socket, a_socket: zmq.Socket
+      self, a_pdb_id: str
   ) -> bool:
     """Adds protein structure data based on a protein from the PDB database.
 
     Args:
         a_pdb_id (str): The ID of the protein structure in the PDB database.
-        the_main_socket (zmq.Socket): The main ZeroMQ socket for communication.
-        a_socket (zmq.Socket): An auxiliary ZeroMQ socket for communication.
     
     Returns:
       A boolean indicating if there are multiple CA atoms in a single residue in the pdb data.
@@ -123,12 +122,6 @@ class Protein:
     if a_pdb_id is None:
       logger.error("a_pdb_id is None.")
       raise exception.IllegalArgumentError("a_pdb_id is None.")
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if a_socket is None:
-      logger.error("a_socket is None.")
-      raise exception.IllegalArgumentError("a_socket is None.")
 
     # </editor-fold>
 
@@ -137,25 +130,14 @@ class Protein:
     )
     bio_data.download_pdb_file(a_pdb_id, tmp_pdb_filepath)
     self.chains = protein_operations.get_protein_chains(
-        tmp_pdb_filepath,
-        the_main_socket,
-        a_socket,
+        tmp_pdb_filepath
     )
 
-    tmp_job_description = job.GeneralPurposeJobDescription(
-        enums.JobShortDescription.CONSOLIDATE_MOLECULE_OBJECT_TO_FIRST_STATE,
+    tmp_reply_data = PmlWorker.one_shot_do(
+        PmlCommand.CONSOLIDATE_MOLECULE, args=(str(tmp_pdb_filepath),)
     )
-    tmp_job_description.setup_dict(
-        {enums.JobDescriptionKeys.PDB_FILEPATH.value: str(tmp_pdb_filepath)}
-    )
-    print(tmp_job_description.job_information)
-    tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-        the_main_socket,
-        a_socket,
-        tmp_job_description,
-    )
-    print(tmp_reply)
-    self._pdb_data, tmp_more_than_one_ca_atom = bio_data.parse_pdb_file(tmp_reply["data"])
+    
+    self._pdb_data, tmp_more_than_one_ca_atom = bio_data.parse_pdb_file(tmp_reply_data)
     if pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb").exists():
       os.remove(
         str(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb"))
@@ -164,16 +146,12 @@ class Protein:
 
   def add_protein_structure_data_from_local_pdb_file(
       self,
-      a_filepath: pathlib.Path,
-      the_main_socket: zmq.Socket,
-      a_socket: zmq.Socket,
+      a_filepath: pathlib.Path
   ) -> bool:
     """Adds protein structure data based on a protein from the local filesystem.
 
     Args:
         a_filepath (pathlib.Path): The filepath of the PDB file to be processed.
-        the_main_socket (zmq.Socket): The main socket for communication.
-        a_socket (zmq.Socket): A secondary socket for communication.
     
     Returns:
       A boolean indicating if there are multiple CA atoms in a single residue in the pdb data.
@@ -186,35 +164,19 @@ class Protein:
     if a_filepath is None:
       logger.error("a_filepath is None.")
       raise exception.IllegalArgumentError("a_filepath is None.")
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if a_socket is None:
-      logger.error("a_socket is None.")
-      raise exception.IllegalArgumentError("a_socket is None.")
 
     # </editor-fold>
 
     self.chains = protein_operations.get_protein_chains(
-        a_filepath,
-        the_main_socket,
-        a_socket,
+        a_filepath
     )
-    tmp_job_description = job.GeneralPurposeJobDescription(
-        enums.JobShortDescription.CONSOLIDATE_MOLECULE_OBJECT_TO_FIRST_STATE,
+    tmp_reply_data = PmlWorker.one_shot_do(
+        PmlCommand.CONSOLIDATE_MOLECULE, args=(str(a_filepath),)
     )
-    tmp_job_description.setup_dict(
-        {enums.JobDescriptionKeys.PDB_FILEPATH.value: str(a_filepath)}
-    )
-    tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-        the_main_socket,
-        a_socket,
-        tmp_job_description,
-    )
-    if tmp_reply["data"] == "":
-      logger.error(f"Could not find pdb file! Ran into error: {tmp_reply}")
+    if not tmp_reply_data or tmp_reply_data == "":
+      logger.error(f"Could not find pdb file! Ran into error: {tmp_reply_data}")
       raise FileNotFoundError()
-    self._pdb_data, tmp_more_than_one_ca_atom = bio_data.parse_pdb_file(tmp_reply["data"])
+    self._pdb_data, tmp_more_than_one_ca_atom = bio_data.parse_pdb_file(tmp_reply_data)
     try:
       os.remove(
           pathlib.Path(
@@ -247,30 +209,17 @@ class Protein:
       i += 1
 
   def create_new_pymol_session(
-      self, the_main_socket: zmq.Socket, the_general_purpose_socket: zmq.Socket
+      self
   ) -> None:
     """Creates a new pymol session by loading the protein into PyMOL.
 
-    Args:
-        the_main_socket (zmq.Socket): The main ZMQ socket used for communication with the auxiliary PyMOL process.
-        the_general_purpose_socket (zmq.Socket): The general purpose ZMQ socket used for communication with the auxiliary PyMOL process.
-
     Raises:
-        exception.IllegalArgumentError: If the_main_socket or the_general_purpose_socket is None.
         ValueError: If there is no pdb data in the current object.
         UnableToCreatePdbFileError: If an error occurs while building the pdb file.
         UnableToOpenFileError: If the pdb file could not be opened for writing.
 
     """
     # <editor-fold desc="Checks">
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if the_general_purpose_socket is None:
-      logger.error("the_general_purpose_socket is None.")
-      raise exception.IllegalArgumentError(
-          "the_general_purpose_socket is None."
-      )
     pdb_filepath = pathlib.Path(
         f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb"
     )
@@ -301,24 +250,13 @@ class Protein:
       logger.error("pdb file could not be opened for writing.")
       raise exception.UnableToOpenFileError("")
 
-    tmp_job_description = job.GeneralPurposeJobDescription(
-        enums.JobShortDescription.CREATE_NEW_PROTEIN_PYMOL_SESSION
+    tmp_reply_data = PmlWorker.one_shot_do(
+        PmlCommand.CREATE_NEW_SESSION,
+        args=(
+            str(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb")),
+        ),
     )
-    tmp_job_description.setup_dict(
-        {
-            enums.JobDescriptionKeys.PDB_FILEPATH.value: str(
-                pathlib.Path(
-                    f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb"
-                )
-            )
-        }
-    )
-    tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-        the_main_socket,
-        the_general_purpose_socket,
-        tmp_job_description,
-    )
-    self.pymol_session = tmp_reply["data"][0]
+    self.pymol_session = tmp_reply_data
 
   def set_id(self, a_value: int) -> None:
     """Sets the id of the protein object.
@@ -581,54 +519,31 @@ class Protein:
   #     self.pymol_selection.set_selections_without_chains_ca()
 
   def clean_protein(
-      self, the_main_socket: zmq.Socket, the_general_purpose_socket: zmq.Socket
+      self
   ) -> bool:
     """Cleans the protein objects and sets the new pdb data into the instance.
-
-    Args:
-      the_main_socket (zmq.Socket): The main ZeroMQ socket for communication with the auxiliary pymol client.
-      the_general_purpose_socket (zmq.Socket): The general purpose ZeroMQ socket for communication with the auxiliary pymol client.
     
     Returns:
       A boolean indicating if there are multiple CA atoms in a single residue in the pdb data.
-    
-    Raises:
-      exception.IllegalArgumentError: If any of the arguments are None.
     """
     # <editor-fold desc="Checks">
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if the_general_purpose_socket is None:
-      logger.error("the_general_purpose_socket is None.")
-      raise exception.IllegalArgumentError(
-          "the_general_purpose_socket is None."
-      )
 
     # </editor-fold>
 
-    tmp_job_description = job.GeneralPurposeJobDescription(
-        enums.JobShortDescription.CLEAN_PROTEIN_UPDATE_STRUCTURE
+    tmp_reply_data = PmlWorker.one_shot_do(
+        PmlCommand.CLEAN_PROTEIN_UPDATE_STRUCTURE,
+        args=(
+            str(self.pymol_session),
+            str(self._pymol_molecule_object),
+        ),
     )
-    tmp_job_description.setup_dict(
-        {
-            enums.JobDescriptionKeys.PYMOL_SESSION.value: str(
-                self.pymol_session
-            ),
-            enums.JobDescriptionKeys.PROTEIN_NAME.value: str(
-                self._pymol_molecule_object
-            ),
-        },
-    )
-    tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-        the_main_socket,
-        the_general_purpose_socket,
-        tmp_job_description,
-    )
-    if tmp_reply["data"][0].find("ERROR") != -1:
-      raise ValueError(f"{tmp_reply['data'][0]}; {tmp_reply['data'][1]}")
+    
+    # If returned empty string, then an error occurred implicitly
+    if not tmp_reply_data or tmp_reply_data[0] == "":
+      logger.error("Clean protein failed inside PyMOL.")
+      raise ValueError("Clean protein failed.")
 
-    self.pymol_session, tmp_pdb_filepath = tmp_reply["data"]
+    self.pymol_session, tmp_pdb_filepath = tmp_reply_data
     tmp_pdb_data, tmp_more_than_one_ca_atom = bio_data.parse_pdb_file(tmp_pdb_filepath)
     self._pdb_data = tmp_pdb_data
     return tmp_more_than_one_ca_atom

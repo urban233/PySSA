@@ -12,10 +12,8 @@ keeping each model class focused on its own domain.
 """
 from typing import Optional
 from chempy.models import Indexed
-
-from src.auxiliary_pymol import auxiliary_pymol_client
 from src.pyssa.gui.qt import QtGui
-from src.pyssa.internal.data_structures import protein, job
+from src.pyssa.internal.data_structures import protein
 from src.pyssa.internal.pymol import pml_worker, pml_enums
 from src.pyssa.util import enums
 
@@ -66,17 +64,6 @@ class ProteinSubtreeMixin:
         pml_enums.PmlCommand.GET_SCENE_LIST, sync=True
       )
 
-    tmp_job = job.GeneralPurposeJobDescription(
-      enums.JobShortDescription.GET_ALL_SCENES_OF_SESSION
-    )
-    tmp_job.setup_dict(
-      {enums.JobDescriptionKeys.PYMOL_SESSION.value: a_pymol_session}
-    )
-    tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-      the_main_socket, a_socket, tmp_job
-    )
-    return tmp_reply["data"]
-
   def _fetch_chempy_model(
           self,
           a_pymol_session: str,
@@ -89,20 +76,6 @@ class ProteinSubtreeMixin:
       return tmp_pml_worker.do(
         pml_enums.PmlCommand.GET_MODEL, (f"{a_molecule_object}", ), sync=True
       )
-
-    tmp_job = job.GeneralPurposeJobDescription(
-      enums.JobShortDescription.GET_MODEL
-    )
-    tmp_job.setup_dict(
-      {
-        enums.JobDescriptionKeys.PYMOL_SESSION.value: a_pymol_session,
-        enums.JobDescriptionKeys.MOLECULE_OBJECT.value: a_molecule_object,
-      }
-    )
-    tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-      the_main_socket, a_socket, tmp_job
-    )
-    return tmp_reply["data"]
 
   def _fetch_scenes_for_protein(
           self,

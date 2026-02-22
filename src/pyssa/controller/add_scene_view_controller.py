@@ -60,10 +60,18 @@ class AddSceneViewController(QtCore.QObject):
     self._app_state = the_app_state
     self._view = add_scene_view.AddSceneView(a_parent)
 
-    from src.auxiliary_pymol import auxiliary_pymol_client
-    self._pymol_cmd = auxiliary_pymol_client._get_client()
-
-    self._all_current_scenes = self._pymol_cmd.get_scene_list() or []
+    from src.pyssa.gui import main_window
+    try:
+      from src.pyssa.internal.pymol.pml_worker import PmlWorker
+      from src.pyssa.internal.pymol.pml_enums import PmlCommand
+      interface_manager = main_window.controller._interface_manager
+      session_filepath = interface_manager.pymol_session_manager.current_pymol_session.filepath
+      
+      with PmlWorker.session(PmlWorker.cache_session(session_filepath, "fetch_scenes")) as worker:
+          self._all_current_scenes = worker.do(PmlCommand.GET_SCENE_LIST, sync=True) or []
+    except Exception as e:
+      logger.error(f"Failed to fetch scenes: {e}")
+      self._all_current_scenes = []
 
     self._view.lbl_status.setStyleSheet("color: #ba1a1a; font-size: 11px;")
     self._connect_all_ui_elements_to_slot_functions()

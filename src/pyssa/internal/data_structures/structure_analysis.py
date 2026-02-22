@@ -25,9 +25,8 @@ import pathlib
 import numpy as np
 from typing import TYPE_CHECKING
 
-import zmq
-
-from src.auxiliary_pymol import auxiliary_pymol_client
+from src.pyssa.internal.pymol.pml_worker import PmlWorker
+from src.pyssa.internal.pymol.pml_enums import PmlCommand
 from src.pyssa.controller import database_manager
 from src.pyssa.io_pyssa import filesystem_helpers, bio_data
 from src.pyssa.logging_pyssa import log_handlers
@@ -114,15 +113,11 @@ class Analysis:
   def run_distance_analysis(
       self,
       the_image_creation_option: bool,
-      the_main_socket: zmq.Socket,
-      a_socket: zmq.Socket,
   ) -> None:
     """Runs the distance analysis for all protein pairs of the analysis job.
 
     Args:
         the_image_creation_option (bool): A flag indicating whether to create images.
-        the_main_socket (zmq.Socket): The main socket for communication.
-        a_socket (zmq.Socket): A secondary socket for communication.
 
     Raises:
         exception.IllegalArgumentError: If any of the arguments are None.
@@ -134,12 +129,6 @@ class Analysis:
     if the_image_creation_option is None:
       logger.error("the_image_creation_option is None.")
       raise exception.IllegalArgumentError("the_image_creation_option is None.")
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if a_socket is None:
-      logger.error("a_socket is None.")
-      raise exception.IllegalArgumentError("a_socket is None.")
 
     # </editor-fold>
 
@@ -182,10 +171,9 @@ class Analysis:
         except Exception as e:
           logger.error(f"PDB file could not be built. Error: {e}")
 
-        tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-            the_main_socket,
-            a_socket,
-            job.DistanceAnalysisJobDescription(
+        tmp_reply_data = PmlWorker.one_shot_do(
+            PmlCommand.DISTANCE_ANALYSIS,
+            args=(
                 tmp_protein_pair.name,
                 str(tmp_protein_1_pdb_cache_filepath),
                 str(tmp_protein_2_pdb_cache_filepath),
@@ -195,55 +183,51 @@ class Analysis:
                 tmp_protein_pair.distance_analysis.cycles,
             ),
         )
-        if tmp_reply["result"] == "error" and tmp_reply["data"] == "Malformed pdb file.":
-          raise exception.UnableToDoAnalysisError(tmp_reply["data"])
-        if tmp_reply["data"] is not None:
-          print(tmp_reply["data"])
-          distance_analysis_results_object_values, base64_string = tmp_reply[
-              "data"
-          ]
-          distances, base64_string, rmsd, aligned_residues = (
-              distance_analysis_results_object_values
-          )
-          result_hashtable: dict[str, np.ndarry] = {
-              pyssa_keys.ARRAY_DISTANCE_INDEX: np.array(
-                  distances[pyssa_keys.ARRAY_DISTANCE_INDEX]
-              ),
-              pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN: np.array(
-                  distances[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN]
-              ),
-              pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION: np.array(
-                  distances[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION]
-              ),
-              pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI: np.array(
-                  distances[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI]
-              ),
-              pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN: np.array(
-                  distances[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN]
-              ),
-              pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION: np.array(
-                  distances[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION]
-              ),
-              pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI: np.array(
-                  distances[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI]
-              ),
-              pyssa_keys.ARRAY_DISTANCE_DISTANCES: np.array(
-                  distances[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
-              ),
-          }
-          print(result_hashtable)
-
-          tmp_protein_pair.distance_analysis.analysis_results = (
-              results.DistanceAnalysisResults(
-                  result_hashtable,
-                  base64_string,
-                  rmsd,
-                  aligned_residues,
-              )
-          )
-          tmp_protein_pair.pymol_session = base64_string
-        else:
+        if not tmp_reply_data:
           logger.warning("Returning data was None!")
+          continue
+
+        distance_analysis_results_object_values, base64_string = tmp_reply_data
+        distances, base64_string, rmsd, aligned_residues = (
+            distance_analysis_results_object_values
+        )
+        result_hashtable: dict[str, np.ndarray] = {
+            pyssa_keys.ARRAY_DISTANCE_INDEX: np.array(
+                distances[pyssa_keys.ARRAY_DISTANCE_INDEX]
+            ),
+            pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN: np.array(
+                distances[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN]
+            ),
+            pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION: np.array(
+                distances[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION]
+            ),
+            pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI: np.array(
+                distances[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI]
+            ),
+            pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN: np.array(
+                distances[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN]
+            ),
+            pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION: np.array(
+                distances[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION]
+            ),
+            pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI: np.array(
+                distances[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI]
+            ),
+            pyssa_keys.ARRAY_DISTANCE_DISTANCES: np.array(
+                distances[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
+            ),
+        }
+        print(result_hashtable)
+
+        tmp_protein_pair.distance_analysis.analysis_results = (
+            results.DistanceAnalysisResults(
+                result_hashtable,
+                base64_string,
+                rmsd,
+                aligned_residues,
+            )
+        )
+        tmp_protein_pair.pymol_session = base64_string
       except exception.IllegalArgumentError:
         logger.error("The argument filename is illegal.")
         raise exception.UnableToOpenFileError(
@@ -260,16 +244,12 @@ class Analysis:
       self,
       the_analysis_type: str,
       the_image_option: bool,
-      the_main_socket: zmq.Socket,
-      a_socket: zmq.Socket,
   ) -> None:
     """Starts the distance analysis.
 
     Args:
         the_analysis_type (str): The type of analysis to run. Possible values are "distance".
         the_image_option (bool): Option for image analysis.
-        the_main_socket (zmq.Socket): The main socket for communication.
-        a_socket (zmq.Socket): A socket for communication.
 
     Raises:
         exception.IllegalArgumentError: If any of the arguments are None.
@@ -283,12 +263,6 @@ class Analysis:
     if the_image_option is None:
       logger.error("the_image_option is None.")
       raise exception.IllegalArgumentError("the_image_option is None.")
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if a_socket is None:
-      logger.error("a_socket is None.")
-      raise exception.IllegalArgumentError("a_socket is None.")
 
     if len(self.analysis_list) == 0:
       logger.error("Analysis list is empty.")
@@ -298,7 +272,7 @@ class Analysis:
     # </editor-fold>
 
     if the_analysis_type == "distance":
-      self.run_distance_analysis(the_image_option, the_main_socket, a_socket)
+      self.run_distance_analysis(the_image_option)
     else:
       tmp_msg: str = f"Unknown analysis type: {the_analysis_type}"
       logger.error(tmp_msg)

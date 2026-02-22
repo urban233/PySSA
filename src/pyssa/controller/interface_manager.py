@@ -1643,13 +1643,8 @@ class InterfaceManager:
   def _build_proteins_model(self) -> None:
     """Builds the proteins model for the current project."""
     if len(self._current_project.proteins) > 0:
-      tmp_main_socket, tmp_general_purpose_socket = (
-          self.job_manager.get_general_purpose_socket_pair()
-      )
       self._protein_model.build_model_from_scratch(
-          self._current_project.proteins,
-          tmp_main_socket,
-          tmp_general_purpose_socket,
+          self._current_project.proteins
       )
       # tmp_root_item = self._protein_model.invisibleRootItem()
       # for tmp_protein in self._current_project.proteins:
@@ -1677,13 +1672,8 @@ class InterfaceManager:
   def _build_protein_pairs_model(self) -> None:
     """Builds the protein pairs model for the current project."""
     if len(self._current_project.protein_pairs) > 0:
-      tmp_main_socket, tmp_general_purpose_socket = (
-          self.job_manager.get_general_purpose_socket_pair()
-      )
       self._protein_pair_model.build_model_from_scratch(
-          self._current_project.protein_pairs,
-          tmp_main_socket,
-          tmp_general_purpose_socket,
+          self._current_project.protein_pairs
       )
       # tmp_root_item = self._protein_pair_model.invisibleRootItem()
       # for tmp_protein_pair in self._current_project.protein_pairs:
@@ -3087,11 +3077,8 @@ class InterfaceManager:
 
     # </editor-fold>
 
-    tmp_main_socket, the_general_purpose_socket = (
-        self.job_manager.get_general_purpose_socket_pair()
-    )
     self._protein_pair_model.add_protein_pair(
-        a_protein_pair, tmp_main_socket, the_general_purpose_socket
+        a_protein_pair
     )
 
   def remove_protein_pair_from_protein_pairs_model(self) -> None:

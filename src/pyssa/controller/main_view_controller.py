@@ -41,7 +41,7 @@ from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.qt import QtGui
 
-from src.auxiliary_pymol import auxiliary_pymol_client
+# from src.auxiliary_pymol import auxiliary_pymol_client
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.custom_context_menus import protein_tree_context_menu, protein_pair_tree_context_menu, \
   sequence_list_context_menu
@@ -798,20 +798,6 @@ class MainViewController:
     else:
       logger.info("No documentation window is open. Nothing to do.")
 
-    tmp_main_socket, tmp_socket = self._interface_manager.job_manager.get_general_purpose_socket_pair()
-    tmp_job_description = job.GeneralPurposeJobDescription(enums.JobShortDescription.ABORT)
-    tmp_job_description.type = enums.JobType.ABORT
-    tmp_job_description.job_information["job_type"] = enums.JobType.ABORT.value
-    tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-      tmp_main_socket,
-      tmp_socket,
-      tmp_job_description,
-    )
-    if tmp_reply["data"] == "Auxiliary PyMOL will now exit.":
-      logger.info("Auxiliary PyMOL will now exit.")
-    else:
-      logger.warning("Auxiliary PyMOL was not able to exit correctly!")
-    time.sleep(3)
     QtWidgets.QApplication.quit()
 
   def __slot_close_all(self) -> None:
@@ -895,20 +881,6 @@ class MainViewController:
     else:
       logger.info("No documentation window is open. Nothing to do.")
 
-    tmp_main_socket, tmp_socket = self._interface_manager.job_manager.get_general_purpose_socket_pair()
-    tmp_job_description = job.GeneralPurposeJobDescription(enums.JobShortDescription.ABORT)
-    tmp_job_description.type = enums.JobType.ABORT
-    tmp_job_description.job_information["job_type"] = enums.JobType.ABORT.value
-    tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-      tmp_main_socket,
-      tmp_socket,
-      tmp_job_description,
-    )
-    if tmp_reply["data"] == "Auxiliary PyMOL will now exit.":
-      logger.info("Auxiliary PyMOL will now exit.")
-    else:
-      logger.warning("Auxiliary PyMOL was not able to exit correctly!")
-    time.sleep(4)
     QtWidgets.QApplication.quit()
 
     # if tmp_number_of_exact_pyssa_match_windows == 1:
