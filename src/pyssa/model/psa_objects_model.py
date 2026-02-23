@@ -210,6 +210,35 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
       lambda: self._proteins_model.add_protein_from_protein_object(a_protein),
     )
 
+  def update_protein(
+          self,
+          a_protein: "protein.Protein"
+  ) -> None:
+    """Update a standalone protein under the "Proteins" section in-place.
+
+    Args:
+        a_protein: The protein to update.
+
+    Raises:
+        exception.IllegalArgumentError: If any argument is ``None``.
+    """
+    if a_protein is None:
+      logger.error("a_protein is None.")
+      raise exception.IllegalArgumentError("a_protein is None.")
+
+    target_id = a_protein.get_id()
+    for row in range(self._proteins_section.rowCount()):
+      item = self._proteins_section.child(row)
+      stored = item.data(enums.ModelEnum.OBJECT_ROLE)
+      if stored is not None and stored.get_id() == target_id:
+        self._with_root(
+          self._proteins_model,
+          self._proteins_section,
+          lambda: self._proteins_model.update_protein_node(item, a_protein),
+        )
+        return
+    logger.warning("Protein to update not found in the model.")
+
   def add_protein_pair(
           self,
           a_protein_pair: "protein_pair.ProteinPair",

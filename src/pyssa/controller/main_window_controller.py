@@ -37,6 +37,13 @@ import requests
 
 # import pywinctl
 
+from src.pyssa.internal.pymol.pml_worker import PmlWorker
+from src.pyssa.internal.pymol.pml_enums import PmlCommand
+from src.pyssa.io_pyssa.db_pyssa.write_queue import WriteOperation, OperationType
+from src.pyssa.io_pyssa import bio_data
+from src.pyssa.internal.data_structures import protein
+from src.pyssa.util import enums
+
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtGui
@@ -138,6 +145,11 @@ class MainWindowController:
         self.feedback_timer = QtCore.QTimer()
         self.feedback_timer.setSingleShot(True)
         self._is_syncing_selection: bool = False
+        
+        self._auto_save_timer = QtCore.QTimer()
+        self._auto_save_timer.setSingleShot(True)
+        self._auto_save_timer.timeout.connect(self.save_pymol_session_to_project)
+        
         self._tree_context_menu = tree_context_menu.TreeContextMenu()
         self._register_tree_context_menu_actions()
         self._current_selection_snapshot: "selection_snapshot.SelectionSnapshot | None" = None
@@ -760,6 +772,10 @@ class MainWindowController:
         }
 
     # </editor-fold>
+
+    def _trigger_auto_save(self) -> None:
+        """Trigger the auto-save timer after a PyMOL-altering interaction."""
+        self._auto_save_timer.start(5000)
 
     def open_welcome_screen(self):
         if not self._dialog_controllers.__contains__("welcome_screen"):
@@ -1740,10 +1756,12 @@ class MainWindowController:
     def __slot_show_as_cartoon(self) -> None:
         """Shows the `pyssa_sele` selection in cartoon representation."""
         self._user_pymol.get_cmd_module().show("cartoon", "sele")
+        self._trigger_auto_save()
 
     def __slot_hide_cartoon(self) -> None:
         """Hides the cartoon representation of the `sele` selection."""
         self._user_pymol.get_cmd_module().hide("cartoon", "sele")
+        self._trigger_auto_save()
 
     # </editor-fold>
 
@@ -1760,10 +1778,12 @@ class MainWindowController:
     def __slot_show_as_sticks(self) -> None:
         """Shows the `pyssa_sele` selection in sticks representation."""
         self._user_pymol.get_cmd_module().show("sticks", "sele")
+        self._trigger_auto_save()
 
     def __slot_hide_sticks(self) -> None:
         """Hides the sticks representation of the `pyssa_sele` selection."""
         self._user_pymol.get_cmd_module().hide("sticks", "sele")
+        self._trigger_auto_save()
 
     # </editor-fold>
 
@@ -1780,10 +1800,12 @@ class MainWindowController:
     def __slot_show_as_ribbon(self) -> None:
         """Shows the `sele` selection in ribbon representation."""
         self._user_pymol.get_cmd_module().show("ribbon", "sele")
+        self._trigger_auto_save()
 
     def __slot_hide_ribbon(self) -> None:
         """Hides the ribbon representation of the `sele` selection."""
         self._user_pymol.get_cmd_module().hide("ribbon", "sele")
+        self._trigger_auto_save()
     # </editor-fold>
 
     # <editor-fold desc="Lines representation">
@@ -1799,10 +1821,12 @@ class MainWindowController:
     def __slot_show_as_lines(self) -> None:
         """Shows the `sele` selection in lines representation."""
         self._user_pymol.get_cmd_module().show("lines", "sele")
+        self._trigger_auto_save()
 
     def __slot_hide_lines(self) -> None:
         """Hides the lines representation of the `sele` selection."""
         self._user_pymol.get_cmd_module().hide("lines", "sele")
+        self._trigger_auto_save()
     # </editor-fold>
 
     # <editor-fold desc="Spheres representation">
@@ -1818,10 +1842,12 @@ class MainWindowController:
     def __slot_show_as_spheres(self) -> None:
         """Shows the `pyssa_sele` selection in spheres representation."""
         self._user_pymol.get_cmd_module().show("spheres", "sele")
+        self._trigger_auto_save()
 
     def __slot_hide_spheres(self) -> None:
         """Hides the spheres representation of the `sele` selection."""
         self._user_pymol.get_cmd_module().hide("spheres", "sele")
+        self._trigger_auto_save()
 
     # </editor-fold>
 
@@ -1838,10 +1864,12 @@ class MainWindowController:
     def __slot_show_as_dots(self) -> None:
         """Shows the `sele` selection in dots representation."""
         self._user_pymol.get_cmd_module().show("dots", "sele")
+        self._trigger_auto_save()
 
     def __slot_hide_dots(self) -> None:
         """Hides the dots representation of the `sele` selection."""
         self._user_pymol.get_cmd_module().hide("dots", "sele")
+        self._trigger_auto_save()
     # </editor-fold>
 
     # <editor-fold desc="Mesh representation">
@@ -1900,11 +1928,13 @@ class MainWindowController:
     def __slot_apply_color(self, a_color_name) -> None:
         """Colors the default sele selection in the given color."""
         self._user_pymol.get_cmd_module().color(a_color_name, "sele")
+        self._trigger_auto_save()
 
     def __slot_apply_color_by_elements(self) -> None:
         """Colors the default sele selection in the given color."""
         self._user_pymol.get_cmd_module().color("atomic", "sele and not elem C")
         self._user_pymol.get_cmd_module().color("grey70", "sele and elem C")
+        self._trigger_auto_save()
 
     def __slot_apply_bg_color(self, a_color_name) -> None:
         """Colors the viewer background in the given color."""
@@ -1918,6 +1948,7 @@ class MainWindowController:
                 self._main_window.tool_window_layout.apply_viewer_background("#000000")
             case _:
                 logger.error(f"The color name {a_color_name} is not available as bg color!")
+        self._trigger_auto_save()
 
     # </editor-fold>
 
@@ -1931,10 +1962,88 @@ class MainWindowController:
 
 
     def __slot_clean_solvent(self):
+        active_object = self._user_pymol.get_currently_loaded_object()
         self._user_pymol.get_cmd_module().remove("solvent")
+        self._run_protein_structure_update_async(active_object)
 
     def __slot_clean_organic(self):
+        active_object = self._user_pymol.get_currently_loaded_object()
         self._user_pymol.get_cmd_module().remove("organic")
+        self._run_protein_structure_update_async(active_object)
+
+    def _run_protein_structure_update_async(self, active_object):
+        if not active_object or not isinstance(active_object, protein.Protein):
+            self._trigger_auto_save()
+            return
+
+        # Retrieve current session string to pass to the worker
+        session_str = self._user_pymol.save_session()
+        
+        # Show loading indicator in status bar
+        self._app_state.status_bar_manager.show_permanent_message("Synchronizing structure data...", True)
+        
+        def background_task(progress_callback, is_cancelled):
+            # 1. Update structure via PmlWorker
+            tmp_reply_data = PmlWorker.one_shot_do(
+                PmlCommand.CLEAN_PROTEIN_UPDATE_STRUCTURE,
+                args=(session_str, active_object.get_molecule_object())
+            )
+            if not tmp_reply_data or tmp_reply_data[0] == "":
+                raise ValueError("Clean protein failed inside PyMOL.")
+                
+            new_session, tmp_pdb_filepath = tmp_reply_data
+            
+            # 2. Parse new PDB data
+            tmp_pdb_data, tmp_more_than_one_ca = bio_data.parse_pdb_file(tmp_pdb_filepath)
+            
+            # 3. Update the protein object in memory
+            active_object.pymol_session = new_session
+            active_object.set_pdb_data(tmp_pdb_data)
+            
+            # 4. Use new Database API (ProjectWriteQueue) to persist changes
+            hot_db = self._app_state.hot_db
+            if hot_db:
+                hot_db.write_queue.submit(
+                    WriteOperation(OperationType.UPDATE_PROTEIN_SESSION, active_object)
+                )
+                
+                # Update PDB atoms
+                hot_db.write_queue.submit(
+                    WriteOperation(OperationType.UPDATE_PROTEIN_PDB_DATA, active_object) # We need to verify if this operation type exists, else we write a custom operation
+                )
+
+                # Find and remove non-protein chains
+                for tmp_chain in active_object.chains:
+                    if tmp_chain.chain_type == enums.ChainTypeEnum.NON_PROTEIN_CHAIN.value:
+                        hot_db.write_queue.submit(
+                            WriteOperation(OperationType.DELETE_CHAIN, (active_object.get_id(), tmp_chain.get_id()))
+                        )
+                
+            return "Success"
+
+        def on_success(result):
+            # Trigger a UI refresh to rebuild the tree view
+            if isinstance(active_object, protein.Protein):
+                self._app_state.pyssa_objects_model.update_protein(active_object)
+            self._trigger_auto_save()
+            self._app_state.status_bar_manager.show_permanent_message("", False)
+            
+        def on_error(exc):
+            logger.exception("Failed to update structure data.", exc_info=exc)
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                f"An error occurred while updating the structure:\n\n{exc}",
+                "Update Structure",
+                custom_message_box.CustomMessageBoxIcons.ERROR.value,
+            )
+            tmp_dialog.exec()
+            self._app_state.status_bar_manager.show_permanent_message("", False)
+            
+        (
+            thread_runtime.get_singleton_thread_runtime()
+            .run(background_task)
+            .on_success(on_success)
+            .on_error(on_error)
+        )
 
     # <editor-fold desc="Selection slots">
     def __slot_show_sele(self) -> None:

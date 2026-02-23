@@ -59,6 +59,7 @@ class OperationType(Enum):
   DELETE_PROTEIN_PAIR       = "delete_protein_pair"
   UPDATE_PROTEIN_SESSION    = "update_protein_session"
   UPDATE_PAIR_SESSION       = "update_pair_session"
+  UPDATE_PROTEIN_PDB_DATA   = "update_protein_pdb_data"
   INSERT_SEQUENCE           = "insert_sequence"
   DELETE_SEQUENCE           = "delete_sequence"
   UPDATE_SEQUENCE_NAME      = "update_sequence_name"
@@ -337,6 +338,13 @@ def _dispatch(db: "ProjectDatabase", op: WriteOperation) -> None:
       # payload: Protein domain object
       db.update_protein_session(
         op.payload.get_id(), op.payload.pymol_session
+      )
+
+    case OperationType.UPDATE_PROTEIN_PDB_DATA:
+      # payload: Protein domain object
+      db.replace_pdb_atoms(
+          op.payload.get_id(),
+          op.payload.get_pdb_data()
       )
 
     case OperationType.UPDATE_PAIR_SESSION:
