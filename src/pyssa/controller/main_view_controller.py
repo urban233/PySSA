@@ -6152,6 +6152,7 @@ class MainViewController:
       logger.error(f"An error occurred during the protein import: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
         "Protein import failed!"
+        "There is an unknown PDB ID or NO internet connection is available!"
       )
     else:
       self._interface_manager.block_gui(with_wait_cursor=True)
@@ -6209,6 +6210,7 @@ class MainViewController:
       logger.error(f"An error occurred during the protein import: {e}")
       self._interface_manager.status_bar_manager.show_error_message(
         "Protein import failed!"
+        "There is an unknown PDB ID or NO internet connection is available!"
       )
     finally:
       self._interface_manager.stop_wait_cursor()
