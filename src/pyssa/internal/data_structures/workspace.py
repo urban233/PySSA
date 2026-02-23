@@ -18,3 +18,15 @@ class Workspace:
   def delete_project(self, a_project_name: str):
     self._model.removeRow(self._model.findItems(a_project_name)[0].row())
     self.construct_project_db_path(a_project_name).unlink()
+
+  def get_projects_as_string_list(self) -> list[str]:
+    """Converts the internal QStandardItemModel into a list of project names.
+
+    Returns:
+      list[str]: A list containing the names of all projects in the workspace.
+    """
+    return [
+        self._model.item(row).text()
+        for row in range(self._model.rowCount())
+        if self._model.item(row) is not None
+    ]

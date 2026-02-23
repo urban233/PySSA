@@ -472,20 +472,26 @@ class UseProjectViewController(QtCore.QObject):
     )
     self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
 
+  def _set_ui_loading(self, loading: bool) -> None:
+     self._view.ui.btn_use_create_new_project.setEnabled(not loading)
+     self._view.ui.btn_use_back.setEnabled(not loading)
+     self._view.ui.list_use_selected_protein_structures.setEnabled(not loading)
+     self._view.ui.list_use_available_protein_structures.setEnabled(not loading)
+
   def create_use_project(self) -> None:
     """Uses the project by sending the `user_input` signal and closing the dialog."""
     logger.log(
-        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create' button was clicked."
+      log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create' button was clicked."
     )
-    
+
     tmp_proteins: list = []
     for tmp_row in range(
-        self._view.ui.list_use_selected_protein_structures.count()
+            self._view.ui.list_use_selected_protein_structures.count()
     ):
       tmp_proteins.append(
-          self._view.ui.list_use_selected_protein_structures.item(tmp_row).data(
-              enums.ModelEnum.OBJECT_ROLE
-          )
+        self._view.ui.list_use_selected_protein_structures.item(tmp_row).data(
+          enums.ModelEnum.OBJECT_ROLE
+        )
       )
 
     project_name = self._view.ui.txt_use_project_name.text()
@@ -504,7 +510,7 @@ class UseProjectViewController(QtCore.QObject):
       if is_cancelled():
         tmp_db.close()
         raise InterruptedError("Cancelled before creating project database.")
-      
+
       tmp_db.initialise_schema()
       project_id = tmp_db.insert_project(name=project_name, os=platform.system())
 
@@ -519,9 +525,6 @@ class UseProjectViewController(QtCore.QObject):
 
       # Insert the copied proteins into the db, and associate them with the new project
       for idx, tmp_protein in enumerate(tmp_proteins):
-        if progress_callback:
-           progress_callback(f"Adding protein {idx+1}/{len(tmp_proteins)}...", int(idx/len(tmp_proteins) * 100))
-
         tmp_protein_copy = copy.deepcopy(tmp_protein)
         tmp_protein_copy.db_project_id = project_id
         tmp_project.add_existing_protein(tmp_protein_copy)
@@ -535,6 +538,9 @@ class UseProjectViewController(QtCore.QObject):
       tmp_project, tmp_db, tmp_pyssa_objects_model = result
       self._app_state.pyssa_objects_model = tmp_pyssa_objects_model
       self._app_state.open_project(tmp_project, tmp_db)
+      self._app_state._build_workspace_model()
+      self._app_state.status_bar_manager.show_permanent_message("", False)
+      self._app_state.status_bar_manager.show_temporary_message("Project created.")
 
     def on_error(exc):
       logger.exception("Failed to create use project.", exc_info=exc)
@@ -552,10 +558,6 @@ class UseProjectViewController(QtCore.QObject):
       .on_error(on_error)
     )
     self._view.close()
-
-  def _set_ui_loading(self, loading: bool) -> None:
-     self._view.ui.btn_use_create_new_project.setEnabled(not loading)
-     self._view.ui.btn_use_back.setEnabled(not loading)
-     self._view.ui.list_use_selected_protein_structures.setEnabled(not loading)
-     self._view.ui.list_use_available_protein_structures.setEnabled(not loading)
-
+    self._app_state.status_bar_manager.show_permanent_message(
+      "Creating project ...", True
+    )

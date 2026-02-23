@@ -48,7 +48,6 @@ from src.pyssa.controller import settings_manager, create_project_view_controlle
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.gui.ui.custom_filters import help_event_filter
 from src.pyssa.gui.ui.dialogs import dialog_about
-from src.pyssa.gui.ui.views import predict_protein_view
 from src.pyssa.internal import job_definitions
 from src.pyssa.internal.data_structures import protein_pair, protein
 from src.pyssa.internal.data_structures.data_classes import job_descriptor
