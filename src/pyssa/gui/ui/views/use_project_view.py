@@ -46,6 +46,8 @@ class UseProjectView(QtWidgets.QDialog):
     self.resize(450, 600)
     self.ui.btn_cancel.clicked.connect(self.close)
     self.setWindowModality(Qt.WindowModal)
+    self.setObjectName("UseProjectDialog")
+    self.setToolTip("")
 
   def _initialize_ui(self) -> None:
     """Initialize the UI elements."""

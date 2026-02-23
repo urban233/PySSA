@@ -162,9 +162,14 @@ class MainWindowController:
         self._setup_application_settings()
 
         help_map = {
-            "pyssa_objects_panel": "<h3>PySSA Objects Panel</h3><p>Displays all PySSA objects in the current project.</p>",
+            "pyssa_objects_panel": """
+                <h3>PySSA Objects Panel:</h3>
+                <p>Displays all PySSA objects in the current project.</p>
+            """,
 
-            # Create Project Dialog
+          # <editor-fold desc="Dialogs">
+          # <editor-fold desc="Project">
+          # Create Project Dialog
             "Dialog": """
                 <h3>Create a new project:</h3>
                 <ol>
@@ -172,14 +177,15 @@ class MainWindowController:
                     <li>Click on Create.</li>
                 </ol>
                 <p style="color: red;"><b>⚠ CAUTION:</b></p>
-                <p>The project name must have 20 characters or fewer. Moreover, the only characters that can be used are 0-9, a-z, A-Z, -, _.</p>
+                <p>The project name must have 20 characters or fewer.
+                Moreover, the only characters that can be used are 0-9, a-z, A-Z, -, _.</p>
             """,
 
             # Open Project Dialog
             "OpenProjectDialog": """
                 <h3>Open a project from your workspace:</h3>
                 <ol>
-                    <li>Select a project from the list.</li>
+                    <li>Enter a new project name.</li>
                     <li><i>Optional:</i> Check the text box under Selected Project to see if the selected name is displayed.</li>
                     <li>Click on Open.</li>
                 </ol>
@@ -192,6 +198,29 @@ class MainWindowController:
                 </ol>
             """,
 
+            # Use Project Dialog
+            "UseProjectDialog": """
+                        <h3>Use a project from your workspace:</h3>
+                        <ol>
+                            <li>Select a project from the list.</li>
+                            <li>Choose an existing project.</li>
+                            <li><i>Optional:</i> Choose another existing project
+                            in combobox or going back to select another existing project.</li>
+                            <li>Select the protein under Available Proteins that you want to have in your new project.</li>
+                            <li>Click on Add.</li>
+                            <li><i>Optional:</i> Choose another protein(s) under
+                            Available Proteins that you want to have in your new project. Click on Add.
+                            Repeat this until you have all proteins.</li>
+                            <li><i>Optional:</i> If you added a wrong protein to Proteins In New Project
+                            you can select this protein and click on Remove.
+                            Repeat this until you have all the proteins you really want.</li>
+                            <li>Click on Create.</li>
+                        </ol>
+                        <p style="color: red;"><b>⚠ CAUTION:</b></p>
+                        <p>The project name must have 20 characters or fewer.
+                        Moreover, the only characters that can be used are 0-9, a-z, A-Z, -, _.</p>
+                    """,
+
             # Delete Project Dialog
             "DeleteProjectDialog": """
                 <h3>Delete a project from your workspace:</h3>
@@ -203,9 +232,12 @@ class MainWindowController:
                 <p><b>📝 Note:</b></p>
                 <p>A warning message will appear every time a project is deleted.</p>
             """,
+          # </editor-fold>
+          # </editor-fold>
 
-            # Menu items
-            "action_new_project": """
+          # <editor-fold desc="Menu items">
+          # <editor-fold desc="Project">
+          "action_new_project": """
                 <h3>Create a new project in your workspace:</h3>
                 <p>Click to open the Create Project dialog.</p>
             """,
@@ -213,6 +245,11 @@ class MainWindowController:
             "action_open_project": """
                 <h3>Open an existing project from your workspace:</h3>
                 <p>Click to open the Open Project dialog.</p>
+            """,
+
+            "action_use_project": """
+                        <h3>Use an existing project from your workspace:</h3>
+                        <p>Click to open the Use Project dialog.</p>
             """,
 
             "action_delete_project": """
@@ -224,20 +261,25 @@ class MainWindowController:
                 <h3>Import a project into your workspace:</h3>
                 <ol>
                     <li>Select Import from the Project menu.</li>
-                    <li>Select a Project Database File (.db) from your computer in the file dialog.</li>
+                    <li>Select a Project Database File (.db) from your
+                    computer in the file dialog.</li>
                     <li>Click on Open.</li>
-                    <li>Either accept the project name or enter a new project name.</li>
+                    <li>Either accept the project name or enter
+                    a new project name.</li>
                     <li>Wait until the project is imported.</li>
                 </ol>
                 <p><b>🔧 Tech Note:</b></p>
-                <p>The Project Database File is an SQLite3 database file. To ensure a successful import, the project must have been exported through the PySSA application.</p>
+                <p>The Project Database File is an SQLite3 database file.
+                To ensure a successful import, the project must have been
+                exported through the PySSA application.</p>
             """,
 
             "action_export_project": """
                 <h3>Export the currently active project:</h3>
                 <ol>
                     <li>Under the Project menu, click on Export.</li>
-                    <li>Choose a location to save your Project Database File on your computer in the file dialog.</li>
+                    <li>Choose a location to save your Project Database File on
+                    your computer in the file dialog.</li>
                     <li>Click on Save.</li>
                     <li>Wait for the export process to finish.</li>
                 </ol>
@@ -247,8 +289,22 @@ class MainWindowController:
                     <li>Send the Project Database File to others.</li>
                 </ol>
                 <p><b>🔧 Tech Note:</b></p>
-                <p>The Project Database File is an SQLite3 database file. To ensure a successful import, the project must have been exported through the PySSA application.</p>
+                <p>The Project Database File is an SQLite3 database file.
+                To ensure a successful import,
+                the project must have been exported through the
+                PySSA application.</p>
+            """,
+
+            "action_close_project": """
+                <h3>Close the currently active project:</h3>
+                <p>Click to close the active project.</p>
+                <p><b>💡 Tip:</b></p>
+                <p>Closing a project does not delete it.
+                You can reopen it anytime using the Open Project dialog window
+                by clicking Project in the menu bar and then Open.</p>
             """
+          # </editor-fold>
+          # </editor-fold>
         }
         self.help_filter = help_event_filter.HelpEventFilter(
             self._main_window.help_panel.help_text_browser,
@@ -1050,6 +1106,10 @@ class MainWindowController:
             self._dialog_controllers["use_project"] = use_project_view_controller.UseProjectViewController(
                 self._app_state
             )
+            # Install hover help event filter on the dialog
+            dialog_view = self._dialog_controllers["use_project"].get_view()
+            dialog_view.installEventFilter(self.help_filter)
+            logger.info(f"Installed hover help on Use Project dialog (objectName: {dialog_view.objectName()})")
         self._dialog_controllers["use_project"].restore_default_view()
         self._dialog_controllers["use_project"].get_view().show()
 

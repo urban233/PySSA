@@ -89,6 +89,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.action_open_project = QtGui.QAction("Open", self)
     self.action_open_project.setObjectName("action_open_project")
     self.action_use_project = QtGui.QAction("Use", self)
+    self.action_use_project.setObjectName("action_use_project")
     self.action_delete_project = QtGui.QAction("Delete", self)
     self.action_delete_project.setObjectName("action_delete_project")
     self.action_import_project = QtGui.QAction("Import", self)
@@ -96,6 +97,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.action_export_project = QtGui.QAction("Export", self)
     self.action_export_project.setObjectName("action_export_project")
     self.action_close_project = QtGui.QAction("Close", self)
+    self.action_close_project.setObjectName("action_close_project")
     self.action_exit_application = QtGui.QAction("Exit Application", self)
 
     # --- Prediction Actions ---
