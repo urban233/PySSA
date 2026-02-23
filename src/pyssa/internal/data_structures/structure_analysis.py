@@ -135,8 +135,8 @@ class Analysis:
     logger.debug(
         f"The function argument of the value for the image_creation_option is: {the_image_creation_option}",
     )
-    self._fetch_pdb_atoms_for_all_proteins()
-    tmp_latest_protein_pair_id = self._get_last_id_of_protein_pairs()
+    # self._fetch_pdb_atoms_for_all_proteins()
+    # tmp_latest_protein_pair_id = self._get_last_id_of_protein_pairs()
     # create scratch dirs
     filesystem_helpers.create_directory(constants.SCRATCH_DIR_ANALYSIS)
 
@@ -182,6 +182,7 @@ class Analysis:
                 tmp_protein_pair.distance_analysis.cutoff,
                 tmp_protein_pair.distance_analysis.cycles,
             ),
+            sync=True
         )
         if not tmp_reply_data:
           logger.warning("Returning data was None!")
@@ -217,7 +218,6 @@ class Analysis:
                 distances[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
             ),
         }
-        print(result_hashtable)
 
         tmp_protein_pair.distance_analysis.analysis_results = (
             results.DistanceAnalysisResults(

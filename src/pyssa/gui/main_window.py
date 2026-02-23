@@ -192,6 +192,9 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
       "color": quick_access_bar_action.QuickAccessBarAction(
         "Color", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.PALETTE)
       ),
+      "clean": quick_access_bar_action.QuickAccessBarAction(
+        "Clean", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.MOP)
+      ),
       "running_jobs": quick_access_bar_action.QuickAccessBarAction(
         "Running Jobs", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.PLAY_CIRCLE)
       ),
@@ -281,6 +284,18 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.surface_show_hide_menu.addAction(self.surface_show_action)
     self.surface_show_hide_menu.addAction(self.surface_hide_action)
     # </editor-fold>
+    # <editor-fold desc="Clean">
+    self.clean_solvent_organic_menu = dropdown_menu.DropDownMenu()
+    self.clean_solvent_action = QtGui.QAction(
+      IconManager.instance().get_icon(IconManager.Icons.DELETE), "Solvent Molecules"
+    )
+    self.clean_organic_action = QtGui.QAction(
+      IconManager.instance().get_icon(IconManager.Icons.DELETE), "Organic Molecules"
+    )
+    self.clean_solvent_organic_menu.addAction(self.clean_solvent_action)
+    self.clean_solvent_organic_menu.addAction(self.clean_organic_action)
+    # </editor-fold>
+
     self.color_grid = color_grid.PyMOLColorGrid()
     self.color_config = psa_color_config.PSAColorConfig(self.color_grid)
     self.color_grid_menu = dropdown_menu.DropDownMenu()

@@ -42,7 +42,7 @@ from typing import Any, Generator
 
 import pymol2
 
-from pyssa.io_pyssa import binary_data
+from src.pyssa.io_pyssa import binary_data
 import os
 import numpy as np
 from src.pyssa.gui.user_pymol import UserPyMOL
@@ -586,12 +586,12 @@ def _do_distance_analysis(
   pymol_instance.cmd.load(filename=str(a_protein_2_pdb_cache_filepath), object=tmp_protein_2_name)
 
   pymol_instance.cmd.color("green", tmp_protein_1_name)
-  pymol_instance.cmd.color("cyan", tmp_protein_2_name)
+  pymol_instance.cmd.color("blue", tmp_protein_2_name)
 
   pymol_instance.cmd.zoom("all")
   pymol_instance.cmd.scene("base", action="store")
 
-  pymol_instance.cmd.bg_color("white")
+  pymol_instance.cmd.bg_color("black")
   pymol_instance.cmd.set("valence", 0)
   pymol_instance.cmd.set("scene_buttons", 0)
   pymol_instance.cmd.set("ray_trace_mode", 1)
@@ -704,13 +704,13 @@ def _do_distance_analysis(
 
   result_lists_hashtable = {
     "index": index_list,
-    "ref_chain": ref_chain_list,
-    "ref_pos": ref_pos_list,
-    "ref_resi": ref_resi_list,
-    "model_chain": model_chain_list,
-    "model_pos": model_pos_list,
-    "model_resi": model_resi_list,
-    "distance": distance_list,
+    "prot_1_chain": ref_chain_list,
+    "prot_1_position": ref_pos_list,
+    "prot_1_residue": ref_resi_list,
+    "prot_2_chain": model_chain_list,
+    "prot_2_position": model_pos_list,
+    "prot_2_residue": model_resi_list,
+    "distances": distance_list,
   }
   
   distance_analysis_results_object_values = (

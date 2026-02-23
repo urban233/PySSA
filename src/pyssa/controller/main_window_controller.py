@@ -421,6 +421,11 @@ class MainWindowController:
         #     self.__slot_clear_sele
         # )
         # # </editor-fold>
+        self._main_window.viewer_toolbar_actions.get("clean").get_action().triggered.connect(
+            self.__slot_display_clean_options
+        )
+        self._main_window.clean_solvent_action.triggered.connect(self.__slot_clean_solvent)
+        self._main_window.clean_organic_action.triggered.connect(self.__slot_clean_organic)
         # # </editor-fold>
 
         self._main_window.viewer_toolbar_actions.get("running_jobs").get_action().triggered.connect(
@@ -1853,6 +1858,21 @@ class MainWindowController:
 
     # </editor-fold>
 
+    def __slot_display_clean_options(self):
+        try:
+            self._main_window.clean_solvent_organic_menu.exec(
+                self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("clean"))
+            )
+        except Exception as e:
+            logger.error(e.__str__())
+
+
+    def __slot_clean_solvent(self):
+        self._user_pymol.get_cmd_module().remove("solvent")
+
+    def __slot_clean_organic(self):
+        self._user_pymol.get_cmd_module().remove("organic")
+
     # <editor-fold desc="Selection slots">
     def __slot_show_sele(self) -> None:
         """Highlights the selection in PyMOL"""
@@ -1867,6 +1887,7 @@ class MainWindowController:
         self.feedback_timer.start(100)
 
     # </editor-fold>
+
     # </editor-fold>
 
     # <editor-fold desc="PyMOL related">
@@ -2062,7 +2083,7 @@ class MainWindowController:
     def _handle_distance_analysis_job_result(
             self,
             descriptor: "job_descriptor.JobDescriptor",
-            result: dict[str, Union["protein_pair.ProteinPair", bool]]
+            result: dict[str, Union[list["protein_pair.ProteinPair"], bool]]
     ):
         if descriptor.is_hot:
             # Results belong to the hot project
@@ -2082,7 +2103,7 @@ class MainWindowController:
     def _handle_prediction_job_result(
             self,
             descriptor: "job_descriptor.JobDescriptor",
-            result: dict[str, Union["protein.Protein", bool]]
+            result: dict[str, Union[list["protein.Protein"], bool]]
     ):
         if descriptor.is_hot:
             for tmp_protein in result["predicted_proteins"]:
@@ -2100,7 +2121,7 @@ class MainWindowController:
     def _handle_prediction_and_distance_analysis_job_result(
             self,
             descriptor: "job_descriptor.JobDescriptor",
-            result: dict[str, Union[bool, "protein.Protein", "protein_pair.ProteinPair"]]
+            result: dict[str, Union[bool, list["protein.Protein"], list["protein_pair.ProteinPair"]]]
     ):
         if descriptor.is_hot:
             for tmp_protein in result["predicted_proteins"]:

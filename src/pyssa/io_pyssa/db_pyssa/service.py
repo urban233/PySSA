@@ -317,7 +317,10 @@ class ProjectService:
                             protein.get_id(),
                             c.chain_letter,
                             param.value,
-                            c.pymol_parameters[param.value],
+                            # We pass an empty string as the value because these
+                            # are not being used anymore but still exist in the
+                            # DB for backward compatibility
+                            "",
                             pair_id,
                         )
 

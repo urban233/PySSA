@@ -107,7 +107,7 @@ class AddProteinPairViewController(QtCore.QObject):
         "No Protein Chains",
         custom_message_box.CustomMessageBoxIcons.ERROR.value,
       )
-      tmp_dialog.exec_()
+      tmp_dialog.exec()
     else:
       self.temporary_model_is_valid = True
       self._hide_scenes_nodes()
@@ -229,13 +229,16 @@ class AddProteinPairViewController(QtCore.QObject):
   def _get_first_protein_chain(self, an_index: QtCore.QModelIndex) -> str:
     """Searches for the first protein chain within the given index object.
 
-    It iterates over the child models of the index object until it finds a protein chain or reaches the end of the child models.
+    Iterates over the chain children of the protein node until a protein chain
+    is found.  Uses `model.index()` for child navigation because
+    `QModelIndex.child()` was removed in PyQt6.
 
     Args:
-        an_index (QtCore.QModelIndex): The index object to search for the first protein chain.
+        an_index (QtCore.QModelIndex): The protein-level index to search.
 
     Returns:
-         A chain letter or an empty string if no matching chain is found.
+        The chain letter of the first protein chain, or an empty string when
+        no protein chain exists under the given index.
 
     Raises:
         exception.IllegalArgumentError: If `an_index` is None.
@@ -247,18 +250,17 @@ class AddProteinPairViewController(QtCore.QObject):
 
     # </editor-fold>
 
-    i = 0
-    tmp_loop_flag = True
-    while tmp_loop_flag is True:
-      tmp_chain = (
-          an_index.child(1, 0).child(i, 0).data(enums.ModelEnum.OBJECT_ROLE)
-      )
-      if tmp_chain.chain_type == "protein_chain":
+    tmp_model = an_index.model()
+    # Row 1 under a protein node is always the "Chains" header.
+    chains_header_index = tmp_model.index(1, 0, an_index)
+    if not chains_header_index.isValid():
+      return ""
+    chain_count = tmp_model.rowCount(chains_header_index)
+    for i in range(chain_count):
+      chain_index = tmp_model.index(i, 0, chains_header_index)
+      tmp_chain = chain_index.data(enums.ModelEnum.OBJECT_ROLE)
+      if tmp_chain is not None and tmp_chain.chain_type == "protein_chain":
         return tmp_chain.chain_letter
-      elif tmp_chain.chain_type == "non_protein_chain":
-        i += 1
-      else:
-        tmp_loop_flag = False
     return ""
 
   def _get_protein_name_and_chains(
@@ -300,23 +302,47 @@ class AddProteinPairViewController(QtCore.QObject):
     return tmp_protein_name, tmp_protein_chains
 
   def _create_analysis_run_name(self) -> str:
-    """Creates the name of the analysis run."""
+    """Creates the name of the analysis run based on the current tree selections.
+
+    Returns:
+        The analysis run name as a formatted string of the form
+        ``prot1;chain(s)_vs_prot2;chain(s)``.
+    """
     prot_1_name, prot_1_chains = self._get_protein_name_and_chains(
         self._view.ui.tree_prot_1.selectedIndexes()
     )
     prot_2_name, prot_2_chains = self._get_protein_name_and_chains(
         self._view.ui.tree_prot_2.selectedIndexes()
     )
-    prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
-    prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
-    # if prot_1_name == prot_2_name:
-    #     # identical proteins getting compared and need therefore be indexed with _1 and _2
-    #     tmp_analysis_run_name = f"{prot_1_name}_1;{prot_1_chains}_vs_{prot_2_name}_2;{prot_2_chains}"
-    # else:
-    tmp_analysis_run_name = (
-        f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-    )
-    return tmp_analysis_run_name
+    prot_1_chains_str = ",".join([str(elem) for elem in prot_1_chains])
+    prot_2_chains_str = ",".join([str(elem) for elem in prot_2_chains])
+    return f"{prot_1_name};{prot_1_chains_str}_vs_{prot_2_name};{prot_2_chains_str}"
+
+  def _evaluate_and_update_add_button(self, the_selection: QtCore.QItemSelection) -> None:
+    """Evaluates the current tree_prot_2 selection and enables or disables the Add button.
+
+    The Add button is enabled only when the number of selected chains matches
+    the number of chains selected in tree_prot_1, and the resulting analysis
+    run name does not conflict with any existing analysis run, protein pair, or
+    reserved name.
+
+    Args:
+        the_selection (QtCore.QItemSelection): The current selection in tree_prot_2.
+    """
+    tmp_analysis_run_name = self._create_analysis_run_name()
+    tmp_run_name_normalised = tmp_analysis_run_name.replace(";", "_").replace(",", "_")
+    if len(the_selection.indexes()) != self._number_of_prot_1_selected_chains:
+      self._view.ui.btn_add.setEnabled(False)
+    elif tmp_analysis_run_name in self._existing_analysis_runs:
+      self._view.ui.btn_add.setEnabled(False)
+    elif tmp_run_name_normalised in self._existing_protein_pairs:
+      self._view.ui.btn_add.setEnabled(False)
+    elif self._app_state.name_registry.is_reserved(
+        name_registry_module.PROTEIN_PAIR, tmp_run_name_normalised
+    ):
+      self._view.ui.btn_add.setEnabled(False)
+    else:
+      self._view.ui.btn_add.setEnabled(True)
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
@@ -414,82 +440,43 @@ class AddProteinPairViewController(QtCore.QObject):
     tmp_selection_model = self._view.ui.tree_prot_2.selectionModel()
     tmp_selection = tmp_selection_model.selection()
 
-    # <editor-fold desc="Checks for selection of multiple proteins">
-    i = 0
+    # <editor-fold desc="Deselect additional protein nodes when multiple are chosen">
+    protein_count = 0
     invalid = QtCore.QItemSelection()
     for index in tmp_selection.indexes():
       if index.data(enums.ModelEnum.TYPE_ROLE) == "protein":
-        if i > 0:
+        if protein_count > 0:
           invalid.select(index, index)
-        i += 1
-    if i > 1:
+        protein_count += 1
+    if protein_count > 1:
       tmp_selection_model.select(invalid, QtCore.QItemSelectionModel.Deselect)
-      tmp_analysis_run_name = self._create_analysis_run_name()
-      tmp_analysis_run_name_without_semicolon = tmp_analysis_run_name.replace(
-          ";", "_"
-      )
-      tmp_analysis_run_name_without_semicolon_and_comma = (
-          tmp_analysis_run_name_without_semicolon.replace(",", "_")
-      )
-      if len(tmp_selection.indexes()) != self._number_of_prot_1_selected_chains:
-        self._view.ui.btn_add.setEnabled(False)
-      elif tmp_analysis_run_name in self._existing_analysis_runs:
-        self._view.ui.btn_add.setEnabled(False)
-      elif (
-          tmp_analysis_run_name_without_semicolon_and_comma
-          in self._existing_protein_pairs
-      ):
-        self._view.ui.btn_add.setEnabled(False)
-      elif self._app_state.name_registry.is_reserved(
-          name_registry_module.PROTEIN_PAIR,
-          tmp_analysis_run_name_without_semicolon_and_comma,
-      ):
-        self._view.ui.btn_add.setEnabled(False)
-      else:
-        self._view.ui.btn_add.setEnabled(True)
+      self._evaluate_and_update_add_button(tmp_selection)
       return
     # </editor-fold>
 
-    # <editor-fold desc="Checks for selection of chains and proteins">
+    # <editor-fold desc="Restrict selection to a single parent level">
     parent = self._view.ui.tree_prot_2.currentIndex().parent()
     invalid = QtCore.QItemSelection()
     for index in tmp_selection.indexes():
-      if index.parent() == parent:
-        continue
-      invalid.select(index, index)
+      if index.parent() != parent:
+        invalid.select(index, index)
     tmp_selection_model.select(invalid, QtCore.QItemSelectionModel.Deselect)
-    tmp_analysis_run_name = self._create_analysis_run_name()
-    tmp_analysis_run_name_without_semicolon = tmp_analysis_run_name.replace(
-        ";", "_"
-    )
-    tmp_analysis_run_name_without_semicolon_and_comma = (
-        tmp_analysis_run_name_without_semicolon.replace(",", "_")
-    )
-    if len(tmp_selection.indexes()) != self._number_of_prot_1_selected_chains:
-      self._view.ui.btn_add.setEnabled(False)
-    elif tmp_analysis_run_name in self._existing_analysis_runs:
-      self._view.ui.btn_add.setEnabled(False)
-    elif (
-        tmp_analysis_run_name_without_semicolon_and_comma
-        in self._existing_protein_pairs
-    ):
-      self._view.ui.btn_add.setEnabled(False)
-    elif self._app_state.name_registry.is_reserved(
-        name_registry_module.PROTEIN_PAIR,
-        tmp_analysis_run_name_without_semicolon_and_comma,
-    ):
-      self._view.ui.btn_add.setEnabled(False)
-    else:
-      self._view.ui.btn_add.setEnabled(True)
     # </editor-fold>
+
+    self._evaluate_and_update_add_button(tmp_selection)
 
   def __slot_collapse_all_tree_prot_1(
       self, the_selected_index: QtCore.QModelIndex
   ) -> None:
-    """Collapses all items in the tree view 1 except for the selected item.
+    """Collapses all protein nodes in tree_prot_1 except for the expanded one.
+
+    When a protein node is expanded the Chains header (row 1) is also expanded
+    automatically.  Uses `model.index()` for child navigation because
+    `QModelIndex.child()` was removed in PyQt6.
 
     Args:
-        the_selected_index (QtCore.QModelIndex): The index of the selected item in the tree view.
+        the_selected_index (QtCore.QModelIndex): The index of the item that was
+            just expanded.
 
     Raises:
         exception.IllegalArgumentError: If `the_selected_index` is None.
@@ -504,12 +491,13 @@ class AddProteinPairViewController(QtCore.QObject):
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
         "An object of the tree view 1 was expanded.",
     )
+    tmp_model = self._view.ui.tree_prot_1.model()
     tmp_type = the_selected_index.data(enums.ModelEnum.TYPE_ROLE)
     if tmp_type == "protein":
       tmp_index_to_check = the_selected_index
-      self._view.ui.tree_prot_1.setExpanded(
-          tmp_index_to_check.child(1, 0), True
-      )
+      # Row 1 under a protein node is the "Chains" header.
+      chains_header_index = tmp_model.index(1, 0, tmp_index_to_check)
+      self._view.ui.tree_prot_1.setExpanded(chains_header_index, True)
     elif tmp_type == "header":
       tmp_index_to_check = the_selected_index.parent()
     elif tmp_type == "chain":
@@ -517,23 +505,26 @@ class AddProteinPairViewController(QtCore.QObject):
     else:
       tmp_index_to_check = None
 
-    for tmp_row in range(self._view.ui.tree_prot_1.model().rowCount()):
-      tmp_index = self._view.ui.tree_prot_1.model().index(tmp_row, 0)
+    for tmp_row in range(tmp_model.rowCount()):
+      tmp_index = tmp_model.index(tmp_row, 0)
       if (
           tmp_index != tmp_index_to_check
           and tmp_index.data(enums.ModelEnum.TYPE_ROLE) == "protein"
       ):
-        self._view.ui.tree_prot_1.collapse(
-            self._view.ui.tree_prot_1.model().index(tmp_row, 0)
-        )
+        self._view.ui.tree_prot_1.collapse(tmp_index)
 
   def __slot_collapse_all_tree_prot_2(
       self, the_selected_index: QtCore.QModelIndex
   ) -> None:
-    """Collapses all items in the tree view 2 except for the selected item.
+    """Collapses all protein nodes in tree_prot_2 except for the expanded one.
+
+    When a protein node is expanded the Chains header (row 1) is also expanded
+    automatically.  Uses `model.index()` for child navigation because
+    `QModelIndex.child()` was removed in PyQt6.
 
     Args:
-        the_selected_index (QtCore.QModelIndex): The index of the selected item in the tree view.
+        the_selected_index (QtCore.QModelIndex): The index of the item that was
+            just expanded.
 
     Raises:
         exception.IllegalArgumentError: If `the_selected_index` is None.
@@ -546,14 +537,15 @@ class AddProteinPairViewController(QtCore.QObject):
 
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-        "An object of the tree view 1 was expanded.",
+        "An object of the tree view 2 was expanded.",
     )
+    tmp_model = self._view.ui.tree_prot_2.model()
     tmp_type = the_selected_index.data(enums.ModelEnum.TYPE_ROLE)
     if tmp_type == "protein":
       tmp_index_to_check = the_selected_index
-      self._view.ui.tree_prot_2.setExpanded(
-          tmp_index_to_check.child(1, 0), True
-      )
+      # Row 1 under a protein node is the "Chains" header.
+      chains_header_index = tmp_model.index(1, 0, tmp_index_to_check)
+      self._view.ui.tree_prot_2.setExpanded(chains_header_index, True)
     elif tmp_type == "header":
       tmp_index_to_check = the_selected_index.parent()
     elif tmp_type == "chain":
@@ -561,15 +553,13 @@ class AddProteinPairViewController(QtCore.QObject):
     else:
       tmp_index_to_check = None
 
-    for tmp_row in range(self._view.ui.tree_prot_2.model().rowCount()):
-      tmp_index = self._view.ui.tree_prot_2.model().index(tmp_row, 0)
+    for tmp_row in range(tmp_model.rowCount()):
+      tmp_index = tmp_model.index(tmp_row, 0)
       if (
           tmp_index != tmp_index_to_check
           and tmp_index.data(enums.ModelEnum.TYPE_ROLE) == "protein"
       ):
-        self._view.ui.tree_prot_2.collapse(
-            self._view.ui.tree_prot_2.model().index(tmp_row, 0)
-        )
+        self._view.ui.tree_prot_2.collapse(tmp_index)
 
   def __slot_show_tree_prot_2(self) -> None:
     """Performs the necessary UI changes and updates the label and tree widget for the second protein structure selection."""
