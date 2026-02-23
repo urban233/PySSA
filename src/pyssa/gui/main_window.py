@@ -40,6 +40,7 @@ from pmg_qt import keymapping
 
 from src.pyssa.controller import main_window_controller, welcome_screen_view_controller
 from src.pyssa.gui import user_pymol
+from src.pyssa.gui.ui.styles import styles
 
 from src.pyssa.gui.ui.views import pyssa_objects_panel, welcome_screen_view, help_panel
 
@@ -388,6 +389,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self._add_menu_style()
     base_style = "QMainWindow {background-color: #ebecf0;}"
     self.setStyleSheet(base_style)
+    # styles.inject_local_appdata_path_into_stylesheet()
 
   # <editor-fold desc="Private methods">
   def _setup_menu(self):

@@ -161,34 +161,32 @@ class DeleteProjectViewController(QtCore.QObject):
     if not selected_indexes:
       return
 
-    if len(selected_indexes) > 1:
-      tmp_dialog = custom_message_box.CustomMessageBoxDelete(
-          "Are you sure you want to delete these projects?",
-          "Delete Projects",
-          custom_message_box.CustomMessageBoxIcons.WARNING.value,
+    names_to_delete = []
+    for idx in selected_indexes:
+      names_to_delete.append(
+          self._view.ui.list_delete_projects_view.model().data(idx, Qt.DisplayRole)
       )
-      tmp_dialog.exec()
-      if not tmp_dialog.response:
-        return
-      
-      names_to_delete = []
-      for idx in selected_indexes:
-        names_to_delete.append(self._view.ui.list_delete_projects_view.model().data(idx, Qt.DisplayRole))
-        
-      for name in names_to_delete:
-        self._app_state.workspace.delete_project(name)
 
-    elif len(selected_indexes) == 1:
-      tmp_dialog = custom_message_box.CustomMessageBoxDelete(
-          "Are you sure you want to delete this project?",
-          "Delete Project",
-          custom_message_box.CustomMessageBoxIcons.WARNING.value,
-      )
-      tmp_dialog.exec()
-      if not tmp_dialog.response:
-        return
-        
-      project_name = self._view.ui.list_delete_projects_view.model().data(selected_indexes[0], Qt.DisplayRole)
-      self._app_state.workspace.delete_project(project_name)
+    if len(names_to_delete) > 1:
+      dialog_message = "Are you sure you want to delete these projects?"
+      dialog_title = "Delete Projects"
+    else:
+      dialog_message = "Are you sure you want to delete this project?"
+      dialog_title = "Delete Project"
+
+    tmp_dialog = custom_message_box.CustomMessageBoxDelete(
+        dialog_message,
+        dialog_title,
+        custom_message_box.CustomMessageBoxIcons.WARNING.value,
+    )
+    tmp_dialog.exec()
+    if not tmp_dialog.response:
+      return
+
+    for name in names_to_delete:
+      try:
+        self._app_state.workspace.delete_project(name)
+      except Exception as e:
+        logger.error(f"Failed to delete project '{name}'. Reason: {e}")
 
     self.restore_default_view()

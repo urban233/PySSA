@@ -48,11 +48,10 @@ if PYDEBUG:
     print(PROGRAM_SRC_PATH)
     DATA_PATH = pathlib.Path(PROGRAM_SRC_PATH / "pyssa/data")
 else:
-    PROGRAM_BIN_ROOT_PATH: pathlib.Path = pathlib.Path(sys.executable).parent
-    PYTHON_LIB_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "lib")
+    PROGRAM_BIN_ROOT_PATH: pathlib.Path = pathlib.Path(sys.executable).parent.parent.parent
+    PYTHON_LIB_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "cpython-3.11.14/python/Lib/site-packages/")
     PROGRAM_SRC_PATH: pathlib.Path = pathlib.Path(PYTHON_LIB_PATH / "src")
-    # TODO: Check if this path is correct if deployed
-    DATA_PATH = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "data")
+    DATA_PATH = pathlib.Path(PROGRAM_SRC_PATH / "pyssa/data")
 
 AUXILIARY_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "aux_pymol.exe")
 USER_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "user_pymol" / "Open-Source-PyMOL.exe")

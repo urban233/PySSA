@@ -2292,14 +2292,18 @@ class MainWindowController:
             result: dict[str, Union[list["protein.Protein"], bool]]
     ):
         if descriptor.is_hot:
+            current_project_id = self._app_state.project.get_id()
             for tmp_protein in result["predicted_proteins"]:
+                tmp_protein.db_project_id = current_project_id
                 self._app_state.project.add_existing_protein(tmp_protein)
                 self._app_state.pyssa_objects_model.add_protein(tmp_protein)
                 self._app_state.hot_db.write_queue.submit(
                     WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
                 )
         else:
+            project_id = descriptor.cold_handle._db.get_project_id(descriptor.project_name)
             for tmp_protein in result["predicted_proteins"]:
+                tmp_protein.db_project_id = project_id
                 descriptor.cold_handle.submit(
                     WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
                 )

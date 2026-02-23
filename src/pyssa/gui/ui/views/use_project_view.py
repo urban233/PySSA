@@ -60,7 +60,8 @@ class UseProjectView(QtWidgets.QDialog):
     )
     self.ui.btn_help.setText("")
     styles.color_bottom_frame_button(self.ui.btn_use_create_new_project)
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     self.setWindowTitle("Use Project")
     self.setWindowFlags(

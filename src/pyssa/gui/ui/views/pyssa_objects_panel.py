@@ -167,7 +167,7 @@ class PySSAObjectsPanel(base_side_panel.BaseSidePanel):
         # self._setup_expand_collapse_header()
         self._setup_tree_view()
         # self._set_icons()
-        self._setup_extra_styles()
+        # self._setup_extra_styles()
         self._setup_container_widget()
         # This panel should always be shown to make it easier for the end-user
         self.btn_close.hide()

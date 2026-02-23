@@ -53,6 +53,8 @@ if not IS_PYQT6:
 
 # Handle moved classes (e.g., QStringListModel moved from QtGui to QtCore in PyQt6)
 if IS_PYQT6:
+    QtCore.Signal = QtCore.pyqtSignal
+
     QtGui.QStringListModel = QtCore.QStringListModel
     QtWidgets.QAbstractItemView.NoEditTriggers = (
         QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers

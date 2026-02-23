@@ -73,8 +73,8 @@ class AdvancedPredictionConfigurationsViewController(QtCore.QObject):
     super().__init__()
     self._app_state = the_app_state
     self._on_confirm_callback = on_confirm_callback
-    from src.pyssa.gui.ui.views import advanced_prediction_configurations_view
-    self._view = advanced_prediction_configurations_view.AdvancedPredictionConfigurationsView(a_parent)
+    from src.pyssa.gui.ui.views import advanced_prediction_configurations
+    self._view = advanced_prediction_configurations.AdvancedPredictionConfigurationsView(a_parent)
     self.prediction_config: prediction_configuration.PredictionConfiguration = (
         a_prediction_configuration
     )
