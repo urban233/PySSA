@@ -43,7 +43,8 @@ class SettingsView(QtWidgets.QDialog):
     self.ui = auto_settings_view.Ui_Dialog()
     self.ui.setupUi(self)
     self._initialize_ui()
-    self.resize(450, 600)
+    self.resize(500, 250)
+    self.setMinimumSize(500, 300)
     self.ui.btn_cancel.clicked.connect(self.close)
     self.setWindowModality(Qt.WindowModal)
 
@@ -54,6 +55,8 @@ class SettingsView(QtWidgets.QDialog):
         self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
     )
     self.ui.btn_help.setText("")
+    self.ui.spb_cycles.setMinimumWidth(80)
+    self.ui.dspb_cutoff.setMinimumWidth(80)
     styles.color_bottom_frame_button(self.ui.btn_ok)
     styles.set_stylesheet(self)
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))

@@ -87,6 +87,30 @@ class SettingsViewController(QtCore.QObject):
   def restore_default_view(self) -> None:
     """Restores the UI."""
     self._view.ui.tabWidget.setCurrentIndex(0)
+    self._view.ui.txt_workspace_dir.setText(
+      str(self._settings_manager.settings.get_workspace_path())
+    )
+    self._view.ui.spb_cycles.setValue(
+      int(self._settings_manager.settings.get_cycles())
+    )
+    self._view.ui.dspb_cutoff.setValue(
+      float(self._settings_manager.settings.get_cutoff())
+    )
+    self._view.ui.box_bg_color.setCurrentIndex(
+      self._view.ui.box_bg_color.findText(
+        self._settings_manager.settings.image_background_color
+      ),
+    )
+    if self._settings_manager.settings.image_renderer == "0":
+      self._view.ui.box_renderer.setCurrentIndex(0)
+    else:
+      self._view.ui.box_renderer.setCurrentIndex(1)
+    self._view.ui.box_ray_trace_mode.setCurrentIndex(
+      self._settings_manager.settings.image_ray_trace_mode
+    )
+    self._view.ui.box_ray_texture.setCurrentIndex(
+      self._settings_manager.settings.image_ray_texture
+    )
 
   # </editor-fold>
 
@@ -125,24 +149,6 @@ class SettingsViewController(QtCore.QObject):
     gui_utils.fill_combo_box(
         self._view.ui.box_ray_texture, item_list_ray_texture
     )
-
-    # item_list = [
-    #     "normal",
-    #     "Red-green (green weak, deuteranopia)",
-    #     "Red-green (red weak, protanopia)",
-    #     "Blue-yellow (tritanopia)",
-    # ]
-    # gui_utils.fill_combo_box(self._view.ui.cb_color_vision_mode, item_list)
-    self._view.ui.txt_workspace_dir.setEnabled(False)
-    self._view.ui.txt_workspace_dir.setText(
-        str(self._settings_manager.settings.get_workspace_path())
-    )
-    self._view.ui.spb_cycles.setValue(
-        int(self._settings_manager.settings.get_cycles())
-    )
-    self._view.ui.dspb_cutoff.setValue(
-        float(self._settings_manager.settings.get_cutoff())
-    )
     # customize spin boxes
     self._view.ui.spb_cycles.setMinimum(0)
     # self._view.ui.spb_cycles.setMaximum(20) # fixme: is a maximum needed?
@@ -150,34 +156,15 @@ class SettingsViewController(QtCore.QObject):
     self._view.ui.dspb_cutoff.setMinimum(0.00)
     self._view.ui.dspb_cutoff.setMaximum(20.00)
     self._view.ui.dspb_cutoff.setSingleStep(0.1)
-    # self._view.ui.lbl_color_vision_mode.hide()
-    # self._view.ui.cb_color_vision_mode.hide()
-    #
-    # self._view.ui.cb_color_vision_mode.setCurrentIndex(
-    #     self._view.ui.cb_color_vision_mode.findText(self._settings_manager.settings.color_vision_mode)
-    # )
-    self._view.ui.box_bg_color.setCurrentIndex(
-        self._view.ui.box_bg_color.findText(
-            self._settings_manager.settings.image_background_color
-        ),
-    )
-    if self._settings_manager.settings.image_renderer == "0":
-      self._view.ui.box_renderer.setCurrentIndex(0)
-    else:
-      self._view.ui.box_renderer.setCurrentIndex(1)
-    self._view.ui.box_ray_trace_mode.setCurrentIndex(
-        self._settings_manager.settings.image_ray_trace_mode
-    )
-    self._view.ui.box_ray_texture.setCurrentIndex(
-        self._settings_manager.settings.image_ray_texture
-    )
+    self._view.ui.txt_workspace_dir.setEnabled(False)
+    # Hide the PyMOL settings tab for now
+    self._view.ui.tabWidget.setTabVisible(3, False)
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
     self._view.ui.btn_workspace_dir.clicked.connect(self.choose_workspace_dir)
     self._view.ui.btn_ok.clicked.connect(self.ok_dialog)
     self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
-    self._view.ui.cb_toggle_pymol_expert_mode.clicked.connect(self.toggle_pymol_expert_mode)
 
   def choose_workspace_dir(self) -> None:
     """Opens a QFileDialog to choose a workspace directory."""
@@ -223,7 +210,3 @@ class SettingsViewController(QtCore.QObject):
     if hasattr(self._app_state, "_build_workspace_model"):
       self._app_state._build_workspace_model()
     self._app_state._on_state_changed()
-
-  def toggle_pymol_expert_mode(self):
-    if hasattr(self._parent, "user_pymol"):
-      self._parent.user_pymol.get_user_pymol_connector().toggle_pymol_expert_mode()

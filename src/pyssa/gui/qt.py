@@ -70,6 +70,8 @@ if IS_PYQT6:
     QtGui.QPalette.Highlight = QtGui.QPalette.ColorRole.Highlight
     QtGui.QPalette.HighlightedText = QtGui.QPalette.ColorRole.HighlightedText
 
+    QtWidgets.QFileDialog.ShowDirsOnly = QtWidgets.QFileDialog.Option.ShowDirsOnly
+
     QtWidgets.QActionGroup = QtGui.QActionGroup
     QtWidgets.QAction = QtGui.QAction
     QtWidgets.QShortcut = QtGui.QShortcut
