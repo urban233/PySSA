@@ -61,7 +61,6 @@ class PySSAObjectsPanelController(QtCore.QObject):
     self._app_state = the_app_state
     self._panel = a_pyssa_objects_panel
     self._user_pymol: "user_pymol.UserPyMOL" = a_user_pymol
-    self._model = the_app_state.pyssa_objects_model
 
     # Holds the most recently resolved selection snapshot so that slot methods
     # can access the current selection without re-querying the Qt model.
@@ -76,6 +75,10 @@ class PySSAObjectsPanelController(QtCore.QObject):
     # </editor-fold>
     self._set_model()
     self._connect_all_signals_with_their_slots()
+
+  @property
+  def _model(self) -> "psa_objects_model.PSAObjectsModel":
+      return self._app_state.pyssa_objects_model
 
   def _set_model(self) -> None:
     self._panel.tree_view.setModel(self._model)

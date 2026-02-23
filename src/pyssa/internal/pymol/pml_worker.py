@@ -47,7 +47,7 @@ import os
 import numpy as np
 from src.pyssa.gui.user_pymol import UserPyMOL
 from src.pyssa.internal.pymol.worker_command import CommandType, WorkerCommand
-from src.pyssa.util import constants
+from src.pyssa.util import constants, enums
 
 logger = logging.getLogger(__name__)
 
@@ -562,7 +562,7 @@ def _get_chains(pymol_instance: pymol2.PyMOL, a_pdb_filepath: str) -> list[tuple
       fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\\n"):]
       complete_sequence_of_chain = (tmp_protein_name, fasta_sequence_of_chain_without_header.replace("\\n", ""))
       
-      chains_of_protein.append((tmp_chain, complete_sequence_of_chain, "PROTEIN" if is_protein_chain else "NON_PROTEIN"))
+      chains_of_protein.append((tmp_chain, complete_sequence_of_chain, enums.ChainTypeEnum.PROTEIN_CHAIN.value if is_protein_chain else enums.ChainTypeEnum.NON_PROTEIN_CHAIN.value))
     return chains_of_protein
   except Exception as e:
     logger.error(f"Get chains failed: {e}")

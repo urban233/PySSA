@@ -32,7 +32,7 @@ from src.pyssa.gui import name_registry as name_registry_module
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.internal.data_structures import chain, protein
 from src.pyssa.logging_pyssa import log_levels, log_handlers
-from src.pyssa.model import proteins_model
+from src.pyssa.model import psa_objects_model
 from src.pyssa.util import enums, exception
 
 logger = logging.getLogger(__file__)
@@ -84,24 +84,37 @@ class AddProteinPairViewController(QtCore.QObject):
     self._on_add_callback = on_add_callback
     from src.pyssa.gui.ui.views import add_protein_pair_view
     self._view = add_protein_pair_view.AddProteinPairView(a_parent)
-    self._temporary_model = (
-        proteins_model.TemporaryProteinsModel()
-    )  # is needed to not mess up the main model!
+    self._local_model = psa_objects_model.PSAObjectsModel()
     if self._app_state.has_open_project():
-      self._temporary_model.build_model_from_scratch(
-          self._app_state.project.proteins
-      )
+      main_model = self._app_state.pyssa_objects_model
+      main_proteins_index = main_model.get_proteins_section_index()
+      main_proteins_item = main_model.itemFromIndex(main_proteins_index)
+      
+      local_proteins_index = self._local_model.get_proteins_section_index()
+      local_proteins_item = self._local_model.itemFromIndex(local_proteins_index)
+
+      if main_proteins_item is not None and local_proteins_item is not None:
+        for row in range(main_proteins_item.rowCount()):
+          protein_item = main_proteins_item.child(row, 0)
+          if protein_item is not None:
+            tmp_protein = protein_item.data(enums.ModelEnum.OBJECT_ROLE)
+            if self._check_if_protein_has_protein_chains(tmp_protein):
+              local_proteins_item.appendRow(self._deep_copy_item(protein_item))
     self._existing_analysis_runs = a_list_of_used_run_names
     self._existing_protein_pairs = a_list_of_used_protein_pair_names
     self._number_of_prot_1_selected_chains: int = 1
     self.restore_ui()
     self.temporary_model_is_valid = False
 
-    self._view.ui.tree_prot_1.setModel(self._temporary_model)
-    self._view.ui.tree_prot_2.setModel(self._temporary_model)
+    self._view.ui.tree_prot_1.setModel(self._local_model)
+    self._view.ui.tree_prot_2.setModel(self._local_model)
+    proteins_section_index = self._local_model.get_proteins_section_index()
+    self._view.ui.tree_prot_1.setRootIndex(proteins_section_index)
+    self._view.ui.tree_prot_2.setRootIndex(proteins_section_index)
+    
     if a_list_of_extra_proteins is not None:
       self._add_additional_proteins_to_model(a_list_of_extra_proteins)
-    if self._temporary_model.rowCount() == 0:
+    if self._local_model.rowCount(proteins_section_index) == 0:
       tmp_dialog = custom_message_box.CustomMessageBoxOk(
         "All proteins in the project have only non-protein chains!",
         "No Protein Chains",
@@ -116,6 +129,25 @@ class AddProteinPairViewController(QtCore.QObject):
 
   def get_view(self):
     return self._view
+
+  def _check_if_protein_has_protein_chains(self, a_protein: "protein.Protein") -> bool:
+    """Checks if at least one chain in the protein is an actual protein chain."""
+    if a_protein is None:
+      return False
+    for tmp_chain_in_protein in a_protein.chains:
+      if tmp_chain_in_protein.chain_type == "protein_chain":
+        return True
+    return False
+
+  def _deep_copy_item(self, item: QtGui.QStandardItem) -> QtGui.QStandardItem:
+    """Creates a deep copy of a QStandardItem and its children."""
+    new_item = item.clone()
+    for row in range(item.rowCount()):
+        for col in range(item.columnCount()):
+            child = item.child(row, col)
+            if child is not None:
+                new_item.setChild(row, col, self._deep_copy_item(child))
+    return new_item
 
   def restore_ui(self) -> None:
     """Restores the UI."""
@@ -161,29 +193,29 @@ class AddProteinPairViewController(QtCore.QObject):
     # </editor-fold>
 
     for tmp_protein in a_list_of_extra_proteins:
-      self._view.ui.tree_prot_1.model().add_temporary_protein(tmp_protein)
+      if self._check_if_protein_has_protein_chains(tmp_protein):
+        self._local_model.add_temporary_protein(tmp_protein)
 
   def _hide_scenes_nodes(self) -> None:
-    """Hides the nodes in the tree_prot_1 and tree_prot_2 views.
-
-    This method iterates through the rows in the model of tree_prot_1 and tree_prot_2 views,
-    and sets the row at index (0, tmp_row) to be hidden.
-    """
-    for tmp_row in range(self._view.ui.tree_prot_1.model().rowCount()):
+    """Hides the nodes in the tree_prot_1 and tree_prot_2 views."""
+    tmp_parent = self._local_model.get_proteins_section_index()
+    for tmp_row in range(self._local_model.rowCount(tmp_parent)):
+      tmp_protein_index = self._local_model.index(tmp_row, 0, tmp_parent)
       self._view.ui.tree_prot_1.setRowHidden(
-          0, self._view.ui.tree_prot_1.model().index(tmp_row, 0), True
+          0, tmp_protein_index, True
       )
       self._view.ui.tree_prot_2.setRowHidden(
-          0, self._view.ui.tree_prot_2.model().index(tmp_row, 0), True
+          0, tmp_protein_index, True
       )
 
   def _get_chain_indexes_from_tree_model(
-      self, a_model: QtGui.QStandardItemModel
+      self, a_model: QtGui.QStandardItemModel, a_parent: QtCore.QModelIndex = None
   ) -> list:
     """Gets a list of chain indexes from the given model.
 
     Args:
         a_model (QtGui.QStandardItemModel): The tree model from which to retrieve the chain indexes.
+        a_parent (QtCore.QModelIndex): An optional parent index for nested searches.
 
     Returns:
         list: A list of QModelIndex objects representing the chain indexes in the tree model.
@@ -199,8 +231,9 @@ class AddProteinPairViewController(QtCore.QObject):
     # </editor-fold>
 
     tmp_chain_indexes = []
-    for row in range(a_model.rowCount()):
-      tmp_model_index = a_model.index(row, 0)
+    tmp_parent = a_parent if a_parent is not None else QtCore.QModelIndex()
+    for row in range(a_model.rowCount(tmp_parent)):
+      tmp_model_index = a_model.index(row, 0, tmp_parent)
       for sub_row in range(a_model.rowCount(tmp_model_index)):
         sub_model_index = a_model.index(sub_row, 0, tmp_model_index)
         if sub_model_index.data(Qt.DisplayRole) == "Chains":
@@ -212,8 +245,9 @@ class AddProteinPairViewController(QtCore.QObject):
 
   def _hide_non_protein_chains(self) -> None:
     """Hide the rows in both tree_prot_1 and tree_prot_2 that correspond to non-protein chains."""
+    tmp_parent = self._local_model.get_proteins_section_index()
     for tmp_chain_index in self._get_chain_indexes_from_tree_model(
-        self._view.ui.tree_prot_1.model()
+        self._local_model, tmp_parent
     ):
       tmp_chain: "chain.Chain" = tmp_chain_index.data(
           enums.ModelEnum.OBJECT_ROLE
@@ -298,8 +332,14 @@ class AddProteinPairViewController(QtCore.QObject):
       elif tmp_index.data(enums.ModelEnum.TYPE_ROLE) == "chain":
         tmp_protein_name = tmp_index.parent().parent().data(Qt.DisplayRole)
         tmp_protein_chains.append(tmp_index.data(Qt.DisplayRole))
+      elif tmp_index.data(enums.ModelEnum.TYPE_ROLE) == "residue":
+        tmp_protein_name = tmp_index.parent().parent().parent().data(Qt.DisplayRole)
+        tmp_protein_chains.append(tmp_index.parent().data(Qt.DisplayRole))
+      elif tmp_index.data(enums.ModelEnum.TYPE_ROLE) == "atom":
+        tmp_protein_name = tmp_index.parent().parent().parent().parent().data(Qt.DisplayRole)
+        tmp_protein_chains.append(tmp_index.parent().parent().data(Qt.DisplayRole))
 
-    return tmp_protein_name, tmp_protein_chains
+    return tmp_protein_name, list(set(tmp_protein_chains))
 
   def _create_analysis_run_name(self) -> str:
     """Creates the name of the analysis run based on the current tree selections.
@@ -331,7 +371,12 @@ class AddProteinPairViewController(QtCore.QObject):
     """
     tmp_analysis_run_name = self._create_analysis_run_name()
     tmp_run_name_normalised = tmp_analysis_run_name.replace(";", "_").replace(",", "_")
-    if len(the_selection.indexes()) != self._number_of_prot_1_selected_chains:
+    
+    _, prot_2_chains = self._get_protein_name_and_chains(
+        self._view.ui.tree_prot_2.selectedIndexes()
+    )
+
+    if len(prot_2_chains) != self._number_of_prot_1_selected_chains:
       self._view.ui.btn_add.setEnabled(False)
     elif tmp_analysis_run_name in self._existing_analysis_runs:
       self._view.ui.btn_add.setEnabled(False)
@@ -505,8 +550,9 @@ class AddProteinPairViewController(QtCore.QObject):
     else:
       tmp_index_to_check = None
 
-    for tmp_row in range(tmp_model.rowCount()):
-      tmp_index = tmp_model.index(tmp_row, 0)
+    tmp_parent = self._local_model.get_proteins_section_index()
+    for tmp_row in range(tmp_model.rowCount(tmp_parent)):
+      tmp_index = tmp_model.index(tmp_row, 0, tmp_parent)
       if (
           tmp_index != tmp_index_to_check
           and tmp_index.data(enums.ModelEnum.TYPE_ROLE) == "protein"
@@ -553,8 +599,9 @@ class AddProteinPairViewController(QtCore.QObject):
     else:
       tmp_index_to_check = None
 
-    for tmp_row in range(tmp_model.rowCount()):
-      tmp_index = tmp_model.index(tmp_row, 0)
+    tmp_parent = self._local_model.get_proteins_section_index()
+    for tmp_row in range(tmp_model.rowCount(tmp_parent)):
+      tmp_index = tmp_model.index(tmp_row, 0, tmp_parent)
       if (
           tmp_index != tmp_index_to_check
           and tmp_index.data(enums.ModelEnum.TYPE_ROLE) == "protein"
@@ -573,9 +620,12 @@ class AddProteinPairViewController(QtCore.QObject):
     self._view.ui.lbl_prot_2.show()
     self._view.ui.tree_prot_2.show()
     self._view.ui.btn_back.show()
-    self._number_of_prot_1_selected_chains = len(
+    
+    _, prot_1_chains = self._get_protein_name_and_chains(
         self._view.ui.tree_prot_1.selectedIndexes()
     )
+    self._number_of_prot_1_selected_chains = len(prot_1_chains)
+    
     self._view.ui.lbl_prot_2.setText(
         f"Select second protein structure with {self._number_of_prot_1_selected_chains} chains",
     )

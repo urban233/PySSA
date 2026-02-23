@@ -152,6 +152,27 @@ class PSAProteinModel(ProteinSubtreeMixin, base_tree_model.BaseTreeModel):
       except Exception as exc:
         logger.error("Failed to add protein '%s': %s", obj_name, exc, exc_info=True)
 
+  def add_temporary_protein(
+          self,
+          a_protein: "protein.Protein"
+  ) -> None:
+    """Add a minimal protein node suitable for temporary models.
+    
+    This avoids querying PyMOL for scenes or full atomic hierarchies.
+    It builds a flat structure exposing only chains, with a "generic" scene.
+    
+    Args:
+        a_protein: The protein object.
+        
+    Raises:
+        exception.IllegalArgumentError: If ``a_protein`` is ``None``.
+    """
+    if a_protein is None:
+      logger.error("a_protein is None.")
+      raise exception.IllegalArgumentError("a_protein is None.")
+
+    self._add_protein_node(a_protein, scenes=["generic"], hierarchy_map=None)
+
   # ------------------------------------------------------------------
   # Public API — scene management
   # ------------------------------------------------------------------

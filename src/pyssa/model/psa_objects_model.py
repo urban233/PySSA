@@ -284,6 +284,31 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
 
     return new_pair
 
+  def add_temporary_protein(
+          self,
+          a_protein: "protein.Protein"
+  ) -> None:
+    """Add a standalone protein minimally (without PyMOL query).
+    
+    Delegates to the Proteins sub-model to append a simple layout
+    of just the protein and its chains for temporary UIs.
+
+    Args:
+        a_protein: The protein to add.
+
+    Raises:
+        exception.IllegalArgumentError: If any argument is ``None``.
+    """
+    if a_protein is None:
+      logger.error("a_protein is None.")
+      raise exception.IllegalArgumentError("a_protein is None.")
+
+    self._with_root(
+      self._proteins_model,
+      self._proteins_section,
+      lambda: self._proteins_model.add_temporary_protein(a_protein),
+    )
+
   # ------------------------------------------------------------------
   # Public API — removing items
   # ------------------------------------------------------------------
@@ -309,8 +334,7 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
         self._sequences_section.removeRow(row)
         return
 
-    logger.error(f"Sequence not found in model.")
-    raise ValueError("Sequence not found in model.")
+    logger.warning(f"Sequence not found in model during removal.")
 
   def remove_protein(self, a_protein: "protein.Protein") -> None:
     """Remove a protein from the "Proteins" section.
@@ -327,15 +351,15 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
       raise exception.IllegalArgumentError("a_protein is None.")
 
     target_name = a_protein.get_molecule_object()
+    target_id = a_protein.get_id()
     for row in range(self._proteins_section.rowCount()):
       item = self._proteins_section.child(row)
       stored = item.data(enums.ModelEnum.OBJECT_ROLE)
-      if stored is not None and stored.get_molecule_object() == target_name:
+      if stored is not None and stored.get_id() == target_id:
         self._proteins_section.removeRow(row)
         return
 
-    logger.error("Protein '%s' not found in model.", target_name)
-    raise ValueError("Protein not found in model.")
+    logger.warning("Protein '%s' not found in model during removal.", target_name)
 
   def remove_protein_pair(self, a_protein_pair: "protein_pair.ProteinPair") -> None:
     """Remove a protein pair from the "Protein Pairs" section.
@@ -352,15 +376,15 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
       raise exception.IllegalArgumentError("a_protein_pair is None.")
 
     target_name = a_protein_pair.name
+    target_id = a_protein_pair.get_id()
     for row in range(self._protein_pairs_section.rowCount()):
       item = self._protein_pairs_section.child(row)
       stored = item.data(enums.ModelEnum.OBJECT_ROLE)
-      if stored is not None and stored.name == target_name:
+      if stored is not None and stored.get_id() == target_id:
         self._protein_pairs_section.removeRow(row)
         return
 
-    logger.error("Protein pair '%s' not found in model.", target_name)
-    raise ValueError("Protein pair not found in model.")
+    logger.warning("Protein pair '%s' not found in model during removal.", target_name)
 
   # ------------------------------------------------------------------
   # Public API — scene management (delegates to protein/pair sub-models)
