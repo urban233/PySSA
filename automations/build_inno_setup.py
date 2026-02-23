@@ -4,6 +4,7 @@ import subprocess
 import sys
 import time
 import zipfile
+import tarfile
 
 from task_automator.IO import file
 from task_automator.utils import web_utils
@@ -18,11 +19,13 @@ class BuildInnoSetup:
   def __init__(self) -> None:
     """Constructor."""
     self.deployment_resources_path = pathlib.Path(const.PROJECT_ROOT_DIR / "deployment/resources")
-    self.inno_build_path = pathlib.Path(const.PROJECT_ROOT_DIR / "inno-build-release")
-    self.inno_build_assets_path = pathlib.Path(self.inno_build_path / "inno-assets")
-    self.inno_build_cache_path = pathlib.Path(self.inno_build_path / "inno-cache")
-    self.inno_sources_build_path = pathlib.Path(self.inno_build_path / "inno-sources")
-    self.pyssa_program_path = pathlib.Path(self.inno_build_path / "inno-sources/bin/PySSA")
+    self.virtual_env_path = pathlib.Path(const.PROJECT_ROOT_DIR / ".venv")
+    self.original_pyssa_source_path = pathlib.Path(const.PROJECT_ROOT_DIR / "src")
+    self.inno_build_path = pathlib.Path(const.PROJECT_ROOT_DIR / "ib-release")
+    self.inno_build_assets_path = pathlib.Path(self.inno_build_path / "assets")
+    self.inno_build_cache_path = pathlib.Path(self.inno_build_path / "cache")
+    self.inno_sources_build_path = pathlib.Path(self.inno_build_path / "sources")
+    self.pyssa_program_path = pathlib.Path(self.inno_build_path / "sources/bin/PySSA")
     self.inno_build_prerequisite_path = pathlib.Path(self.inno_sources_build_path / "prerequisite")
     self.inno_build_third_party_path = pathlib.Path(self.inno_sources_build_path / "third_party")
     self.inno_build_tmp_path = pathlib.Path(self.inno_sources_build_path / "tmp")
@@ -53,51 +56,97 @@ class BuildInnoSetup:
     self.inno_sources_build_path.mkdir()
     self.inno_build_cache_path.mkdir(exist_ok=True)
     # </editor-fold>
-    build_win_exe.build()
+    # ---
+    pathlib.Path(self.inno_build_tmp_path).mkdir()
+    # <editor-fold desc="Download cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only.tar.gz">
+    if not pathlib.Path.exists(pathlib.Path(self.inno_build_cache_path / "cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only")):
+      print("Downloading cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only.tar.gz ...")
+      tmp_ret = web_utils.download_file(
+        "https://github.com/astral-sh/python-build-standalone/releases/download/20260211/cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only.tar.gz",
+        str(pathlib.Path(self.inno_build_cache_path / "cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only.tar.gz"))
+      )
+      if not tmp_ret:
+        print("Unable to download cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only.tar.gz, build process exists.")
+        return
+      print("Finished downloading cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only.tar.gz.")
+      with tarfile.open(pathlib.Path(self.inno_build_cache_path / "cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only.tar.gz"), "r:gz") as tar:
+        tar.extractall(path=pathlib.Path(self.inno_build_cache_path / "cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only"))
+      pathlib.Path(self.inno_build_cache_path / "cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only.tar.gz").unlink()
+    # </editor-fold>
+    shutil.copytree(
+      pathlib.Path(self.inno_build_cache_path / "cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only"),
+      pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14"),
+    )
+
+    shutil.copytree(
+      pathlib.Path(self.original_pyssa_source_path),
+      pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/Lib/site-packages/src"),
+      dirs_exist_ok=True,
+    )
+
+    subprocess.run(
+      [
+        str(pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/python.exe")),
+        "-m", "pip", "install", "-r", str(pathlib.Path(const.PROJECT_ROOT_DIR / "requirements.txt"))
+      ],
+      stdout=sys.stdout, stderr=sys.stderr, text=True
+    )
+
+    subprocess.run(
+      [
+        str(pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/python.exe")),
+        "-m", "pip", "install", "pymol-open-source-whl"
+      ],
+      stdout=sys.stdout, stderr=sys.stderr, text=True
+    )
+
+    # ---
+
+    # build_win_exe.build()
     # <editor-fold desc="Copy frozen PySSA Python venv">
-    shutil.copytree(
-      pathlib.Path(const.PROJECT_ROOT_DIR / "build/exe.win-amd64-3.11"),
-      pathlib.Path(self.inno_sources_build_path),
-      dirs_exist_ok=True
-    )
-    # Download and extract user_pymol.zip
-    user_pymol_zip = self.inno_build_cache_path / "user_pymol.zip"
-    user_pymol_extract_path = self.inno_build_cache_path / "user_pymol"
-
-    if not user_pymol_zip.exists():
-      print("Downloading user_pymol.zip...")
-      if not web_utils.download_file("https://github.com/urban233/custom-pyssa-pymol-open-source-version/releases/download/v2025.07.1/user_pymol.zip", str(user_pymol_zip)):
-        print("Unable to download user_pymol.zip, build process exits.")
-        return
-      print("Finished downloading user_pymol.zip.")
-
-      # Extract the zip file
-      print("Extracting user_pymol.zip...")
-      try:
-        with zipfile.ZipFile(user_pymol_zip, 'r') as zip_ref:
-          zip_ref.extractall(user_pymol_extract_path)
-        print("Successfully extracted user_pymol.zip")
-      except Exception as e:
-        print(f"Error extracting user_pymol.zip: {e}")
-        return
-    else:
-      print("Using cached version of user_pymol.zip")
-      if not user_pymol_extract_path.exists():
-        try:
-          with zipfile.ZipFile(user_pymol_zip, 'r') as zip_ref:
-            zip_ref.extractall(user_pymol_extract_path)
-          print("Successfully extracted user_pymol.zip from cache")
-        except Exception as e:
-          print(f"Error extracting cached user_pymol.zip: {e}")
-          return
-    shutil.copytree(
-      pathlib.Path(const.PROJECT_ROOT_DIR / "inno-build-release/inno-cache/user_pymol"),
-      pathlib.Path(self.inno_sources_build_path / "user_pymol"),
-      dirs_exist_ok=True
-    )
+    # shutil.copytree(
+    #   pathlib.Path(const.PROJECT_ROOT_DIR / "build/exe.win-amd64-3.11"),
+    #   pathlib.Path(self.inno_sources_build_path),
+    #   dirs_exist_ok=True
+    # )
+    # # Download and extract user_pymol.zip
+    # user_pymol_zip = self.inno_build_cache_path / "user_pymol.zip"
+    # user_pymol_extract_path = self.inno_build_cache_path / "user_pymol"
+    #
+    # if not user_pymol_zip.exists():
+    #   print("Downloading user_pymol.zip...")
+    #   if not web_utils.download_file("https://github.com/urban233/custom-pyssa-pymol-open-source-version/releases/download/v2025.07.1/user_pymol.zip", str(user_pymol_zip)):
+    #     print("Unable to download user_pymol.zip, build process exits.")
+    #     return
+    #   print("Finished downloading user_pymol.zip.")
+    #
+    #   # Extract the zip file
+    #   print("Extracting user_pymol.zip...")
+    #   try:
+    #     with zipfile.ZipFile(user_pymol_zip, 'r') as zip_ref:
+    #       zip_ref.extractall(user_pymol_extract_path)
+    #     print("Successfully extracted user_pymol.zip")
+    #   except Exception as e:
+    #     print(f"Error extracting user_pymol.zip: {e}")
+    #     return
+    # else:
+    #   print("Using cached version of user_pymol.zip")
+    #   if not user_pymol_extract_path.exists():
+    #     try:
+    #       with zipfile.ZipFile(user_pymol_zip, 'r') as zip_ref:
+    #         zip_ref.extractall(user_pymol_extract_path)
+    #       print("Successfully extracted user_pymol.zip from cache")
+    #     except Exception as e:
+    #       print(f"Error extracting cached user_pymol.zip: {e}")
+    #       return
+    # shutil.copytree(
+    #   pathlib.Path(const.PROJECT_ROOT_DIR / "inno-build-release/inno-cache/user_pymol"),
+    #   pathlib.Path(self.inno_sources_build_path / "user_pymol"),
+    #   dirs_exist_ok=True
+    # )
     # </editor-fold>
     # <editor-fold desc="Get WSL2 distro from sciebo">
-    pathlib.Path(self.inno_build_tmp_path).mkdir()
+
     if include_wsl2_distro:
       if not pathlib.Path.exists(pathlib.Path(self.inno_build_cache_path / "alma-colabfold-9-rootfs.tar")):
         print("Downloading alma-colabfold-9-rootfs.tar ...")
@@ -122,6 +171,14 @@ class BuildInnoSetup:
       overwrite=True
     ):
       print("Copying the setup.bat file failed!")
+      exit(1)
+
+    if not file.File.copy(
+      pathlib.Path(self.deployment_resources_path / "start_pyssa.bat"),
+      pathlib.Path(self.inno_sources_build_path / "start_pyssa.bat"),
+      overwrite=True
+    ):
+      print("Copying the start_pyssa.bat file failed!")
       exit(1)
     if not file.File.copy(
             pathlib.Path(self.deployment_resources_path / "uninstall_helper.bat"),

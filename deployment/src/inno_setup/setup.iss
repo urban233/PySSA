@@ -7,7 +7,7 @@
 [Setup]
 WizardStyle=modern
 AppName=PySSA
-AppVersion=1.3.1
+AppVersion=1.4.0
 AppCopyright=Martin Urban, Hannah Kullik, IBCI
 AppId={{192F52C3-D86D-4735-9929-C7DF599CB538}
 DefaultDirName={localappdata}\IBCI\PySSA
@@ -16,7 +16,7 @@ VersionInfoProductName=PySSA
 MinVersion=10.0.19045
 PrivilegesRequired=lowest
 OutputDir=..\..\dist
-OutputBaseFilename=PySSA_1.3.1_Setup
+OutputBaseFilename=PySSA_1.4.0_Setup
 DisableReadyPage=True
 DisableWelcomePage=False
 DisableDirPage=True
@@ -40,12 +40,12 @@ Name: "{app}\bin"
 Name: "{app}\third_party"
 
 [Files]
-Source: "..\..\..\inno-build-release\inno-sources\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs;
-Source: "..\..\..\inno-build-release\inno-assets\logo.ico"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs;
+Source: "..\..\..\ib-release\sources\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs;
+Source: "..\..\..\ib-release\assets\logo.ico"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs;
 
 [Icons]
-Name: "{userdesktop}\PySSA 1.3.1"; Filename: "{app}\pyssa.exe"; IconFilename: "{app}\assets\logo.ico"
-Name: "{userstartmenu}\PySSA 1.3.1"; Filename: "{app}\pyssa.exe"; IconFilename: "{app}\assets\logo.ico"
+Name: "{userdesktop}\PySSA 1.4.0"; Filename: "{app}\start_pyssa.bat"; IconFilename: "{app}\assets\logo.ico"
+Name: "{userstartmenu}\PySSA 1.4.0"; Filename: "{app}\start_pyssa.bat"; IconFilename: "{app}\assets\logo.ico"
 
 [Run]
 Filename: "{app}\third_party\VC_redist.x64.exe"; Parameters: "/quiet /norestart"; Flags: runhidden waituntilterminated
