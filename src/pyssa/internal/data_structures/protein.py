@@ -68,7 +68,7 @@ class Protein:
   _pdb_data: list[dict]
   """A list of pdb information."""
 
-  db_project_id: int
+  db_project_id: int = 0
   """The project id from the database."""
 
   # </editor-fold>
