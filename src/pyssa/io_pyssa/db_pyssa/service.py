@@ -260,8 +260,10 @@ class ProjectService:
                 c.set_id(chain_id)
                 self._db._repo_pymol_params.insert(
                     tx,
-                    c.pymol_parameters[enums.PymolParameterEnum.COLOR.value],
-                    c.pymol_parameters[enums.PymolParameterEnum.REPRESENTATION.value],
+                    # Hard coded default values for pymol parameters
+                    # because these are deprecated and no longer used
+                    "green",
+                    "cartoon",
                     chain_id,
                 )
             if protein_obj.chains:
