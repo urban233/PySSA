@@ -162,9 +162,22 @@ class MainWindowController:
         self._setup_application_settings()
 
         help_map = {
-            "pyssa_objects_panel": "<h3>Save Button</h3><p>Saves the current document.</p>"
+            "pyssa_objects_panel": "<h3>PySSA Objects Panel</h3><p>Displays all PySSA objects in the current project.</p>",
+            "Dialog": """
+                <h3>Create a new project</h3>
+                <ol>
+                    <li>Enter a new project name</li>
+                    <li>Click on Create</li>
+                </ol>
+                <p style="color: red;"><b>⚠ CAUTION:</b></p>
+                <p>The project name must have 20 characters or fewer. Moreover, the only characters that can be used are 0-9, a-z, A-Z, -, _.</p>
+            """
         }
-        self.help_filter = help_event_filter.HelpEventFilter(self._main_window.help_panel.help_text_browser, help_map)
+        self.help_filter = help_event_filter.HelpEventFilter(
+            self._main_window.help_panel.help_text_browser,
+            help_map,
+            self._main_window.help_panel
+        )
         self._main_window.pyssa_objects_panel.installEventFilter(self.help_filter)
 
         self.refresh_ui()
@@ -917,6 +930,10 @@ class MainWindowController:
             self._dialog_controllers["create_project"] = create_project_view_controller.CreateProjectViewController(
                 self._app_state
             )
+            # Install hover help event filter on the dialog
+            dialog_view = self._dialog_controllers["create_project"].get_view()
+            dialog_view.installEventFilter(self.help_filter)
+            logger.info(f"Installed hover help on Create Project dialog (objectName: {dialog_view.objectName()})")
         self._dialog_controllers["create_project"].restore_default_view()
         self._dialog_controllers["create_project"].get_view().show()
 

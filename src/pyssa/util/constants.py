@@ -43,7 +43,7 @@ False if the env var is not defined
 
 # Paths/Filepaths
 if PYDEBUG:
-    PROGRAM_BIN_ROOT_PATH = pathlib.Path(r"C:\Users\manfred\github_repos\PySSA")
+    PROGRAM_BIN_ROOT_PATH = pathlib.Path(r"C:\Users\hannah\github_repos\PySSA")
     PROGRAM_SRC_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "src")
     print(PROGRAM_SRC_PATH)
     DATA_PATH = pathlib.Path(PROGRAM_SRC_PATH / "pyssa/data")

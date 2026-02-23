@@ -59,6 +59,7 @@ if IS_PYQT6:
     )
     Qt.WindowModal = Qt.WindowModality.WindowModal
     Qt.DisplayRole = Qt.ItemDataRole.DisplayRole
+    Qt.UserRole = Qt.ItemDataRole.UserRole
     Qt.WaitCursor = Qt.CursorShape.WaitCursor
 
     QtCore.Qt.AscendingOrder = QtCore.Qt.SortOrder.AscendingOrder
