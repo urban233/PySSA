@@ -291,6 +291,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.surface_show_hide_menu.addAction(self.surface_show_action)
     self.surface_show_hide_menu.addAction(self.surface_hide_action)
     # </editor-fold>
+
     # <editor-fold desc="Clean">
     self.clean_solvent_organic_menu = dropdown_menu.DropDownMenu()
     self.clean_solvent_action = QtGui.QAction(
@@ -308,6 +309,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.color_grid_menu = dropdown_menu.DropDownMenu()
     self.color_grid_action = QtWidgets.QWidgetAction(None)
 
+    # <editor-fold desc="Jobs">
     self.active_jobs = job_panel.JobPanel()
     self.active_jobs_menu = dropdown_menu.DropDownMenu()
     self.active_jobs_action = QtWidgets.QWidgetAction(None)
@@ -315,6 +317,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.complete_jobs = job_panel.JobPanel()
     self.complete_jobs_menu = dropdown_menu.DropDownMenu()
     self.complete_jobs_action = QtWidgets.QWidgetAction(None)
+    # </editor-fold>
 
     # <editor-fold desc="PyMOL OpenGL widget">
     # For thread-safe viewport command
@@ -323,6 +326,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     cmd = self.cmd = self.pymolwidget.cmd
     self.pymolwidget.installEventFilter(self)
     # </editor-fold>
+
     # <editor-fold desc="Viewer + toolbar widget">
     self.viewer_toolbar = quick_access_bar.QuickAccessBar(list(self.viewer_toolbar_actions.values()), horizontal=True)
     self.viewer_widget = QtWidgets.QWidget()
@@ -354,6 +358,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
       ('single_right','none', 'none'),
     """
     self.user_pymol = user_pymol.UserPyMOL(self.pymolwidget)
+
     # <editor-fold desc="Panels">
     self.left_side_panel_stacked_widget = QtWidgets.QStackedWidget()
     self.pyssa_objects_panel = pyssa_objects_panel.PySSAObjectsPanel()
@@ -362,6 +367,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.right_side_panel_stacked_widget = QtWidgets.QStackedWidget()
     self.bottom_panel_stacked_widget = QtWidgets.QStackedWidget()
     # </editor-fold>
+
     # # </editor-fold>
     self._setup_menu()
     self._setup_left_side_panels()

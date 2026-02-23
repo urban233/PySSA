@@ -233,6 +233,8 @@ class MainWindowController:
                 <p>A warning message will appear every time a project is deleted.</p>
             """,
           # </editor-fold>
+
+
           # </editor-fold>
 
           # <editor-fold desc="Menu items">
@@ -304,6 +306,8 @@ class MainWindowController:
                 by clicking Project in the menu bar and then Open.</p>
             """
           # </editor-fold>
+
+
           # </editor-fold>
         }
         self.help_filter = help_event_filter.HelpEventFilter(
