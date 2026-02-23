@@ -59,8 +59,6 @@ class PySSAObjectsPanel(base_side_panel.BaseSidePanel):
         super().__init__("PySSA Objects")
         # <editor-fold desc="Instance attributes">
         self.container_widget: QtWidgets.QWidget = QtWidgets.QWidget()
-        self.expand_all: QtWidgets.QPushButton = QtWidgets.QPushButton()
-        self.collapse_all: QtWidgets.QPushButton = QtWidgets.QPushButton()
         self.collapse_expand_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
         self.tree_view: QtWidgets.QTreeView = QtWidgets.QTreeView()
         # </editor-fold>
@@ -87,23 +85,6 @@ class PySSAObjectsPanel(base_side_panel.BaseSidePanel):
             """
         )
 
-    def _set_icons(self) -> None:
-        """Assigns icons to the expand and collapse buttons.
-
-        Uses the IconManager singleton to set appropriate icons for
-        the expand_all and collapse_all buttons.
-        """
-        IconManager.instance().set_icon(
-            self.expand_all,
-            IconManager.Icons.EXPAND_ALL,
-            the_size=QtCore.QSize(16, 16),
-        )
-        IconManager.instance().set_icon(
-            self.collapse_all,
-            IconManager.Icons.COLLAPSE_ALL,
-            the_size=QtCore.QSize(16, 16),
-        )
-
     def _setup_top_toolbar(self):
         self.expand_all = quick_access_bar_action.QuickAccessBarAction(
             "Expand All", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.EXPAND_ALL)
@@ -126,7 +107,7 @@ class PySSAObjectsPanel(base_side_panel.BaseSidePanel):
 
         # Horizontal quick access bar above the editor
         self._quick_access_bar = quick_access_bar.QuickAccessBar([
-            # self.expand_all, self.collapse_all,
+            self.expand_all, self.collapse_all,
             self.import_file_action, self.add_sequence_action,
             self.export_file_action, self.delete_object_action
         ], horizontal=True, button_size=(24, 24))

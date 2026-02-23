@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the import sequence view controller."""
+import copy
 import logging
 from collections import defaultdict
 from Bio.SeqRecord import SeqRecord
@@ -270,7 +271,7 @@ class ImportSequenceViewController(QtCore.QObject):
 
     tmp_seq_records = []
     for seq_info in merged_seq_infos:
-      tmp_seq_record = SeqRecord(seq_info.seq, name=seq_info.name)
+      tmp_seq_record = SeqRecord(seq_info.seq, id=seq_info.name, name=seq_info.name)
       tmp_seq_records.append(tmp_seq_record)
     return tmp_seq_records
 
@@ -290,22 +291,24 @@ class ImportSequenceViewController(QtCore.QObject):
     self._view.ui.btn_import_sequence.setEnabled(False)
 
     def import_task(progress_callback, is_cancelled):
-        for tmp_seq_record in self._parsed_seq_records:
-            logger.info(
-              f"Adding new sequence {tmp_seq_record.name} with {tmp_seq_record.seq} to the current project."
-            )
+      logger.debug("Importing sequences.")
+      return copy.deepcopy(self._parsed_seq_records)
+        # for tmp_seq_record in self._parsed_seq_records:
+        #     logger.info(
+        #       f"Adding new sequence {tmp_seq_record.name} with {tmp_seq_record.seq} to the current project."
+        #     )
+
+
+    def on_success(result: list[SeqRecord]):
+        for tmp_seq_record in result:
+            self._app_state.project.sequences.append(tmp_seq_record)
+            self._app_state.pyssa_objects_model.add_sequence(tmp_seq_record)
             self._app_state.hot_db.insert_sequence(
               str(tmp_seq_record.id),
               str(tmp_seq_record.seq),
               tmp_seq_record.name,
               self._app_state.project.get_id()
             )
-
-    def on_success(result):
-        for tmp_seq_record in self._parsed_seq_records:
-            self._app_state.project.sequences.append(tmp_seq_record)
-            # Use incremental update instead of full rebuild to preserve tree state
-            self._app_state.pyssa_objects_model.add_sequence(tmp_seq_record)
         self._app_state.status_bar_manager.show_permanent_message("", False)
         self._app_state.status_bar_manager.show_temporary_message("Sequence(s) imported.")
         

@@ -98,6 +98,12 @@ class PySSAObjectsPanelController(QtCore.QObject):
         logger.warning("Selection model is None, cannot connect signal")
 
   def _connect_all_signals_with_their_slots(self) -> None:
+    self._panel.expand_all.get_action().triggered.connect(
+      self._panel.tree_view.expandAll
+    )
+    self._panel.collapse_all.get_action().triggered.connect(
+      self._panel.tree_view.collapseAll
+    )
     self._panel.import_file_action.get_action().triggered.connect(
       self.__slot_display_import_popup
     )
@@ -112,9 +118,6 @@ class PySSAObjectsPanelController(QtCore.QObject):
     self._panel.delete_object_action.get_action().triggered.connect(
       self.__slot_delete_object
     )
-
-    # self.expand_all.clicked.connect(self._panel.tree_view.expandAll)
-    # self.collapse_all.clicked.connect(self._panel.tree_view.collapseAll)
 
   def suppress_selection_signal(self) -> None:
     """Temporarily disconnect the tree's selectionChanged signal and stop the debounce timer.

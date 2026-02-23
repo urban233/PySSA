@@ -120,7 +120,7 @@ class UserPyMOL:
         for (
                 distance_value
         ) in a_protein_pair.distance_analysis.analysis_results.distance_data.get(
-            "distance"
+            "distances"
         ):
             if distance_value <= cutoff_1:
                 atom_info = _get_chain_and_position(
