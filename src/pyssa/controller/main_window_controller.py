@@ -58,11 +58,7 @@ from src.pyssa.logging_pyssa import log_handlers, log_levels
 from src.pyssa.model import job_model, selection_snapshot
 from src.pyssa.util import constants, enums, tools, main_window_util
 from src.pyssa.gui import main_window, app_state
-from src.pyssa.gui.ui.custom_context_menus import (
-    sequence_list_context_menu,
-    protein_tree_context_menu,
-    protein_pair_tree_context_menu,
-)
+from src.pyssa.gui.ui.custom_context_menus import tree_context_menu
 from src.pyssa.internal.thread.thread_api import thread_runtime
 
 logger = logging.getLogger(__file__)
@@ -143,9 +139,8 @@ class MainWindowController:
         self.feedback_timer = QtCore.QTimer()
         self.feedback_timer.setSingleShot(True)
         self._is_syncing_selection: bool = False
-        self._sequence_context_menu = sequence_list_context_menu.SequenceListContextMenu()
-        self._protein_context_menu = protein_tree_context_menu.ProteinTreeContextMenu()
-        self._protein_pair_context_menu = protein_pair_tree_context_menu.ProteinPairTreeContextMenu()
+        self._tree_context_menu = tree_context_menu.TreeContextMenu()
+        self._register_tree_context_menu_actions()
         self._current_selection_snapshot: "selection_snapshot.SelectionSnapshot | None" = None
         # self.custom_progress_signal = custom_signals.ProgressSignal()
         # self.abort_signal = custom_signals.AbortSignal()
@@ -440,6 +435,9 @@ class MainWindowController:
         tree_view.setContextMenuPolicy(
             QtCore.Qt.ContextMenuPolicy.CustomContextMenu
         )
+        tree_view.customContextMenuRequested.connect(
+            self.__slot_show_tree_context_menu
+        )
         self._pyssa_objects_panel_controller.selectionSnapshotUpdated.connect(
             self.__slot_on_selection_snapshot_updated
         )
@@ -449,6 +447,69 @@ class MainWindowController:
         # </editor-fold>
         self.feedback_timer.timeout.connect(self.__slot_sync_pymol_selection_to_tree)
         self._app_state.job_model.job_finished.connect(self._handle_job_results)
+
+    def _register_tree_context_menu_actions(self) -> None:
+        """Register all context menu actions for the tree view.
+
+        This is the single place to add, remove, or reorganise context menu
+        entries.  To add a new item, call
+        ``self._tree_context_menu.register_action(section, key, label, callback)``.
+        The ``configure`` method (called from ``refresh_ui``) will automatically
+        show the action whenever the matching selection context is active.
+
+        Valid sections:
+            ``'sequence'``: visible when sequences are selected.
+            ``'standalone_protein'``: visible when standalone proteins are selected.
+            ``'protein_pair'``: visible when protein pairs are selected.
+            ``'protein_pair_child'``: visible when proteins inside a pair are selected.
+        """
+        tmp_context_menu = self._tree_context_menu
+
+        # -- Sequence actions --------------------------------------------------
+        # No dedicated rename slot exists in this controller yet; add here when
+        # a RenameSequenceViewController is integrated into MainWindowController.
+
+        # -- Standalone protein actions ----------------------------------------
+        tmp_context_menu.register_action(
+            section="standalone_protein",
+            key="standalone_protein__open_session",
+            label="Open Session",
+            callback=self.__slot_open_session,
+        )
+        tmp_context_menu.register_action(
+            section="standalone_protein",
+            key="standalone_protein__clean_solvent",
+            label="Clean Solvent Molecules",
+            callback=self.__slot_clean_solvent,
+        )
+        tmp_context_menu.register_action(
+            section="standalone_protein",
+            key="standalone_protein__clean_organic",
+            label="Clean Organic Molecules",
+            callback=self.__slot_clean_organic,
+        )
+
+        # -- Protein pair actions -----------------------------------------------
+        tmp_context_menu.register_action(
+            section="protein_pair",
+            key="protein_pair__open_session",
+            label="Open Session",
+            callback=self.__slot_open_session,
+        )
+        tmp_context_menu.register_action(
+            section="protein_pair",
+            key="protein_pair__results_summary",
+            label="Open Results Summary",
+            callback=self.__slot_results_summary,
+        )
+
+        # -- Protein pair child actions -----------------------------------------
+        tmp_context_menu.register_action(
+            section="protein_pair_child",
+            key="protein_pair_child__results_summary",
+            label="Open Results Summary",
+            callback=self.__slot_results_summary,
+        )
 
     def _setup_application_settings(self):
         # self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
@@ -838,6 +899,9 @@ class MainWindowController:
             panel.tree_view.setModel(self._app_state.pyssa_objects_model)
             # Reconnect selection signal after model is replaced
             self._pyssa_objects_panel_controller._connect_selection_signal()
+
+        # -- Tree context menu ---------------------------------------------
+        self._tree_context_menu.configure(snapshot)
 
         # -- Window title --------------------------------------------------
         if has_project:
@@ -2011,6 +2075,20 @@ class MainWindowController:
         snapshot = self._get_current_snapshot()
         if snapshot and snapshot.raw_scenes:
             self.__slot_recall_scene()
+
+    def __slot_show_tree_context_menu(self, pos: QtCore.QPoint) -> None:
+        """Show the tree view context menu at the right-click position.
+
+        The menu items are already configured by the most recent ``refresh_ui``
+        call, so this slot only needs to translate the local widget position to
+        global screen coordinates and delegate display to the menu object.
+
+        Args:
+            pos: Local-widget-space position of the right-click, provided
+                 automatically by the ``customContextMenuRequested`` signal.
+        """
+        tree_view = self._main_window.pyssa_objects_panel.tree_view
+        self._tree_context_menu.show_at(tree_view.mapToGlobal(pos))
 
     def __slot_sync_pymol_selection_to_tree(self) -> None:
         """Sync the current PyMOL 'sele' selection into the tree view.
