@@ -3,6 +3,21 @@ from src.pyssa.gui.ui.styles import styles
 from src.pyssa.util import constants
 
 
+class HelpView(QtWidgets.QDialog):
+  def __init__(self, help_content: str):
+    super().__init__()
+    self.setWindowTitle("PySSA - Help")
+    self.resize(350, 450)
+    # Layout
+    self._main_layout = QtWidgets.QVBoxLayout()
+    self.text_browser = QtWidgets.QTextBrowser()
+    self.text_browser.setHtml(help_content)
+
+    self._main_layout.addWidget(self.text_browser)
+
+    self.setLayout(self._main_layout)
+
+
 class BasicBrowserView(QtWidgets.QDialog):
   def __init__(self):
     super().__init__()
