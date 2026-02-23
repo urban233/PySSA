@@ -85,11 +85,16 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # <editor-fold desc="Create Actions">
     # --- Project Actions ---
     self.action_new_project = QtGui.QAction("New", self)
+    self.action_new_project.setObjectName("action_new_project")
     self.action_open_project = QtGui.QAction("Open", self)
+    self.action_open_project.setObjectName("action_open_project")
     self.action_use_project = QtGui.QAction("Use", self)
     self.action_delete_project = QtGui.QAction("Delete", self)
+    self.action_delete_project.setObjectName("action_delete_project")
     self.action_import_project = QtGui.QAction("Import", self)
+    self.action_import_project.setObjectName("action_import_project")
     self.action_export_project = QtGui.QAction("Export", self)
+    self.action_export_project.setObjectName("action_export_project")
     self.action_close_project = QtGui.QAction("Close", self)
     self.action_exit_application = QtGui.QAction("Exit Application", self)
 

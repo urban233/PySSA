@@ -1,4 +1,4 @@
-from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtCore, QtGui
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,3 +24,16 @@ class HelpEventFilter(QtCore.QObject):
       self.help_browser.clear()
 
     return super().eventFilter(obj, event)
+
+  def handle_menu_action_hovered(self, action: QtGui.QAction):
+    """Handle when a menu action is hovered."""
+    object_name = action.objectName()
+    logger.debug(f"Menu action hovered: {object_name}")
+    help_text = self.help_map.get(object_name, "")
+    if help_text:
+      self.help_browser.setHtml(help_text)
+
+  def handle_menu_about_to_hide(self):
+    """Handle when menu is about to close."""
+    logger.debug("Menu about to hide, clearing help")
+    self.help_browser.clear()

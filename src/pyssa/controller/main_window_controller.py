@@ -257,13 +257,10 @@ class MainWindowController:
         )
         self._main_window.pyssa_objects_panel.installEventFilter(self.help_filter)
 
-        # Install event filters on menu action items
-        self._main_window.action_new_project.installEventFilter(self.help_filter)
-        self._main_window.action_open_project.installEventFilter(self.help_filter)
-        self._main_window.action_delete_project.installEventFilter(self.help_filter)
-        self._main_window.action_import_project.installEventFilter(self.help_filter)
-        self._main_window.action_export_project.installEventFilter(self.help_filter)
-        logger.info("Installed hover help on menu action items")
+        # Connect menu hovered signal to show help for menu items
+        self._main_window.menuProject.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        self._main_window.menuProject.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
+        logger.info("Connected hover help for Project menu items")
 
         self.refresh_ui()
         self.open_welcome_screen()
