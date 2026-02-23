@@ -166,7 +166,7 @@ class MainWindowController:
 
             # Create Project Dialog
             "Dialog": """
-                <h3>Create a new project</h3>
+                <h3>Create a new project:</h3>
                 <ol>
                     <li>Enter a new project name.</li>
                     <li>Click on Create.</li>
@@ -177,15 +177,14 @@ class MainWindowController:
 
             # Open Project Dialog
             "OpenProjectDialog": """
-                <h3>Open Project</h3>
-                <p><b>Open a project from your workspace</b></p>
+                <h3>Open a project from your workspace:</h3>
                 <ol>
                     <li>Select a project from the list.</li>
                     <li><i>Optional:</i> Check the text box under Selected Project to see if the selected name is displayed.</li>
                     <li>Click on Open.</li>
                 </ol>
                 <p><b>💡 Tip:</b></p>
-                <p><b>Search for a project name in your workspace</b></p>
+                <p><b>Search for a project name in your workspace:</b></p>
                 <ol>
                     <li>Type part of the project name in the first textbox.</li>
                     <li>Verify if the text box under 'Selected Project' displays the correct project.</li>
@@ -195,12 +194,11 @@ class MainWindowController:
 
             # Delete Project Dialog
             "DeleteProjectDialog": """
-                <h3>Delete Project</h3>
-                <p><b>Delete a project from your workspace</b></p>
+                <h3>Delete a project from your workspace:</h3>
                 <ol>
                     <li>Click on one of the projects from the list.</li>
                     <li><i>Optional:</i> Check the text box under 'Selected Project' to confirm that the selected name is displayed.</li>
-                    <li>Click on Delete</li>
+                    <li>Click on Delete.</li>
                 </ol>
                 <p><b>📝 Note:</b></p>
                 <p>A warning message will appear every time a project is deleted.</p>
@@ -208,50 +206,45 @@ class MainWindowController:
 
             # Menu items
             "action_new_project": """
-                <h3>New Project</h3>
-                <p>Create a new project in your workspace.</p>
+                <h3>Create a new project in your workspace:</h3>
                 <p>Click to open the Create Project dialog.</p>
             """,
 
             "action_open_project": """
-                <h3>Open Project</h3>
-                <p>Open an existing project from your workspace.</p>
+                <h3>Open an existing project from your workspace:</h3>
                 <p>Click to open the Open Project dialog.</p>
             """,
 
             "action_delete_project": """
-                <h3>Delete Project</h3>
-                <p>Delete a project from your workspace.</p>
+                <h3>Delete a project from your workspace:</h3>
                 <p>Click to open the Delete Project dialog.</p>
             """,
 
             "action_import_project": """
-                <h3>Import Project</h3>
-                <p><b>Import a project into your workspace</b></p>
+                <h3>Import a project into your workspace:</h3>
                 <ol>
-                    <li>Select Import from the Project menu</li>
-                    <li>Select a Project Database File (.db) from your computer in the file dialog</li>
-                    <li>Click on Open</li>
-                    <li>Either accept the project name or enter a new project name</li>
-                    <li>Wait until the project is imported</li>
+                    <li>Select Import from the Project menu.</li>
+                    <li>Select a Project Database File (.db) from your computer in the file dialog.</li>
+                    <li>Click on Open.</li>
+                    <li>Either accept the project name or enter a new project name.</li>
+                    <li>Wait until the project is imported.</li>
                 </ol>
                 <p><b>🔧 Tech Note:</b></p>
                 <p>The Project Database File is an SQLite3 database file. To ensure a successful import, the project must have been exported through the PySSA application.</p>
             """,
 
             "action_export_project": """
-                <h3>Export Project</h3>
-                <p><b>Export the currently active project</b></p>
+                <h3>Export the currently active project:</h3>
                 <ol>
-                    <li>Under the Project menu, click on Export</li>
-                    <li>Choose a location to save your Project Database File on your computer in the file dialog</li>
-                    <li>Click on Save</li>
-                    <li>Wait for the export process to finish</li>
+                    <li>Under the Project menu, click on Export.</li>
+                    <li>Choose a location to save your Project Database File on your computer in the file dialog.</li>
+                    <li>Click on Save.</li>
+                    <li>Wait for the export process to finish.</li>
                 </ol>
-                <p><b>Share your work with others</b></p>
+                <p><b>Share your work with others:</b></p>
                 <ol>
-                    <li>Export your project</li>
-                    <li>Send the Project Database File to others</li>
+                    <li>Export your project.</li>
+                    <li>Send the Project Database File to others.</li>
                 </ol>
                 <p><b>🔧 Tech Note:</b></p>
                 <p>The Project Database File is an SQLite3 database file. To ensure a successful import, the project must have been exported through the PySSA application.</p>
