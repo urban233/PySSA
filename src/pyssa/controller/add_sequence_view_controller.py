@@ -222,31 +222,25 @@ class AddSequenceViewController(QtCore.QObject):
     )
     tmp_seq_name = self._view.ui.le_seq_name.text()
     tmp_sequence = self._view.ui.le_protein_seq.toPlainText()
-    self._view.close()
 
     from src.pyssa.internal.thread.thread_api import thread_runtime
     from Bio import SeqRecord
-    import copy
 
     def add_sequence(progress_callback, is_cancelled):
       tmp_seq_record = SeqRecord.SeqRecord(tmp_sequence, id=tmp_seq_name, name=tmp_seq_name)
-      
+      return tmp_seq_record
+
+    def on_success(result: SeqRecord.SeqRecord):
+      self._app_state.project.sequences.append(result)
+      self._app_state.pyssa_objects_model.add_sequence(result)
       self._app_state.hot_db.insert_sequence(
-        str(tmp_seq_record.id),
-        str(tmp_seq_record.seq),
-        tmp_seq_name,
+        str(result.id),
+        str(result.seq),
+        result.name,
         self._app_state.project.get_id()
       )
-
-      # Update memory model
-      tmp_project = copy.deepcopy(self._app_state.project)
-      tmp_project.sequences.append(tmp_seq_record)
-      return tmp_project
-
-    def on_success(tmp_project):
-      self._app_state.project = tmp_project
-      # Trigger UI to refresh sequence list
-      self._app_state._on_state_changed()
+      self._app_state.status_bar_manager.show_permanent_message("", False)
+      self._app_state.status_bar_manager.show_temporary_message("Sequence added.")
 
     def on_error(exc):
       logger.exception("Failed to add sequence.", exc_info=exc)
@@ -262,4 +256,8 @@ class AddSequenceViewController(QtCore.QObject):
       .run(add_sequence)
       .on_success(on_success)
       .on_error(on_error)
+    )
+    self._view.close()
+    self._app_state.status_bar_manager.show_permanent_message(
+      "Adding sequence to project ...", True
     )

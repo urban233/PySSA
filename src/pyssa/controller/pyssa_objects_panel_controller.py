@@ -75,7 +75,7 @@ class PySSAObjectsPanelController(QtCore.QObject):
     
     # </editor-fold>
     self._set_model()
-    self._connect_signals()
+    self._connect_all_signals_with_their_slots()
 
   def _set_model(self) -> None:
     self._panel.tree_view.setModel(self._model)
@@ -97,7 +97,7 @@ class PySSAObjectsPanelController(QtCore.QObject):
     else:
         logger.warning("Selection model is None, cannot connect signal")
 
-  def _connect_signals(self) -> None:
+  def _connect_all_signals_with_their_slots(self) -> None:
     self._panel.import_file_action.get_action().triggered.connect(
       self.__slot_display_import_popup
     )
@@ -105,6 +105,9 @@ class PySSAObjectsPanelController(QtCore.QObject):
     self._panel.import_seq_action.triggered.connect(self.__slot_import_sequence)
     self._panel.export_file_action.get_action().triggered.connect(
       self.__slot_export_file
+    )
+    self._panel.add_sequence_action.get_action().triggered.connect(
+      self.__slot_add_sequence
     )
     self._panel.delete_object_action.get_action().triggered.connect(
       self.__slot_delete_object
@@ -164,7 +167,6 @@ class PySSAObjectsPanelController(QtCore.QObject):
 
   def __slot_import_sequence(self):
     from src.pyssa.controller.import_sequence_view_controller import ImportSequenceViewController
-    from src.pyssa.internal.thread.thread_api import thread_runtime
     
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -176,7 +178,7 @@ class PySSAObjectsPanelController(QtCore.QObject):
     )
     self._external_controller.restore_ui()
     self._external_controller.get_view().show()
-    
+
   def __slot_import_protein(self):
     from src.pyssa.controller.add_protein_view_controller import AddProteinViewController
     
@@ -189,6 +191,20 @@ class PySSAObjectsPanelController(QtCore.QObject):
       a_parent=self._panel.window()
     )
     self._external_controller.restore_ui()
+    self._external_controller.get_view().show()
+
+  def __slot_add_sequence(self):
+    from src.pyssa.controller import add_sequence_view_controller
+
+    logger.log(
+      log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+      "'Import sequence' button on the was clicked.",
+    )
+    self._external_controller = add_sequence_view_controller.AddSequenceViewController(
+      the_app_state=self._app_state,
+      a_parent=self._panel.window()
+    )
+    self._external_controller.restore_default_view()
     self._external_controller.get_view().show()
 
   def __slot_export_file(self) -> None:
