@@ -164,23 +164,28 @@ class MainWindowController:
         help_map = {
             "pyssa_objects_panel": """
                 <p>PySSA Objects Panel:</p>
-                <p>Displays all PySSA objects in the current project.</p>
+                <p>Displays all PySSA objects in the current project:
+                <ul>
+                    <li>Sequences</li>
+                    <li>Proteins (with chains, residues and atoms)</li>
+                    <li>Protein Pairs (with proteins including chains, residues and atoms)</li>
+                </ul>
             """,
 
           # <editor-fold desc="PyMOL Viewer">
             "pymolwidget": """
                 <p>PyMOL Viewer:</p>
                 <p>This is the interactive 3D molecular viewer powered by PyMOL.
-                It displays all loaded protein structures in 3D.</p>
+                It displays protein structures of a protein or protein pair in 3D.</p>
                 <p>Navigation in the viewer:</p>
-                <ol>
+                <ul>
                     <li>Left-click and drag down to zoom in; drag up to zoom out.</li>
                     <li>Right-click and drag to rotate the protein or protein pair.</li>
-                    <li>Hold the middle mouse button and drag to move (pan)
-                    the protein or protein pair.</li>
+                    <li>Hold the middle mouse button and drag to move the
+                     protein or protein pair.</li>
                     <li>Scroll the mouse wheel up to reveal more of the structure
                     (reduce clipping); scroll down to hide more.</li>
-                </ol>
+                </ul>
                 <p>Loading structures:</p>
                 <ol>
                     <li>Select a protein or protein pair in the PySSA Objects Panel.</li>
@@ -190,13 +195,16 @@ class MainWindowController:
             """,
 
           # <editor-fold desc="Viewer toolbar buttons">
-            "viewer_open_session": """
+          # <editor-fold desc="Session/Scene">
+          "viewer_open_session": """
                 <p>Open Session:</p>
                 <p>Load the stored PyMOL session for the currently selected protein or
-                protein pair into the viewport.</p>
+                protein pair into the PyMOL viewer.</p>
                 <ol>
                     <li>Select a protein or protein pair in the PySSA Objects Panel.</li>
-                    <li>Click Open Session to load its 3D structure into the viewport.</li>
+                    <li>Click Open Session in the toolbar, or right-click and choose
+                    Open Session from the context menu.</li>
+                    <li>This leads to load its 3D structure into the PyMOL viewer.</li>
                 </ol>
             """,
 
@@ -204,10 +212,11 @@ class MainWindowController:
                 <p>Create Scene:</p>
                 <p>Save the current viewport state as a new named scene.</p>
                 <ol>
-                    <li>Set up the desired camera angle, zoom, and representation in the viewport.</li>
+                    <li>Set up the desired camera angle, zoom, and representation in the PyMOL viewer.</li>
                     <li>Click Create Scene.</li>
                     <li>Enter a name for the new scene.</li>
-                    <li>The scene appears under the protein or protein pair in the PySSA Objects Panel.</li>
+                    <li>The scene appears under Scenes under the protein or
+                    protein pair in the PySSA Objects Panel.</li>
                 </ol>
             """,
 
@@ -215,7 +224,8 @@ class MainWindowController:
                 <p>Save Scene:</p>
                 <p>Overwrite the currently active scene with the present viewport state.</p>
                 <ol>
-                    <li>Select the scene you want to update in the PySSA Objects Panel.</li>
+                    <li>Select the scene you want to update under Scenes under
+                    the protein or protein pair in the PySSA Objects Panel.</li>
                     <li>Adjust the viewport to the desired state.</li>
                     <li>Click Save Scene to overwrite the existing scene data.</li>
                 </ol>
@@ -225,15 +235,18 @@ class MainWindowController:
                 <p>Delete Scene:</p>
                 <p>Remove the currently selected scene.</p>
                 <ol>
-                    <li>Select the scene to delete in the PySSA Objects Panel.</li>
+                    <li>Select the scene to delete under Scenes under the
+                    protein or protein pair in the PySSA Objects Panel.</li>
                     <li>Click Delete Scene.</li>
-                    <li>Confirm the deletion. The scene is permanently removed.</li>
+                    <li>The scene is permanently removed.</li>
                 </ol>
                 <p style="color: red;"><b>&#9888; CAUTION:</b></p>
                 <p>This action cannot be undone.</p>
             """,
+          # </editor-fold>
 
-            "viewer_cartoon": """
+          # <editor-fold desc="Representations">
+          "viewer_cartoon": """
                 <p>Cartoon Representation:</p>
                 <p>Switch the selected protein to cartoon representation.</p>
                 <p>Cartoon shows secondary structure elements (helices as ribbons,
@@ -254,7 +267,7 @@ class MainWindowController:
                 <ol>
                     <li>Select a protein, residue, or atom in the PySSA Objects Panel.</li>
                     <li>Click Sticks to apply the representation.</li>
-                    <li>Useful for inspecting active sites or ligand interactions.</li>
+                    <li>Use Show or Hide from the dropdown to toggle visibility.</li>
                 </ol>
             """,
 
@@ -266,6 +279,7 @@ class MainWindowController:
                 <ol>
                     <li>Select a protein or chain.</li>
                     <li>Click Ribbon to apply the representation.</li>
+                    <li>Use Show or Hide from the dropdown to toggle visibility.</li>
                 </ol>
             """,
 
@@ -277,28 +291,31 @@ class MainWindowController:
                 <ol>
                     <li>Select a protein or chain.</li>
                     <li>Click Lines to apply the representation.</li>
+                    <li>Use Show or Hide from the dropdown to toggle visibility.</li>
                 </ol>
             """,
 
             "viewer_spheres": """
                 <p>Spheres Representation:</p>
-                <p>Switch the selected structure to van der Waals spheres representation.</p>
-                <p>Each atom is drawn as a sphere scaled to its van der Waals radius.
+                <p>Switch the selected structure to Van der Waals spheres representation.</p>
+                <p>Each atom is drawn as a sphere scaled to its Van der Waals radius.
                 Useful for visualising molecular surface and packing.</p>
                 <ol>
                     <li>Select a protein or residue.</li>
                     <li>Click Spheres to apply the representation.</li>
+                    <li>Use Show or Hide from the dropdown to toggle visibility.</li>
                 </ol>
             """,
 
             "viewer_dots": """
                 <p>Dots Representation:</p>
                 <p>Switch the selected structure to dots representation.</p>
-                <p>Each atom is shown as a dot cloud at its van der Waals radius.
+                <p>Each atom is shown as a dot cloud at its Van der Waals radius.
                 Gives a lightweight surface-like appearance.</p>
                 <ol>
                     <li>Select a protein or residue.</li>
                     <li>Click Dots to apply the representation.</li>
+                    <li>Use Show or Hide from the dropdown to toggle visibility.</li>
                 </ol>
             """,
 
@@ -310,6 +327,7 @@ class MainWindowController:
                 <ol>
                     <li>Select a protein or chain.</li>
                     <li>Click Mesh to apply the representation.</li>
+                    <li>Use Show or Hide from the dropdown to toggle visibility.</li>
                 </ol>
             """,
 
@@ -321,9 +339,10 @@ class MainWindowController:
                 <ol>
                     <li>Select a protein or chain.</li>
                     <li>Click Surface to apply the representation.</li>
-                    <li>Use Show or Hide to toggle surface visibility.</li>
+                    <li>Use Show or Hide from the dropdown to toggle visibility.</li>
                 </ol>
             """,
+          # </editor-fold>
 
             "viewer_color": """
                 <p>Color:</p>
@@ -503,6 +522,57 @@ class MainWindowController:
                 selected protein or structure.
                 Carbon = grey, Nitrogen = blue, Oxygen = red, Sulphur = yellow.</p>
             """,
+
+          # <editor-fold desc="Color grid buttons">
+            # --- Reds ---
+            "color_red":        "<p>Color: <b>red</b> (#ff0000) &mdash; Click to apply pure red to the selected protein or structure.</p>",
+            "color_tv_red":     "<p>Color: <b>tv_red</b> (#ff3333) &mdash; Click to apply TV red to the selected protein or structure.</p>",
+            "color_salmon":     "<p>Color: <b>salmon</b> (#ff9999) &mdash; Click to apply salmon to the selected protein or structure.</p>",
+            "color_raspberry":  "<p>Color: <b>raspberry</b> (#b24c66) &mdash; Click to apply raspberry to the selected protein or structure.</p>",
+
+            # --- Greens ---
+            "color_green":      "<p>Color: <b>green</b> (#00ff00) &mdash; Click to apply pure green to the selected protein or structure.</p>",
+            "color_tv_green":   "<p>Color: <b>tv_green</b> (#33ff33) &mdash; Click to apply TV green to the selected protein or structure.</p>",
+            "color_palegreen":  "<p>Color: <b>palegreen</b> (#a5e5a5) &mdash; Click to apply pale green to the selected protein or structure.</p>",
+            "color_forest":     "<p>Color: <b>forest</b> (#339933) &mdash; Click to apply forest green to the selected protein or structure.</p>",
+
+            # --- Blues ---
+            "color_blue":       "<p>Color: <b>blue</b> (#0000ff) &mdash; Click to apply pure blue to the selected protein or structure.</p>",
+            "color_tv_blue":    "<p>Color: <b>tv_blue</b> (#4c4cff) &mdash; Click to apply TV blue to the selected protein or structure.</p>",
+            "color_lightblue":  "<p>Color: <b>lightblue</b> (#bfbfff) &mdash; Click to apply light blue to the selected protein or structure.</p>",
+            "color_skyblue":    "<p>Color: <b>skyblue</b> (#337fcc) &mdash; Click to apply sky blue to the selected protein or structure.</p>",
+
+            # --- Yellows ---
+            "color_yellow":     "<p>Color: <b>yellow</b> (#ffff00) &mdash; Click to apply pure yellow to the selected protein or structure.</p>",
+            "color_tv_yellow":  "<p>Color: <b>tv_yellow</b> (#ffff33) &mdash; Click to apply TV yellow to the selected protein or structure.</p>",
+            "color_paleyellow": "<p>Color: <b>paleyellow</b> (#ffff7f) &mdash; Click to apply pale yellow to the selected protein or structure.</p>",
+            "color_sand":       "<p>Color: <b>sand</b> (#b78c4c) &mdash; Click to apply sand to the selected protein or structure.</p>",
+
+            # --- Magentas ---
+            "color_magenta":    "<p>Color: <b>magenta</b> (#ff00ff) &mdash; Click to apply magenta to the selected protein or structure.</p>",
+            "color_purple":     "<p>Color: <b>purple</b> (#bf00bf) &mdash; Click to apply purple to the selected protein or structure.</p>",
+            "color_pink":       "<p>Color: <b>pink</b> (#ffa5d8) &mdash; Click to apply pink to the selected protein or structure.</p>",
+            "color_hotpink":    "<p>Color: <b>hotpink</b> (#ff007f) &mdash; Click to apply hot pink to the selected protein or structure.</p>",
+
+            # --- Cyans ---
+            "color_cyan":       "<p>Color: <b>cyan</b> (#00ffff) &mdash; Click to apply cyan to the selected protein or structure.</p>",
+            "color_aquamarine": "<p>Color: <b>aquamarine</b> (#7fffff) &mdash; Click to apply aquamarine to the selected protein or structure.</p>",
+            "color_palecyan":   "<p>Color: <b>palecyan</b> (#ccffff) &mdash; Click to apply pale cyan to the selected protein or structure.</p>",
+            "color_teal":       "<p>Color: <b>teal</b> (#00bfbf) &mdash; Click to apply teal to the selected protein or structure.</p>",
+
+            # --- Oranges ---
+            "color_orange":      "<p>Color: <b>orange</b> (#ff7f00) &mdash; Click to apply orange to the selected protein or structure.</p>",
+            "color_tv_orange":   "<p>Color: <b>tv_orange</b> (#ff8c26) &mdash; Click to apply TV orange to the selected protein or structure.</p>",
+            "color_lightorange": "<p>Color: <b>lightorange</b> (#ffcc7f) &mdash; Click to apply light orange to the selected protein or structure.</p>",
+            "color_olive":       "<p>Color: <b>olive</b> (#c4b200) &mdash; Click to apply olive to the selected protein or structure.</p>",
+
+            # --- Greys / Black / White ---
+            "color_white":  "<p>Color: <b>white</b> (#ffffff) &mdash; Click to apply white to the selected protein or structure.</p>",
+            "color_grey70": "<p>Color: <b>grey70</b> (#b2b2b2) &mdash; Click to apply grey70 to the selected protein or structure.</p>",
+            "color_grey30": "<p>Color: <b>grey30</b> (#4c4c4c) &mdash; Click to apply grey30 to the selected protein or structure.</p>",
+            "color_black":  "<p>Color: <b>black</b> (#000000) &mdash; Click to apply black to the selected protein or structure.</p>",
+          # </editor-fold>
+
           # </editor-fold>
 
           # <editor-fold desc="Popup panels — Jobs">
@@ -531,7 +601,8 @@ class MainWindowController:
             "expand_all": """
                 <p>Expand all:</p>
                 <p>Click to expand the entire tree in the PySSA Objects Panel,
-                showing all sequences, proteins, protein pairs, and scenes at once.</p>
+                showing all sequences, proteins (with scenes, chains, residues, atoms)
+                and protein pairs (with scenes, proteins, chains, residues, atoms) at once.</p>
             """,
 
             "collapse_all": """
@@ -544,10 +615,11 @@ class MainWindowController:
                 <p>Import a file into the current project:</p>
                 <ol>
                     <li>Click on the Import File button to open the import menu.</li>
-                    <li>Select Sequence to import a FASTA sequence file.</li>
-                    <li>Select Protein to import a PDB protein structure file.</li>
+                    <li>Select Sequence to import a FASTA sequence file or
+                    select Protein to import a PDB protein structure file.</li>
                     <li>Choose the file from your computer in the file dialog.</li>
-                    <li>Click Open. The object appears in the PySSA Objects Panel.</li>
+                    <li>Click Open. The imported sequence or protein appears in
+                    the PySSA Objects Panel.</li>
                 </ol>
             """,
 
@@ -560,15 +632,19 @@ class MainWindowController:
                     <li>Click on Add to save the sequence to the project.</li>
                 </ol>
                 <p style="color: red;"><b>&#9888; CAUTION:</b></p>
-                <p>Multimer sequences must contain a comma between the individual chain sequences
-                (e.g. MKABC,MKLMN).</p>
+                <p>The only characters for the sequence name that can be used are
+                0-9, a-z, A-Z, -, _. Moreover, multimer sequences must contain
+                a comma between the individual chain sequences (e.g. MKABC,MKLMN).
+                </p>
             """,
 
             "export_file": """
-                <p>Export selected objects to files on your computer:</p>
+                <p>Export selected sequence or protein to a file on your computer:</p>
                 <ol>
                     <li>Select one or more sequences or standalone proteins
-                    in the PySSA Objects Panel.</li>
+                    in the PySSA Objects Panel. The selection of >1 sequence or
+                    protein can be done via Ctrl+Click, Shift+Click,
+                    Ctrl+arrow keys up and down and Shift+arrow keys up and down.</li>
                     <li>Click on the Export File button.</li>
                     <li>Choose an output directory in the file dialog.</li>
                     <li>Click Select Folder.</li>
@@ -581,18 +657,20 @@ class MainWindowController:
             """,
 
             "delete_object": """
-                <p>Delete selected objects from the current project:</p>
+                <p>Delete selected sequence, protein or protein pair from
+                the current project:</p>
                 <ol>
-                    <li>Select one or more items in the PySSA Objects Panel
-                    (sequences, proteins, or protein pairs).</li>
+                    <li>Select one sequence, protein or protein pair in the
+                    PySSA Objects Panel.</li>
                     <li>Click on the Delete Object button.</li>
                     <li>Confirm the deletion in the confirmation dialog.</li>
                     <li>The selected objects are permanently removed from the project.</li>
                 </ol>
                 <p style="color: red;"><b>&#9888; CAUTION:</b></p>
                 <p>This action cannot be undone.
-                A standalone protein cannot be deleted while it is still part of a protein pair.
-                Delete the protein pair first, then delete the protein.</p>
+                A standalone protein cannot be deleted while it is still part
+                of a protein pair. Delete the protein pair first, then delete
+                the protein.</p>
             """,
           # </editor-fold>
 
@@ -602,23 +680,24 @@ class MainWindowController:
                 <p>A sequence item stores an amino acid sequence (single-letter code)
                 in the project.</p>
                 <p>What you can do with a sequence:</p>
-                <ol>
-                    <li>Select it and run Prediction to generate a 3D protein structure.</li>
+                <ul>
                     <li>Select it and click Export File to save it as a .fasta file.</li>
+                    <li>Select it and run Prediction to generate a 3D protein structure.</li>
                     <li>Select it and click Delete Object to remove it from the project.</li>
-                </ol>
+                </ul>
             """,
 
             "protein_item": """
                 <p>Protein:</p>
                 <p>A protein item stores a 3D protein structure (PDB data) in the project.</p>
                 <p>What you can do with a protein:</p>
-                <ol>
-                    <li>Select it and run Analysis to compare it with another protein.</li>
-                    <li>Select it and use Image to render a viewport image.</li>
+                <ul>
                     <li>Select it and click Export File to save it as a .pdb file.</li>
+                    <li>Select it and run Analysis to compare it with another protein.</li>
+                    <li>Select it and load it into the PyMOL Viewer.
+                    After that, modify the protein and use Image to render a viewport image.</li>
                     <li>Select it and click Delete Object to remove it from the project.</li>
-                </ol>
+                </ul>
                 <p style="color: red;"><b>&#9888; CAUTION:</b></p>
                 <p>A protein that is part of a protein pair cannot be deleted independently.
                 Delete the protein pair first.</p>
@@ -628,23 +707,27 @@ class MainWindowController:
                 <p>Protein pair:</p>
                 <p>A protein pair links two proteins that have been compared via distance analysis.</p>
                 <p>What you can do with a protein pair:</p>
-                <ol>
+                <ul>
                     <li>Select it and click Results to view the analysis summary.</li>
-                    <li>Expand it to see the two child proteins and their scenes.</li>
+                    <li>Select it and load it into the PyMOL Viewer.
+                    After that, modify the protein pair and use Image to render
+                    a viewport image.</li>
                     <li>Select it and click Delete Object to remove the pair
                     (the underlying proteins are kept).</li>
-                </ol>
+                </ul>
             """,
 
             "scene_item": """
                 <p>Scene:</p>
                 <p>A scene stores a saved PyMOL viewport state (camera position,
-                representation, colours) for a specific protein or protein pair.</p>
+                representation, colors) for a specific protein or protein pair.</p>
                 <p>What you can do with a scene:</p>
-                <ol>
+                <ul>
                     <li>Select it to load the saved viewport state in PyMOL.</li>
                     <li>Use the viewer toolbar to resave the current viewport as a new scene.</li>
-                </ol>
+                    <li>Modify the scene and add a new scene.</li>
+                    <li>Select a scene and delete it.</li>
+                </ul>
             """,
 
           # <editor-fold desc="PySSA Objects Panel tree — section nodes">
@@ -1168,11 +1251,11 @@ class MainWindowController:
         _panel = self._main_window.pyssa_objects_panel
         _toolbar = _panel.get_toolbar()
         _btn_map = [
-            (_panel.expand_all,        "expand_all"),
-            (_panel.collapse_all,      "collapse_all"),
+            (_panel.expand_all, "expand_all"),
+            (_panel.collapse_all, "collapse_all"),
             (_panel.import_file_action, "import_file"),
             (_panel.add_sequence_action, "add_sequence"),
-            (_panel.export_file_action,  "export_file"),
+            (_panel.export_file_action, "export_file"),
             (_panel.delete_object_action, "delete_object"),
         ]
         for action_wrapper, obj_name in _btn_map:
@@ -1183,7 +1266,7 @@ class MainWindowController:
                 logger.info(f"Installed hover help on Objects Panel button: {obj_name}")
 
         # Connect the tree view hover signals for item-level help text.
-        # setMouseTracking ensures Enter events fire when cursor moves over items
+        # setMouseTracking ensures Enter events fire when the cursor moves over items
         # even without clicking.
         _tree = _panel.tree_view
         _tree.setMouseTracking(True)
@@ -1192,14 +1275,14 @@ class MainWindowController:
         logger.info("Connected tree view hover help signals.")
 
         # Install hover help on the PyMOL viewport widget.
-        _mw = self._main_window
-        _mw.pymolwidget.setObjectName("pymolwidget")
-        _mw.pymolwidget.installEventFilter(self.help_filter)
+        _main_window = self._main_window
+        _main_window.pymolwidget.setObjectName("pymolwidget")
+        _main_window.pymolwidget.installEventFilter(self.help_filter)
 
         # Install hover help on all viewer toolbar buttons.
         # NOTE: The actual visible toolbar is inside tool_window_layout, not
         # main_window.viewer_toolbar (which is never added to any layout).
-        _vt = _mw.tool_window_layout.viewer_toolbar
+        _viewer_toolbar = _main_window.tool_window_layout.viewer_toolbar
         _viewer_btn_map = [
             ("open_session",    "viewer_open_session"),
             ("create_scene",    "viewer_create_scene"),
@@ -1219,9 +1302,9 @@ class MainWindowController:
             ("notifications",   "viewer_notifications"),
         ]
         for action_key, obj_name in _viewer_btn_map:
-            action_wrapper = _mw.viewer_toolbar_actions.get(action_key)
+            action_wrapper = _main_window.viewer_toolbar_actions.get(action_key)
             if action_wrapper is not None:
-                btn = _vt.get_tool_button_for_action(action_wrapper)
+                btn = _viewer_toolbar.get_tool_button_for_action(action_wrapper)
                 if btn is not None:
                     btn.setObjectName(obj_name)
                     btn.installEventFilter(self.help_filter)
@@ -1229,14 +1312,14 @@ class MainWindowController:
 
         # Connect hovered signals for all 8 representation show/hide popup menus.
         _repr_menus = [
-            _mw.cartoon_show_hide_menu,
-            _mw.sticks_show_hide_menu,
-            _mw.ribbon_show_hide_menu,
-            _mw.lines_show_hide_menu,
-            _mw.spheres_show_hide_menu,
-            _mw.dots_show_hide_menu,
-            _mw.mesh_show_hide_menu,
-            _mw.surface_show_hide_menu,
+            _main_window.cartoon_show_hide_menu,
+            _main_window.sticks_show_hide_menu,
+            _main_window.ribbon_show_hide_menu,
+            _main_window.lines_show_hide_menu,
+            _main_window.spheres_show_hide_menu,
+            _main_window.dots_show_hide_menu,
+            _main_window.mesh_show_hide_menu,
+            _main_window.surface_show_hide_menu,
         ]
         for _menu in _repr_menus:
             _menu.hovered.connect(self.help_filter.handle_menu_action_hovered)
@@ -1244,23 +1327,27 @@ class MainWindowController:
         logger.info("Connected hover help for all representation show/hide menus.")
 
         # Connect the Clean popup menu.
-        _mw.clean_solvent_organic_menu.hovered.connect(self.help_filter.handle_menu_action_hovered)
-        _mw.clean_solvent_organic_menu.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
+        _main_window.clean_solvent_organic_menu.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        _main_window.clean_solvent_organic_menu.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
 
         # Install event filters on the Color popup panel's interactive widgets.
-        _cc = _mw.color_config
+        _color_config = _main_window.color_config
         for _btn in (
-            _cc.btn_white_bg,
-            _cc.btn_grey_bg,
-            _cc.btn_black_bg,
-            _cc.btn_color_by_elements,
+            _color_config.btn_white_bg,
+            _color_config.btn_grey_bg,
+            _color_config.btn_black_bg,
+            _color_config.btn_color_by_elements,
         ):
             _btn.installEventFilter(self.help_filter)
-        logger.info("Installed hover help on color config buttons.")
+
+        # Install event filters on all 32 color grid buttons.
+        for _btn in _main_window.color_grid.get_all_color_buttons().values():
+            _btn.installEventFilter(self.help_filter)
+        logger.info("Installed hover help on all color config and color grid buttons.")
 
         # Install event filters on the Active Jobs and Completed Jobs panels.
-        _mw.active_jobs.installEventFilter(self.help_filter)
-        _mw.complete_jobs.installEventFilter(self.help_filter)
+        _main_window.active_jobs.installEventFilter(self.help_filter)
+        _main_window.complete_jobs.installEventFilter(self.help_filter)
         logger.info("Installed hover help on job panels.")
 
         # Connect menu hovered signal to show help for menu items

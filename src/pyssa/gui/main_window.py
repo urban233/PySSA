@@ -83,7 +83,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # </editor-fold>
 
     # <editor-fold desc="Create Actions">
-    # --- Project Actions ---
+    # <editor-fold desc="Project Actions">
     self.action_new_project = QtGui.QAction("New", self)
     self.action_new_project.setObjectName("action_new_project")
     self.action_open_project = QtGui.QAction("Open", self)
@@ -99,41 +99,48 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.action_close_project = QtGui.QAction("Close", self)
     self.action_close_project.setObjectName("action_close_project")
     self.action_exit_application = QtGui.QAction("Exit Application", self)
+    # </editor-fold>
 
-    # --- Prediction Actions ---
+    # <editor-fold desc="Prediction Actions">
     self.action_predict_monomer = QtGui.QAction("Monomer", self)
     self.action_predict_monomer.setObjectName("action_predict_monomer")
     self.action_predict_multimer = QtGui.QAction("Multimer", self)
     self.action_predict_multimer.setObjectName("action_predict_multimer")
+    # </editor-fold>
 
-    # --- Analysis Actions ---
+    # <editor-fold desc="Analysis Actions">
     self.action_distance_analysis = QtGui.QAction("Distance", self)
     self.action_distance_analysis.setObjectName("action_distance_analysis")
+    # </editor-fold>
 
-    # --- Results Actions ---
+    # <editor-fold desc="Results Actions">
     self.action_results_summary = QtGui.QAction("Summary", self)
     self.action_results_summary.setObjectName("action_results_summary")
+    # </editor-fold>
 
-    # --- Image Actions ---
+    # <editor-fold desc="Image Actions">
     self.action_preview_image = QtGui.QAction("Preview", self)
     self.action_preview_image.setObjectName("action_preview_image")
     self.action_ray_tracing_image = QtGui.QAction("Ray-Tracing", self)
     self.action_ray_tracing_image.setObjectName("action_ray_tracing_image")
     self.action_simple_image = QtGui.QAction("Simple", self)
     self.action_simple_image.setObjectName("action_simple_image")
+    # </editor-fold>
 
-    # --- Hotspots Actions ---
+    # <editor-fold desc="Hotspots Actions">
     self.action_protein_regions = QtGui.QAction("Protein Regions", self)
     self.action_protein_regions.setObjectName("action_protein_regions")
     self.action_protein_regions.setCheckable(False)
+    # </editor-fold>
 
-    # --- Settings Actions ---
+    # <editor-fold desc="Settings Actions">
     self.action_edit_settings = QtGui.QAction("Edit", self)
     self.action_edit_settings.setObjectName("action_edit_settings")
     self.action_restore_settings = QtGui.QAction("Restore", self)
     self.action_restore_settings.setObjectName("action_restore_settings")
+    # </editor-fold>
 
-    # --- About/Help Actions ---
+    # <editor-fold desc="About/Help Actions">
     self.action_documentation = QtGui.QAction("Documentation", self)
     self.action_documentation.setObjectName("action_documentation")
     self.action_get_demo_projects = QtGui.QAction("Get Demo Projects", self)
@@ -144,6 +151,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.action_clear_logs.setObjectName("action_clear_logs")
     self.action_about = QtGui.QAction("About", self)
     self.action_about.setObjectName("action_about")
+    # </editor-fold>
     # </editor-fold>
 
     # <editor-fold desc="Set up status bar">
@@ -337,6 +345,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.clean_solvent_organic_menu.addAction(self.clean_organic_action)
     # </editor-fold>
 
+    # <editor-fold desc="Color Grid">
     self.color_grid = color_grid.PyMOLColorGrid()
     self.color_config = psa_color_config.PSAColorConfig(self.color_grid)
     self.color_config.btn_white_bg.setObjectName("popup_color_bg_white")
@@ -345,6 +354,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.color_config.btn_color_by_elements.setObjectName("popup_color_by_elements")
     self.color_grid_menu = dropdown_menu.DropDownMenu()
     self.color_grid_action = QtWidgets.QWidgetAction(None)
+    # </editor-fold>
 
     # <editor-fold desc="Jobs">
     self.active_jobs = job_panel.JobPanel()
