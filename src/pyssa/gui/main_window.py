@@ -190,8 +190,14 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
       "surface": quick_access_bar_action.QuickAccessBarAction(
         "Surface", "left", 8, None, IconManager.instance().get_icon(IconManager.Icons.SURFACE_REPR)
       ),
+      "hide_all": quick_access_bar_action.QuickAccessBarAction(
+        "Hide All Representations", "left", 8, None, IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF)
+      ),
       "color": quick_access_bar_action.QuickAccessBarAction(
         "Color", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.PALETTE)
+      ),
+      "selection": quick_access_bar_action.QuickAccessBarAction(
+        "Selection", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.HIGHLIGHT_MOUSE_CURSOR)
       ),
       "clean": quick_access_bar_action.QuickAccessBarAction(
         "Clean", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.MOP)
@@ -285,6 +291,23 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.surface_show_hide_menu.addAction(self.surface_show_action)
     self.surface_show_hide_menu.addAction(self.surface_hide_action)
     # </editor-fold>
+
+    # <editor-fold desc="Selection">
+    self.selection_show_hide_menu = dropdown_menu.DropDownMenu()
+    self.selection_show_action = QtGui.QAction(
+      IconManager.instance().get_icon(IconManager.Icons.VISIBILITY), "Show"
+    )
+    self.selection_hide_action = QtGui.QAction(
+      IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF), "Hide"
+    )
+    self.selection_clear_action = QtGui.QAction(
+      IconManager.instance().get_icon(IconManager.Icons.DELETE), "Clear"
+    )
+    self.selection_show_hide_menu.addAction(self.selection_show_action)
+    self.selection_show_hide_menu.addAction(self.selection_hide_action)
+    self.selection_show_hide_menu.addAction(self.selection_clear_action)
+    # </editor-fold>
+
     # <editor-fold desc="Clean">
     self.clean_solvent_organic_menu = dropdown_menu.DropDownMenu()
     self.clean_solvent_action = QtGui.QAction(

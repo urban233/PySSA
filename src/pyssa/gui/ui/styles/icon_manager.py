@@ -145,6 +145,7 @@ class IconManager:
         PANORAMA_WIDE_ANGLE = "PANORAMA_WIDE_ANGLE"
         MOP = "MOP"
         LOGO = "LOGO"
+        HIGHLIGHT_MOUSE_CURSOR = "HIGHLIGHT_MOUSE_CURSOR"
 
     # <editor-fold desc="Class attributes">
     _instance = None

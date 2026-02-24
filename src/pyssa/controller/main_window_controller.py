@@ -42,7 +42,7 @@ from src.pyssa.internal.pymol.pml_worker import PmlWorker
 from src.pyssa.internal.pymol.pml_enums import PmlCommand
 from src.pyssa.io_pyssa.db_pyssa.write_queue import WriteOperation, OperationType
 from src.pyssa.io_pyssa import bio_data, filesystem_io
-from src.pyssa.internal.data_structures import protein
+from src.pyssa.internal.data_structures import protein, project
 from src.pyssa.util import enums
 
 from src.pyssa.gui.qt import QtWidgets
@@ -307,8 +307,11 @@ class MainWindowController:
         )
         self._main_window.surface_show_action.triggered.connect(self.__slot_show_as_surface)
         self._main_window.surface_hide_action.triggered.connect(self.__slot_hide_surface)
+        self._main_window.viewer_toolbar_actions.get("hide_all").get_action().triggered.connect(
+            self.__slot_hide_all_representations
+        )
         # # </editor-fold>
-        # # <editor-fold desc="Color slots">
+        # <editor-fold desc="Color slots">
         self._main_window.viewer_toolbar_actions.get("color").get_action().triggered.connect(
             self.__slot_display_color_grid
         )
@@ -417,18 +420,15 @@ class MainWindowController:
         self._main_window.color_config.btn_black_bg.clicked.connect(
             lambda: self.__slot_apply_bg_color("black")
         )
-        # # </editor-fold>
-        # # <editor-fold desc="Selection slots">
-        # self._main_window.show_sele_rb_panel_item.get_action().triggered.connect(
-        #     self.__slot_show_sele
-        # )
-        # self._main_window.hide_sele_rb_panel_item.get_action().triggered.connect(
-        #     self.__slot_hide_sele
-        # )
-        # self._main_window.clear_sele_rb_panel_item.get_action().triggered.connect(
-        #     self.__slot_clear_sele
-        # )
-        # # </editor-fold>
+        # </editor-fold>
+        # <editor-fold desc="Selection slots">
+        self._main_window.viewer_toolbar_actions.get("selection").get_action().triggered.connect(
+            self.__slot_display_selection_options
+        )
+        self._main_window.selection_show_action.triggered.connect(self.__slot_show_sele)
+        self._main_window.selection_hide_action.triggered.connect(self.__slot_hide_sele)
+        self._main_window.selection_clear_action.triggered.connect(self.__slot_clear_sele)
+        # </editor-fold>
         self._main_window.viewer_toolbar_actions.get("clean").get_action().triggered.connect(
             self.__slot_display_clean_options
         )
@@ -798,94 +798,108 @@ class MainWindowController:
         passed selection snapshot to unconditionally set every relevant widget
         property (e.g. enabling predicting monomer only if monomers exist and/or are selected).
         """
-        has_project = self._app_state.has_open_project()
-        project = self._app_state.project
+        # A hot project is the project that is currently loaded and shown to the user.
+        has_hot_project: bool = self._app_state.has_open_project()
+        tmp_project: "project.Project" = self._app_state.project
 
         # Derived booleans from detailed project data.
-        has_sequences = has_project and len(project.sequences) > 0
-        has_monomer_sequences_in_project = has_sequences and any("," not in s for s in project.sequences)
-        has_multimer_sequences_in_project = has_sequences and any("," in s for s in project.sequences)
+        has_sequences: bool = has_hot_project and len(tmp_project.sequences) > 0
+        has_monomer_sequences_in_project: bool = has_sequences and any("," not in s for s in tmp_project.sequences)
+        has_multimer_sequences_in_project: bool = has_sequences and any("," in s for s in tmp_project.sequences)
 
-        has_proteins = has_project and len(project.proteins) > 0
-        has_protein_pairs = has_project and len(project.protein_pairs) > 0
-        has_any_objects = has_sequences or has_proteins or has_protein_pairs
-        has_running_jobs = len(self._app_state._cold_dbs) > 0
+        has_proteins: bool = has_hot_project and len(tmp_project.proteins) > 0
+        has_protein_pairs: bool = has_hot_project and len(tmp_project.protein_pairs) > 0
+        has_any_objects: bool = has_sequences or has_proteins or has_protein_pairs
+        has_running_jobs: bool = self._app_state.job_scheduler.has_running_jobs()
         if self._user_pymol.get_currently_loaded_object() is None:
-            has_loaded_session = False
+            has_loaded_session: bool = False
         else:
-            has_loaded_session = True
-
-        # -- Project menu actions ------------------------------------------
-        # Actions that replace or manage the active project context are always available.
-        self._main_window.action_new_project.setEnabled(True)
-        self._main_window.action_open_project.setEnabled(True)
-        self._main_window.action_use_project.setEnabled(True)
-        self._main_window.action_delete_project.setEnabled(True)
-        self._main_window.action_import_project.setEnabled(True)
-
-        # Export and close specifically act upon the *current* project.
-        self._main_window.action_export_project.setEnabled(has_project)
-        self._main_window.action_close_project.setEnabled(has_project)
-        # action_exit_application is always enabled.
+            has_loaded_session: bool = True
 
         # -- Selection Snapshot context ------------------------------------
-        has_active_monomer_selection = snapshot.has_monomer_sequences if snapshot else False
-        has_active_multimer_selection = snapshot.has_multimer_sequences if snapshot else False
+        has_active_monomer_sequence_selection = snapshot.has_monomer_sequences if snapshot else False
+        has_active_multimer_sequence_selection = snapshot.has_multimer_sequences if snapshot else False
         has_active_protein_selection = len(snapshot.distinct_proteins) > 0 if snapshot else False
         has_active_pair_selection = len(snapshot.raw_protein_pairs) > 0 if snapshot else False
         has_active_pair_child_selection = len(snapshot.raw_protein_pair_children) > 0 if snapshot else False
         has_active_scene_selection = len(snapshot.raw_scenes) > 0 if snapshot else False
 
-        # -- Top-level menus -----------------------------------------------
-        self._main_window.menuPrediction.setEnabled(has_project)
         # Prediction needs an input sequence to execute. Prefer active selection, fallback to project existence.
-        can_predict_monomer = has_active_monomer_selection or has_monomer_sequences_in_project
-        can_predict_multimer = has_active_multimer_selection or has_multimer_sequences_in_project
+        can_predict_monomer = has_active_monomer_sequence_selection or has_monomer_sequences_in_project
+        can_predict_multimer = has_active_multimer_sequence_selection or has_multimer_sequences_in_project
+
+        # Distance analysis operations computationally require 3D structure models.
+        can_analyze = has_proteins
+
+        # <editor-fold desc="Project menu">
+        # Actions that replace or manage the active project context are always available.
+        self._main_window.action_new_project.setEnabled(not has_hot_project)
+        self._main_window.action_open_project.setEnabled(not has_hot_project)
+        self._main_window.action_use_project.setEnabled(has_hot_project)
+        self._main_window.action_delete_project.setEnabled(not has_hot_project)
+        self._main_window.action_import_project.setEnabled(not has_hot_project)
+        # Export and close specifically act upon the *current* project.
+        self._main_window.action_export_project.setEnabled(has_hot_project)
+        self._main_window.action_close_project.setEnabled(has_hot_project)
+        self._main_window.action_exit_application.setEnabled(True)
+        # </editor-fold>
+
+        # <editor-fold desc="Prediction menu">
+        self._main_window.menuPrediction.setEnabled(has_hot_project and can_predict_monomer or can_predict_multimer)
         self._main_window.action_predict_monomer.setEnabled(can_predict_monomer)
         self._main_window.action_predict_multimer.setEnabled(can_predict_multimer)
+        # </editor-fold>
 
-        self._main_window.menuAnalysis.setEnabled(has_project)
-        # Distance analysis operations computationally require 3D structure models.
-        can_analyze = has_active_protein_selection or has_active_pair_selection or (has_proteins or has_protein_pairs)
+        # <editor-fold desc="Distance analysis menu">
+        self._main_window.menuAnalysis.setEnabled(has_hot_project and can_analyze)
         self._main_window.action_distance_analysis.setEnabled(can_analyze)
+        # </editor-fold>
 
-        self._main_window.menuResults.setEnabled(has_project)
+        # <editor-fold desc="Results menu">
+        self._main_window.menuResults.setEnabled(has_hot_project and has_protein_pairs)
         # Results summaries aggregate data from protein pair analysis/predictions.
-        self._main_window.action_results_summary.setEnabled(has_active_pair_selection or has_active_pair_child_selection or (has_protein_pairs and not snapshot))
+        self._main_window.action_results_summary.setEnabled(has_active_pair_selection or has_active_pair_child_selection)
+        # </editor-fold>
 
-        self._main_window.menuImage.setEnabled(has_project)
-        # Rendering commands mathematically require actual PyMOL coordinates.
-        can_image = has_active_protein_selection or has_active_pair_child_selection or (has_proteins and not snapshot)
-        self._main_window.action_preview_image.setEnabled(can_image)
-        self._main_window.action_ray_tracing_image.setEnabled(can_image)
-        self._main_window.action_simple_image.setEnabled(can_image)
+        # <editor-fold desc="Image menu">
+        self._main_window.menuImage.setEnabled(has_hot_project and has_loaded_session)
+        self._main_window.action_preview_image.setEnabled(has_hot_project and has_loaded_session)
+        self._main_window.action_ray_tracing_image.setEnabled(has_hot_project and has_loaded_session)
+        self._main_window.action_simple_image.setEnabled(has_hot_project and has_loaded_session)
+        # </editor-fold>
 
-        self._main_window.menuHotspots.setEnabled(has_project)
-        # Protein region generation acts upon 3D coordinates.
-        self._main_window.action_protein_regions.setEnabled(can_image)
+        # <editor-fold desc="Hotspots menu">
+        self._main_window.menuHotspots.setEnabled(has_hot_project and has_loaded_session)
+        # Think about using also a selection because this is nearly mandatory
+        # for the feature to truly work.
+        self._main_window.action_protein_regions.setEnabled(has_hot_project and has_loaded_session)
+        # </editor-fold>
+
         # Settings and Help menus are always enabled.
 
-        # -- Viewer toolbar actions ----------------------------------------
-        # Base scene and session commands act on the project environment.
+        # <editor-fold desc="Session management">
         toolbar_action_open_session = self._main_window.viewer_toolbar_actions.get("open_session")
-        if toolbar_action_open_session: toolbar_action_open_session.get_action().setEnabled(has_project)
-
-        toolbar_action_create_scene = self._main_window.viewer_toolbar_actions.get("create_scene")
-        if toolbar_action_create_scene: toolbar_action_create_scene.get_action().setEnabled(
-            has_project and can_image and has_loaded_session
+        if toolbar_action_open_session: toolbar_action_open_session.get_action().setEnabled(
+            has_hot_project and
+            (has_proteins or has_protein_pairs) and
+            (has_active_protein_selection or has_active_pair_selection or has_active_pair_child_selection)
         )
+        # </editor-fold>
+
+        # <editor-fold desc="Scene management">
+        toolbar_action_create_scene = self._main_window.viewer_toolbar_actions.get("create_scene")
+        if toolbar_action_create_scene: toolbar_action_create_scene.get_action().setEnabled(has_loaded_session)
 
         toolbar_action_save_scene = self._main_window.viewer_toolbar_actions.get("save_scene")
-        if toolbar_action_save_scene: toolbar_action_save_scene.get_action().setEnabled(
-            has_active_scene_selection and has_loaded_session
-        )
+        if toolbar_action_save_scene: toolbar_action_save_scene.get_action().setEnabled(has_loaded_session)
 
         toolbar_action_delete_scene = self._main_window.viewer_toolbar_actions.get("delete_scene")
         if toolbar_action_delete_scene: toolbar_action_delete_scene.get_action().setEnabled(
-            has_active_scene_selection and has_loaded_session
+            has_loaded_session and has_active_scene_selection
         )
+        # </editor-fold>
 
-        # PyMOL representation tools need a 3D structural model in the wrapper.
+        # <editor-fold desc="PyMOL representation">
         _protein_level_toolbar_keys = [
             "cartoon", "sticks", "ribbon", "lines", "spheres", "dots",
             "mesh", "surface", "color",
@@ -893,23 +907,50 @@ class MainWindowController:
         for key in _protein_level_toolbar_keys:
             toolbar_action = self._main_window.viewer_toolbar_actions.get(key)
             if toolbar_action is not None:
-                toolbar_action.get_action().setEnabled(can_image)
+                toolbar_action.get_action().setEnabled(
+                    has_loaded_session and (
+                            has_active_protein_selection or has_active_pair_selection or has_active_pair_child_selection
+                    )
+                )
+        # </editor-fold>
 
-        # General viewer state indicators are active.
+        # <editor-fold desc="Color">
+        toolbar_action_color = self._main_window.viewer_toolbar_actions.get("color")
+        if toolbar_action_color: toolbar_action_color.get_action().setEnabled(
+            has_loaded_session and (
+                    has_active_protein_selection or has_active_pair_selection or has_active_pair_child_selection
+            )
+        )
+        # </editor-fold>
+
+        # <editor-fold desc="Clean protein">
+        toolbar_action_clean = self._main_window.viewer_toolbar_actions.get("clean")
+        if toolbar_action_clean: toolbar_action_clean.get_action().setEnabled(
+            has_loaded_session and has_active_protein_selection
+        )
+        # </editor-fold>
+
+        # <editor-fold desc="Job management">
         _status_level_toolbar_keys = ["running_jobs", "notifications"]
         for key in _status_level_toolbar_keys:
             toolbar_action = self._main_window.viewer_toolbar_actions.get(key)
             if toolbar_action is not None:
                 toolbar_action.get_action().setEnabled(True)
+        # </editor-fold>
 
-        # -- PySSA Objects Panel toolbar -----------------------------------
+        # <editor-fold desc="PySSA Objects Panel toolbar">
         panel = self._main_window.pyssa_objects_panel
         # Importing sequences or structural files requires an open project.
-        panel.import_file_action.get_action().setEnabled(has_project)
-        panel.add_sequence_action.get_action().setEnabled(has_project)
+        panel.import_file_action.get_action().setEnabled(has_hot_project)
+        panel.add_sequence_action.get_action().setEnabled(has_hot_project)
         # Exporting or deleting explicitly requires at least one object to export/delete.
-        panel.export_file_action.get_action().setEnabled(has_any_objects)
-        panel.delete_object_action.get_action().setEnabled(has_any_objects)
+        panel.export_file_action.get_action().setEnabled(
+            has_active_monomer_sequence_selection or has_active_multimer_sequence_selection or has_active_protein_selection
+        )
+        panel.delete_object_action.get_action().setEnabled(
+            has_active_monomer_sequence_selection or has_active_multimer_sequence_selection or has_active_protein_selection or has_active_pair_selection
+        )
+        # </editor-fold>
 
         # -- First-pass model binding --------------------------------------
         if self._app_state.is_first_pass():
@@ -921,9 +962,9 @@ class MainWindowController:
         self._tree_context_menu.configure(snapshot)
 
         # -- Window title --------------------------------------------------
-        if has_project:
+        if has_hot_project:
             self._main_window.setWindowTitle(
-                f"PySSA \u2014 {project.get_project_name()}"
+                f"PySSA \u2014 {tmp_project.get_project_name()}"
             )
         else:
             self._main_window.setWindowTitle("PySSA")
@@ -1912,6 +1953,12 @@ class MainWindowController:
         self._user_pymol.get_cmd_module().hide("surface", "sele")
 
     # </editor-fold>
+
+    def __slot_hide_all_representations(self):
+        tmp_reprs = ["cartoon", "sticks", "ribbon", "lines", "spheres", "dots", "mesh", "surface"]
+        for tmp_repr in tmp_reprs:
+            self._user_pymol.get_cmd_module().hide(tmp_repr, "sele")
+
     # </editor-fold>
 
     # <editor-fold desc="Color slots">
@@ -1953,6 +2000,14 @@ class MainWindowController:
         self._trigger_auto_save()
 
     # </editor-fold>
+
+    def __slot_display_selection_options(self):
+        try:
+            self._main_window.selection_show_hide_menu.exec(
+                self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("selection"))
+            )
+        except Exception as e:
+            logger.error(e.__str__())
 
     def __slot_display_clean_options(self):
         try:
