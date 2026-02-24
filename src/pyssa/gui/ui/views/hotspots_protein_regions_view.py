@@ -58,3 +58,6 @@ class HotspotsProteinRegionsView(QtWidgets.QDialog):
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
+    # Set objectName for hover help
+    self.setObjectName("HotspotsProteinRegionsDialog")
+    self.setToolTip("")

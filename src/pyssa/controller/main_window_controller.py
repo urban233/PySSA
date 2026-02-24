@@ -163,7 +163,7 @@ class MainWindowController:
 
         help_map = {
             "pyssa_objects_panel": """
-                <h3>PySSA Objects Panel:</h3>
+                <p>PySSA Objects Panel:</p>
                 <p>Displays all PySSA objects in the current project.</p>
             """,
 
@@ -171,7 +171,7 @@ class MainWindowController:
           # <editor-fold desc="Project">
           # Create Project Dialog
             "Dialog": """
-                <h3>Create a new project:</h3>
+                <p>Create a new project:</p>
                 <ol>
                     <li>Enter a new project name.</li>
                     <li>Click on Create.</li>
@@ -183,14 +183,13 @@ class MainWindowController:
 
             # Open Project Dialog
             "OpenProjectDialog": """
-                <h3>Open a project from your workspace:</h3>
+                <p>Open a project from your workspace:</p>
                 <ol>
                     <li>Enter a new project name.</li>
                     <li><i>Optional:</i> Check the text box under Selected Project to see if the selected name is displayed.</li>
                     <li>Click on Open.</li>
                 </ol>
-                <p><b>💡 Tip:</b></p>
-                <p><b>Search for a project name in your workspace:</b></p>
+                <p>Search for a project name in your workspace:</p>
                 <ol>
                     <li>Type part of the project name in the first textbox.</li>
                     <li>Verify if the text box under 'Selected Project' displays the correct project.</li>
@@ -200,7 +199,7 @@ class MainWindowController:
 
             # Use Project Dialog
             "UseProjectDialog": """
-                        <h3>Use a project from your workspace:</h3>
+                        <p>Use a project from your workspace:</p>
                         <ol>
                             <li>Select a project from the list.</li>
                             <li>Choose an existing project.</li>
@@ -223,14 +222,89 @@ class MainWindowController:
 
             # Delete Project Dialog
             "DeleteProjectDialog": """
-                <h3>Delete a project from your workspace:</h3>
+                <p>Delete a project from your workspace:</p>
                 <ol>
                     <li>Click on one of the projects from the list.</li>
                     <li><i>Optional:</i> Check the text box under 'Selected Project' to confirm that the selected name is displayed.</li>
                     <li>Click on Delete.</li>
                 </ol>
-                <p><b>📝 Note:</b></p>
-                <p>A warning message will appear every time a project is deleted.</p>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Prediction">
+          # Predict Protein Dialog
+            "PredictProteinDialog": """
+                <p>Protein Structure Prediction dialog:</p>
+                <ol>
+                    <li>Review the pre-selected sequences in the sequence list on the left.</li>
+                    <li><i>Optional:</i> Uncheck sequences you do not want to include
+                    in this prediction run.</li>
+                    <li>Click on <b>Start Prediction</b> to submit the job.</li>
+                    <li>Wait until the prediction finishes.
+                    You can monitor progress in the toolbar (running jobs indicator).</li>
+                    <li>Once finished, the predicted structure appears in the
+                    PySSA Objects Panel automatically.</li>
+                </ol>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Analysis">
+          # Distance Analysis Dialog
+            "DistanceAnalysisDialog": """
+                <p>Distance Analysis dialog:</p>
+                <ol>
+                    <li>Select the protein pair you want to analyse from the drop-down list.</li>
+                    <li>Set the number of <b>Cycles</b> for the structural alignment
+                    (higher = more accurate, slower).</li>
+                    <li>Set the <b>Cutoff</b> value (&Aring;) to define which C-alpha distances
+                    are considered significant.</li>
+                    <li>Click on <b>Start Analysis</b> to submit the job.</li>
+                    <li>Wait until the progress indicator disappears.</li>
+                    <li>Open <b>Results &rarr; Summary</b> to inspect the results.</li>
+                </ol>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Results">
+          # Results Summary Dialog
+            "ResultsSummaryDialog": """
+                <p>Results Summary dialog:</p>
+                <ol>
+                    <li>Review the RMSD value and the number of aligned residues at the top.</li>
+                    <li><i>Optional:</i> Click <b>View Plots</b> to open the distance histogram
+                    in a separate window.</li>
+                    <li><i>Optional:</i> Click <b>Export Data</b> to save all distance values
+                    to a CSV file on your computer.</li>
+                </ol>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Hotspots">
+          # Hotspots Protein Regions Dialog
+            "HotspotsProteinRegionsDialog": """
+                <p>Protein Regions dialog:</p>
+                <ol>
+                    <li>Select a protein or residues in the PyMOL viewport.</li>
+                    <li>Use the controls in the dialog to define the region of interest.</li>
+                    <li>Click <b>Apply</b> to highlight the region as sticks with atomic colours.</li>
+                    <li>Click <b>Cancel</b> to close the dialog without applying changes.</li>
+                </ol>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Settings">
+          # Settings Dialog
+            "SettingsDialog": """
+                <p>Settings dialog:</p>
+                <ol>
+                    <li>Enter the <b>ColabFold server address</b> to connect to the
+                    prediction server (e.g. http://colabfold-server:8080).</li>
+                    <li>Set the desired <b>Cycles</b> and <b>Cutoff</b> values that will be
+                    used as the default for new distance analyses.</li>
+                    <li>Choose the preferred <b>image renderer</b>, <b>ray trace mode</b>,
+                    and <b>ray texture</b> for image exports.</li>
+                    <li>Click <b>OK</b> to save all changes.</li>
+                </ol>
             """,
           # </editor-fold>
 
@@ -240,27 +314,27 @@ class MainWindowController:
           # <editor-fold desc="Menu items">
           # <editor-fold desc="Project">
           "action_new_project": """
-                <h3>Create a new project in your workspace:</h3>
+                <p>Create a new project in your workspace:</p>
                 <p>Click to open the Create Project dialog.</p>
             """,
 
             "action_open_project": """
-                <h3>Open an existing project from your workspace:</h3>
+                <p>Open an existing project from your workspace:</p>
                 <p>Click to open the Open Project dialog.</p>
             """,
 
             "action_use_project": """
-                        <h3>Use an existing project from your workspace:</h3>
+                        <p>Use an existing project from your workspace:</p>
                         <p>Click to open the Use Project dialog.</p>
             """,
 
             "action_delete_project": """
-                <h3>Delete a project from your workspace:</h3>
+                <p>Delete a project from your workspace:</p>
                 <p>Click to open the Delete Project dialog.</p>
             """,
 
             "action_import_project": """
-                <h3>Import a project into your workspace:</h3>
+                <p>Import a project into your workspace:</p>
                 <ol>
                     <li>Select Import from the Project menu.</li>
                     <li>Select a Project Database File (.db) from your
@@ -270,14 +344,10 @@ class MainWindowController:
                     a new project name.</li>
                     <li>Wait until the project is imported.</li>
                 </ol>
-                <p><b>🔧 Tech Note:</b></p>
-                <p>The Project Database File is an SQLite3 database file.
-                To ensure a successful import, the project must have been
-                exported through the PySSA application.</p>
             """,
 
             "action_export_project": """
-                <h3>Export the currently active project:</h3>
+                <p>Export the currently active project:</p>
                 <ol>
                     <li>Under the Project menu, click on Export.</li>
                     <li>Choose a location to save your Project Database File on
@@ -285,26 +355,205 @@ class MainWindowController:
                     <li>Click on Save.</li>
                     <li>Wait for the export process to finish.</li>
                 </ol>
-                <p><b>Share your work with others:</b></p>
+                <p>Share your work with others: </p>
                 <ol>
                     <li>Export your project.</li>
                     <li>Send the Project Database File to others.</li>
                 </ol>
-                <p><b>🔧 Tech Note:</b></p>
-                <p>The Project Database File is an SQLite3 database file.
-                To ensure a successful import,
-                the project must have been exported through the
-                PySSA application.</p>
             """,
 
             "action_close_project": """
-                <h3>Close the currently active project:</h3>
+                <p>Close the currently active project:</p>
                 <p>Click to close the active project.</p>
-                <p><b>💡 Tip:</b></p>
-                <p>Closing a project does not delete it.
-                You can reopen it anytime using the Open Project dialog window
-                by clicking Project in the menu bar and then Open.</p>
+                <p>The project is automatically saved.</p>
             """
+          # </editor-fold>
+
+          # <editor-fold desc="Prediction">
+            ,
+            "action_predict_monomer": """
+                <p>Run a monomer protein structure prediction:</p>
+                <ol>
+                    <li>Select one or more monomer sequences in the PySSA Objects Panel.</li>
+                    <li>Click on <b>Prediction &rarr; Monomer</b> to open the prediction dialog.</li>
+                    <li>Verify the pre-filled sequence list in the dialog.</li>
+                    <li>Click on <b>Start Prediction</b> to begin the calculation.</li>
+                    <li>Wait for the job to finish. Progress is shown in the toolbar.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>An internet connection and a valid ColabFold server address
+                (configured in Settings) are required for prediction.</p>
+            """,
+
+            "action_predict_multimer": """
+                <p>Run a multimer protein structure prediction:</p>
+                <ol>
+                    <li>Select one or more multimer sequences (comma-separated chains)
+                    in the PySSA Objects Panel.</li>
+                    <li>Click on <b>Prediction &rarr; Multimer</b> to open the prediction dialog.</li>
+                    <li>Verify the pre-filled sequence list in the dialog.</li>
+                    <li>Click on <b>Start Prediction</b> to begin the calculation.</li>
+                    <li>Wait for the job to finish. Progress is shown in the toolbar.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>Multimer sequences must contain a comma between chain sequences
+                (e.g. <i>MKABC,MKLMN</i>). An internet connection is required.</p>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Analysis">
+            "action_distance_analysis": """
+                <p>Run a distance analysis between two protein structures:</p>
+                <ol>
+                    <li>Select at least one protein pair in the PySSA Objects Panel,
+                    or ensure the project contains protein pairs.</li>
+                    <li>Click on <b>Analysis &rarr; Distance</b> to open the dialog.</li>
+                    <li>Configure the protein pair, cycles, and cutoff value.</li>
+                    <li>Click on <b>Start Analysis</b>.</li>
+                    <li>Wait for the job to finish. Results appear automatically.</li>
+                </ol>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Results">
+            "action_results_summary": """
+                <p>View a summary of a completed distance analysis:</p>
+                <ol>
+                    <li>Select a protein pair (or a protein inside a pair) in the
+                    PySSA Objects Panel.</li>
+                    <li>Click on <b>Results &rarr; Summary</b> to open the dialog.</li>
+                    <li>Inspect the RMSD value and the number of aligned residues.</li>
+                    <li><i>Optional:</i> Click on <b>View Plots</b> to see distance histogram plots.</li>
+                    <li><i>Optional:</i> Click on <b>Export Data</b> to save results as a CSV file.</li>
+                </ol>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Image">
+            "action_preview_image": """
+                <p>Preview a ray-traced image in the PyMOL viewport:</p>
+                <ol>
+                    <li>Load a protein structure session (open a session or select an object).</li>
+                    <li>Arrange the view in the PyMOL viewport as desired.</li>
+                    <li>Click on <b>Image &rarr; Preview</b>.</li>
+                    <li>A preview render (800 &times; 600 px) appears directly in the viewport.
+                    No file is saved.</li>
+                </ol>
+            """,
+
+            "action_ray_tracing_image": """
+                <p>Save a high-quality ray-traced image to disk:</p>
+                <ol>
+                    <li>Load a protein structure session and arrange the viewport view.</li>
+                    <li>Click on <b>Image &rarr; Ray-Tracing</b>.</li>
+                    <li>Choose a save location and filename in the file dialog.</li>
+                    <li>Click <b>Save</b>.</li>
+                    <li>Wait for the rendering job to finish.
+                    Progress is shown in the toolbar.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>Ray-tracing can take several minutes depending on scene complexity
+                and your hardware.</p>
+            """,
+
+            "action_simple_image": """
+                <p>Save a fast, non-ray-traced image to disk:</p>
+                <ol>
+                    <li>Load a protein structure session and arrange the viewport view.</li>
+                    <li>Click on <b>Image &rarr; Simple</b>.</li>
+                    <li>Choose a save location and filename in the file dialog.</li>
+                    <li>Click <b>Save</b>.</li>
+                    <li>The image is saved immediately without ray-tracing.</li>
+                </ol>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Hotspots">
+            "action_protein_regions": """
+                <p>Highlight selected protein regions directly in the PyMOL viewport:</p>
+                <ol>
+                    <li>Select atoms or residues of interest in the PyMOL viewport
+                    (they will be stored as the <i>sele</i> selection).</li>
+                    <li>Click on <b>Hotspots &rarr; Protein Regions</b>.</li>
+                    <li>The selected region is displayed as sticks with atomic colours
+                    (non-carbon atoms coloured by element, carbon atoms in grey).</li>
+                    <li>The viewport automatically zooms to the selection.</li>
+                </ol>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Settings">
+            "action_edit_settings": """
+                <p>Edit the application settings:</p>
+                <ol>
+                    <li>Click on <b>Settings &rarr; Edit</b> to open the Settings dialog.</li>
+                    <li>Adjust the ColabFold server address, image options, or analysis
+                    parameters as needed.</li>
+                    <li>Click <b>OK</b> to save your changes.</li>
+                </ol>
+            """,
+
+            "action_restore_settings": """
+                <p>Reset all settings to their factory defaults:</p>
+                <ol>
+                    <li>Click on <b>Settings &rarr; Restore</b>.</li>
+                    <li>Confirm the reset in the confirmation dialog that appears.</li>
+                    <li>All application settings are restored to their default values.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>This action cannot be undone. Any customised settings
+                (server address, image quality, cutoff values) will be lost.</p>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Help menu">
+            "action_documentation": """
+                <p>Toggle the Help panel:</p>
+                <ol>
+                    <li>Click on <b>Help &rarr; Documentation</b>.</li>
+                    <li>The Help panel on the right side opens or closes.</li>
+                    <li>Hover over any menu item or dialog to see context-sensitive help
+                    text appear in this panel.</li>
+                </ol>
+            """,
+
+            "action_get_demo_projects": """
+                <p>Download and install demo projects into your workspace:</p>
+                <ol>
+                    <li>Click on <b>Help &rarr; Get Demo Projects</b>.</li>
+                    <li>PySSA downloads a set of pre-built demo projects from the internet.</li>
+                    <li>The demo projects are automatically imported into your workspace.</li>
+                    <li>Open them via <b>Project &rarr; Open</b> to explore example results.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>An active internet connection is required to download the demo projects.</p>
+            """,
+
+            "action_show_log_in_explorer": """
+                <p>Open a log file for inspection:</p>
+                <ol>
+                    <li>Click on <b>Help &rarr; Show Logs in Explorer</b>.</li>
+                    <li>A file dialog opens showing all available log files.</li>
+                    <li>Select the log file you want to read.</li>
+                    <li>Click <b>Open</b> to view the file in the default text application.</li>
+                </ol>
+            """,
+
+            "action_clear_logs": """
+                <p>Delete all generated log files:</p>
+                <ol>
+                    <li>Click on <b>Help &rarr; Clear Logs</b>.</li>
+                    <li>All log files stored in the <i>.pyssa/logs</i> folder are deleted.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>This action cannot be undone. Deleted log files cannot be recovered.</p>
+            """,
+
+            "action_about": """
+                <p>View information about PySSA:</p>
+                <p>Click on <b>Help &rarr; About</b> to open the About dialog.</p>
+                <p>The dialog shows the current version, authors, and licence information.</p>
+            """,
           # </editor-fold>
 
 
@@ -320,7 +569,21 @@ class MainWindowController:
         # Connect menu hovered signal to show help for menu items
         self._main_window.menuProject.hovered.connect(self.help_filter.handle_menu_action_hovered)
         self._main_window.menuProject.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
-        logger.info("Connected hover help for Project menu items")
+        self._main_window.menuPrediction.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        self._main_window.menuPrediction.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
+        self._main_window.menuAnalysis.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        self._main_window.menuAnalysis.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
+        self._main_window.menuResults.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        self._main_window.menuResults.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
+        self._main_window.menuImage.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        self._main_window.menuImage.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
+        self._main_window.menuHotspots.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        self._main_window.menuHotspots.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
+        self._main_window.menuSettings.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        self._main_window.menuSettings.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
+        self._main_window.menuAbout.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        self._main_window.menuAbout.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
+        logger.info("Connected hover help for all menu items")
 
         self.refresh_ui()
         self.open_welcome_screen()
@@ -1328,6 +1591,10 @@ class MainWindowController:
                 sequences,
                 a_parent=self._main_window,
             )
+            # Install hover help event filter on the dialog
+            dialog_view = self._dialog_controllers["predict_monomer"].get_view()
+            dialog_view.installEventFilter(self.help_filter)
+            logger.info(f"Installed hover help on Predict Protein dialog (objectName: {dialog_view.objectName()})")
         else:
             # Re-create when called again so it reflects the current state.
             self._dialog_controllers["predict_monomer"] = predict_protein_view_controller.PredictProteinViewController(
@@ -1335,6 +1602,7 @@ class MainWindowController:
                 sequences,
                 a_parent=self._main_window,
             )
+            self._dialog_controllers["predict_monomer"].get_view().installEventFilter(self.help_filter)
         self._dialog_controllers["predict_monomer"].get_view().show()
 
     def __slot_predict_multimer(self) -> None:
@@ -1346,6 +1614,10 @@ class MainWindowController:
                 sequences,
                 a_parent=self._main_window,
             )
+            # Install hover help event filter on the dialog
+            dialog_view = self._dialog_controllers["predict_multimer"].get_view()
+            dialog_view.installEventFilter(self.help_filter)
+            logger.info(f"Installed hover help on Predict Multimer dialog (objectName: {dialog_view.objectName()})")
         else:
             # Re-create when called again so it reflects the current state.
             self._dialog_controllers["predict_multimer"] = predict_protein_view_controller.PredictProteinViewController(
@@ -1353,6 +1625,7 @@ class MainWindowController:
                 sequences,
                 a_parent=self._main_window,
             )
+            self._dialog_controllers["predict_multimer"].get_view().installEventFilter(self.help_filter)
         self._dialog_controllers["predict_multimer"].get_view().show()
     # </editor-fold>
 
@@ -1362,6 +1635,10 @@ class MainWindowController:
             self._dialog_controllers["distance_analysis_dialog"] = distance_analysis_view_controller.DistanceAnalysisViewController(
                 self._app_state
             )
+            # Install hover help event filter on the dialog
+            dialog_view = self._dialog_controllers["distance_analysis_dialog"].get_view()
+            dialog_view.installEventFilter(self.help_filter)
+            logger.info(f"Installed hover help on Distance Analysis dialog (objectName: {dialog_view.objectName()})")
         self._dialog_controllers["distance_analysis_dialog"].restore_default_view()
         self._dialog_controllers["distance_analysis_dialog"].get_view().show()
     # </editor-fold>
@@ -1372,6 +1649,10 @@ class MainWindowController:
             self._dialog_controllers["results_summary_dialog"] = results_view_controller.ResultsViewController(
                 self._get_selected_protein_pairs()[0], self._app_state, self._user_pymol, self._main_window
             )
+            # Install hover help event filter on the dialog
+            dialog_view = self._dialog_controllers["results_summary_dialog"].get_view()
+            dialog_view.installEventFilter(self.help_filter)
+            logger.info(f"Installed hover help on Results Summary dialog (objectName: {dialog_view.objectName()})")
         self._dialog_controllers["results_summary_dialog"].restore_default_view()
         self._dialog_controllers["results_summary_dialog"].get_view().show()
     # </editor-fold>
@@ -1455,6 +1736,10 @@ class MainWindowController:
             self._dialog_controllers["settings_dialog"] = settings_view_controller.SettingsViewController(
                 self._app_state
             )
+            # Install hover help event filter on the dialog
+            dialog_view = self._dialog_controllers["settings_dialog"].get_view()
+            dialog_view.installEventFilter(self.help_filter)
+            logger.info(f"Installed hover help on Settings dialog (objectName: {dialog_view.objectName()})")
         self._dialog_controllers["settings_dialog"].restore_default_view()
         self._dialog_controllers["settings_dialog"].get_view().show()
 

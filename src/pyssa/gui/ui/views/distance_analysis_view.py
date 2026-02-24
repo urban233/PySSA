@@ -64,3 +64,6 @@ class DistanceAnalysisView(QtWidgets.QDialog):
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
+    # Set objectName for hover help
+    self.setObjectName("DistanceAnalysisDialog")
+    self.setToolTip("")

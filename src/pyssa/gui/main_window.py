@@ -102,33 +102,48 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
 
     # --- Prediction Actions ---
     self.action_predict_monomer = QtGui.QAction("Monomer", self)
+    self.action_predict_monomer.setObjectName("action_predict_monomer")
     self.action_predict_multimer = QtGui.QAction("Multimer", self)
+    self.action_predict_multimer.setObjectName("action_predict_multimer")
 
     # --- Analysis Actions ---
     self.action_distance_analysis = QtGui.QAction("Distance", self)
+    self.action_distance_analysis.setObjectName("action_distance_analysis")
 
     # --- Results Actions ---
     self.action_results_summary = QtGui.QAction("Summary", self)
+    self.action_results_summary.setObjectName("action_results_summary")
 
     # --- Image Actions ---
     self.action_preview_image = QtGui.QAction("Preview", self)
+    self.action_preview_image.setObjectName("action_preview_image")
     self.action_ray_tracing_image = QtGui.QAction("Ray-Tracing", self)
+    self.action_ray_tracing_image.setObjectName("action_ray_tracing_image")
     self.action_simple_image = QtGui.QAction("Simple", self)
+    self.action_simple_image.setObjectName("action_simple_image")
 
     # --- Hotspots Actions ---
     self.action_protein_regions = QtGui.QAction("Protein Regions", self)
+    self.action_protein_regions.setObjectName("action_protein_regions")
     self.action_protein_regions.setCheckable(False)
 
     # --- Settings Actions ---
     self.action_edit_settings = QtGui.QAction("Edit", self)
+    self.action_edit_settings.setObjectName("action_edit_settings")
     self.action_restore_settings = QtGui.QAction("Restore", self)
+    self.action_restore_settings.setObjectName("action_restore_settings")
 
     # --- About/Help Actions ---
     self.action_documentation = QtGui.QAction("Documentation", self)
+    self.action_documentation.setObjectName("action_documentation")
     self.action_get_demo_projects = QtGui.QAction("Get Demo Projects", self)
+    self.action_get_demo_projects.setObjectName("action_get_demo_projects")
     self.action_show_log_in_explorer = QtGui.QAction("Show Logs in Explorer", self)
+    self.action_show_log_in_explorer.setObjectName("action_show_log_in_explorer")
     self.action_clear_logs = QtGui.QAction("Clear Logs", self)
+    self.action_clear_logs.setObjectName("action_clear_logs")
     self.action_about = QtGui.QAction("About", self)
+    self.action_about.setObjectName("action_about")
     # </editor-fold>
 
     # <editor-fold desc="Set up status bar">

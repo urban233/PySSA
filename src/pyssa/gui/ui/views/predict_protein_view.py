@@ -74,3 +74,6 @@ class PredictProteinView(QtWidgets.QDialog):
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
+    # Set objectName for hover help
+    self.setObjectName("PredictProteinDialog")
+    self.setToolTip("")
