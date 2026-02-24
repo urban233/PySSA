@@ -471,9 +471,40 @@ chain_dict_reverse = {
     'Z': 25,
 }
 
-PYMOL_SESSION_DEFAULTS = {
-    "": "",
-    "1": 0
+PYMOL_STYLE_DEFAULT = {
+   "valence": 0,
+   "scene_buttons": 0,
+   "ray_trace_mode": 1,
+   "antialias": 1,
+   "ambient": 0.5,
+   "cartoon_fancy_helices": 1,
+   "cartoon_discrete_colors": 1,
+   "cartoon_sampling": 14,
+   "spec_power": 350,
+   "spec_reflect": 0.2,
+   "ray_transparency_contrast": 0.4,
+   "ray_transparency_oblique": 1.0,
+   "ray_transparency_oblique_power": 4.0,
+   "ray_trace_color": "black",
+}
+
+PYMOL_STYLE_MAESTRO_LIKE = {
+    "valence": 0,
+    "scene_buttons": 1,
+    "ray_trace_mode": 1,
+    "antialias": 1,
+    "ambient": 0.5,
+    "cartoon_fancy_helices": 1,
+    "cartoon_discrete_colors": 1,
+    "cartoon_sampling": 14,
+    "cartoon_oval_width": 0.2,
+    "cartoon_oval_length": 0.8,
+    "spec_power": 350,
+    "spec_reflect": 0.2,
+    "ray_transparency_contrast": 0.4,
+    "ray_transparency_oblique": 1.0,
+    "ray_transparency_oblique_power": 4.0,
+    "ray_trace_color": "black",
 }
 
 PYMOL_REPR_STATES_WITH_INDICES = {

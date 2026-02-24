@@ -242,6 +242,12 @@ class MainWindowController:
         self._main_window.action_restore_settings.triggered.connect(
             self.__slot_restore_settings
         )
+        self._main_window.action_pymol_default_style.triggered.connect(
+            self.__slot_pymol_default_style
+        )
+        self._main_window.action_pymol_maestro_style.triggered.connect(
+            self.__slot_pymol_maestro_style
+        )
         # </editor-fold>
 
         # <editor-fold desc="Help menu">
@@ -1422,6 +1428,18 @@ class MainWindowController:
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def __slot_pymol_default_style(self):
+        for tmp_style_keys in constants.PYMOL_STYLE_DEFAULT.keys():
+            self._user_pymol.get_cmd_module().set(tmp_style_keys, constants.PYMOL_STYLE_DEFAULT[tmp_style_keys])
+        self._trigger_auto_save()
+
+    def __slot_pymol_maestro_style(self):
+        for tmp_style_keys in constants.PYMOL_STYLE_MAESTRO_LIKE.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_STYLE_MAESTRO_LIKE[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
     # </editor-fold>
 
     # <editor-fold desc="Help menu">
@@ -1745,6 +1763,7 @@ class MainWindowController:
         else:
             # No selection - operate on all objects
             logger.info("Opening session for all objects (no specific selection)")
+        self.refresh_ui(self._get_current_snapshot())
 
         # Example implementation (replace with actual logic)
         # with pml_worker.PmlWorker.session(pml_worker.PmlWorker.cache_user_session(self._user_pymol, "my_test")) as worker:
@@ -1797,7 +1816,7 @@ class MainWindowController:
             tmp_scene_name, self._user_pymol.get_currently_loaded_object()
         )
         self._user_pymol.set_current_scene_name(tmp_scene_name)
-        self.refresh_ui()
+        self.refresh_ui(self._get_current_snapshot())
 
         # # Log selection context for debugging
         # snapshot = self._get_current_snapshot()
@@ -1852,6 +1871,7 @@ class MainWindowController:
                 )
             self._user_pymol.get_cmd_module().scene("base", "recall")
             self._user_pymol.set_current_scene_name("base")
+        self.refresh_ui(self._get_current_snapshot())
 
     # # </editor-fold>
 
@@ -2087,7 +2107,6 @@ class MainWindowController:
         except Exception as e:
             logger.error(e.__str__())
 
-
     def __slot_clean_solvent(self):
         active_object = self._user_pymol.get_currently_loaded_object()
         self._user_pymol.get_cmd_module().remove("solvent")
@@ -2154,6 +2173,7 @@ class MainWindowController:
                 self._app_state.pyssa_objects_model.update_protein(active_object)
             self._trigger_auto_save()
             self._app_state.status_bar_manager.show_permanent_message("", False)
+            self.refresh_ui(self._get_current_snapshot())
             
         def on_error(exc):
             logger.exception("Failed to update structure data.", exc_info=exc)
@@ -2194,29 +2214,6 @@ class MainWindowController:
         """PyMOL single left click event."""
         try:
             self.feedback_timer.start(100)
-        except Exception as e:
-            print(e.__str__())
-
-    # TODO: Refactor below
-    def update_protein_structure_tree_view(self) -> None:
-        """Updates the protein structure tree view in the side panel."""
-        try:
-            selection_strings = []
-            self._user_pymol.get_cmd_module().select(
-                "sele", enable=1
-            )  # Highlights the selection even if clicked on the PyMOL "canvas"
-            atoms = self._user_pymol.get_cmd_module().get_model("sele")
-            for at in atoms.atom:
-                selection_strings.append(
-                    self.parse_selection_string(
-                        f"/1nb1//{at.chain}/{at.resi}+{str(at.resn)}/{at.name}"  # TODO: The hard-coded 3bmp can be fixed by storing the active protein name in some sort of pymol manager
-                    )
-                )  # TODO: Needs more work!
-            self._main_window.pyssa_objects_panel.tree_view.selectionModel().clearSelection()
-            self.select_item(
-                self._main_window.pyssa_objects_panel.tree_view,
-                selection_strings,
-            )
         except Exception as e:
             print(e.__str__())
 

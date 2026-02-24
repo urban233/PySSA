@@ -120,6 +120,10 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # --- Settings Actions ---
     self.action_edit_settings = QtGui.QAction("Edit", self)
     self.action_restore_settings = QtGui.QAction("Restore", self)
+    self.submenuPyMOLStyle = self.menuSettings.addMenu("PyMOL Style")
+    self.action_pymol_default_style = QtGui.QAction("Default", self.submenuPyMOLStyle)
+    self.action_pymol_maestro_style = QtGui.QAction("Maestro-like", self.submenuPyMOLStyle)
+    self.submenuPyMOLStyle.menuAction().setVisible(False)
 
     # --- About/Help Actions ---
     self.action_documentation = QtGui.QAction("Documentation", self)
@@ -461,6 +465,8 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # --- Settings Menu ---
     self.menuSettings.addAction(self.action_edit_settings)
     self.menuSettings.addAction(self.action_restore_settings)
+    # self.submenuPyMOLStyle.addAction(self.action_pymol_default_style)
+    # self.submenuPyMOLStyle.addAction(self.action_pymol_maestro_style)
 
     # --- About/Help Menu ---
     self.menuAbout.addAction(self.action_documentation)
