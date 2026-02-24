@@ -29,6 +29,7 @@ import logging
 import os
 import pathlib
 import shutil
+import subprocess
 from io import BytesIO
 from typing import Union
 
@@ -40,7 +41,7 @@ import requests
 from src.pyssa.internal.pymol.pml_worker import PmlWorker
 from src.pyssa.internal.pymol.pml_enums import PmlCommand
 from src.pyssa.io_pyssa.db_pyssa.write_queue import WriteOperation, OperationType
-from src.pyssa.io_pyssa import bio_data
+from src.pyssa.io_pyssa import bio_data, filesystem_io
 from src.pyssa.internal.data_structures import protein
 from src.pyssa.util import enums
 
@@ -185,7 +186,7 @@ class MainWindowController:
     # <editor-fold desc="Private methods">
     def _connect_all_signals_with_their_slots(self) -> None:
         """Connects all relevant widget signals with their appropriate slots."""
-        # self._main_window.dialogClosed.connect(self.__slot_close_application)
+        self._main_window.dialogClosed.connect(self.__slot_exit_application)
 
         # <editor-fold desc="Project menu">
         self._main_window.action_new_project.triggered.connect(self.__slot_create_project)
@@ -195,9 +196,10 @@ class MainWindowController:
         self._main_window.action_import_project.triggered.connect(self.__slot_import_project)
         self._main_window.action_export_project.triggered.connect(self.__slot_export_current_project)
         self._main_window.action_close_project.triggered.connect(self.__slot_close_project)
+        self._main_window.action_exit_application.triggered.connect(
+            self.__slot_exit_application
+        )
         # </editor-fold>
-        # TODO: Add the right slot method! ;)
-        # self._main_window.action_exit_application.triggered.connect(self.)
 
         # <editor-fold desc="Prediction menu">
         self._main_window.action_predict_monomer.triggered.connect(self.__slot_predict_monomer)
@@ -2342,7 +2344,10 @@ class MainWindowController:
             descriptor: "job_descriptor.JobDescriptor",
             result: dict
     ):
-        print("Hi")
+        # Until now, there is no implementation needed after the ray-tracing job.
+        # However, it might be helpful to have such a method scaffold for
+        # later use.
+        pass
     # </editor-fold>
     # </editor-fold>
 
@@ -2382,15 +2387,24 @@ class MainWindowController:
         except Exception as e:
             logger.error(f"Failed to capture or trigger PyMOL session save: {e}")
 
-    def shutdown_application_processes(self) -> None:
+    def __slot_exit_application(self) -> None:
         """Closes all threads and process as well as the application itself."""
-        # if not pyssa_constants.FRONTEND_ONLY:
-        #   # TODO: Add correct pyssa_core logic here
-        #   raise NotImplementedError()
-        # self.aux_pymol_client.shutdown_service()
-        # self._pymol_worker_connection.send(worker_command.WorkerCommand("", "shutdown", ()))
-        # self._pymol_worker_process.join()
-        self._main_window.close()
+        tmp_message = "Are you sure you want to close PySSA?"
+        tmp_jobs_are_running = self._app_state.job_scheduler.has_running_jobs()
+        if tmp_jobs_are_running:
+            tmp_message = "There are still jobs running.\nAre you sure you want to close PySSA?\n\n The progress of the running job(s) are lost!"
+        tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+            tmp_message,
+            "Close PySSA",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value,
+        )
+        tmp_dialog.exec()
+        if tmp_dialog.response:
+            if tmp_jobs_are_running:
+                subprocess.run(["wsl", "--terminate", "almaColabfold9"], creationflags=subprocess.CREATE_NO_WINDOW)
+                filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
+                constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
+            self._main_window.close()
 
     def _get_viewer_tool_bar_action_pos(self, an_action) -> QtCore.QPoint:
         """Return a global point beneath the toolbar button for the given action.
