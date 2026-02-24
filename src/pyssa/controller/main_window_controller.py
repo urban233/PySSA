@@ -167,6 +167,127 @@ class MainWindowController:
                 <p>Displays all PySSA objects in the current project.</p>
             """,
 
+          # <editor-fold desc="PySSA Objects Panel toolbar actions">
+            "expand_all": """
+                <p>Expand all:</p>
+                <p>Click to expand the entire tree in the PySSA Objects Panel,
+                showing all sequences, proteins, protein pairs, and scenes at once.</p>
+            """,
+
+            "collapse_all": """
+                <p>Collapse all:</p>
+                <p>Click to collapse the entire tree in the PySSA Objects Panel,
+                hiding all child items and showing only the top-level entries.</p>
+            """,
+
+            "import_file": """
+                <p>Import a file into the current project:</p>
+                <ol>
+                    <li>Click on the Import File button to open the import menu.</li>
+                    <li>Select Sequence to import a FASTA sequence file.</li>
+                    <li>Select Protein to import a PDB protein structure file.</li>
+                    <li>Choose the file from your computer in the file dialog.</li>
+                    <li>Click Open. The object appears in the PySSA Objects Panel.</li>
+                </ol>
+            """,
+
+            "add_sequence": """
+                <p>Add a new sequence manually to the current project:</p>
+                <ol>
+                    <li>Click on the Add Sequence button.</li>
+                    <li>Enter the sequence name in the dialog.</li>
+                    <li>Enter the amino acid sequence (single-letter code) in the text field.</li>
+                    <li>Click on Add to save the sequence to the project.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>Multimer sequences must contain a comma between the individual chain sequences
+                (e.g. MKABC,MKLMN).</p>
+            """,
+
+            "export_file": """
+                <p>Export selected objects to files on your computer:</p>
+                <ol>
+                    <li>Select one or more sequences or standalone proteins
+                    in the PySSA Objects Panel.</li>
+                    <li>Click on the Export File button.</li>
+                    <li>Choose an output directory in the file dialog.</li>
+                    <li>Click Select Folder.</li>
+                    <li>Sequences are exported as .fasta files;
+                    proteins are exported as .pdb files.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>Protein pairs cannot be exported with this button.
+                Export individual proteins from the pair instead.</p>
+            """,
+
+            "delete_object": """
+                <p>Delete selected objects from the current project:</p>
+                <ol>
+                    <li>Select one or more items in the PySSA Objects Panel
+                    (sequences, proteins, or protein pairs).</li>
+                    <li>Click on the Delete Object button.</li>
+                    <li>Confirm the deletion in the confirmation dialog.</li>
+                    <li>The selected objects are permanently removed from the project.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>This action cannot be undone.
+                A standalone protein cannot be deleted while it is still part of a protein pair.
+                Delete the protein pair first, then delete the protein.</p>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="PySSA Objects Panel tree node types">
+            "sequence_item": """
+                <p>Sequence:</p>
+                <p>A sequence item stores an amino acid sequence (single-letter code)
+                in the project.</p>
+                <p>What you can do with a sequence:</p>
+                <ol>
+                    <li>Select it and run Prediction to generate a 3D protein structure.</li>
+                    <li>Select it and click Export File to save it as a .fasta file.</li>
+                    <li>Select it and click Delete Object to remove it from the project.</li>
+                </ol>
+            """,
+
+            "protein_item": """
+                <p>Protein:</p>
+                <p>A protein item stores a 3D protein structure (PDB data) in the project.</p>
+                <p>What you can do with a protein:</p>
+                <ol>
+                    <li>Select it and run Analysis to compare it with another protein.</li>
+                    <li>Select it and use Image to render a viewport image.</li>
+                    <li>Select it and click Export File to save it as a .pdb file.</li>
+                    <li>Select it and click Delete Object to remove it from the project.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>A protein that is part of a protein pair cannot be deleted independently.
+                Delete the protein pair first.</p>
+            """,
+
+            "protein_pair_item": """
+                <p>Protein pair:</p>
+                <p>A protein pair links two proteins that have been compared via distance analysis.</p>
+                <p>What you can do with a protein pair:</p>
+                <ol>
+                    <li>Select it and click Results to view the analysis summary.</li>
+                    <li>Expand it to see the two child proteins and their scenes.</li>
+                    <li>Select it and click Delete Object to remove the pair
+                    (the underlying proteins are kept).</li>
+                </ol>
+            """,
+
+            "scene_item": """
+                <p>Scene:</p>
+                <p>A scene stores a saved PyMOL viewport state (camera position,
+                representation, colours) for a specific protein or protein pair.</p>
+                <p>What you can do with a scene:</p>
+                <ol>
+                    <li>Select it to load the saved viewport state in PyMOL.</li>
+                    <li>Use the viewer toolbar to resave the current viewport as a new scene.</li>
+                </ol>
+            """,
+          # </editor-fold>
+
           # <editor-fold desc="Dialogs">
           # <editor-fold desc="Project">
           # Create Project Dialog
@@ -176,7 +297,7 @@ class MainWindowController:
                     <li>Enter a new project name.</li>
                     <li>Click on Create.</li>
                 </ol>
-                <p style="color: red;"><b>⚠ CAUTION:</b></p>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
                 <p>The project name must have 20 characters or fewer.
                 Moreover, the only characters that can be used are 0-9, a-z, A-Z, -, _.</p>
             """,
@@ -215,7 +336,7 @@ class MainWindowController:
                             Repeat this until you have all the proteins you really want.</li>
                             <li>Click on Create.</li>
                         </ol>
-                        <p style="color: red;"><b>⚠ CAUTION:</b></p>
+                        <p style="color: red;"><b>&#9888; CAUTION:</b></p>
                         <p>The project name must have 20 characters or fewer.
                         Moreover, the only characters that can be used are 0-9, a-z, A-Z, -, _.</p>
                     """,
@@ -239,7 +360,7 @@ class MainWindowController:
                     <li>Review the pre-selected sequences in the sequence list on the left.</li>
                     <li><i>Optional:</i> Uncheck sequences you do not want to include
                     in this prediction run.</li>
-                    <li>Click on <b>Start Prediction</b> to submit the job.</li>
+                    <li>Click on Start Prediction to submit the job.</li>
                     <li>Wait until the prediction finishes.
                     You can monitor progress in the toolbar (running jobs indicator).</li>
                     <li>Once finished, the predicted structure appears in the
@@ -254,13 +375,13 @@ class MainWindowController:
                 <p>Distance Analysis dialog:</p>
                 <ol>
                     <li>Select the protein pair you want to analyse from the drop-down list.</li>
-                    <li>Set the number of <b>Cycles</b> for the structural alignment
+                    <li>Set the number of Cycles for the structural alignment
                     (higher = more accurate, slower).</li>
-                    <li>Set the <b>Cutoff</b> value (&Aring;) to define which C-alpha distances
+                    <li>Set the Cutoff value (&Aring;) to define which C-alpha distances
                     are considered significant.</li>
-                    <li>Click on <b>Start Analysis</b> to submit the job.</li>
+                    <li>Click on Start Analysis to submit the job.</li>
                     <li>Wait until the progress indicator disappears.</li>
-                    <li>Open <b>Results &rarr; Summary</b> to inspect the results.</li>
+                    <li>Open Results &rarr; Summary to inspect the results.</li>
                 </ol>
             """,
           # </editor-fold>
@@ -271,9 +392,9 @@ class MainWindowController:
                 <p>Results Summary dialog:</p>
                 <ol>
                     <li>Review the RMSD value and the number of aligned residues at the top.</li>
-                    <li><i>Optional:</i> Click <b>View Plots</b> to open the distance histogram
+                    <li><i>Optional:</i> Click View Plots to open the distance histogram
                     in a separate window.</li>
-                    <li><i>Optional:</i> Click <b>Export Data</b> to save all distance values
+                    <li><i>Optional:</i> Click Export Data to save all distance values
                     to a CSV file on your computer.</li>
                 </ol>
             """,
@@ -286,8 +407,8 @@ class MainWindowController:
                 <ol>
                     <li>Select a protein or residues in the PyMOL viewport.</li>
                     <li>Use the controls in the dialog to define the region of interest.</li>
-                    <li>Click <b>Apply</b> to highlight the region as sticks with atomic colours.</li>
-                    <li>Click <b>Cancel</b> to close the dialog without applying changes.</li>
+                    <li>Click Apply to highlight the region as sticks with atomic colours.</li>
+                    <li>Click Cancel to close the dialog without applying changes.</li>
                 </ol>
             """,
           # </editor-fold>
@@ -297,13 +418,13 @@ class MainWindowController:
             "SettingsDialog": """
                 <p>Settings dialog:</p>
                 <ol>
-                    <li>Enter the <b>ColabFold server address</b> to connect to the
+                    <li>Enter the ColabFold server address to connect to the
                     prediction server (e.g. http://colabfold-server:8080).</li>
-                    <li>Set the desired <b>Cycles</b> and <b>Cutoff</b> values that will be
+                    <li>Set the desired Cycles and Cutoff values that will be
                     used as the default for new distance analyses.</li>
-                    <li>Choose the preferred <b>image renderer</b>, <b>ray trace mode</b>,
-                    and <b>ray texture</b> for image exports.</li>
-                    <li>Click <b>OK</b> to save all changes.</li>
+                    <li>Choose the preferred image renderer, ray trace mode,
+                    and ray texture for image exports.</li>
+                    <li>Click OK to save all changes.</li>
                 </ol>
             """,
           # </editor-fold>
@@ -375,9 +496,9 @@ class MainWindowController:
                 <p>Run a monomer protein structure prediction:</p>
                 <ol>
                     <li>Select one or more monomer sequences in the PySSA Objects Panel.</li>
-                    <li>Click on <b>Prediction &rarr; Monomer</b> to open the prediction dialog.</li>
+                    <li>Click on Prediction &rarr; Monomer to open the prediction dialog.</li>
                     <li>Verify the pre-filled sequence list in the dialog.</li>
-                    <li>Click on <b>Start Prediction</b> to begin the calculation.</li>
+                    <li>Click on Start Prediction to begin the calculation.</li>
                     <li>Wait for the job to finish. Progress is shown in the toolbar.</li>
                 </ol>
                 <p style="color: red;"><b>&#9888; CAUTION:</b></p>
@@ -390,9 +511,9 @@ class MainWindowController:
                 <ol>
                     <li>Select one or more multimer sequences (comma-separated chains)
                     in the PySSA Objects Panel.</li>
-                    <li>Click on <b>Prediction &rarr; Multimer</b> to open the prediction dialog.</li>
+                    <li>Click on Prediction &rarr; Multimer to open the prediction dialog.</li>
                     <li>Verify the pre-filled sequence list in the dialog.</li>
-                    <li>Click on <b>Start Prediction</b> to begin the calculation.</li>
+                    <li>Click on Start Prediction to begin the calculation.</li>
                     <li>Wait for the job to finish. Progress is shown in the toolbar.</li>
                 </ol>
                 <p style="color: red;"><b>&#9888; CAUTION:</b></p>
@@ -407,9 +528,9 @@ class MainWindowController:
                 <ol>
                     <li>Select at least one protein pair in the PySSA Objects Panel,
                     or ensure the project contains protein pairs.</li>
-                    <li>Click on <b>Analysis &rarr; Distance</b> to open the dialog.</li>
+                    <li>Click on Analysis &rarr; Distance to open the dialog.</li>
                     <li>Configure the protein pair, cycles, and cutoff value.</li>
-                    <li>Click on <b>Start Analysis</b>.</li>
+                    <li>Click on Start Analysis.</li>
                     <li>Wait for the job to finish. Results appear automatically.</li>
                 </ol>
             """,
@@ -421,10 +542,10 @@ class MainWindowController:
                 <ol>
                     <li>Select a protein pair (or a protein inside a pair) in the
                     PySSA Objects Panel.</li>
-                    <li>Click on <b>Results &rarr; Summary</b> to open the dialog.</li>
+                    <li>Click on Results &rarr; Summary to open the dialog.</li>
                     <li>Inspect the RMSD value and the number of aligned residues.</li>
-                    <li><i>Optional:</i> Click on <b>View Plots</b> to see distance histogram plots.</li>
-                    <li><i>Optional:</i> Click on <b>Export Data</b> to save results as a CSV file.</li>
+                    <li><i>Optional:</i> Click on View Plots to see distance histogram plots.</li>
+                    <li><i>Optional:</i> Click on Export Data to save results as a CSV file.</li>
                 </ol>
             """,
           # </editor-fold>
@@ -435,7 +556,7 @@ class MainWindowController:
                 <ol>
                     <li>Load a protein structure session (open a session or select an object).</li>
                     <li>Arrange the view in the PyMOL viewport as desired.</li>
-                    <li>Click on <b>Image &rarr; Preview</b>.</li>
+                    <li>Click on Image &rarr; Preview.</li>
                     <li>A preview render (800 &times; 600 px) appears directly in the viewport.
                     No file is saved.</li>
                 </ol>
@@ -445,9 +566,9 @@ class MainWindowController:
                 <p>Save a high-quality ray-traced image to disk:</p>
                 <ol>
                     <li>Load a protein structure session and arrange the viewport view.</li>
-                    <li>Click on <b>Image &rarr; Ray-Tracing</b>.</li>
+                    <li>Click on Image &rarr; Ray-Tracing.</li>
                     <li>Choose a save location and filename in the file dialog.</li>
-                    <li>Click <b>Save</b>.</li>
+                    <li>Click Save.</li>
                     <li>Wait for the rendering job to finish.
                     Progress is shown in the toolbar.</li>
                 </ol>
@@ -460,9 +581,9 @@ class MainWindowController:
                 <p>Save a fast, non-ray-traced image to disk:</p>
                 <ol>
                     <li>Load a protein structure session and arrange the viewport view.</li>
-                    <li>Click on <b>Image &rarr; Simple</b>.</li>
+                    <li>Click on Image &rarr; Simple.</li>
                     <li>Choose a save location and filename in the file dialog.</li>
-                    <li>Click <b>Save</b>.</li>
+                    <li>Click Save.</li>
                     <li>The image is saved immediately without ray-tracing.</li>
                 </ol>
             """,
@@ -474,7 +595,7 @@ class MainWindowController:
                 <ol>
                     <li>Select atoms or residues of interest in the PyMOL viewport
                     (they will be stored as the <i>sele</i> selection).</li>
-                    <li>Click on <b>Hotspots &rarr; Protein Regions</b>.</li>
+                    <li>Click on Hotspots &rarr; Protein Regions.</li>
                     <li>The selected region is displayed as sticks with atomic colours
                     (non-carbon atoms coloured by element, carbon atoms in grey).</li>
                     <li>The viewport automatically zooms to the selection.</li>
@@ -486,17 +607,17 @@ class MainWindowController:
             "action_edit_settings": """
                 <p>Edit the application settings:</p>
                 <ol>
-                    <li>Click on <b>Settings &rarr; Edit</b> to open the Settings dialog.</li>
+                    <li>Click on Settings &rarr; Edit to open the Settings dialog.</li>
                     <li>Adjust the ColabFold server address, image options, or analysis
                     parameters as needed.</li>
-                    <li>Click <b>OK</b> to save your changes.</li>
+                    <li>Click OK to save your changes.</li>
                 </ol>
             """,
 
             "action_restore_settings": """
                 <p>Reset all settings to their factory defaults:</p>
                 <ol>
-                    <li>Click on <b>Settings &rarr; Restore</b>.</li>
+                    <li>Click on Settings &rarr; Restore.</li>
                     <li>Confirm the reset in the confirmation dialog that appears.</li>
                     <li>All application settings are restored to their default values.</li>
                 </ol>
@@ -510,7 +631,7 @@ class MainWindowController:
             "action_documentation": """
                 <p>Toggle the Help panel:</p>
                 <ol>
-                    <li>Click on <b>Help &rarr; Documentation</b>.</li>
+                    <li>Click on Help &rarr; Documentation.</li>
                     <li>The Help panel on the right side opens or closes.</li>
                     <li>Hover over any menu item or dialog to see context-sensitive help
                     text appear in this panel.</li>
@@ -520,10 +641,10 @@ class MainWindowController:
             "action_get_demo_projects": """
                 <p>Download and install demo projects into your workspace:</p>
                 <ol>
-                    <li>Click on <b>Help &rarr; Get Demo Projects</b>.</li>
+                    <li>Click on Help &rarr; Get Demo Projects.</li>
                     <li>PySSA downloads a set of pre-built demo projects from the internet.</li>
                     <li>The demo projects are automatically imported into your workspace.</li>
-                    <li>Open them via <b>Project &rarr; Open</b> to explore example results.</li>
+                    <li>Open them via Project &rarr; Open to explore example results.</li>
                 </ol>
                 <p style="color: red;"><b>&#9888; CAUTION:</b></p>
                 <p>An active internet connection is required to download the demo projects.</p>
@@ -532,17 +653,17 @@ class MainWindowController:
             "action_show_log_in_explorer": """
                 <p>Open a log file for inspection:</p>
                 <ol>
-                    <li>Click on <b>Help &rarr; Show Logs in Explorer</b>.</li>
+                    <li>Click on Help &rarr; Show Logs in Explorer.</li>
                     <li>A file dialog opens showing all available log files.</li>
                     <li>Select the log file you want to read.</li>
-                    <li>Click <b>Open</b> to view the file in the default text application.</li>
+                    <li>Click Open to view the file in the default text application.</li>
                 </ol>
             """,
 
             "action_clear_logs": """
                 <p>Delete all generated log files:</p>
                 <ol>
-                    <li>Click on <b>Help &rarr; Clear Logs</b>.</li>
+                    <li>Click on Help &rarr; Clear Logs.</li>
                     <li>All log files stored in the <i>.pyssa/logs</i> folder are deleted.</li>
                 </ol>
                 <p style="color: red;"><b>&#9888; CAUTION:</b></p>
@@ -551,12 +672,12 @@ class MainWindowController:
 
             "action_about": """
                 <p>View information about PySSA:</p>
-                <p>Click on <b>Help &rarr; About</b> to open the About dialog.</p>
+                <p>Click on Help &rarr; About to open the About dialog.</p>
                 <p>The dialog shows the current version, authors, and licence information.</p>
             """,
           # </editor-fold>
 
-
+          # </editor-fold>
           # </editor-fold>
         }
         self.help_filter = help_event_filter.HelpEventFilter(
@@ -565,6 +686,24 @@ class MainWindowController:
             self._main_window.help_panel
         )
         self._main_window.pyssa_objects_panel.installEventFilter(self.help_filter)
+
+        # Install hover help on Objects Panel toolbar buttons
+        _panel = self._main_window.pyssa_objects_panel
+        _toolbar = _panel.get_toolbar()
+        _btn_map = [
+            (_panel.expand_all,        "expand_all"),
+            (_panel.collapse_all,      "collapse_all"),
+            (_panel.import_file_action, "import_file"),
+            (_panel.add_sequence_action, "add_sequence"),
+            (_panel.export_file_action,  "export_file"),
+            (_panel.delete_object_action, "delete_object"),
+        ]
+        for action_wrapper, obj_name in _btn_map:
+            btn = _toolbar.get_tool_button_for_action(action_wrapper)
+            if btn is not None:
+                btn.setObjectName(obj_name)
+                btn.installEventFilter(self.help_filter)
+                logger.info(f"Installed hover help on Objects Panel button: {obj_name}")
 
         # Connect menu hovered signal to show help for menu items
         self._main_window.menuProject.hovered.connect(self.help_filter.handle_menu_action_hovered)
@@ -1573,7 +1712,7 @@ class MainWindowController:
             if selected_sequences:
                 return selected_sequences
 
-        # No relevant selection — fall back to all qualifying sequences.
+        # No relevant selection â€” fall back to all qualifying sequences.
         registry = self._app_state.name_registry
         from src.pyssa.gui import name_registry as name_registry_module
         return [
@@ -2555,7 +2694,7 @@ class MainWindowController:
         the tree selection accordingly.
 
         The panel controller's selection signal is suppressed during the
-        update to prevent a feedback loop (PyMOL → tree → PyMOL).
+        update to prevent a feedback loop (PyMOL â†’ tree â†’ PyMOL).
         """
         try:
             self._is_syncing_selection = True
@@ -2568,7 +2707,7 @@ class MainWindowController:
             if selection_model is None:
                 return
 
-            # Suppress tree → PyMOL sync while we modify the tree selection.
+            # Suppress tree â†’ PyMOL sync while we modify the tree selection.
             self._pyssa_objects_panel_controller.suppress_selection_signal()
             try:
                 selection_model.clearSelection()
@@ -2582,7 +2721,7 @@ class MainWindowController:
                 self._pyssa_objects_panel_controller.restore_selection_signal()
 
             # Because we suppressed the panel signal, the normal
-            # snapshot → refresh_ui path was skipped.  Resolve a snapshot
+            # snapshot â†’ refresh_ui path was skipped.  Resolve a snapshot
             # from the tree's current selection and refresh the UI manually.
             current_indexes = list(selection_model.selectedIndexes())
             snapshot = model.resolve_selection(current_indexes)
