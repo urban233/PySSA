@@ -191,7 +191,7 @@ class MainWindowController:
     # <editor-fold desc="Private methods">
     def _connect_all_signals_with_their_slots(self) -> None:
         """Connects all relevant widget signals with their appropriate slots."""
-        self._main_window.dialogClosed.connect(self.__slot_exit_application)
+        self._main_window.dialogClosed.connect(self.__slot_close_application)
 
         # <editor-fold desc="Project menu">
         self._main_window.action_new_project.triggered.connect(self.__slot_create_project)
@@ -2547,8 +2547,8 @@ class MainWindowController:
         except Exception as e:
             logger.error(f"Failed to capture or trigger PyMOL session save: {e}")
 
-    def __slot_exit_application(self) -> None:
-        """Closes all threads and process as well as the application itself."""
+    def _close_all(self):
+        self._main_window.blockSignals(True)
         tmp_message = "Are you sure you want to close PySSA?"
         tmp_jobs_are_running = self._app_state.job_scheduler.has_running_jobs()
         if tmp_jobs_are_running:
@@ -2565,6 +2565,16 @@ class MainWindowController:
                 filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
                 constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
             self._main_window.close()
+
+    def __slot_exit_application(self) -> None:
+        """Closes all threads and process as well as the application itself."""
+        self._close_all()
+
+    def __slot_close_application(self, return_value: tuple[str, QtGui.QCloseEvent]):
+        _, tmp_event = return_value
+        self._close_all()
+        tmp_event.accept()
+
 
     def _get_viewer_tool_bar_action_pos(self, an_action) -> QtCore.QPoint:
         """Return a global point beneath the toolbar button for the given action.
