@@ -286,6 +286,123 @@ class MainWindowController:
                     <li>Use the viewer toolbar to resave the current viewport as a new scene.</li>
                 </ol>
             """,
+
+          # <editor-fold desc="PySSA Objects Panel tree — section nodes">
+            "section_sequences": """
+                <p>Sequences section:</p>
+                <p>This section groups all amino acid sequences stored in the current project.</p>
+                <p>From here you can:</p>
+                <ol>
+                    <li>Expand the section to see all individual sequences.</li>
+                    <li>Select one or more sequences and run Prediction to generate 3D structures.</li>
+                    <li>Select a sequence and click Export File to save it as a .fasta file.</li>
+                    <li>Select a sequence and click Delete Object to remove it from the project.</li>
+                    <li>Click Add Sequence in the toolbar to create a new sequence manually.</li>
+                    <li>Click Import File in the toolbar to import a .fasta file.</li>
+                </ol>
+            """,
+
+            "section_proteins": """
+                <p>Proteins section:</p>
+                <p>This section groups all standalone protein structures stored in the current project.</p>
+                <p>From here you can:</p>
+                <ol>
+                    <li>Expand the section to see all individual proteins.</li>
+                    <li>Select a protein and run Analysis to compare it with another protein.</li>
+                    <li>Select a protein and use Image to render a viewport image.</li>
+                    <li>Select a protein and click Export File to save it as a .pdb file.</li>
+                    <li>Select a protein and click Delete Object to remove it from the project.</li>
+                    <li>Click Import File in the toolbar to import a .pdb file.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>A protein that is still part of a protein pair cannot be deleted.
+                Delete the protein pair first.</p>
+            """,
+
+            "section_protein_pairs": """
+                <p>Protein Pairs section:</p>
+                <p>This section groups all protein pairs that have been analysed
+                via distance analysis.</p>
+                <p>From here you can:</p>
+                <ol>
+                    <li>Expand the section to see all protein pairs.</li>
+                    <li>Select a protein pair and click Results to view the analysis summary.</li>
+                    <li>Expand a protein pair to inspect its two child proteins and their scenes.</li>
+                    <li>Select a protein pair and click Delete Object to remove it
+                    (the underlying proteins are kept).</li>
+                </ol>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="PySSA Objects Panel tree — individual items">
+            "protein_item_in_pair": """
+                <p>Protein (inside a protein pair):</p>
+                <p>This protein is one of the two members of the parent protein pair.</p>
+                <p>From here you can:</p>
+                <ol>
+                    <li>Expand it to see its Chains (and their residues and atoms).</li>
+                    <li>Select a chain, residue, or atom under this protein to zoom
+                    to that region in the PyMOL viewport.</li>
+                    <li>Select it and use Image to render a viewport image of this protein alone.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>This protein cannot be deleted on its own.
+                Delete the protein pair first to free both proteins.</p>
+            """,
+
+            "header_scenes": """
+                <p>Scenes sub-section:</p>
+                <p>Lists all saved PyMOL viewport states for the parent protein or protein pair.</p>
+                <p>Each scene remembers camera angle, representation style, and colouring.</p>
+                <p>From here you can:</p>
+                <ol>
+                    <li>Expand it to see all scene entries.</li>
+                    <li>Select a scene to restore its viewport state in PyMOL.</li>
+                </ol>
+            """,
+
+            "header_chains": """
+                <p>Chains sub-section:</p>
+                <p>Lists all polypeptide chains contained in the parent protein structure.</p>
+                <p>From here you can:</p>
+                <ol>
+                    <li>Expand it to see all chain identifiers.</li>
+                    <li>Select a chain to highlight it in the PyMOL viewport.</li>
+                    <li>Expand a chain to browse its individual residues and atoms.</li>
+                </ol>
+            """,
+
+            "chain_item": """
+                <p>Chain:</p>
+                <p>A chain is a single polypeptide chain within a protein structure.
+                Each chain is identified by a one-letter ID (e.g. A, B, C).</p>
+                <p>From here you can:</p>
+                <ol>
+                    <li>Select it to highlight the entire chain in the PyMOL viewport.</li>
+                    <li>Expand it to see all residues belonging to this chain.</li>
+                </ol>
+            """,
+
+            "residue_item": """
+                <p>Residue:</p>
+                <p>A residue is a single amino acid within a chain.
+                It is shown as its sequence number followed by the three-letter residue name
+                (e.g. 42 - ALA).</p>
+                <p>From here you can:</p>
+                <ol>
+                    <li>Select it to highlight and zoom to this residue in the PyMOL viewport.</li>
+                    <li>Expand it to see the individual atoms of this residue.</li>
+                </ol>
+            """,
+
+            "atom_item": """
+                <p>Atom:</p>
+                <p>An atom is a single atom within a residue (e.g. CA = alpha carbon, N, O, CB).</p>
+                <p>From here you can:</p>
+                <ol>
+                    <li>Select it to highlight and zoom to this exact atom in the PyMOL viewport.</li>
+                </ol>
+            """,
           # </editor-fold>
 
           # <editor-fold desc="Dialogs">
@@ -704,6 +821,15 @@ class MainWindowController:
                 btn.setObjectName(obj_name)
                 btn.installEventFilter(self.help_filter)
                 logger.info(f"Installed hover help on Objects Panel button: {obj_name}")
+
+        # Connect the tree view hover signals for item-level help text.
+        # setMouseTracking ensures Enter events fire when cursor moves over items
+        # even without clicking.
+        _tree = _panel.tree_view
+        _tree.setMouseTracking(True)
+        _tree.entered.connect(self.help_filter.handle_tree_item_entered)
+        _tree.viewport().installEventFilter(self.help_filter)
+        logger.info("Connected tree view hover help signals.")
 
         # Connect menu hovered signal to show help for menu items
         self._main_window.menuProject.hovered.connect(self.help_filter.handle_menu_action_hovered)
