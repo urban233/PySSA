@@ -63,6 +63,7 @@ class PySSAObjectsPanel(base_side_panel.BaseSidePanel):
         self.tree_view: QtWidgets.QTreeView = QtWidgets.QTreeView()
         # </editor-fold>
         self._setup_panel_extra_ui()
+        self.setMinimumWidth(250)
     # </editor-fold>
 
     def get_toolbar(self) -> "quick_access_bar.QuickAccessBar":

@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'src/pyssa/gui/ui/forms/settings_view.ui'
+# Form implementation generated from reading ui file '.\settings_view.ui'
 #
 # Created by: PyQt6 UI code generator 6.10.0
 #
@@ -46,6 +46,9 @@ class Ui_Dialog(object):
         self.horizontalLayout_4.addWidget(self.btn_workspace_dir)
         self.verticalLayout_3.addLayout(self.horizontalLayout_4)
         self.verticalLayout_5.addLayout(self.verticalLayout_3)
+        self.cb_pyssa_expert_mode = QtWidgets.QCheckBox(parent=self.project_tab)
+        self.cb_pyssa_expert_mode.setObjectName("cb_pyssa_expert_mode")
+        self.verticalLayout_5.addWidget(self.cb_pyssa_expert_mode)
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
         self.verticalLayout_5.addItem(spacerItem)
         self.tabWidget.addTab(self.project_tab, "")
@@ -184,6 +187,7 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.label_3.setText(_translate("Dialog", "Current Workspace"))
         self.btn_workspace_dir.setText(_translate("Dialog", "..."))
+        self.cb_pyssa_expert_mode.setText(_translate("Dialog", "Enable PySSA expert mode (resets every program launch)"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.project_tab), _translate("Dialog", "Project"))
         self.label_6.setText(_translate("Dialog", "Distance Analysis Parameters"))
         self.label_4.setText(_translate("Dialog", "Cycles"))

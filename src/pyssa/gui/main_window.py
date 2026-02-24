@@ -79,6 +79,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.menuResults = QtWidgets.QMenu("Results", self)
     self.menuImage = QtWidgets.QMenu("Image", self)
     self.menuHotspots = QtWidgets.QMenu("Hotspots", self)
+    self.menuExpert = QtWidgets.QMenu("Expert", self)
     self.menuSettings = QtWidgets.QMenu("Settings", self)
     self.menuAbout = QtWidgets.QMenu("Help", self)
     # </editor-fold>
@@ -112,6 +113,9 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # --- Hotspots Actions ---
     self.action_protein_regions = QtGui.QAction("Protein Regions", self)
     self.action_protein_regions.setCheckable(False)
+
+    # --- Expert Actions ---
+    self.action_run_pml_script = QtGui.QAction("Run PyMOL Script", self)
 
     # --- Settings Actions ---
     self.action_edit_settings = QtGui.QAction("Edit", self)
@@ -207,7 +211,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
       ),
       "notifications": quick_access_bar_action.QuickAccessBarAction(
         "Notifications", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.NOTIFICATIONS)
-      ),
+      )
     }
     # </editor-fold>
 
@@ -451,6 +455,9 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # --- Hotspots Menu ---
     self.menuHotspots.addAction(self.action_protein_regions)
 
+    # --- Expert Menu ---
+    self.menuExpert.addAction(self.action_run_pml_script)
+
     # --- Settings Menu ---
     self.menuSettings.addAction(self.action_edit_settings)
     self.menuSettings.addAction(self.action_restore_settings)
@@ -472,6 +479,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     menubar.addMenu(self.menuResults)
     menubar.addMenu(self.menuImage)
     menubar.addMenu(self.menuHotspots)
+    menubar.addMenu(self.menuExpert)
     menubar.addMenu(self.menuSettings)
     menubar.addMenu(self.menuAbout)
     # </editor-fold>
@@ -755,7 +763,8 @@ def exec_app():
   pymol.cmd.set("internal_gui", 0)
   pymol.cmd.set("internal_feedback", 0)
 
-  window.show()
+  # window.show()
+  window.showMaximized()
 
   # window.raise_()
   #

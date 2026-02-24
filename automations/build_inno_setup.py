@@ -100,6 +100,22 @@ class BuildInnoSetup:
       stdout=sys.stdout, stderr=sys.stderr, text=True
     )
 
+    # Patch the pymol_gl_widget.py for HighDpi support
+    shutil.copy(
+      pathlib.Path(self.deployment_resources_path / "pymol_gl_widget.py"),
+      pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/Lib/site-packages/pmg_qt")
+    )
+    # Patch the invocation.py for custom options
+    shutil.copy(
+      pathlib.Path(self.deployment_resources_path / "invocation.py"),
+      pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/Lib/site-packages/pymol")
+    )
+    # Patch the controlling.py for disabling the context menu in the PyMOL viewer
+    shutil.copy(
+      pathlib.Path(self.deployment_resources_path / "invocation.py"),
+      pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/Lib/site-packages/pymol")
+    )
+
     # ---
 
     # build_win_exe.build()

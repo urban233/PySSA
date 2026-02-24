@@ -28,6 +28,7 @@ Version: 2.0.0
 import logging
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 from io import BytesIO
@@ -154,6 +155,8 @@ class MainWindowController:
         self._tree_context_menu = tree_context_menu.TreeContextMenu()
         self._register_tree_context_menu_actions()
         self._current_selection_snapshot: "selection_snapshot.SelectionSnapshot | None" = None
+
+        self._last_pymol_script_dir = QtCore.QDir.homePath()
         # self.custom_progress_signal = custom_signals.ProgressSignal()
         # self.abort_signal = custom_signals.AbortSignal()
         # self.thread_pool = QtCore.QThreadPool()
@@ -181,7 +184,7 @@ class MainWindowController:
         self._main_window.pyssa_objects_panel.installEventFilter(self.help_filter)
 
         self.refresh_ui()
-        self.open_welcome_screen()
+        # self.open_welcome_screen()
 
     # <editor-fold desc="Private methods">
     def _connect_all_signals_with_their_slots(self) -> None:
@@ -223,6 +226,12 @@ class MainWindowController:
         # <editor-fold desc="Hotspots menu">
         self._main_window.action_protein_regions.triggered.connect(
             self.__slot_protein_hotspots
+        )
+        # </editor-fold>
+
+        # <editor-fold desc="Expert menu">
+        self._main_window.action_run_pml_script.triggered.connect(
+            self.__slot_run_pml_script
         )
         # </editor-fold>
 
@@ -801,6 +810,7 @@ class MainWindowController:
         # A hot project is the project that is currently loaded and shown to the user.
         has_hot_project: bool = self._app_state.has_open_project()
         tmp_project: "project.Project" = self._app_state.project
+        is_pyssa_expert = self._app_state.get_settings().pyssa_expert_mode
 
         # Derived booleans from detailed project data.
         has_sequences: bool = has_hot_project and len(tmp_project.sequences) > 0
@@ -873,6 +883,10 @@ class MainWindowController:
         # Think about using also a selection because this is nearly mandatory
         # for the feature to truly work.
         self._main_window.action_protein_regions.setEnabled(has_hot_project and has_loaded_session)
+        # </editor-fold>
+
+        # <editor-fold desc="Expert menu">
+        self._main_window.menuExpert.menuAction().setVisible(is_pyssa_expert)
         # </editor-fold>
 
         # <editor-fold desc="Settings menu">
@@ -997,10 +1011,10 @@ class MainWindowController:
             self._main_window.setWindowTitle("PySSA")
         # </editor-fold>
 
-        self._main_window.tool_window_layout.set_left_panel_hidden(not has_hot_project)
         self._main_window.project_overview_panel.set_project_name(
             self._app_state.project.get_project_name() if self._app_state.has_open_project() else ""
         )
+        self._main_window.tool_window_layout.set_left_panel_hidden(not has_hot_project)
         self._main_window.project_overview_panel.set_session_name(self._user_pymol.get_current_session_name())
         self._main_window.project_overview_panel.set_scene_name(self._user_pymol.get_current_scene_name())
 
@@ -2358,6 +2372,21 @@ class MainWindowController:
             logger.error(f"Failed to sync PyMOL selection to tree: {e}")
         finally:
             self._is_syncing_selection = False
+
+    def __slot_run_pml_script(self):
+        formats = [
+            'PyMOL Command Script (*.pml)',
+            'Python Script (*.py)',
+        ]
+        file_name = QtWidgets.QFileDialog.getOpenFileName(
+            self._main_window,
+            "Open PyMOL script file",
+            self._last_pymol_script_dir,
+            ";;".join(formats),
+        )
+        if file_name != ("", ""):
+            self._last_pymol_script_dir = os.path.dirname(str(file_name[0]))
+            self._user_pymol.get_cmd_module().run(str(file_name[0]))
 
     # </editor-fold>
 

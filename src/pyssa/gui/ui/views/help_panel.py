@@ -62,6 +62,7 @@ class HelpPanel(base_side_panel.BaseSidePanel):
         self.help_text_browser = QtWidgets.QTextBrowser()
         # </editor-fold>
         self._setup_panel_extra_ui()
+        self.setMinimumWidth(250)
     # </editor-fold>
 
     # <editor-fold desc="Private methods">

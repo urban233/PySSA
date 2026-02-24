@@ -245,7 +245,7 @@ class AddProteinViewController(QtCore.QObject):
           "Open existing protein",
           QtCore.QDir.homePath(),
           "PDB Files (*.pdb)",
-      )
+        )
       if file_name == ("", ""):
         self._view.ui.lbl_status.setText("No file has been selected.")
       else:
