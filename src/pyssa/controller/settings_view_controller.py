@@ -191,7 +191,6 @@ class SettingsViewController(QtCore.QObject):
     self._settings_manager.settings.set_cutoff(
         self._view.ui.dspb_cutoff.value()
     )
-    # self._settings_manager.settings.color_vision_mode = self._view.ui.cb_color_vision_mode.currentText()
     self._settings_manager.settings.image_background_color = (
         self._view.ui.box_bg_color.currentText()
     )
@@ -205,7 +204,7 @@ class SettingsViewController(QtCore.QObject):
     self._settings_manager.settings.image_ray_texture = (
         self._view.ui.box_ray_texture.currentIndex()
     )
-    if self._settings_manager.settings.pyssa_expert_mode != self._view.ui.cb_pyssa_expert_mode.isChecked():
+    if self._settings_manager.settings.pyssa_expert_mode == False and self._view.ui.cb_pyssa_expert_mode.isChecked() == True:
       tmp_activated_expert_mode = True
     else:
       tmp_activated_expert_mode = False
