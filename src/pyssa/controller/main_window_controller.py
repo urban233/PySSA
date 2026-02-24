@@ -809,7 +809,6 @@ class MainWindowController:
 
         has_proteins: bool = has_hot_project and len(tmp_project.proteins) > 0
         has_protein_pairs: bool = has_hot_project and len(tmp_project.protein_pairs) > 0
-        has_any_objects: bool = has_sequences or has_proteins or has_protein_pairs
         has_running_jobs: bool = self._app_state.job_scheduler.has_running_jobs()
         if self._user_pymol.get_currently_loaded_object() is None:
             has_loaded_session: bool = False
@@ -875,7 +874,20 @@ class MainWindowController:
         self._main_window.action_protein_regions.setEnabled(has_hot_project and has_loaded_session)
         # </editor-fold>
 
-        # Settings and Help menus are always enabled.
+        # <editor-fold desc="Settings menu">
+        self._main_window.menuSettings.setEnabled(True)
+        self._main_window.action_edit_settings.setEnabled(True)
+        self._main_window.action_restore_settings.setEnabled(True)
+        # </editor-fold>
+
+        # <editor-fold desc="Help menu">
+        self._main_window.menuAbout.setEnabled(True)
+        self._main_window.action_documentation.setEnabled(True)
+        self._main_window.action_get_demo_projects.setEnabled(True)
+        self._main_window.action_show_log_in_explorer.setEnabled(True)
+        self._main_window.action_clear_logs.setEnabled(True)
+        self._main_window.action_about.setEnabled(True)
+        # </editor-fold>
 
         # <editor-fold desc="Session management">
         toolbar_action_open_session = self._main_window.viewer_toolbar_actions.get("open_session")
@@ -912,6 +924,11 @@ class MainWindowController:
                             has_active_protein_selection or has_active_pair_selection or has_active_pair_child_selection
                     )
                 )
+
+        toolbar_action_hide_all = self._main_window.viewer_toolbar_actions.get("hide_all")
+        if toolbar_action_hide_all: toolbar_action_hide_all.get_action().setEnabled(
+            has_loaded_session and has_active_protein_selection
+        )
         # </editor-fold>
 
         # <editor-fold desc="Color">
@@ -920,6 +937,13 @@ class MainWindowController:
             has_loaded_session and (
                     has_active_protein_selection or has_active_pair_selection or has_active_pair_child_selection
             )
+        )
+        # </editor-fold>
+
+        # <editor-fold desc="Selection">
+        toolbar_action_selection = self._main_window.viewer_toolbar_actions.get("selection")
+        if toolbar_action_selection: toolbar_action_selection.get_action().setEnabled(
+            has_loaded_session
         )
         # </editor-fold>
 
@@ -952,22 +976,25 @@ class MainWindowController:
         )
         # </editor-fold>
 
-        # -- First-pass model binding --------------------------------------
+        # <editor-fold desc="First-pass model binding">
         if self._app_state.is_first_pass():
             panel.tree_view.setModel(self._app_state.pyssa_objects_model)
             # Reconnect selection signal after model is replaced
             self._pyssa_objects_panel_controller._connect_selection_signal()
+        # </editor-fold>
 
-        # -- Tree context menu ---------------------------------------------
+        # <editor-fold desc="Tree context menu">
         self._tree_context_menu.configure(snapshot)
+        # </editor-fold>
 
-        # -- Window title --------------------------------------------------
+        # <editor-fold desc="Window title">
         if has_hot_project:
             self._main_window.setWindowTitle(
                 f"PySSA \u2014 {tmp_project.get_project_name()}"
             )
         else:
             self._main_window.setWindowTitle("PySSA")
+        # </editor-fold>
 
     # <editor-fold desc="Slot methods">
     # <editor-fold desc="Project menu">
