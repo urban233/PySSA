@@ -251,7 +251,7 @@ class MainWindowController:
         # # </editor-fold>
         # # <editor-fold desc="Scene slots">
         self._main_window.viewer_toolbar_actions.get("create_scene").get_action().triggered.connect(
-            self.__slot_save_scene
+            self.__slot_create_scene
         )
         self._main_window.viewer_toolbar_actions.get("save_scene").get_action().triggered.connect(
             self.__slot_update_scene
@@ -814,6 +814,7 @@ class MainWindowController:
             has_loaded_session: bool = False
         else:
             has_loaded_session: bool = True
+        is_base_scene: bool = self._user_pymol.get_current_scene_name() == "base"
 
         # -- Selection Snapshot context ------------------------------------
         has_active_monomer_sequence_selection = snapshot.has_monomer_sequences if snapshot else False
@@ -822,7 +823,7 @@ class MainWindowController:
         has_active_pair_selection = len(snapshot.raw_protein_pairs) > 0 if snapshot else False
         has_active_pair_child_selection = len(snapshot.raw_protein_pair_children) > 0 if snapshot else False
         has_active_scene_selection = len(snapshot.raw_scenes) > 0 if snapshot else False
-
+        tools.debug_print(f"has_active_scene_selection: {has_active_scene_selection}", 2)
         # Prediction needs an input sequence to execute. Prefer active selection, fallback to project existence.
         can_predict_monomer = has_active_monomer_sequence_selection or has_monomer_sequences_in_project
         can_predict_multimer = has_active_multimer_sequence_selection or has_multimer_sequences_in_project
@@ -907,7 +908,7 @@ class MainWindowController:
 
         toolbar_action_delete_scene = self._main_window.viewer_toolbar_actions.get("delete_scene")
         if toolbar_action_delete_scene: toolbar_action_delete_scene.get_action().setEnabled(
-            has_loaded_session and has_active_scene_selection
+            has_loaded_session and has_active_scene_selection and not is_base_scene
         )
         # </editor-fold>
 
@@ -995,6 +996,13 @@ class MainWindowController:
         else:
             self._main_window.setWindowTitle("PySSA")
         # </editor-fold>
+
+        self._main_window.tool_window_layout.set_left_panel_hidden(not has_hot_project)
+        self._main_window.project_overview_panel.set_project_name(
+            self._app_state.project.get_project_name() if self._app_state.has_open_project() else ""
+        )
+        self._main_window.project_overview_panel.set_session_name(self._user_pymol.get_current_session_name())
+        self._main_window.project_overview_panel.set_scene_name(self._user_pymol.get_current_scene_name())
 
     # <editor-fold desc="Slot methods">
     # <editor-fold desc="Project menu">
@@ -1752,8 +1760,8 @@ class MainWindowController:
     # </editor-fold>
 
     # # <editor-fold desc="Scene slots">
-    def __slot_save_scene(self) -> None:
-        """Saves a PyMOL scene.
+    def __slot_create_scene(self) -> None:
+        """Creates a PyMOL scene.
 
         The scene includes the current view and all visible objects.
         Selection context is available via _get_current_snapshot() if needed.
@@ -1774,6 +1782,8 @@ class MainWindowController:
         self._app_state.pyssa_objects_model.add_scene(
             tmp_scene_name, self._user_pymol.get_currently_loaded_object()
         )
+        self._user_pymol.set_current_scene_name(tmp_scene_name)
+        self.refresh_ui()
 
         # # Log selection context for debugging
         # snapshot = self._get_current_snapshot()
@@ -1786,17 +1796,34 @@ class MainWindowController:
         if snapshot:
             for tmp_raw_scene in snapshot.raw_scenes:
                 self._user_pymol.get_cmd_module().scene(tmp_raw_scene, "recall")
+                self._user_pymol.set_current_scene_name(tmp_raw_scene)
                 # Log scene recall
                 logger.info(f"Recalled scene: {tmp_raw_scene}")
+        self.refresh_ui(self._get_current_snapshot())
 
     def __slot_update_scene(self):
         """Update the currently selected PyMOL scene and refresh its thumbnail."""
         snapshot = self._get_current_snapshot()
         if snapshot:
             for tmp_raw_scene in snapshot.raw_scenes:
-                self._user_pymol.get_cmd_module().scene(tmp_raw_scene, "update")
+                if tmp_raw_scene == "base":
+                    self._user_pymol.get_cmd_module().scene("__scratch__", "update")
+                    self._user_pymol.get_cmd_module().scene("__scratch__", "recall")
+                    self._user_pymol.set_current_scene_name("__scratch__")
+                    self.refresh_ui(self._get_current_snapshot())
+                else:
+                    self._user_pymol.get_cmd_module().scene(tmp_raw_scene, "update")
                 # Log scene recall
                 logger.info(f"Updated scene: {tmp_raw_scene}")
+
+        tmp_current_scene_name = self._user_pymol.get_current_scene_name()
+        if tmp_current_scene_name == "base":
+            self._user_pymol.get_cmd_module().scene("__scratch__", "update")
+            self._user_pymol.get_cmd_module().scene("__scratch__", "recall")
+            self._user_pymol.set_current_scene_name("__scratch__")
+            self.refresh_ui(self._get_current_snapshot())
+        else:
+            self._user_pymol.get_cmd_module().scene(tmp_current_scene_name, "update")
 
     def __slot_delete_scene(self):
         """Deletes the currently selected PyMOL scene and removes it from the list."""
@@ -1809,6 +1836,8 @@ class MainWindowController:
                 self._app_state.pyssa_objects_model.remove_scene(
                     tmp_raw_scene, self._user_pymol.get_currently_loaded_object()
                 )
+            self._user_pymol.get_cmd_module().scene("base", "recall")
+            self._user_pymol.set_current_scene_name("base")
 
     # # </editor-fold>
 

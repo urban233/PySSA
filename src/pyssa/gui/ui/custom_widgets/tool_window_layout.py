@@ -25,6 +25,7 @@ from typing import Optional
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.ui.custom_widgets import quick_access_bar
+from src.pyssa.gui.ui.views import base_side_panel
 
 
 class ToolWindowLayout(QtWidgets.QWidget):
@@ -41,6 +42,7 @@ class ToolWindowLayout(QtWidgets.QWidget):
           right_quick_access_bar_items,
           viewer_quick_access_bar_items,
           molecular_viewer: QtWidgets.QWidget,
+          project_over_view_panel: "base_side_panel.BaseSidePanel",
           parent: Optional[QtWidgets.QWidget] = None
   ) -> None:
     super().__init__(parent)
@@ -50,6 +52,7 @@ class ToolWindowLayout(QtWidgets.QWidget):
     self.viewer_toolbar = quick_access_bar.QuickAccessBar(
       viewer_quick_access_bar_items, horizontal=True
     )
+    self.project_over_view_panel = project_over_view_panel
     # TODO: PySSA does not need these toolbars right now
     # self.left_toolbar = quick_access_bar.QuickAccessBar(left_quick_access_bar_items)
     # self.right_toolbar = quick_access_bar.QuickAccessBar(right_quick_access_bar_items)
@@ -60,6 +63,7 @@ class ToolWindowLayout(QtWidgets.QWidget):
     self.bottom_stack = QtWidgets.QStackedWidget()
 
     # --- QFrames for stylable containers ---
+    self.left_upper_frame = QtWidgets.QFrame()
     self.left_frame = QtWidgets.QFrame()
     self.right_frame = QtWidgets.QFrame()
     self.bottom_frame = QtWidgets.QFrame()
@@ -80,12 +84,10 @@ class ToolWindowLayout(QtWidgets.QWidget):
 
     self._init_ui()
 
-  # -------------------------------------------------------------------------
-  # UI setup
-  # -------------------------------------------------------------------------
   def _init_ui(self) -> None:
     """Initialize UI layout with stylable frames."""
     # Configure stacked widget frames
+    self._setup_project_overview_panel_frame(self.left_upper_frame, self.project_over_view_panel)
     self._setup_stacked_panel_frame(self.left_frame, self.left_stack)
     self._setup_stacked_panel_frame(self.right_frame, self.right_stack)
     self._setup_stacked_panel_frame(self.bottom_frame, self.bottom_stack)
@@ -108,7 +110,12 @@ class ToolWindowLayout(QtWidgets.QWidget):
     self.right_splitter.setSizes([800, self._last_right_size])
     self.right_splitter.setChildrenCollapsible(False)
 
-    self.left_splitter.addWidget(self.left_frame)
+    self.left_container = QtWidgets.QWidget()
+    tmp_left_panel_layout = QtWidgets.QVBoxLayout(self.left_container)
+    tmp_left_panel_layout.addWidget(self.left_upper_frame)
+    tmp_left_panel_layout.addWidget(self.left_frame)
+    tmp_left_panel_layout.setContentsMargins(0, 0, 0, 0)
+    self.left_splitter.addWidget(self.left_container)
     self.left_splitter.addWidget(self.right_splitter)
     self.left_splitter.setSizes([self._last_left_size, 800])
     self.left_splitter.setChildrenCollapsible(False)
@@ -151,8 +158,27 @@ class ToolWindowLayout(QtWidgets.QWidget):
     # tmp_shadow_effect.setColor(QtGui.QColor(0, 0, 0, 15))
     # frame.setGraphicsEffect(tmp_shadow_effect)
 
+  @staticmethod
+  def _setup_project_overview_panel_frame(
+          frame: QtWidgets.QFrame,
+          project_overview_panel: "base_side_panel.BaseSidePanel",
+  ) -> None:
+    """Embed a stacked widget into a frame for styling."""
+    frame_layout = QtWidgets.QVBoxLayout(frame)
+    frame_layout.setContentsMargins(2, 2, 2, 2)
+    frame_layout.addWidget(project_overview_panel)
+
   def _apply_default_styles(self) -> None:
     """Apply a simple border style to demonstrate panel styling."""
+    self.left_upper_frame.setStyleSheet(
+      """
+      QFrame {
+            border: 0.075em solid white;
+            background: white;
+            border-radius: 0.75em;
+        }
+      """
+    )
     self.left_frame.setStyleSheet(
       """
       QFrame {
@@ -237,9 +263,13 @@ class ToolWindowLayout(QtWidgets.QWidget):
       current_sizes = self.left_splitter.sizes()
       if current_sizes[0] > 0:
         self._last_left_size = current_sizes[0]
-      self.left_frame.hide()
+      # self.left_upper_frame.hide()
+      # self.left_frame.hide()
+      self.left_container.hide()
     else:
-      self.left_frame.show()
+      # self.left_upper_frame.show()
+      # self.left_frame.show()
+      self.left_container.show()
       # Calculate the size for the right section based on current total width
       total_width = sum(self.left_splitter.sizes())
       right_size = max(total_width - self._last_left_size, 100)

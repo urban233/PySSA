@@ -471,6 +471,11 @@ chain_dict_reverse = {
     'Z': 25,
 }
 
+PYMOL_SESSION_DEFAULTS = {
+    "": "",
+    "1": 0
+}
+
 PYMOL_REPR_STATES_WITH_INDICES = {
     0: {
         'sticks': 0,

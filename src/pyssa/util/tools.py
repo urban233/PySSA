@@ -20,6 +20,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for functions which can be used across the entire project."""
+import inspect
+import os
 import pathlib
 import json
 from typing import Union
@@ -115,3 +117,68 @@ def get_latest_release(json_file_path: Union[str, pathlib.Path]) -> Optional[dic
     'releaseDate': latest_entry['releaseDate'],
     'releaseUrl': latest_entry['releaseUrl']
   }
+
+
+def debug_print(msg, depth=1):
+  frame = inspect.currentframe()
+  outer = inspect.getouterframes(frame)
+
+  if len(outer) > depth:
+    info = outer[depth]
+    f = info.frame
+
+    print("==== DEBUG INFO ====")
+    print(f"Message       : {msg}")
+    print(f"Function      : {info.function}")
+    print(f"File          : {info.filename}")
+    print(f"Line          : {info.lineno}")
+    print(f"Module        : {inspect.getmodule(f)}")
+    print(f"Class         : {type(f.f_locals.get('self')).__name__ if 'self' in f.f_locals else None}")
+    print(f"Locals        : {list(f.f_locals.keys())}")
+    print(f"Globals       : {list(f.f_globals.keys())[:5]} ...")
+    print(f"Code Context  : {info.code_context}")
+    print("====================")
+
+# def debug_print(msg, depth=1):
+#   frame = inspect.currentframe()
+#   outer_frames = inspect.getouterframes(frame)
+#
+#   if len(outer_frames) > depth:
+#     info = outer_frames[depth]
+#
+#     filename = os.path.basename(info.filename)
+#     lineno = info.lineno
+#     function = info.function
+#     code_context = info.code_context[0].strip() if info.code_context else ""
+#     module = inspect.getmodule(info.frame)
+#     module_name = module.__name__ if module else "Unknown"
+#
+#     # Try to detect class name
+#     cls_name = None
+#     if "self" in info.frame.f_locals:
+#       cls_name = type(info.frame.f_locals["self"]).__name__
+#
+#     print("---- DEBUG CALL INFO ----")
+#     print(f"Message     : {msg}")
+#     print(f"Function    : {function}")
+#     print(f"Class       : {cls_name}")
+#     print(f"Module      : {module_name}")
+#     print(f"File        : {filename}")
+#     print(f"Line        : {lineno}")
+#     print(f"Code        : {code_context}")
+#     print("-------------------------")
+
+# def debug_print(msg, depth=1):
+#   """Prints a debug message with the name of the function which called it.
+#
+#   [0] = debug_print
+#   [1] = immediate caller
+#   [2] = caller of caller
+#   """
+#   frame = inspect.currentframe()
+#   for _ in range(depth):
+#     if frame:
+#       frame = frame.f_back
+#
+#   name = frame.f_code.co_name if frame else "Unknown"
+#   print(f"[Called from: {name}] {msg}")

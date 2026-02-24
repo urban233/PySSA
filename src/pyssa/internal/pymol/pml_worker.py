@@ -529,6 +529,7 @@ def _create_new_session(pymol_instance: pymol2.PyMOL, a_pdb_filepath: str) -> st
     pymol_instance.cmd.color("green", tmp_protein_name)
     pymol_instance.cmd.reset()
     pymol_instance.cmd.scene("base", action="store")
+    pymol_instance.cmd.scene("__scratch__", action="store")
     
     session_filepath = pathlib.Path(f"{constants.SCRATCH_DIR}/{tmp_protein_name}_session.pse")
     pymol_instance.cmd.save(str(session_filepath))

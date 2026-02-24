@@ -42,7 +42,7 @@ from src.pyssa.controller import main_window_controller, welcome_screen_view_con
 from src.pyssa.gui import user_pymol
 from src.pyssa.gui.ui.styles import styles
 
-from src.pyssa.gui.ui.views import pyssa_objects_panel, welcome_screen_view, help_panel
+from src.pyssa.gui.ui.views import pyssa_objects_panel, welcome_screen_view, help_panel, project_overview_panel
 
 from src.pyssa.gui.ui.styles.icon_manager import IconManager
 from src.pyssa.gui.qt import QtCore
@@ -373,6 +373,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.user_pymol = user_pymol.UserPyMOL(self.pymolwidget)
     # <editor-fold desc="Panels">
     self.left_side_panel_stacked_widget = QtWidgets.QStackedWidget()
+    self.project_overview_panel = project_overview_panel.ProjectOverviewPanel()
     self.pyssa_objects_panel = pyssa_objects_panel.PySSAObjectsPanel()
     self.pyssa_objects_panel.setObjectName("pyssa_objects_panel")
     self.help_panel = help_panel.HelpPanel()
@@ -395,7 +396,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
       None,
       None,
       list(self.viewer_toolbar_actions.values()),
-      self.pymolwidget, self
+      self.pymolwidget, self.project_overview_panel, self
     )
 
     self.tool_window_layout.set_right_panel_hidden(True)

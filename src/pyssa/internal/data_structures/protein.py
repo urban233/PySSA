@@ -308,6 +308,10 @@ class Protein:
         tmp_chain.chain_sequence.name = a_value
     self.pymol_selection.molecule_object = a_value
 
+  def get_name(self) -> str:
+    """Gets the name of the protein."""
+    return self._pymol_molecule_object
+
   def get_all_sequences(self) -> list["sequence.Sequence"]:
     """Gets all sequences of the protein as list of sequences.
 

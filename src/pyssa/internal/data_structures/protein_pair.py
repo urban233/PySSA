@@ -152,3 +152,6 @@ class ProteinPair:
 
     """
     return f"{self.protein_1.get_molecule_object()}-{self.protein_2.get_molecule_object()}"
+
+  def get_name(self):
+    return self.name
