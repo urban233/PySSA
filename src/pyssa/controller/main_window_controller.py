@@ -167,6 +167,212 @@ class MainWindowController:
                 <p>Displays all PySSA objects in the current project.</p>
             """,
 
+          # <editor-fold desc="PyMOL Viewer">
+            "pymolwidget": """
+                <p>PyMOL Viewer:</p>
+                <p>This is the interactive 3D molecular viewer powered by PyMOL.
+                It displays all loaded protein structures in 3D.</p>
+                <p>Navigation in the viewer:</p>
+                <ol>
+                    <li>Left-click and drag down to zoom in; drag up to zoom out.</li>
+                    <li>Right-click and drag to rotate the protein or protein pair.</li>
+                    <li>Hold the middle mouse button and drag to move (pan)
+                    the protein or protein pair.</li>
+                    <li>Scroll the mouse wheel up to reveal more of the structure
+                    (reduce clipping); scroll down to hide more.</li>
+                </ol>
+                <p>Loading structures:</p>
+                <ol>
+                    <li>Select a protein or protein pair in the PySSA Objects Panel.</li>
+                    <li>Click Open Session in the toolbar, or right-click and choose
+                    Open Session from the context menu.</li>
+                </ol>
+            """,
+
+          # <editor-fold desc="Viewer toolbar buttons">
+            "viewer_open_session": """
+                <p>Open Session:</p>
+                <p>Load the stored PyMOL session for the currently selected protein or
+                protein pair into the viewport.</p>
+                <ol>
+                    <li>Select a protein or protein pair in the PySSA Objects Panel.</li>
+                    <li>Click Open Session to load its 3D structure into the viewport.</li>
+                </ol>
+            """,
+
+            "viewer_create_scene": """
+                <p>Create Scene:</p>
+                <p>Save the current viewport state as a new named scene.</p>
+                <ol>
+                    <li>Set up the desired camera angle, zoom, and representation in the viewport.</li>
+                    <li>Click Create Scene.</li>
+                    <li>Enter a name for the new scene.</li>
+                    <li>The scene appears under the protein or protein pair in the PySSA Objects Panel.</li>
+                </ol>
+            """,
+
+            "viewer_save_scene": """
+                <p>Save Scene:</p>
+                <p>Overwrite the currently active scene with the present viewport state.</p>
+                <ol>
+                    <li>Select the scene you want to update in the PySSA Objects Panel.</li>
+                    <li>Adjust the viewport to the desired state.</li>
+                    <li>Click Save Scene to overwrite the existing scene data.</li>
+                </ol>
+            """,
+
+            "viewer_delete_scene": """
+                <p>Delete Scene:</p>
+                <p>Remove the currently selected scene.</p>
+                <ol>
+                    <li>Select the scene to delete in the PySSA Objects Panel.</li>
+                    <li>Click Delete Scene.</li>
+                    <li>Confirm the deletion. The scene is permanently removed.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>This action cannot be undone.</p>
+            """,
+
+            "viewer_cartoon": """
+                <p>Cartoon Representation:</p>
+                <p>Switch the selected protein to cartoon representation.</p>
+                <p>Cartoon shows secondary structure elements (helices as ribbons,
+                sheets as flat arrows, loops as thin tubes).
+                This is the most common representation for protein overview.</p>
+                <ol>
+                    <li>Select a protein or a chain in the PySSA Objects Panel.</li>
+                    <li>Click Cartoon to apply the representation.</li>
+                    <li>Use Show or Hide from the dropdown to toggle visibility.</li>
+                </ol>
+            """,
+
+            "viewer_sticks": """
+                <p>Sticks Representation:</p>
+                <p>Switch the selected structure to sticks representation.</p>
+                <p>Sticks draws every bond as a cylinder, making individual bonds,
+                side chains, and small molecules clearly visible.</p>
+                <ol>
+                    <li>Select a protein, residue, or atom in the PySSA Objects Panel.</li>
+                    <li>Click Sticks to apply the representation.</li>
+                    <li>Useful for inspecting active sites or ligand interactions.</li>
+                </ol>
+            """,
+
+            "viewer_ribbon": """
+                <p>Ribbon Representation:</p>
+                <p>Switch the selected protein to ribbon representation.</p>
+                <p>Ribbon shows the protein backbone as a smooth continuous ribbon,
+                giving an overview of the fold without showing individual atoms.</p>
+                <ol>
+                    <li>Select a protein or chain.</li>
+                    <li>Click Ribbon to apply the representation.</li>
+                </ol>
+            """,
+
+            "viewer_lines": """
+                <p>Lines Representation:</p>
+                <p>Switch the selected structure to lines representation.</p>
+                <p>Lines draws bonds as thin lines. Useful for a lightweight
+                overview when rendering many atoms at once.</p>
+                <ol>
+                    <li>Select a protein or chain.</li>
+                    <li>Click Lines to apply the representation.</li>
+                </ol>
+            """,
+
+            "viewer_spheres": """
+                <p>Spheres Representation:</p>
+                <p>Switch the selected structure to van der Waals spheres representation.</p>
+                <p>Each atom is drawn as a sphere scaled to its van der Waals radius.
+                Useful for visualising molecular surface and packing.</p>
+                <ol>
+                    <li>Select a protein or residue.</li>
+                    <li>Click Spheres to apply the representation.</li>
+                </ol>
+            """,
+
+            "viewer_dots": """
+                <p>Dots Representation:</p>
+                <p>Switch the selected structure to dots representation.</p>
+                <p>Each atom is shown as a dot cloud at its van der Waals radius.
+                Gives a lightweight surface-like appearance.</p>
+                <ol>
+                    <li>Select a protein or residue.</li>
+                    <li>Click Dots to apply the representation.</li>
+                </ol>
+            """,
+
+            "viewer_mesh": """
+                <p>Mesh Representation:</p>
+                <p>Switch the selected structure to mesh (wireframe surface) representation.</p>
+                <p>A semi-transparent 3D mesh is drawn around the molecular surface,
+                useful for showing the overall shape while keeping interior visible.</p>
+                <ol>
+                    <li>Select a protein or chain.</li>
+                    <li>Click Mesh to apply the representation.</li>
+                </ol>
+            """,
+
+            "viewer_surface": """
+                <p>Surface Representation:</p>
+                <p>Switch the selected structure to solid molecular surface representation.</p>
+                <p>The solvent-accessible surface is rendered as a solid skin.
+                Ideal for visualising binding pockets and surface features.</p>
+                <ol>
+                    <li>Select a protein or chain.</li>
+                    <li>Click Surface to apply the representation.</li>
+                    <li>Use Show or Hide to toggle surface visibility.</li>
+                </ol>
+            """,
+
+            "viewer_color": """
+                <p>Color:</p>
+                <p>Apply a colour scheme to the selected protein or structure in the viewport.</p>
+                <ol>
+                    <li>Select a protein or chain in the PySSA Objects Panel.</li>
+                    <li>Click Color to open the colour palette popup.</li>
+                    <li>Choose a colour or colouring scheme (e.g. by element, chain, spectrum).</li>
+                    <li>The selected structure is recoloured immediately.</li>
+                </ol>
+            """,
+
+            "viewer_clean": """
+                <p>Clean:</p>
+                <p>Remove solvent molecules or organic ligands from the viewport display.</p>
+                <ol>
+                    <li>Click Clean to open the cleanup popup.</li>
+                    <li>Select Solvent Molecules to hide water and ions.</li>
+                    <li>Select Organic Molecules to hide small-molecule ligands.</li>
+                </ol>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>This hides molecules from the viewport only. No data is deleted from the project.</p>
+            """,
+
+            "viewer_running_jobs": """
+                <p>Active Jobs:</p>
+                <p>View and monitor currently running background jobs
+                (predictions, analyses, image exports).</p>
+                <ol>
+                    <li>Click Active Jobs to open the running jobs popup.</li>
+                    <li>Each active job is listed with its type and current status.</li>
+                    <li>When a job finishes, its result appears automatically in the
+                    PySSA Objects Panel and a notification is created.</li>
+                </ol>
+            """,
+
+            "viewer_notifications": """
+                <p>Completed Jobs:</p>
+                <p>View the list of all finished background jobs and their results.</p>
+                <ol>
+                    <li>Click Completed Jobs to open the finished jobs popup.</li>
+                    <li>Each completed job is listed with its name and outcome.</li>
+                    <li>Results are also reflected automatically in the
+                    PySSA Objects Panel.</li>
+                </ol>
+            """,
+          # </editor-fold>
+          # </editor-fold>
+
           # <editor-fold desc="PySSA Objects Panel toolbar actions">
             "expand_all": """
                 <p>Expand all:</p>
@@ -830,6 +1036,42 @@ class MainWindowController:
         _tree.entered.connect(self.help_filter.handle_tree_item_entered)
         _tree.viewport().installEventFilter(self.help_filter)
         logger.info("Connected tree view hover help signals.")
+
+        # Install hover help on the PyMOL viewport widget.
+        _mw = self._main_window
+        _mw.pymolwidget.setObjectName("pymolwidget")
+        _mw.pymolwidget.installEventFilter(self.help_filter)
+
+        # Install hover help on all viewer toolbar buttons.
+        # NOTE: The actual visible toolbar is inside tool_window_layout, not
+        # main_window.viewer_toolbar (which is never added to any layout).
+        _vt = _mw.tool_window_layout.viewer_toolbar
+        _viewer_btn_map = [
+            ("open_session",    "viewer_open_session"),
+            ("create_scene",    "viewer_create_scene"),
+            ("save_scene",      "viewer_save_scene"),
+            ("delete_scene",    "viewer_delete_scene"),
+            ("cartoon",         "viewer_cartoon"),
+            ("sticks",          "viewer_sticks"),
+            ("ribbon",          "viewer_ribbon"),
+            ("lines",           "viewer_lines"),
+            ("spheres",         "viewer_spheres"),
+            ("dots",            "viewer_dots"),
+            ("mesh",            "viewer_mesh"),
+            ("surface",         "viewer_surface"),
+            ("color",           "viewer_color"),
+            ("clean",           "viewer_clean"),
+            ("running_jobs",    "viewer_running_jobs"),
+            ("notifications",   "viewer_notifications"),
+        ]
+        for action_key, obj_name in _viewer_btn_map:
+            action_wrapper = _mw.viewer_toolbar_actions.get(action_key)
+            if action_wrapper is not None:
+                btn = _vt.get_tool_button_for_action(action_wrapper)
+                if btn is not None:
+                    btn.setObjectName(obj_name)
+                    btn.installEventFilter(self.help_filter)
+                    logger.info(f"Installed hover help on viewer toolbar button: {obj_name}")
 
         # Connect menu hovered signal to show help for menu items
         self._main_window.menuProject.hovered.connect(self.help_filter.handle_menu_action_hovered)
