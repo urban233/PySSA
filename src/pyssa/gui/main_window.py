@@ -231,9 +231,11 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.cartoon_show_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY), "Show"
     )
+    self.cartoon_show_action.setObjectName("popup_cartoon_show")
     self.cartoon_hide_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF), "Hide"
     )
+    self.cartoon_hide_action.setObjectName("popup_cartoon_hide")
     self.cartoon_show_hide_menu.addAction(self.cartoon_show_action)
     self.cartoon_show_hide_menu.addAction(self.cartoon_hide_action)
 
@@ -241,9 +243,11 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.sticks_show_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY), "Show"
     )
+    self.sticks_show_action.setObjectName("popup_sticks_show")
     self.sticks_hide_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF), "Hide"
     )
+    self.sticks_hide_action.setObjectName("popup_sticks_hide")
     self.sticks_show_hide_menu.addAction(self.sticks_show_action)
     self.sticks_show_hide_menu.addAction(self.sticks_hide_action)
 
@@ -251,9 +255,11 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.ribbon_show_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY), "Show"
     )
+    self.ribbon_show_action.setObjectName("popup_ribbon_show")
     self.ribbon_hide_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF), "Hide"
     )
+    self.ribbon_hide_action.setObjectName("popup_ribbon_hide")
     self.ribbon_show_hide_menu.addAction(self.ribbon_show_action)
     self.ribbon_show_hide_menu.addAction(self.ribbon_hide_action)
 
@@ -261,9 +267,11 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.lines_show_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY), "Show"
     )
+    self.lines_show_action.setObjectName("popup_lines_show")
     self.lines_hide_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF), "Hide"
     )
+    self.lines_hide_action.setObjectName("popup_lines_hide")
     self.lines_show_hide_menu.addAction(self.lines_show_action)
     self.lines_show_hide_menu.addAction(self.lines_hide_action)
 
@@ -271,9 +279,11 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.spheres_show_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY), "Show"
     )
+    self.spheres_show_action.setObjectName("popup_spheres_show")
     self.spheres_hide_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF), "Hide"
     )
+    self.spheres_hide_action.setObjectName("popup_spheres_hide")
     self.spheres_show_hide_menu.addAction(self.spheres_show_action)
     self.spheres_show_hide_menu.addAction(self.spheres_hide_action)
 
@@ -281,9 +291,11 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.dots_show_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY), "Show"
     )
+    self.dots_show_action.setObjectName("popup_dots_show")
     self.dots_hide_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF), "Hide"
     )
+    self.dots_hide_action.setObjectName("popup_dots_hide")
     self.dots_show_hide_menu.addAction(self.dots_show_action)
     self.dots_show_hide_menu.addAction(self.dots_hide_action)
 
@@ -291,18 +303,22 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.mesh_show_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY), "Show"
     )
+    self.mesh_show_action.setObjectName("popup_mesh_show")
     self.mesh_hide_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF), "Hide"
     )
+    self.mesh_hide_action.setObjectName("popup_mesh_hide")
     self.mesh_show_hide_menu.addAction(self.mesh_show_action)
     self.mesh_show_hide_menu.addAction(self.mesh_hide_action)
     self.surface_show_hide_menu = dropdown_menu.DropDownMenu()
     self.surface_show_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY), "Show"
     )
+    self.surface_show_action.setObjectName("popup_surface_show")
     self.surface_hide_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF), "Hide"
     )
+    self.surface_hide_action.setObjectName("popup_surface_hide")
     self.surface_show_hide_menu.addAction(self.surface_show_action)
     self.surface_show_hide_menu.addAction(self.surface_hide_action)
     # </editor-fold>
@@ -312,24 +328,32 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.clean_solvent_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.DELETE), "Solvent Molecules"
     )
+    self.clean_solvent_action.setObjectName("popup_clean_solvent")
     self.clean_organic_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.DELETE), "Organic Molecules"
     )
+    self.clean_organic_action.setObjectName("popup_clean_organic")
     self.clean_solvent_organic_menu.addAction(self.clean_solvent_action)
     self.clean_solvent_organic_menu.addAction(self.clean_organic_action)
     # </editor-fold>
 
     self.color_grid = color_grid.PyMOLColorGrid()
     self.color_config = psa_color_config.PSAColorConfig(self.color_grid)
+    self.color_config.btn_white_bg.setObjectName("popup_color_bg_white")
+    self.color_config.btn_grey_bg.setObjectName("popup_color_bg_grey")
+    self.color_config.btn_black_bg.setObjectName("popup_color_bg_black")
+    self.color_config.btn_color_by_elements.setObjectName("popup_color_by_elements")
     self.color_grid_menu = dropdown_menu.DropDownMenu()
     self.color_grid_action = QtWidgets.QWidgetAction(None)
 
     # <editor-fold desc="Jobs">
     self.active_jobs = job_panel.JobPanel()
+    self.active_jobs.setObjectName("popup_active_jobs")
     self.active_jobs_menu = dropdown_menu.DropDownMenu()
     self.active_jobs_action = QtWidgets.QWidgetAction(None)
 
     self.complete_jobs = job_panel.JobPanel()
+    self.complete_jobs.setObjectName("popup_complete_jobs")
     self.complete_jobs_menu = dropdown_menu.DropDownMenu()
     self.complete_jobs_action = QtWidgets.QWidgetAction(None)
     # </editor-fold>

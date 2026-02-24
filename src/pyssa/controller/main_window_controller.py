@@ -370,6 +370,160 @@ class MainWindowController:
                     PySSA Objects Panel.</li>
                 </ol>
             """,
+
+          # <editor-fold desc="Popup menus — representation show/hide">
+            "popup_cartoon_show": """
+                <p>Show Cartoon:</p>
+                <p>Make the cartoon representation visible for the currently selected
+                protein or chain in the PyMOL Viewer.</p>
+            """,
+            "popup_cartoon_hide": """
+                <p>Hide Cartoon:</p>
+                <p>Hide the cartoon representation from the PyMOL Viewer.
+                The data is not deleted; click Show to restore it.</p>
+            """,
+
+            "popup_sticks_show": """
+                <p>Show Sticks:</p>
+                <p>Make the sticks representation visible for the currently selected
+                protein, residue, or chain.</p>
+            """,
+            "popup_sticks_hide": """
+                <p>Hide Sticks:</p>
+                <p>Hide the sticks representation from the PyMOL Viewer.
+                The data is not deleted; click Show to restore it.</p>
+            """,
+
+            "popup_ribbon_show": """
+                <p>Show Ribbon:</p>
+                <p>Make the ribbon representation visible for the currently selected
+                protein or chain.</p>
+            """,
+            "popup_ribbon_hide": """
+                <p>Hide Ribbon:</p>
+                <p>Hide the ribbon representation from the PyMOL Viewer.
+                The data is not deleted; click Show to restore it.</p>
+            """,
+
+            "popup_lines_show": """
+                <p>Show Lines:</p>
+                <p>Make the lines representation visible for the currently selected
+                protein or chain.</p>
+            """,
+            "popup_lines_hide": """
+                <p>Hide Lines:</p>
+                <p>Hide the lines representation from the PyMOL Viewer.
+                The data is not deleted; click Show to restore it.</p>
+            """,
+
+            "popup_spheres_show": """
+                <p>Show Spheres:</p>
+                <p>Make the van der Waals spheres representation visible for the
+                currently selected protein or residue.</p>
+            """,
+            "popup_spheres_hide": """
+                <p>Hide Spheres:</p>
+                <p>Hide the spheres representation from the PyMOL Viewer.
+                The data is not deleted; click Show to restore it.</p>
+            """,
+
+            "popup_dots_show": """
+                <p>Show Dots:</p>
+                <p>Make the dots representation visible for the currently selected
+                protein or residue.</p>
+            """,
+            "popup_dots_hide": """
+                <p>Hide Dots:</p>
+                <p>Hide the dots representation from the PyMOL Viewer.
+                The data is not deleted; click Show to restore it.</p>
+            """,
+
+            "popup_mesh_show": """
+                <p>Show Mesh:</p>
+                <p>Make the wireframe mesh representation visible for the currently
+                selected protein or chain.</p>
+            """,
+            "popup_mesh_hide": """
+                <p>Hide Mesh:</p>
+                <p>Hide the mesh representation from the PyMOL Viewer.
+                The data is not deleted; click Show to restore it.</p>
+            """,
+
+            "popup_surface_show": """
+                <p>Show Surface:</p>
+                <p>Make the solid molecular surface visible for the currently selected
+                protein or chain.</p>
+            """,
+            "popup_surface_hide": """
+                <p>Hide Surface:</p>
+                <p>Hide the molecular surface from the PyMOL Viewer.
+                The data is not deleted; click Show to restore it.</p>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Popup menus — Clean">
+            "popup_clean_solvent": """
+                <p>Clean: Solvent Molecules:</p>
+                <p>Hide all solvent molecules (water, ions) from the PyMOL Viewer.</p>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>This hides solvent molecules from the viewport only.
+                No data is deleted from the project.</p>
+            """,
+
+            "popup_clean_organic": """
+                <p>Clean: Organic Molecules:</p>
+                <p>Hide all organic small-molecule ligands from the PyMOL Viewer.</p>
+                <p style="color: red;"><b>&#9888; CAUTION:</b></p>
+                <p>This hides organic molecules from the viewport only.
+                No data is deleted from the project.</p>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Popup panels — Color">
+            "popup_color_bg_white": """
+                <p>Background Color: White:</p>
+                <p>Set the PyMOL Viewer background to white.
+                Useful for publication-ready images.</p>
+            """,
+
+            "popup_color_bg_grey": """
+                <p>Background Color: Grey:</p>
+                <p>Set the PyMOL Viewer background to a medium grey (grey40).</p>
+            """,
+
+            "popup_color_bg_black": """
+                <p>Background Color: Black:</p>
+                <p>Set the PyMOL Viewer background to black.
+                The default background; provides high contrast for protein colours.</p>
+            """,
+
+            "popup_color_by_elements": """
+                <p>Color Atoms by Element:</p>
+                <p>Apply standard CPK element colouring to all atoms of the
+                selected protein or structure.
+                Carbon = grey, Nitrogen = blue, Oxygen = red, Sulphur = yellow.</p>
+            """,
+          # </editor-fold>
+
+          # <editor-fold desc="Popup panels — Jobs">
+            "popup_active_jobs": """
+                <p>Active Jobs panel:</p>
+                <p>This panel lists all currently running background jobs,
+                including protein structure predictions and distance analyses.</p>
+                <p>Each entry shows the job type and its current status.
+                Results appear automatically in the PySSA Objects Panel when
+                a job completes.</p>
+            """,
+
+            "popup_complete_jobs": """
+                <p>Completed Jobs panel:</p>
+                <p>This panel lists all background jobs that have finished.</p>
+                <p>Each entry shows the job type and its final outcome.
+                Successful results are already reflected in the
+                PySSA Objects Panel.</p>
+            """,
+          # </editor-fold>
+
           # </editor-fold>
           # </editor-fold>
 
@@ -1072,6 +1226,42 @@ class MainWindowController:
                     btn.setObjectName(obj_name)
                     btn.installEventFilter(self.help_filter)
                     logger.info(f"Installed hover help on viewer toolbar button: {obj_name}")
+
+        # Connect hovered signals for all 8 representation show/hide popup menus.
+        _repr_menus = [
+            _mw.cartoon_show_hide_menu,
+            _mw.sticks_show_hide_menu,
+            _mw.ribbon_show_hide_menu,
+            _mw.lines_show_hide_menu,
+            _mw.spheres_show_hide_menu,
+            _mw.dots_show_hide_menu,
+            _mw.mesh_show_hide_menu,
+            _mw.surface_show_hide_menu,
+        ]
+        for _menu in _repr_menus:
+            _menu.hovered.connect(self.help_filter.handle_menu_action_hovered)
+            _menu.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
+        logger.info("Connected hover help for all representation show/hide menus.")
+
+        # Connect the Clean popup menu.
+        _mw.clean_solvent_organic_menu.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        _mw.clean_solvent_organic_menu.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
+
+        # Install event filters on the Color popup panel's interactive widgets.
+        _cc = _mw.color_config
+        for _btn in (
+            _cc.btn_white_bg,
+            _cc.btn_grey_bg,
+            _cc.btn_black_bg,
+            _cc.btn_color_by_elements,
+        ):
+            _btn.installEventFilter(self.help_filter)
+        logger.info("Installed hover help on color config buttons.")
+
+        # Install event filters on the Active Jobs and Completed Jobs panels.
+        _mw.active_jobs.installEventFilter(self.help_filter)
+        _mw.complete_jobs.installEventFilter(self.help_filter)
+        logger.info("Installed hover help on job panels.")
 
         # Connect menu hovered signal to show help for menu items
         self._main_window.menuProject.hovered.connect(self.help_filter.handle_menu_action_hovered)
