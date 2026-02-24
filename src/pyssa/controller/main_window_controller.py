@@ -147,6 +147,8 @@ class MainWindowController:
         self.feedback_timer = QtCore.QTimer()
         self.feedback_timer.setSingleShot(True)
         self._is_syncing_selection: bool = False
+        self._cached_pymol_selection_string: str = ""
+        self._cached_selection_active_object = None
         
         self._auto_save_timer = QtCore.QTimer()
         self._auto_save_timer.setSingleShot(True)
@@ -1736,6 +1738,10 @@ class MainWindowController:
         standalone_proteins = grouped_context['standalone_proteins']
         pair_proteins = grouped_context['pair_proteins']
 
+        # Clear the cached selection since we are opening a session
+        self._cached_pymol_selection_string = ""
+        self._cached_selection_active_object = None
+
         # Determine session context and log appropriate information
         if protein_pairs:
             # Protein pairs are selected - session is bound to the pair
@@ -2195,13 +2201,28 @@ class MainWindowController:
     # <editor-fold desc="Selection slots">
     def __slot_show_sele(self) -> None:
         """Highlights the selection in PyMOL"""
-        self._user_pymol.get_cmd_module().select("sele", enable=1)
+        current_obj = self._user_pymol.get_currently_loaded_object()
+        if self._cached_pymol_selection_string and current_obj and current_obj == self._cached_selection_active_object:
+            try:
+                self._user_pymol.get_cmd_module().select(
+                    "sele",
+                    selection=self._cached_pymol_selection_string,
+                    enable=1
+                )
+                self.feedback_timer.start(100)
+            except Exception as e:
+                logger.warning(f"Failed to restore cached selection '{self._cached_pymol_selection_string}': {e}")
+                self._user_pymol.get_cmd_module().select("sele", enable=1)
+        else:
+            self._user_pymol.get_cmd_module().select("sele", enable=1)
 
     def __slot_hide_sele(self) -> None:
         """Hides the selection highlighting in PyMOL"""
         self._user_pymol.get_cmd_module().select("sele", enable=0)
 
     def __slot_clear_sele(self) -> None:
+        self._cached_pymol_selection_string = ""
+        self._cached_selection_active_object = None
         self._user_pymol.get_cmd_module().select("sele", "none", enable=0)
         self.feedback_timer.start(100)
 
@@ -2287,6 +2308,8 @@ class MainWindowController:
         # to prevent an infinite feedback loop.
         if not self._is_syncing_selection:
             if snapshot.pymol_selection_string:
+                self._cached_pymol_selection_string = snapshot.pymol_selection_string
+                self._cached_selection_active_object = self._user_pymol.get_currently_loaded_object()
                 try:
                     self._user_pymol.get_cmd_module().select(
                         "sele",
