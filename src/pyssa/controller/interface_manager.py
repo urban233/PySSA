@@ -76,8 +76,8 @@ class InterfaceManager:
   # <editor-fold desc="Class attributes">
   string_model = QtCore.QStringListModel()  # TODO: this should be removed!
 
-  _main_window: "main_view.MainView"
-  """The main view window."""
+  _main_window: "main_window.MainWindow"
+  """The main window."""
 
   _settings_view: "settings_view.SettingsView"
   """The settings view window."""
@@ -452,11 +452,11 @@ class InterfaceManager:
   # </editor-fold>
 
   # <editor-fold desc="Getter Methods for view">
-  def get_main_view(self) -> "main_view.MainView":
-    """Gets the main view of the application.
+  def get_main_view(self) -> "main_window.MainWindow":
+    """Gets the main window of the application.
 
     Returns:
-        The main view of the application.
+        The main window of the application.
     """
     return self._main_window
 

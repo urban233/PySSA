@@ -65,7 +65,8 @@ from src.pyssa.internal.thread import database_thread
 from src.pyssa.io_pyssa import filesystem_io
 from src.pyssa.logging_pyssa import log_handlers, log_levels
 from src.pyssa.util import constants, enums, exit_codes, tools, ui_util, exception
-from src.pyssa import main_view
+# NOTE: main_view has been removed - all functionality is now in main_window
+# from src.pyssa import main_view
 from src.pyssa.controller import interface_manager, distance_analysis_view_controller, delete_project_view_controller, \
   create_project_view_controller, open_project_view_controller, database_manager
 from src.pyssa.util import globals
@@ -83,8 +84,9 @@ class MainViewController:
   """Class for main presenter of the pyssa plugin."""
 
   # <editor-fold desc="Class attributes">
-  _view: "main_view.MainView"
-  """The main view of the pyssa plugin."""
+  # NOTE: This controller is deprecated - use MainWindowController instead
+  # _view: "main_view.MainView"
+  # """The main view of the pyssa plugin."""
 
   _application_settings: "settings.Settings"
   """The application settings object."""
@@ -124,7 +126,7 @@ class MainViewController:
 
     # </editor-fold>
 
-    self._view: "main_view.MainView" = the_interface_manager.get_main_view()
+    self._view = the_interface_manager.get_main_view()  # Type hint removed - main_view no longer exists
     self._interface_manager: "interface_manager.InterfaceManager" = (
       the_interface_manager
     )
