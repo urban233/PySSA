@@ -249,6 +249,7 @@ class ProjectService:
                 d[enums.DatabaseEnum.PROTEIN_PYMOL_SESSION.value],
                 d["project_id"],
             )
+            protein_obj.set_id(protein_id)
             for c in protein_obj.chains:
                 chain_id = self._db._repo_chains.insert(
                     tx,

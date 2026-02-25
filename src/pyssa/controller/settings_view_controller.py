@@ -30,7 +30,8 @@ from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_handlers, log_levels
 from src.pyssa.util import constants
 
-from src.pyssa.gui.ui.views import settings_view
+from src.pyssa.gui.ui.views import settings_view, help_view
+
 if TYPE_CHECKING:
   from src.pyssa.gui import app_state
 
@@ -83,7 +84,10 @@ class SettingsViewController(QtCore.QObject):
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
-    # self._interface_manager.help_manager.open_pyssa_settings_page()
+    tmp_dialog = help_view.HelpView(
+      constants.HELP_TEXT_MAP["SettingsDialog"]
+    )
+    tmp_dialog.exec()
 
   def restore_default_view(self) -> None:
     """Restores the UI."""

@@ -120,4 +120,8 @@ class QuickAccessBarAction:
         """
         return self._action
 
+    def update_icon(self, an_icon_filepath):
+        """Update the icon of the action."""
+        self._action.setIcon(QtGui.QIcon(an_icon_filepath))
+
     # </editor-fold>

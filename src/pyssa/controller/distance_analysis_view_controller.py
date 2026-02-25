@@ -28,6 +28,7 @@ from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import pyqtSignal
 
 from src.pyssa.controller import add_protein_pair_view_controller
+from src.pyssa.gui.ui.views import help_view
 
 from src.pyssa.internal import job_definitions
 from src.pyssa.internal.data_structures.data_classes import prediction_configuration, job_descriptor
@@ -86,10 +87,13 @@ class DistanceAnalysisViewController(QtCore.QObject):
 
   def _open_help_for_dialog(self) -> None:
     """Opens the help dialog window."""
-    # logger.log(
-    #     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
-    # )
-    # self._interface_manager.help_manager.open_distance_analysis_page()
+    logger.log(
+        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
+    )
+    tmp_dialog = help_view.HelpView(
+      constants.HELP_TEXT_MAP["DistanceAnalysisDialog"]
+    )
+    tmp_dialog.exec()
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""

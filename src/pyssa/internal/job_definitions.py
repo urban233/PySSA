@@ -170,6 +170,10 @@ def run_prediction_and_distance_analysis_job(
   if not prediction_result["success"]:
     return prediction_result
 
+  # Add newly predicted proteins to the frozen project so they can be analyzed
+  for tmp_protein in prediction_result["predicted_proteins"]:
+    frozen_project.add_existing_protein(tmp_protein)
+
   analysis_result = run_distance_analysis_job(
       frozen_project,
       list_with_analysis_names,

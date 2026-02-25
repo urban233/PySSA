@@ -27,7 +27,7 @@ from src.pyssa.gui import app_state
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.qt import QtWidgets
-from src.pyssa.gui.ui.views import use_project_view
+from src.pyssa.gui.ui.views import use_project_view, help_view
 
 from src.pyssa.io_pyssa.db_pyssa import ProjectDatabase
 from src.pyssa.util import input_validator, constants, enums, exception
@@ -83,6 +83,10 @@ class UseProjectViewController(QtCore.QObject):
     logger.log(
       log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
+    tmp_dialog = help_view.HelpView(
+      constants.HELP_TEXT_MAP["UseProjectDialog"]
+    )
+    tmp_dialog.exec()
 
   def _convert_model_into_set(self) -> set:
     """Converts the model data into a set of project names.

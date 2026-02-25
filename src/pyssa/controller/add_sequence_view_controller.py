@@ -259,6 +259,7 @@ class AddSequenceViewController(QtCore.QObject):
       )
       self._app_state.status_bar_manager.show_permanent_message("", False)
       self._app_state.status_bar_manager.show_temporary_message("Sequence added.")
+      self._app_state._on_state_changed()
 
     def on_error(exc):
       logger.exception("Failed to add sequence.", exc_info=exc)

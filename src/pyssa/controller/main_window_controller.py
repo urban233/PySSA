@@ -37,6 +37,7 @@ from typing import Union
 import pymol
 import requests
 
+from src.pyssa.gui.ui.styles.icon_manager import IconManager
 # import pywinctl
 
 from src.pyssa.internal.pymol.pml_worker import PmlWorker
@@ -181,10 +182,10 @@ class MainWindowController:
         self._setup_application_settings()
 
         # Load help texts from external HTML files
-        help_map = help_text_loader.load_help_texts()
+        # help_map = help_text_loader.load_help_texts()
         self.help_filter = help_event_filter.HelpEventFilter(
             self._main_window.help_panel.help_text_browser,
-            help_map,
+            constants.HELP_TEXT_MAP,
             self._main_window.help_panel
         )
         self._main_window.pyssa_objects_panel.installEventFilter(self.help_filter)
@@ -318,7 +319,8 @@ class MainWindowController:
         logger.info("Connected hover help for all menu items")
 
         self.refresh_ui()
-        # self.open_welcome_screen()
+        if not constants.PYDEBUG:
+            self.check_for_updates()
 
     # <editor-fold desc="Private methods">
     def _connect_all_signals_with_their_slots(self) -> None:
@@ -385,8 +387,14 @@ class MainWindowController:
         self._main_window.action_pymol_legacy_style.triggered.connect(
             self.__slot_pymol_legacy_style
         )
+        self._main_window.action_pymol_maximum_performance.triggered.connect(
+            self.__slot_pymol_maximum_performance_style
+        )
         self._main_window.action_pymol_reasonable_performance.triggered.connect(
             self.__slot_pymol_reasonable_performance_style
+        )
+        self._main_window.action_pymol_reasonable_quality.triggered.connect(
+            self.__slot_pymol_reasonable_quality_style
         )
         self._main_window.action_pymol_maximum_quality.triggered.connect(
             self.__slot_pymol_maximum_quality_style
@@ -399,6 +407,7 @@ class MainWindowController:
         self._main_window.action_show_log_in_explorer.triggered.connect(self.__slot_open_logs)
         self._main_window.action_clear_logs.triggered.connect(self.__slot_clear_all_log_files)
         self._main_window.action_get_demo_projects.triggered.connect(self.__slot_get_demo_projects)
+        self._main_window.action_check_for_updates.triggered.connect(self.__slot_check_for_updates)
         self._main_window.action_about.triggered.connect(self.__slot_open_about)
         # </editor-fold>
 
@@ -983,7 +992,7 @@ class MainWindowController:
         has_active_pair_selection = len(snapshot.raw_protein_pairs) > 0 if snapshot else False
         has_active_pair_child_selection = len(snapshot.raw_protein_pair_children) > 0 if snapshot else False
         has_active_scene_selection = len(snapshot.raw_scenes) > 0 if snapshot else False
-        tools.debug_print(f"has_active_scene_selection: {has_active_scene_selection}", 2)
+        # tools.debug_print(f"has_active_scene_selection: {has_active_scene_selection}", 2)
         # Prediction needs an input sequence to execute. Prefer active selection, fallback to project existence.
         can_predict_monomer = has_active_monomer_sequence_selection or has_monomer_sequences_in_project
         can_predict_multimer = has_active_multimer_sequence_selection or has_multimer_sequences_in_project
@@ -1636,10 +1645,24 @@ class MainWindowController:
             )
         self._trigger_auto_save()
 
+    def __slot_pymol_maximum_performance_style(self):
+        for tmp_style_keys in constants.PYMOL_QUALITY_MAXIMUM_PERFORMANCE.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_MAXIMUM_PERFORMANCE[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
+
     def __slot_pymol_reasonable_performance_style(self):
         for tmp_style_keys in constants.PYMOL_QUALITY_REASONABLE_PERFORMANCE.keys():
             self._user_pymol.get_cmd_module().do(
                 f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_REASONABLE_PERFORMANCE[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
+
+    def __slot_pymol_reasonable_quality_style(self):
+        for tmp_style_keys in constants.PYMOL_QUALITY_REASONABLE_QUALITY.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_REASONABLE_QUALITY[tmp_style_keys]}"
             )
         self._trigger_auto_save()
 
@@ -1924,13 +1947,87 @@ class MainWindowController:
             self._status_bar_manager.show_error_message(
                 "An unknown error occurred!"
             )
+
+    def __slot_check_for_updates(self) -> None:
+        """Slot method for the QAction that checks if updates are avaliable."""
+        self.check_for_updates()
+
+    def check_for_updates(self) -> None:
+        """Checks if an update is available."""
+        try:
+            if tools.check_internet_connectivity():
+                tools.download_file(constants.VERSION_HISTORY_URL, constants.VERSION_HISTORY_FILEPATH)
+                tmp_latest_release = tools.get_latest_release(constants.VERSION_HISTORY_FILEPATH)
+                tmp_current_version = constants.VERSION_NUMBER[1:]
+                if tmp_current_version == tmp_latest_release["version"]:
+                    self._status_bar_manager.show_temporary_message("No update available.")
+                    return
+                tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+                    "A new version is available. Update now?", "Update Available", custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                )
+                tools.debug_print("")
+                tmp_dialog.exec()
+                if not tmp_dialog.response:
+                    return
+
+                def download_update_file(progress_callback, is_cancelled):
+                    tools.download_file(
+                        tmp_latest_release["releaseUrl"],
+                        constants.UPDATE_SETUP_FILEPATH
+                    )
+                    return 0
+
+                def on_success(result):
+                    self._main_window.blockSignals(True)
+                    tmp_message = "PySSA now closes to apply the update."
+                    tmp_jobs_are_running = self._app_state.job_scheduler.has_running_jobs()
+                    if tmp_jobs_are_running:
+                        tmp_message = "There are still jobs running.\nThe progress of the running job(s) are lost!"
+                    tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                        tmp_message,
+                        "Update PySSA",
+                        custom_message_box.CustomMessageBoxIcons.WARNING.value,
+                    )
+                    tmp_dialog.exec()
+                    if tmp_jobs_are_running:
+                        subprocess.run(["wsl", "--terminate", "almaColabfold9"], creationflags=subprocess.CREATE_NO_WINDOW)
+                        filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
+                        constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
+                    subprocess.Popen(constants.UPDATE_SETUP_FILEPATH)
+                    self._main_window.close()
+
+                def on_error(exc):
+                    logger.exception("Failed to download the update.", exc_info=exc)
+                    QtWidgets.QMessageBox.critical(
+                        self._main_window,
+                        "Update PySSA",
+                        "Failed to download the update. Please try again.",
+                    )
+                    self._app_state.status_bar_manager.show_error_message("Failed to download the update. Please try again.")
+
+                (
+                    thread_runtime.get_singleton_thread_runtime()
+                    .run(download_update_file)
+                    .on_success(on_success)
+                    .on_error(on_error)
+                    .start()
+                )
+                self._app_state.status_bar_manager.show_permanent_message(
+                    "Downloading update ...", True
+                )
+
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
     # </editor-fold>
 
     def __slot_toggle_help_panel(self):
         layout = self._main_window.tool_window_layout
         layout.set_right_panel_hidden(not layout.is_right_panel_hidden)
 
-    # <editor-fold desc="Session ribbon slots">
+    # <editor-fold desc="PyMOL viewer toolbar slots">
     # <editor-fold desc="Session slots">
     def __slot_open_session(self) -> None:
         """Opens a PyMOL session based on the current selection.
@@ -2072,6 +2169,16 @@ class MainWindowController:
 
     def __slot_delete_scene(self):
         """Deletes the currently selected PyMOL scene and removes it from the list."""
+        confirm_box = custom_message_box.CustomMessageBoxDelete(
+            "Are you sure you want to permanently delete the selected scene(s)?\n"
+            "This action cannot be undone.",
+            "Confirm Deletion",
+            custom_message_box.CustomMessageBoxIcons.DANGEROUS.value,
+        )
+        confirm_box.exec()
+        if not confirm_box.response:
+            logger.info("Deletion cancelled by user.")
+            return
         snapshot = self._get_current_snapshot()
         if snapshot:
             for tmp_raw_scene in snapshot.raw_scenes:
@@ -2495,6 +2602,9 @@ class MainWindowController:
         )
 
     def __slot_open_completed_jobs_popup(self):
+        self._main_window.viewer_toolbar_actions.get("notifications").update_icon(
+            IconManager.instance().get_icon(IconManager.Icons.NOTIFICATIONS)
+        )
         self._main_window.complete_jobs_menu.exec(
             self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("notifications"))
         )
@@ -2633,28 +2743,11 @@ class MainWindowController:
                 )
             case _:
                 logger.warning(f"Unhandled job type: {descriptor.job_type}")
+        self._main_window.viewer_toolbar_actions.get("notifications").update_icon(
+            IconManager.instance().get_icon(IconManager.Icons.NOTIFICATIONS_UNREAD)
+        )
 
     # <editor-fold desc="Handle specific job results">
-    def _handle_distance_analysis_job_result(
-            self,
-            descriptor: "job_descriptor.JobDescriptor",
-            result: dict[str, Union[list["protein_pair.ProteinPair"], bool]]
-    ):
-        if descriptor.is_hot:
-            # Results belong to the hot project
-            for tmp_protein_pair in result["protein_pairs"]:
-                self._app_state.project.add_protein_pair(tmp_protein_pair)
-                self._app_state.pyssa_objects_model.add_protein_pair(tmp_protein_pair)
-                self._app_state.hot_db.write_queue.submit(
-                    WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
-                )
-        else:
-            # Results belong to a cold project
-            for tmp_protein_pair in result["protein_pairs"]:
-                descriptor.cold_handle.submit(
-                    WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
-                )
-
     def _handle_prediction_job_result(
             self,
             descriptor: "job_descriptor.JobDescriptor",
@@ -2677,19 +2770,16 @@ class MainWindowController:
                     WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
                 )
 
-    def _handle_prediction_and_distance_analysis_job_result(
+    def _handle_distance_analysis_job_result(
             self,
             descriptor: "job_descriptor.JobDescriptor",
-            result: dict[str, Union[bool, list["protein.Protein"], list["protein_pair.ProteinPair"]]]
+            result: dict[str, Union[list["protein_pair.ProteinPair"], bool]]
     ):
         if descriptor.is_hot:
-            for tmp_protein in result["predicted_proteins"]:
-                self._app_state.project.add_existing_protein(tmp_protein)
-                self._app_state.pyssa_objects_model.add_protein(tmp_protein)
-                self._app_state.hot_db.write_queue.submit(
-                    WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
-                )
+            # Results belong to the hot project
+            current_project_id = self._app_state.project.get_id()
             for tmp_protein_pair in result["protein_pairs"]:
+                tmp_protein_pair.db_project_id = current_project_id
                 self._app_state.project.add_protein_pair(tmp_protein_pair)
                 self._app_state.pyssa_objects_model.add_protein_pair(tmp_protein_pair)
                 self._app_state.hot_db.write_queue.submit(
@@ -2697,11 +2787,44 @@ class MainWindowController:
                 )
         else:
             # Results belong to a cold project
+            project_id = descriptor.cold_handle._db.get_project_id(descriptor.project_name)
+            for tmp_protein_pair in result["protein_pairs"]:
+                tmp_protein_pair.db_project_id = project_id
+                descriptor.cold_handle.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
+                )
+
+    def _handle_prediction_and_distance_analysis_job_result(
+            self,
+            descriptor: "job_descriptor.JobDescriptor",
+            result: dict[str, Union[bool, list["protein.Protein"], list["protein_pair.ProteinPair"]]]
+    ):
+        if descriptor.is_hot:
+            current_project_id = self._app_state.project.get_id()
             for tmp_protein in result["predicted_proteins"]:
+                tmp_protein.db_project_id = current_project_id
+                self._app_state.project.add_existing_protein(tmp_protein)
+                self._app_state.pyssa_objects_model.add_protein(tmp_protein)
+                self._app_state.hot_db.write_queue.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
+                )
+            for tmp_protein_pair in result["protein_pairs"]:
+                tmp_protein_pair.db_project_id = current_project_id
+                self._app_state.project.add_protein_pair(tmp_protein_pair)
+                self._app_state.pyssa_objects_model.add_protein_pair(tmp_protein_pair)
+                self._app_state.hot_db.write_queue.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
+                )
+        else:
+            # Results belong to a cold project
+            project_id = descriptor.cold_handle._db.get_project_id(descriptor.project_name)
+            for tmp_protein in result["predicted_proteins"]:
+                tmp_protein.db_project_id = project_id
                 descriptor.cold_handle.submit(
                     WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
                 )
             for tmp_protein_pair in result["protein_pairs"]:
+                tmp_protein_pair.db_project_id = project_id
                 descriptor.cold_handle.submit(
                     WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
                 )
@@ -2781,7 +2904,6 @@ class MainWindowController:
         _, tmp_event = return_value
         self._close_all()
         tmp_event.accept()
-
 
     def _get_viewer_tool_bar_action_pos(self, an_action) -> QtCore.QPoint:
         """Return a global point beneath the toolbar button for the given action.

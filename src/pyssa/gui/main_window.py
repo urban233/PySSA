@@ -150,10 +150,10 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.action_pymol_maestro_style = QtGui.QAction("Maestro-like", self.submenuPyMOLStyle)
     self.action_pymol_legacy_style = QtGui.QAction("Legacy", self.submenuPyMOLStyle)
     self.submenuPyMOLQuality = QtWidgets.QMenu("PyMOL Quality", self.menuSettings)
+    self.action_pymol_maximum_performance = QtGui.QAction("Maximum Performance", self.submenuPyMOLQuality)
     self.action_pymol_reasonable_performance = QtGui.QAction("Reasonable Performance", self.submenuPyMOLQuality)
+    self.action_pymol_reasonable_quality = QtGui.QAction("Reasonable Quality", self.submenuPyMOLQuality)
     self.action_pymol_maximum_quality = QtGui.QAction("Maximum Quality", self.submenuPyMOLQuality)
-
-    # self.submenuPyMOLStyle.menuAction().setVisible(False)
 
     # <editor-fold desc="About/Help Actions">
     self.action_documentation = QtGui.QAction("Documentation", self)
@@ -166,6 +166,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.action_clear_logs.setObjectName("action_clear_logs")
     self.action_about = QtGui.QAction("About", self)
     self.action_about.setObjectName("action_about")
+    self.action_check_for_updates = QtGui.QAction("Check for Updates", self)
     # </editor-fold>
     # </editor-fold>
 
@@ -538,7 +539,9 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.submenuPyMOLStyle.addAction(self.action_pymol_maestro_style)
     self.submenuPyMOLStyle.addAction(self.action_pymol_legacy_style)
     self.menuSettings.addMenu(self.submenuPyMOLQuality)
+    self.submenuPyMOLQuality.addAction(self.action_pymol_maximum_performance)
     self.submenuPyMOLQuality.addAction(self.action_pymol_reasonable_performance)
+    self.submenuPyMOLQuality.addAction(self.action_pymol_reasonable_quality)
     self.submenuPyMOLQuality.addAction(self.action_pymol_maximum_quality)
 
     # --- About/Help Menu ---
@@ -548,6 +551,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.menuAbout.addAction(self.action_show_log_in_explorer)
     self.menuAbout.addAction(self.action_clear_logs)
     self.menuAbout.addSeparator()
+    self.menuAbout.addAction(self.action_check_for_updates)
     self.menuAbout.addAction(self.action_about)
     # </editor-fold>
 

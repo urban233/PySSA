@@ -26,7 +26,7 @@ import os
 from src.pyssa.gui import app_state
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import Qt
-from src.pyssa.gui.ui.views import delete_project_view
+from src.pyssa.gui.ui.views import delete_project_view, help_view
 
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.util import constants, enums, ui_util, exception
@@ -72,6 +72,10 @@ class DeleteProjectViewController(QtCore.QObject):
     logger.log(
       log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
+    tmp_dialog = help_view.HelpView(
+      constants.HELP_TEXT_MAP["DeleteProjectDialog"]
+    )
+    tmp_dialog.exec()
 
   def restore_default_view(self) -> None:
     """Restores the default UI."""

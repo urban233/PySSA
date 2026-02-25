@@ -31,6 +31,7 @@ from src.pyssa.controller import add_protein_pair_view_controller, advanced_pred
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from typing import TYPE_CHECKING
 
+from src.pyssa.gui.ui.views import help_view
 from src.pyssa.internal import job_definitions
 
 if TYPE_CHECKING:
@@ -105,7 +106,10 @@ class PredictProteinViewController(QtCore.QObject):
   # <editor-fold desc="Util methods">
   def _open_help_for_dialog(self) -> None:
     """Opens help dialog."""
-    # self._interface_manager.help_manager.open_colabfold_page()
+    tmp_dialog = help_view.HelpView(
+      constants.HELP_TEXT_MAP["PredictProteinDialog"]
+    )
+    tmp_dialog.exec()
 
   def _show_prediction_configuration(self) -> None:
     """Opens the prediction configuration dialog window."""
