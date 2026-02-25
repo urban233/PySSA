@@ -250,6 +250,13 @@ class MainWindowController:
         self._main_window.action_pymol_maestro_style.triggered.connect(
             self.__slot_pymol_maestro_style
         )
+        self._main_window.action_pymol_reasonable_performance.triggered.connect(
+            self.__slot_pymol_reasonable_performance_style
+        )
+        self._main_window.action_pymol_maximum_quality.triggered.connect(
+            self.__slot_pymol_maximum_quality_style
+        )
+
         # </editor-fold>
 
         # <editor-fold desc="Help menu">
@@ -901,6 +908,8 @@ class MainWindowController:
         self._main_window.menuSettings.setEnabled(True)
         self._main_window.action_edit_settings.setEnabled(True)
         self._main_window.action_restore_settings.setEnabled(True)
+        self._main_window.submenuPyMOLStyle.setEnabled(has_loaded_session)
+        self._main_window.submenuPyMOLQuality.setEnabled(has_loaded_session)
         # </editor-fold>
 
         # <editor-fold desc="Help menu">
@@ -1210,8 +1219,8 @@ class MainWindowController:
 
     def __slot_close_project(self):
         if self._app_state.has_open_project():
+            self._user_pymol.reinitialize_session()
             self._app_state.close_project()
-            self._user_pymol.get_cmd_module().reinitialize()
     # </editor-fold>
 
     # <editor-fold desc="Prediction menu">
@@ -1433,13 +1442,29 @@ class MainWindowController:
 
     def __slot_pymol_default_style(self):
         for tmp_style_keys in constants.PYMOL_STYLE_DEFAULT.keys():
-            self._user_pymol.get_cmd_module().set(tmp_style_keys, constants.PYMOL_STYLE_DEFAULT[tmp_style_keys])
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_STYLE_DEFAULT[tmp_style_keys]}"
+            )
         self._trigger_auto_save()
 
     def __slot_pymol_maestro_style(self):
         for tmp_style_keys in constants.PYMOL_STYLE_MAESTRO_LIKE.keys():
             self._user_pymol.get_cmd_module().do(
                 f"set {tmp_style_keys}, {constants.PYMOL_STYLE_MAESTRO_LIKE[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
+
+    def __slot_pymol_reasonable_performance_style(self):
+        for tmp_style_keys in constants.PYMOL_QUALITY_REASONABLE_PERFORMANCE.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_REASONABLE_PERFORMANCE[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
+
+    def __slot_pymol_maximum_quality_style(self):
+        for tmp_style_keys in constants.PYMOL_QUALITY_MAXIMUM_QUALITY.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_MAXIMUM_QUALITY[tmp_style_keys]}"
             )
         self._trigger_auto_save()
     # </editor-fold>
@@ -2078,7 +2103,7 @@ class MainWindowController:
     def __slot_apply_color_by_elements(self) -> None:
         """Colors the default sele selection in the given color."""
         self._user_pymol.get_cmd_module().color("atomic", "sele and not elem C")
-        self._user_pymol.get_cmd_module().color("grey70", "sele and elem C")
+        self._user_pymol.get_cmd_module().color("grey50", "sele and elem C")
         self._trigger_auto_save()
 
     def __slot_apply_bg_color(self, a_color_name) -> None:

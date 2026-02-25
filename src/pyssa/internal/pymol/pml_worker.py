@@ -511,8 +511,15 @@ def _create_new_session(pymol_instance: pymol2.PyMOL, a_pdb_filepath: str) -> st
     pymol_instance.cmd.load(filename=str(a_pdb_filepath), object=tmp_protein_name)
     pymol_instance.cmd.bg_color("black")
 
+    for tmp_style_keys in constants.PYMOL_QUALITY_MAXIMUM_QUALITY.keys():
+      pymol_instance.cmd.do(
+        f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_MAXIMUM_QUALITY[tmp_style_keys]}"
+      )
+
     for tmp_style_keys in constants.PYMOL_STYLE_DEFAULT.keys():
-      pymol_instance.cmd.set(tmp_style_keys, constants.PYMOL_STYLE_DEFAULT[tmp_style_keys])
+      pymol_instance.cmd.do(
+        f"set {tmp_style_keys}, {constants.PYMOL_STYLE_DEFAULT[tmp_style_keys]}"
+      )
 
     # pymol_instance.cmd.set("valence", 0)
     # pymol_instance.cmd.set("scene_buttons", 0)
