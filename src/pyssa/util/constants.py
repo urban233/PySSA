@@ -502,7 +502,6 @@ PYMOL_STYLE_DEFAULT = {
     # "ribbon_smooth": 0,
     "ribbon_as_cylinders": 0,
     "ribbon_width": 3.0,
-    # "ribbon_use_shader": 0,
     # Sticks settings
     "stick_radius": 0.25,
     # Ray trace settings

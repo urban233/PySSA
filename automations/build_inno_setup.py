@@ -7,6 +7,7 @@ import zipfile
 import tarfile
 
 from task_automator.IO import file
+from task_automator.IO import directory
 from task_automator.utils import web_utils
 
 import const
@@ -47,16 +48,13 @@ class BuildInnoSetup:
     pymol windows build repo!
     """
     # <editor-fold desc="Restore build directory for new build">
-    if self.inno_build_assets_path.exists():
-      shutil.rmtree(self.inno_build_assets_path)
-    if self.inno_sources_build_path.exists():
-      shutil.rmtree(self.inno_sources_build_path)
+    directory.Directory.purge(self.inno_build_assets_path)
+    directory.Directory.purge(self.inno_sources_build_path)
     self.inno_build_path.mkdir(exist_ok=True)
     self.inno_build_assets_path.mkdir()
     self.inno_sources_build_path.mkdir()
     self.inno_build_cache_path.mkdir(exist_ok=True)
     # </editor-fold>
-    # ---
     pathlib.Path(self.inno_build_tmp_path).mkdir()
     # <editor-fold desc="Download cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only.tar.gz">
     if not pathlib.Path.exists(pathlib.Path(self.inno_build_cache_path / "cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only")):
@@ -73,16 +71,21 @@ class BuildInnoSetup:
         tar.extractall(path=pathlib.Path(self.inno_build_cache_path / "cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only"))
       pathlib.Path(self.inno_build_cache_path / "cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only.tar.gz").unlink()
     # </editor-fold>
-    shutil.copytree(
+
+    # <editor-fold desc="Setup Python environment">
+    if not directory.Directory.copy_directory(
       pathlib.Path(self.inno_build_cache_path / "cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only"),
       pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14"),
-    )
+    ):
+      print("Copying the cpython-3.11.14+20260211-x86_64-pc-windows-msvc-install_only directory failed!")
+      exit(1)
 
-    shutil.copytree(
-      pathlib.Path(self.original_pyssa_source_path),
-      pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/Lib/site-packages/src"),
-      dirs_exist_ok=True,
-    )
+    if not directory.Directory.copy_directory(
+            pathlib.Path(self.original_pyssa_source_path),
+            pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/Lib/site-packages/src")
+    ):
+      print("Copying the original source folder directory failed!")
+      exit(1)
 
     subprocess.run(
       [
@@ -99,76 +102,32 @@ class BuildInnoSetup:
       ],
       stdout=sys.stdout, stderr=sys.stderr, text=True
     )
-
-    # Patch the pymol_gl_widget.py for HighDpi support
-    shutil.copy(
-      pathlib.Path(self.deployment_resources_path / "pymol_gl_widget.py"),
-      pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/Lib/site-packages/pmg_qt")
-    )
-    # Patch the invocation.py for custom options
-    shutil.copy(
-      pathlib.Path(self.deployment_resources_path / "invocation.py"),
-      pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/Lib/site-packages/pymol")
-    )
-    # Patch the controlling.py for disabling the context menu in the PyMOL viewer
-    shutil.copy(
-      pathlib.Path(self.deployment_resources_path / "invocation.py"),
-      pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/Lib/site-packages/pymol")
-    )
-
-    # ---
-
-    # build_win_exe.build()
-    # <editor-fold desc="Copy frozen PySSA Python venv">
-    # shutil.copytree(
-    #   pathlib.Path(const.PROJECT_ROOT_DIR / "build/exe.win-amd64-3.11"),
-    #   pathlib.Path(self.inno_sources_build_path),
-    #   dirs_exist_ok=True
-    # )
-    # # Download and extract user_pymol.zip
-    # user_pymol_zip = self.inno_build_cache_path / "user_pymol.zip"
-    # user_pymol_extract_path = self.inno_build_cache_path / "user_pymol"
-    #
-    # if not user_pymol_zip.exists():
-    #   print("Downloading user_pymol.zip...")
-    #   if not web_utils.download_file("https://github.com/urban233/custom-pyssa-pymol-open-source-version/releases/download/v2025.07.1/user_pymol.zip", str(user_pymol_zip)):
-    #     print("Unable to download user_pymol.zip, build process exits.")
-    #     return
-    #   print("Finished downloading user_pymol.zip.")
-    #
-    #   # Extract the zip file
-    #   print("Extracting user_pymol.zip...")
-    #   try:
-    #     with zipfile.ZipFile(user_pymol_zip, 'r') as zip_ref:
-    #       zip_ref.extractall(user_pymol_extract_path)
-    #     print("Successfully extracted user_pymol.zip")
-    #   except Exception as e:
-    #     print(f"Error extracting user_pymol.zip: {e}")
-    #     return
-    # else:
-    #   print("Using cached version of user_pymol.zip")
-    #   if not user_pymol_extract_path.exists():
-    #     try:
-    #       with zipfile.ZipFile(user_pymol_zip, 'r') as zip_ref:
-    #         zip_ref.extractall(user_pymol_extract_path)
-    #       print("Successfully extracted user_pymol.zip from cache")
-    #     except Exception as e:
-    #       print(f"Error extracting cached user_pymol.zip: {e}")
-    #       return
-    # shutil.copytree(
-    #   pathlib.Path(const.PROJECT_ROOT_DIR / "inno-build-release/inno-cache/user_pymol"),
-    #   pathlib.Path(self.inno_sources_build_path / "user_pymol"),
-    #   dirs_exist_ok=True
-    # )
     # </editor-fold>
-    # <editor-fold desc="Get WSL2 distro from sciebo">
 
+    # <editor-fold desc="Patching PyMOL source">
+    # Patch the pymol_gl_widget.py for HighDpi support
+    if not file.File.copy(pathlib.Path(self.deployment_resources_path / "pymol_gl_widget.py"),
+                          pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/Lib/site-packages/pmg_qt/pymol_gl_widget.py")):
+      print("Copying the pymol_gl_widget.py file failed!")
+      exit(1)
+    # Patch the invocation.py for custom options
+    if not file.File.copy(pathlib.Path(self.deployment_resources_path / "invocation.py"),
+                          pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/Lib/site-packages/pymol/invocation.py")):
+      print("Copying the invocation.py file failed!")
+      exit(1)
+    if not file.File.copy(pathlib.Path(self.deployment_resources_path / "controlling.py"),
+                          pathlib.Path(self.inno_sources_build_path / "cpython-3.11.14/python/Lib/site-packages/pymol/controlling.py")):
+      print("Copying the controlling.py file failed!")
+      exit(1)
+    # </editor-fold>
+
+    # <editor-fold desc="Get WSL2 distro from sciebo">
     if include_wsl2_distro:
       if not pathlib.Path.exists(pathlib.Path(self.inno_build_cache_path / "alma-colabfold-9-rootfs.tar")):
         print("Downloading alma-colabfold-9-rootfs.tar ...")
         if not web_utils.download_file("https://w-hs.sciebo.de/s/yOQ8Qo1Uvk1eaQc/download", str(pathlib.Path(self.inno_build_cache_path / "alma-colabfold-9-rootfs.tar"))):
           print("Unable to download alma-colabfold-9-rootfs.tar, build process exists.")
-          return
+          exit(1)
         print("Finished downloading alma-colabfold-9-rootfs.tar.")
       else:
         print("Using cached version of alma-colabfold-9-rootfs.tar under inno-build-release/inno-cache")
@@ -205,10 +164,13 @@ class BuildInnoSetup:
       exit(1)
     self.inno_build_third_party_path.mkdir(exist_ok=True)
     self.inno_build_prerequisite_path.mkdir(exist_ok=True)
-    shutil.copy(tmp_vc_redist_setup_filepath, pathlib.Path(self.inno_build_third_party_path / "VC_redist.x64.exe"))
-    # shutil.copy(tmp_windows_tasks_exe_filepath, pathlib.Path(self.inno_build_prerequisite_path / "WindowsCli.exe"))
+    if not file.File.copy(tmp_vc_redist_setup_filepath, pathlib.Path(self.inno_build_third_party_path / "VC_redist.x64.exe")):
+      print("Copying the VC_redist.x64.exe file failed!")
+      exit(1)
     self.inno_build_assets_path.mkdir(exist_ok=True)
-    shutil.copy(tmp_pyssa_win_build_logo_filepath, pathlib.Path(self.inno_build_assets_path / "logo.ico"))
+    if not file.File.copy(tmp_pyssa_win_build_logo_filepath, pathlib.Path(self.inno_build_assets_path / "logo.ico")):
+      print("Copying the logo.ico file failed!")
+      exit(1)
     # </editor-fold>
 
   def build(self, a_inno_script_path: pathlib.Path) -> None:
