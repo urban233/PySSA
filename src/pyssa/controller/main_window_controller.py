@@ -986,7 +986,7 @@ class MainWindowController:
         has_active_pair_selection = len(snapshot.raw_protein_pairs) > 0 if snapshot else False
         has_active_pair_child_selection = len(snapshot.raw_protein_pair_children) > 0 if snapshot else False
         has_active_scene_selection = len(snapshot.raw_scenes) > 0 if snapshot else False
-        tools.debug_print(f"has_active_scene_selection: {has_active_scene_selection}", 2)
+        # tools.debug_print(f"has_active_scene_selection: {has_active_scene_selection}", 2)
         # Prediction needs an input sequence to execute. Prefer active selection, fallback to project existence.
         can_predict_monomer = has_active_monomer_sequence_selection or has_monomer_sequences_in_project
         can_predict_multimer = has_active_multimer_sequence_selection or has_multimer_sequences_in_project
@@ -1959,6 +1959,7 @@ class MainWindowController:
                 tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
                     "A new version is available. Update now?", "Update Available", custom_message_box.CustomMessageBoxIcons.INFORMATION.value
                 )
+                tools.debug_print("")
                 tmp_dialog.exec()
                 if not tmp_dialog.response:
                     return
@@ -1976,7 +1977,7 @@ class MainWindowController:
                     tmp_jobs_are_running = self._app_state.job_scheduler.has_running_jobs()
                     if tmp_jobs_are_running:
                         tmp_message = "There are still jobs running.\nThe progress of the running job(s) are lost!"
-                    custom_message_box.CustomMessageBoxOk(
+                    tmp_dialog = custom_message_box.CustomMessageBoxOk(
                         tmp_message,
                         "Update PySSA",
                         custom_message_box.CustomMessageBoxIcons.WARNING.value,
@@ -1986,8 +1987,8 @@ class MainWindowController:
                         subprocess.run(["wsl", "--terminate", "almaColabfold9"], creationflags=subprocess.CREATE_NO_WINDOW)
                         filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
                         constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
-                    self._main_window.close()
                     subprocess.Popen(constants.UPDATE_SETUP_FILEPATH)
+                    self._main_window.close()
 
                 def on_error(exc):
                     logger.exception("Failed to download the update.", exc_info=exc)

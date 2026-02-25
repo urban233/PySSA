@@ -203,6 +203,7 @@ class ProjectWriteQueue:
       .run(_drain_worker, self._db, self._queue, stats)
       .on_success(lambda _: self._on_worker_finished(stats))
       .on_error(self._on_worker_error)
+      .start()
     )
 
   def _on_worker_finished(self, stats: dict[str, int]) -> None:
@@ -230,6 +231,7 @@ class ProjectWriteQueue:
       .run(_drain_worker, self._db, self._queue, new_stats)
       .on_success(lambda _: self._on_worker_finished(new_stats))
       .on_error(self._on_worker_error)
+      .start()
     )
 
   def _on_worker_error(self, exc: Exception) -> None:
