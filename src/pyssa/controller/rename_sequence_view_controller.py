@@ -169,4 +169,5 @@ class RenameSequenceViewController(QtCore.QObject):
       .run(rename_sequence)
       .on_success(on_success)
       .on_error(on_error)
+      .start()
     )

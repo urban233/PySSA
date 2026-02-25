@@ -8,11 +8,21 @@ class ThreadRuntime(QtCore.QObject):
     super().__init__()
     self._pool = QtCore.QThreadPool().globalInstance()
     # self._pool.setMaxThreadCount(thread_count)
+    self._active_tasks = set()
 
   def run(self, fn, *args, **kwargs) -> "thread_task.ThreadTask":
     tmp_worker = worker.Worker(fn, *args, **kwargs)
-    tmp_handle = thread_task.ThreadTask(tmp_worker)
-    self._pool.start(tmp_worker)
+    tmp_handle = thread_task.ThreadTask(tmp_worker, self._pool)
+
+    # Prevent Garbage Collection
+    self._active_tasks.add(tmp_handle)
+    tmp_worker.signals.finished.connect(
+      lambda: self._active_tasks.discard(tmp_handle)
+    )
+
+    # # Automatic start on the next event loop tick
+    # QtCore.QTimer.singleShot(0, tmp_handle.start)
+
     return tmp_handle
 
 

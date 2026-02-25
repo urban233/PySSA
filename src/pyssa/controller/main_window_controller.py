@@ -53,7 +53,7 @@ from src.pyssa.gui.qt import QtGui
 from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, \
     pyssa_objects_panel_controller, welcome_screen_view_controller, help_panel_controller, \
     status_bar_manager, job_popup_controller, predict_protein_view_controller, settings_view_controller, \
-    distance_analysis_view_controller, results_view_controller
+    distance_analysis_view_controller, results_view_controller, add_scene_view_controller
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.gui.ui.custom_filters import help_event_filter
 from src.pyssa.gui.ui.dialogs import dialog_about
@@ -1150,6 +1150,7 @@ class MainWindowController:
                 .run(import_project_task)
                 .on_success(on_success)
                 .on_error(on_error)
+                .start()
             )
             self._app_state.status_bar_manager.show_permanent_message(
                 "Importing project ...", True
@@ -1204,6 +1205,7 @@ class MainWindowController:
                     .run(export_project_task)
                     .on_success(on_success)
                     .on_error(on_error)
+                    .start()
                 )
                 self._app_state.status_bar_manager.show_permanent_message(
                     "Importing project ...", True
@@ -1714,6 +1716,7 @@ class MainWindowController:
                 .run(download_demo_projects_task)
                 .on_success(on_success)
                 .on_error(on_error)
+                .start()
             )
 
             # Show progress message
@@ -1830,17 +1833,14 @@ class MainWindowController:
         The scene includes the current view and all visible objects.
         Selection context is available via _get_current_snapshot() if needed.
         """
-        tmp_input_dialog = QtWidgets.QInputDialog()
-        tmp_name, ok_pressed = tmp_input_dialog.getText(
-            self._main_window,
-            "Scene Name",
-            "Enter A Scene Name:",
-            text="",
-        )
-        if not ok_pressed or not tmp_name.strip():
-            return
-        tmp_scene_name = tmp_name.strip()
+        if not self._dialog_controllers.__contains__("add_scene_dialog"):
+            self._dialog_controllers["add_scene_dialog"] = add_scene_view_controller.AddSceneViewController(
+                self._app_state
+            )
+        self._dialog_controllers["add_scene_dialog"].restore_default_view()
+        self._dialog_controllers["add_scene_dialog"].get_view().exec()
 
+        tmp_scene_name = self._dialog_controllers["add_scene_dialog"].get_scene_name()
         self._user_pymol.get_cmd_module().scene(key=tmp_scene_name, action="append")
 
         self._app_state.pyssa_objects_model.add_scene(
@@ -2221,6 +2221,7 @@ class MainWindowController:
             .run(background_task)
             .on_success(on_success)
             .on_error(on_error)
+            .start()
         )
 
     # <editor-fold desc="Selection slots">

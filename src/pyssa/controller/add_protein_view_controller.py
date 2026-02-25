@@ -323,7 +323,13 @@ class AddProteinViewController(QtCore.QObject):
           True
         )
 
-    thread_runtime.get_singleton_thread_runtime().run(import_task).on_success(on_success).on_error(on_error)
+    (
+      thread_runtime.get_singleton_thread_runtime()
+      .run(import_task)
+      .on_success(on_success)
+      .on_error(on_error)
+      .start()
+    )
     self._app_state.status_bar_manager.show_permanent_message(
       "Importing protein ...", True
     )

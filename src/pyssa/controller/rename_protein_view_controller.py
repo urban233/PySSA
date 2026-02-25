@@ -120,4 +120,5 @@ class RenameProteinViewController(QtCore.QObject):
       .run(rename_protein)
       .on_success(on_success)
       .on_error(on_error)
+      .start()
     )

@@ -556,6 +556,7 @@ class UseProjectViewController(QtCore.QObject):
       .run(create_project)
       .on_success(on_success)
       .on_error(on_error)
+      .start()
     )
     self._view.close()
     self._app_state.status_bar_manager.show_permanent_message(

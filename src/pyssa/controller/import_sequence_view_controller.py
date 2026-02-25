@@ -301,7 +301,6 @@ class ImportSequenceViewController(QtCore.QObject):
         #       f"Adding new sequence {tmp_seq_record.name} with {tmp_seq_record.seq} to the current project."
         #     )
 
-
     def on_success(result: list):
         for tmp_seq_record in result:
             self._app_state.project.sequences.append(tmp_seq_record)
@@ -328,6 +327,7 @@ class ImportSequenceViewController(QtCore.QObject):
       .run(import_task)
       .on_success(on_success)
       .on_error(on_error)
+      .start()
     )
     self._app_state.status_bar_manager.show_permanent_message(
       "Importing sequence(s) ...", True
