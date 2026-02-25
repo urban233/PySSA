@@ -25,7 +25,7 @@ import logging
 from src.pyssa.gui import app_state
 from src.pyssa.gui.qt import QtCore, QtWidgets
 from src.pyssa.gui.qt import Qt
-from src.pyssa.gui.ui.views import create_project_view
+from src.pyssa.gui.ui.views import create_project_view, help_view
 from src.pyssa.util import input_validator, constants, exception
 from src.pyssa.logging_pyssa import log_levels, log_handlers
 
@@ -74,6 +74,10 @@ class CreateProjectViewController(QtCore.QObject):
     logger.log(
       log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
+    tmp_dialog = help_view.HelpView(
+      constants.HELP_TEXT_MAP["CreateNewProjectDialog"]
+    )
+    tmp_dialog.exec()
 
   def restore_default_view(self) -> None:
     """Restores the UI."""
