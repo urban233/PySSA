@@ -87,7 +87,7 @@ class HelpEventFilter(QtCore.QObject):
       self.help_browser.setHtml(help_text)
 
   def handle_menu_about_to_hide(self):
-    """Handle when menu is about to close."""
+    """Handle when  menu is about to close."""
     logger.debug("Menu about to hide, clearing help")
     self.help_browser.clear()
 
