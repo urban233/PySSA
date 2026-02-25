@@ -603,19 +603,30 @@ def _do_distance_analysis(
   pymol_instance.cmd.scene("base", action="store")
 
   pymol_instance.cmd.bg_color("black")
-  pymol_instance.cmd.set("valence", 0)
-  pymol_instance.cmd.set("scene_buttons", 0)
-  pymol_instance.cmd.set("ray_trace_mode", 1)
-  pymol_instance.cmd.set("antialias", 1)
-  pymol_instance.cmd.set("ambient", 0.5)
-  pymol_instance.cmd.set("cartoon_fancy_helices", 1)
-  pymol_instance.cmd.set("cartoon_discrete_colors", 1)
-  pymol_instance.cmd.set("cartoon_sampling", 14)
-  pymol_instance.cmd.set("spec_power", 350)
-  pymol_instance.cmd.set("spec_reflect", 0.2)
-  pymol_instance.cmd.set("ray_transparency_contrast", 0.4)
-  pymol_instance.cmd.set("ray_transparency_oblique", 1.0)
-  pymol_instance.cmd.set("ray_transparency_oblique_power", 4.0)
+
+  for tmp_style_keys in constants.PYMOL_QUALITY_MAXIMUM_QUALITY.keys():
+    pymol_instance.cmd.do(
+      f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_MAXIMUM_QUALITY[tmp_style_keys]}"
+    )
+
+  for tmp_style_keys in constants.PYMOL_STYLE_DEFAULT.keys():
+    pymol_instance.cmd.do(
+      f"set {tmp_style_keys}, {constants.PYMOL_STYLE_DEFAULT[tmp_style_keys]}"
+    )
+
+  # pymol_instance.cmd.set("valence", 0)
+  # pymol_instance.cmd.set("scene_buttons", 0)
+  # pymol_instance.cmd.set("ray_trace_mode", 1)
+  # pymol_instance.cmd.set("antialias", 1)
+  # pymol_instance.cmd.set("ambient", 0.5)
+  # pymol_instance.cmd.set("cartoon_fancy_helices", 1)
+  # pymol_instance.cmd.set("cartoon_discrete_colors", 1)
+  # pymol_instance.cmd.set("cartoon_sampling", 14)
+  # pymol_instance.cmd.set("spec_power", 350)
+  # pymol_instance.cmd.set("spec_reflect", 0.2)
+  # pymol_instance.cmd.set("ray_transparency_contrast", 0.4)
+  # pymol_instance.cmd.set("ray_transparency_oblique", 1.0)
+  # pymol_instance.cmd.set("ray_transparency_oblique_power", 4.0)
 
   seq_len_1_atoms = pymol_instance.cmd.get_model(f"{tmp_protein_1_name} and n. CA").atom
   seq_len_protein_1 = len(seq_len_1_atoms) if seq_len_1_atoms else 0
@@ -682,6 +693,10 @@ def _do_distance_analysis(
   pymol_instance.cmd.zoom("all")
   pymol_instance.cmd.scene(key=f"{tmp_protein_1_name}-{tmp_protein_2_name}", action="store")
 
+  pymol_instance.cmd.hide("cartoon")
+  pymol_instance.cmd.show("sticks")
+  pymol_instance.cmd.color("atomic", "all and not elem C")
+
   j, i = 0, 0
   for distance_value in distance_list:
     if float(distance_value) > float(a_cutoff):
@@ -706,6 +721,8 @@ def _do_distance_analysis(
       pymol_instance.cmd.hide("dashes", measurement_obj)
       j += 1
     i += 1
+
+  pymol_instance.cmd.scene(key="base", action="recall")
 
   session_filepath = pathlib.Path(f"{constants.SCRATCH_DIR}/{the_protein_pair_name}_session.pse")
   pymol_instance.cmd.save(str(session_filepath))

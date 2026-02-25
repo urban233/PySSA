@@ -142,6 +142,10 @@ class AddProteinPairViewController(QtCore.QObject):
   def _deep_copy_item(self, item: QtGui.QStandardItem) -> QtGui.QStandardItem:
     """Creates a deep copy of a QStandardItem and its children."""
     new_item = item.clone()
+    # If the item is a chain, we don't want to copy its children (residues)
+    if item.data(enums.ModelEnum.TYPE_ROLE) == "chain":
+      return new_item
+
     for row in range(item.rowCount()):
         for col in range(item.columnCount()):
             child = item.child(row, col)
@@ -323,21 +327,11 @@ class AddProteinPairViewController(QtCore.QObject):
     for tmp_index in the_selected_indexes:
       if tmp_index.data(enums.ModelEnum.TYPE_ROLE) == "protein":
         tmp_protein_name = tmp_index.data(Qt.DisplayRole)
+        # Choosing the protein means taking its first protein chain.
         tmp_protein_chains.append(self._get_first_protein_chain(tmp_index))
-      elif tmp_index.data(enums.ModelEnum.TYPE_ROLE) == "header":
-        tmp_protein_name = tmp_index.parent().data(Qt.DisplayRole)
-        tmp_protein_chains.append(
-            self._get_first_protein_chain(tmp_index.parent())
-        )
       elif tmp_index.data(enums.ModelEnum.TYPE_ROLE) == "chain":
         tmp_protein_name = tmp_index.parent().parent().data(Qt.DisplayRole)
         tmp_protein_chains.append(tmp_index.data(Qt.DisplayRole))
-      elif tmp_index.data(enums.ModelEnum.TYPE_ROLE) == "residue":
-        tmp_protein_name = tmp_index.parent().parent().parent().data(Qt.DisplayRole)
-        tmp_protein_chains.append(tmp_index.parent().data(Qt.DisplayRole))
-      elif tmp_index.data(enums.ModelEnum.TYPE_ROLE) == "atom":
-        tmp_protein_name = tmp_index.parent().parent().parent().parent().data(Qt.DisplayRole)
-        tmp_protein_chains.append(tmp_index.parent().parent().data(Qt.DisplayRole))
 
     return tmp_protein_name, list(set(tmp_protein_chains))
 
@@ -413,6 +407,9 @@ class AddProteinPairViewController(QtCore.QObject):
   ) -> None:
     """Handles the selection change event for the 'tree_prot_1' tree view.
 
+    Only allows selecting 'protein' nodes (which represent selecting their first chain),
+    or 'chain' nodes from the same protein. Reverts invalid selections.
+
     Args:
         selected (QtCore.QItemSelection): The selected items in the tree view.
         deselected (QtCore.QItemSelection): The deselected items in the tree view.
@@ -434,35 +431,70 @@ class AddProteinPairViewController(QtCore.QObject):
     tmp_selection_model = self._view.ui.tree_prot_1.selectionModel()
     tmp_selection = tmp_selection_model.selection()
 
-    # <editor-fold desc="Checks for selection of multiple proteins">
-    i = 0
     invalid = QtCore.QItemSelection()
-    for index in tmp_selection.indexes():
-      if index.data(enums.ModelEnum.TYPE_ROLE) == "protein":
-        if i > 0:
-          invalid.select(index, index)
-        i += 1
-    if i > 1:
-      tmp_selection_model.select(invalid, QtCore.QItemSelectionModel.Deselect)
-      self._view.ui.btn_next.setEnabled(True)
-      return
-    # </editor-fold>
 
-    # <editor-fold desc="Checks for selection of chains and proteins">
-    parent = self._view.ui.tree_prot_1.currentIndex().parent()
-    invalid = QtCore.QItemSelection()
+    # Determine the context of the selection.
+    # We enforce that all selected nodes must point to the same protein.
+    # If the user selected a chain, its parent.parent is the protein.
+    # If the user selected a protein, that is the protein.
+    # Determine the "active protein index" from the first selected item.
+    first_index = tmp_selection.indexes()[0]
+    first_type = first_index.data(enums.ModelEnum.TYPE_ROLE)
+
+    if first_type == "protein":
+      active_protein_index = first_index
+    elif first_type == "chain":
+      active_protein_index = first_index.parent().parent()
+    else:
+      # If the first selected item is neither a chain nor a protein, it's invalid.
+      # (e.g., they clicked the "Chains" header).
+      active_protein_index = None
+
     for index in tmp_selection.indexes():
-      if index.parent() == parent:
+      item_type = index.data(enums.ModelEnum.TYPE_ROLE)
+      # Deselect items that are not proteins or chains.
+      if item_type not in ("protein", "chain"):
+        invalid.select(index, index)
         continue
-      invalid.select(index, index)
-    tmp_selection_model.select(invalid, QtCore.QItemSelectionModel.Deselect)
-    self._view.ui.btn_next.setEnabled(True)
-    # </editor-fold>
+      
+      # Determine the protein to which this item belongs.
+      if item_type == "protein":
+        item_protein_index = index
+      else:
+        item_protein_index = index.parent().parent()
+
+      # If it belongs to a different protein than the active one, deselect it.
+      if item_protein_index != active_protein_index:
+        invalid.select(index, index)
+        continue
+
+      # If the active protein itself is selected, we do not allow selecting
+      # individual chains of that same protein simultaneously. Selection of
+      # the protein node implicitly means selecting its *first* chain.
+      if active_protein_index in tmp_selection.indexes() and index != active_protein_index:
+        invalid.select(index, index)
+
+    if not invalid.isEmpty():
+      # Temporarily block signals to avoid recursive calls while correcting selection
+      tmp_selection_model.blockSignals(True)
+      tmp_selection_model.select(invalid, QtCore.QItemSelectionModel.Deselect)
+      tmp_selection_model.blockSignals(False)
+
+      # Re-evaluate the refined selection.
+      tmp_selection = tmp_selection_model.selection()
+
+    if tmp_selection.isEmpty():
+      self._view.ui.btn_next.setEnabled(False)
+    else:
+      self._view.ui.btn_next.setEnabled(True)
 
   def __slot_handle_selection_change_for_tree_prot_2(
       self, selected: QtCore.QItemSelection, deselected: QtCore.QItemSelection
   ) -> None:
     """Handles the selection change event for the 'tree_prot_2' tree view.
+
+    Only allows selecting 'protein' nodes (which represent selecting their first chain),
+    or 'chain' nodes from the same protein. Reverts invalid selections.
 
     Args:
         selected (QtCore.QItemSelection): The selected items in the tree view.
@@ -485,28 +517,41 @@ class AddProteinPairViewController(QtCore.QObject):
     tmp_selection_model = self._view.ui.tree_prot_2.selectionModel()
     tmp_selection = tmp_selection_model.selection()
 
-    # <editor-fold desc="Deselect additional protein nodes when multiple are chosen">
-    protein_count = 0
     invalid = QtCore.QItemSelection()
-    for index in tmp_selection.indexes():
-      if index.data(enums.ModelEnum.TYPE_ROLE) == "protein":
-        if protein_count > 0:
-          invalid.select(index, index)
-        protein_count += 1
-    if protein_count > 1:
-      tmp_selection_model.select(invalid, QtCore.QItemSelectionModel.Deselect)
-      self._evaluate_and_update_add_button(tmp_selection)
-      return
-    # </editor-fold>
 
-    # <editor-fold desc="Restrict selection to a single parent level">
-    parent = self._view.ui.tree_prot_2.currentIndex().parent()
-    invalid = QtCore.QItemSelection()
+    first_index = tmp_selection.indexes()[0]
+    first_type = first_index.data(enums.ModelEnum.TYPE_ROLE)
+
+    if first_type == "protein":
+      active_protein_index = first_index
+    elif first_type == "chain":
+      active_protein_index = first_index.parent().parent()
+    else:
+      active_protein_index = None
+
     for index in tmp_selection.indexes():
-      if index.parent() != parent:
+      item_type = index.data(enums.ModelEnum.TYPE_ROLE)
+      if item_type not in ("protein", "chain"):
         invalid.select(index, index)
-    tmp_selection_model.select(invalid, QtCore.QItemSelectionModel.Deselect)
-    # </editor-fold>
+        continue
+      
+      if item_type == "protein":
+        item_protein_index = index
+      else:
+        item_protein_index = index.parent().parent()
+
+      if item_protein_index != active_protein_index:
+        invalid.select(index, index)
+        continue
+
+      if active_protein_index in tmp_selection.indexes() and index != active_protein_index:
+        invalid.select(index, index)
+
+    if not invalid.isEmpty():
+      tmp_selection_model.blockSignals(True)
+      tmp_selection_model.select(invalid, QtCore.QItemSelectionModel.Deselect)
+      tmp_selection_model.blockSignals(False)
+      tmp_selection = tmp_selection_model.selection()
 
     self._evaluate_and_update_add_button(tmp_selection)
 
