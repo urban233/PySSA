@@ -30,7 +30,7 @@ from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import Qt
 from src.pyssa.controller import database_manager
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
-from src.pyssa.gui.ui.views import results_view
+from src.pyssa.gui.ui.views import results_view, help_view
 from src.pyssa.gui.ui.views import plot_view
 from src.pyssa.internal.thread import tasks
 from src.pyssa.internal.thread.async_pyssa import protein_pair_async
@@ -103,7 +103,10 @@ class ResultsViewController(QtCore.QObject):
 
   def _open_help_for_dialog(self) -> None:
     """Opens the help dialog."""
-    # self._interface_manager.help_manager.open_results_summary_page()
+    tmp_dialog = help_view.HelpView(
+      constants.HELP_TEXT_MAP["ResultsSummaryDialog"]
+    )
+    tmp_dialog.exec()
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
@@ -231,7 +234,7 @@ class ResultsViewController(QtCore.QObject):
     )
     file_dialog = QtWidgets.QFileDialog()
     desktop_path = QtCore.QStandardPaths.standardLocations(
-      QtCore.QStandardPaths.DesktopLocation
+      QtCore.QStandardPaths.StandardLocation.DesktopLocation
     )[0]
     file_dialog.setDirectory(desktop_path)
     file_path, _ = file_dialog.getSaveFileName(
@@ -256,4 +259,4 @@ class ResultsViewController(QtCore.QObject):
           "Export Data",
           custom_message_box.CustomMessageBoxIcons.ERROR.value,
         )
-      tmp_dialog.exec_()
+      tmp_dialog.exec()

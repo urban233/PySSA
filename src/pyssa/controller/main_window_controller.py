@@ -182,10 +182,10 @@ class MainWindowController:
         self._setup_application_settings()
 
         # Load help texts from external HTML files
-        help_map = help_text_loader.load_help_texts()
+        # help_map = help_text_loader.load_help_texts()
         self.help_filter = help_event_filter.HelpEventFilter(
             self._main_window.help_panel.help_text_browser,
-            help_map,
+            constants.HELP_TEXT_MAP,
             self._main_window.help_panel
         )
         self._main_window.pyssa_objects_panel.installEventFilter(self.help_filter)
@@ -380,8 +380,14 @@ class MainWindowController:
         self._main_window.action_pymol_legacy_style.triggered.connect(
             self.__slot_pymol_legacy_style
         )
+        self._main_window.action_pymol_maximum_performance.triggered.connect(
+            self.__slot_pymol_maximum_performance_style
+        )
         self._main_window.action_pymol_reasonable_performance.triggered.connect(
             self.__slot_pymol_reasonable_performance_style
+        )
+        self._main_window.action_pymol_reasonable_quality.triggered.connect(
+            self.__slot_pymol_reasonable_quality_style
         )
         self._main_window.action_pymol_maximum_quality.triggered.connect(
             self.__slot_pymol_maximum_quality_style
@@ -1631,10 +1637,24 @@ class MainWindowController:
             )
         self._trigger_auto_save()
 
+    def __slot_pymol_maximum_performance_style(self):
+        for tmp_style_keys in constants.PYMOL_QUALITY_MAXIMUM_PERFORMANCE.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_MAXIMUM_PERFORMANCE[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
+
     def __slot_pymol_reasonable_performance_style(self):
         for tmp_style_keys in constants.PYMOL_QUALITY_REASONABLE_PERFORMANCE.keys():
             self._user_pymol.get_cmd_module().do(
                 f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_REASONABLE_PERFORMANCE[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
+
+    def __slot_pymol_reasonable_quality_style(self):
+        for tmp_style_keys in constants.PYMOL_QUALITY_REASONABLE_QUALITY.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_REASONABLE_QUALITY[tmp_style_keys]}"
             )
         self._trigger_auto_save()
 

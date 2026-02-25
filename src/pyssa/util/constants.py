@@ -26,7 +26,7 @@ import datetime
 import pathlib
 import sys
 from pathlib import Path
-from src.pyssa.util import globals, enums
+from src.pyssa.util import globals, enums, help_text_loader
 
 # General
 PLUGIN_NAME = 'PySSA'
@@ -251,6 +251,8 @@ PAGE_HELP_PATHS_DICT = {
     PAGE_USE_EXISTING_PROJECT: HELP_USE_EXISTING_PROJECT_HTML_PATH,
     PAGE_RESULTS: HELP_RESULTS_HTML_PATH,
 }
+
+HELP_TEXT_MAP = help_text_loader.load_help_texts()
 
 DEFAULT_HISTOGRAM_PROPERTIES = {
     enums.HistogramPropertiesEnum.X_AXIS_UNITS: 10,
@@ -517,17 +519,16 @@ PYMOL_STYLE_DEFAULT = {
     "scene_buttons": 0,
     "antialias": 2,
     # Lighting
-    "ambient": 0.5,
-    "reflect": 0.45,
-    "direct": 0.45,
+    "ambient": 0.33,
+    "reflect": 0.24,
+    "direct": 0.36,
     "spec_direct": 0,
-    "spec_direct_power": 55,
-    "light_count": 2,
+    "spec_direct_power": 40,
+    "light_count": 4,
     "edit_light": 1,
     "spec_count": -1,
     "shininess": 55,
-    "spec_power": 350,
-    "spec_reflect": 0.2,
+    "spec_reflect": 0.0,
     "specular": 1,
     "specular_intensity": 0.5,
     # Cartoon settings
@@ -645,6 +646,51 @@ PYMOL_QUALITY_MAXIMUM_QUALITY = {
     "nb_spheres_quality": 3,
 }
 
+PYMOL_QUALITY_REASONABLE_QUALITY = {
+    # Rendering / general
+    "line_smooth": 1,
+    "depth_cue": 1,
+    "specular": 1,
+    "surface_quality": 0,
+    "transparency_mode": 2,
+
+    # Sampling
+    # "cartoon_sampling": 7,
+    # "ribbon_sampling": 1,
+
+    # Shader usage (enabled if use_shaders == 1)
+    "use_shaders": 1,
+    "cartoon_use_shader": 1,
+    "cgo_use_shader": 1,
+    "dash_use_shader": 1,
+    "dot_use_shader": 1,
+    "line_use_shader": 1,
+    "mesh_use_shader": 1,
+    "nb_spheres_use_shader": 1,
+    "nonbonded_use_shader": 1,
+    "ribbon_use_shader": 1,
+    "sphere_use_shader": 1,
+    "stick_use_shader": 1,
+    "surface_use_shader": 1,
+
+    # Cylinders rendering
+    "render_as_cylinders": 1,
+    "alignment_as_cylinders": 1,
+    "cartoon_nucleic_acid_as_cylinders": 1,
+    "dash_as_cylinders": 1,
+    "line_as_cylinders": 1,
+    "mesh_as_cylinders": 1,
+    "nonbonded_as_cylinders": 1,
+    "ribbon_as_cylinders": 1,
+    "stick_as_cylinders": 1,
+
+    # Sphere / dot settings
+    "dot_as_spheres": 1,
+    "stick_ball": 0,
+    "sphere_mode": 9,
+    "nb_spheres_quality": 3,
+}
+
 PYMOL_QUALITY_REASONABLE_PERFORMANCE = {
     # Rendering / general
     "line_smooth": 0,
@@ -690,6 +736,49 @@ PYMOL_QUALITY_REASONABLE_PERFORMANCE = {
     "stick_ball": 0,
     "sphere_mode": 9,
     "nb_spheres_quality": 3,
+}
+
+PYMOL_QUALITY_MAXIMUM_PERFORMANCE = {
+    # Rendering / general
+    "line_smooth": 0,
+    "depth_cue": 0,
+    "specular": 0,
+    "surface_quality": -1,
+    "stick_quality": 5,
+    "sphere_quality": 0,
+    # "ribbon_sampling": 1,
+    # "cartoon_sampling": 3,
+    "transparency_mode": 0,
+    "max_ups": 0,
+
+    # Shader usage (enabled if use_shaders == 1)
+    "use_shaders": 1,
+    "cartoon_use_shader": 1,
+    "cgo_use_shader": 1,
+    "dash_use_shader": 1,
+    "dot_use_shader": 1,
+    "line_use_shader": 1,
+    "mesh_use_shader": 1,
+    "nb_spheres_use_shader": 1,
+    "nonbonded_use_shader": 1,
+    "ribbon_use_shader": 1,
+    "sphere_use_shader": 1,
+    "stick_use_shader": 1,
+    "surface_use_shader": 1,
+
+    # Cylinders rendering
+    "render_as_cylinders": 1,
+    "alignment_as_cylinders": 0,
+    "cartoon_nucleic_acid_as_cylinders": 0,
+    "dash_as_cylinders": 0,
+    "line_as_cylinders": 0,
+    "mesh_as_cylinders": 0,
+    "nonbonded_as_cylinders": 0,
+    "ribbon_as_cylinders": 0,
+    "stick_as_cylinders": 1,
+
+    # Sphere / dot settings
+    "dot_as_spheres": 0,
 }
 
 PYMOL_REPR_STATES_WITH_INDICES = {

@@ -150,7 +150,9 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.action_pymol_maestro_style = QtGui.QAction("Maestro-like", self.submenuPyMOLStyle)
     self.action_pymol_legacy_style = QtGui.QAction("Legacy", self.submenuPyMOLStyle)
     self.submenuPyMOLQuality = QtWidgets.QMenu("PyMOL Quality", self.menuSettings)
+    self.action_pymol_maximum_performance = QtGui.QAction("Maximum Performance", self.submenuPyMOLQuality)
     self.action_pymol_reasonable_performance = QtGui.QAction("Reasonable Performance", self.submenuPyMOLQuality)
+    self.action_pymol_reasonable_quality = QtGui.QAction("Reasonable Quality", self.submenuPyMOLQuality)
     self.action_pymol_maximum_quality = QtGui.QAction("Maximum Quality", self.submenuPyMOLQuality)
 
     # self.submenuPyMOLStyle.menuAction().setVisible(False)
@@ -538,7 +540,9 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.submenuPyMOLStyle.addAction(self.action_pymol_maestro_style)
     self.submenuPyMOLStyle.addAction(self.action_pymol_legacy_style)
     self.menuSettings.addMenu(self.submenuPyMOLQuality)
+    self.submenuPyMOLQuality.addAction(self.action_pymol_maximum_performance)
     self.submenuPyMOLQuality.addAction(self.action_pymol_reasonable_performance)
+    self.submenuPyMOLQuality.addAction(self.action_pymol_reasonable_quality)
     self.submenuPyMOLQuality.addAction(self.action_pymol_maximum_quality)
 
     # --- About/Help Menu ---

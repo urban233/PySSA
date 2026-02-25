@@ -122,14 +122,14 @@ class DistanceAnalysisResults:
 
     tmp_data_to_write = np.transpose(
         [
-            self.distance_data["index"],
-            self.distance_data["ref_chain"],
-            self.distance_data["ref_pos"],
-            self.distance_data["ref_resi"],
-            self.distance_data["model_chain"],
-            self.distance_data["model_pos"],
-            self.distance_data["model_resi"],
-            self.distance_data["distance"],
+            self.distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX],
+            self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN],
+            self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION],
+            self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI],
+            self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN],
+            self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION],
+            self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI],
+            self.distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES],
         ]
     )
     # Writing to the TSV file
