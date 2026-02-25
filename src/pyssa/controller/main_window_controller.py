@@ -240,6 +240,7 @@ class MainWindowController:
             ("mesh",            "viewer_mesh"),
             ("surface",         "viewer_surface"),
             ("hide_all",        "viewer_hide_all_repr"),
+            ("fit_view",        "viewer_fit_view"),
             ("color",           "viewer_color"),
             ("selection",       "viewer_selection"),
             ("clean",           "viewer_clean"),
@@ -271,7 +272,7 @@ class MainWindowController:
             _menu.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
         logger.info("Connected hover help for all representation show/hide menus.")
 
-        # Connect the Selection popup menu.
+        # Connect the Selection menu.
         _main_window.selection_show_hide_menu.hovered.connect(self.help_filter.handle_menu_action_hovered)
         _main_window.selection_show_hide_menu.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
 
