@@ -38,11 +38,11 @@ from pymol.Qt.utils import MainThreadCaller
 from pmg_qt.pymol_gl_widget import PyMOLGLWidget
 from pmg_qt import keymapping
 
-from src.pyssa.controller import main_window_controller, welcome_screen_view_controller
+from src.pyssa.controller import main_window_controller
 from src.pyssa.gui import user_pymol
 from src.pyssa.gui.ui.styles import styles
 
-from src.pyssa.gui.ui.views import pyssa_objects_panel, welcome_screen_view, help_panel, project_overview_panel
+from src.pyssa.gui.ui.views import pyssa_objects_panel, help_panel, project_overview_panel
 
 from src.pyssa.gui.ui.styles.icon_manager import IconManager
 from src.pyssa.gui.qt import QtCore
@@ -708,8 +708,8 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
   # </editor-fold>
 
   # <editor-fold desc="Public methods">
-  def keyPressEvent(self, ev):
-    args = keymapping.keyPressEventToPyMOLButtonArgs(ev)
+  def keyPressEvent(self, event):
+    args = keymapping.keyPressEventToPyMOLButtonArgs(event)
     if args is not None:
       self.pymolwidget.pymol.button(*args)
 
@@ -769,12 +769,12 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
   # </editor-fold>
 
 
-def commandoverloaddecorator(func):
-  name = func.__name__
-  func.__doc__ = getattr(pymol.cmd, name).__doc__
-  setattr(pymol.cmd, name, func)
-  pymol.cmd.extend(func)
-  return func
+def command_overload_decorator(function):
+  name = function.__name__
+  function.__doc__ = getattr(pymol.cmd, name).__doc__
+  setattr(pymol.cmd, name, function)
+  pymol.cmd.extend(function)
+  return function
 
 
 window = None
@@ -816,11 +816,11 @@ def exec_app():
   window = MainWindow()
   controller = main_window_controller.MainWindowController(window)
 
-  @commandoverloaddecorator
+  @command_overload_decorator
   def viewport(w=-1, h=-1, _self=None):
     window.viewportsignal.emit(int(w), int(h))
 
-  @commandoverloaddecorator
+  @command_overload_decorator
   def full_screen(toggle=-1, _self=None):
     from pymol import viewing as v
 
