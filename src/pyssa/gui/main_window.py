@@ -38,11 +38,11 @@ from pymol.Qt.utils import MainThreadCaller
 from pmg_qt.pymol_gl_widget import PyMOLGLWidget
 from pmg_qt import keymapping
 
-from src.pyssa.controller import main_window_controller, welcome_screen_view_controller
+from src.pyssa.controller import main_window_controller
 from src.pyssa.gui import user_pymol
 from src.pyssa.gui.ui.styles import styles
 
-from src.pyssa.gui.ui.views import pyssa_objects_panel, welcome_screen_view, help_panel, project_overview_panel
+from src.pyssa.gui.ui.views import pyssa_objects_panel, help_panel, project_overview_panel
 
 from src.pyssa.gui.ui.styles.icon_manager import IconManager
 from src.pyssa.gui.qt import QtCore
@@ -145,11 +145,14 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.action_restore_settings = QtGui.QAction("Restore", self)
     self.action_restore_settings.setObjectName("action_restore_settings")
     # </editor-fold>
+
     self.submenuPyMOLStyle = QtWidgets.QMenu("PyMOL Style", self.menuSettings)
+    self.submenuPyMOLStyle.setObjectName("action_pymol_style_settings")
     self.action_pymol_default_style = QtGui.QAction("Default", self.submenuPyMOLStyle)
     self.action_pymol_maestro_style = QtGui.QAction("Maestro-like", self.submenuPyMOLStyle)
     self.action_pymol_legacy_style = QtGui.QAction("Legacy", self.submenuPyMOLStyle)
     self.submenuPyMOLQuality = QtWidgets.QMenu("PyMOL Quality", self.menuSettings)
+    self.submenuPyMOLQuality.setObjectName("action_pymol_quality_settings")
     self.action_pymol_maximum_performance = QtGui.QAction("Maximum Performance", self.submenuPyMOLQuality)
     self.action_pymol_reasonable_performance = QtGui.QAction("Reasonable Performance", self.submenuPyMOLQuality)
     self.action_pymol_reasonable_quality = QtGui.QAction("Reasonable Quality", self.submenuPyMOLQuality)
@@ -358,12 +361,15 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.selection_show_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY), "Show"
     )
+    self.selection_show_action.setObjectName("popup_show_selection")
     self.selection_hide_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF), "Hide"
     )
+    self.selection_hide_action.setObjectName("popup_hide_selection")
     self.selection_clear_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.DELETE), "Clear"
     )
+    self.selection_clear_action.setObjectName("popup_clear_selection")
     self.selection_show_hide_menu.addAction(self.selection_show_action)
     self.selection_show_hide_menu.addAction(self.selection_hide_action)
     self.selection_show_hide_menu.addAction(self.selection_clear_action)
@@ -712,8 +718,8 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
   # </editor-fold>
 
   # <editor-fold desc="Public methods">
-  def keyPressEvent(self, ev):
-    args = keymapping.keyPressEventToPyMOLButtonArgs(ev)
+  def keyPressEvent(self, event):
+    args = keymapping.keyPressEventToPyMOLButtonArgs(event)
     if args is not None:
       self.pymolwidget.pymol.button(*args)
 
@@ -773,12 +779,12 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
   # </editor-fold>
 
 
-def commandoverloaddecorator(func):
-  name = func.__name__
-  func.__doc__ = getattr(pymol.cmd, name).__doc__
-  setattr(pymol.cmd, name, func)
-  pymol.cmd.extend(func)
-  return func
+def command_overload_decorator(function):
+  name = function.__name__
+  function.__doc__ = getattr(pymol.cmd, name).__doc__
+  setattr(pymol.cmd, name, function)
+  pymol.cmd.extend(function)
+  return function
 
 
 window = None
@@ -820,11 +826,11 @@ def exec_app():
   window = MainWindow()
   controller = main_window_controller.MainWindowController(window)
 
-  @commandoverloaddecorator
+  @command_overload_decorator
   def viewport(w=-1, h=-1, _self=None):
     window.viewportsignal.emit(int(w), int(h))
 
-  @commandoverloaddecorator
+  @command_overload_decorator
   def full_screen(toggle=-1, _self=None):
     from pymol import viewing as v
 

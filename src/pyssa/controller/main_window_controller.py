@@ -239,7 +239,9 @@ class MainWindowController:
             ("dots",            "viewer_dots"),
             ("mesh",            "viewer_mesh"),
             ("surface",         "viewer_surface"),
+            ("hide_all",        "viewer_hide_all_repr"),
             ("color",           "viewer_color"),
+            ("selection",       "viewer_selection"),
             ("clean",           "viewer_clean"),
             ("running_jobs",    "viewer_running_jobs"),
             ("notifications",   "viewer_notifications"),
@@ -268,6 +270,10 @@ class MainWindowController:
             _menu.hovered.connect(self.help_filter.handle_menu_action_hovered)
             _menu.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
         logger.info("Connected hover help for all representation show/hide menus.")
+
+        # Connect the Selection popup menu.
+        _main_window.selection_show_hide_menu.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        _main_window.selection_show_hide_menu.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
 
         # Connect the Clean popup menu.
         _main_window.clean_solvent_organic_menu.hovered.connect(self.help_filter.handle_menu_action_hovered)
@@ -308,6 +314,10 @@ class MainWindowController:
         self._main_window.menuHotspots.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
         self._main_window.menuSettings.hovered.connect(self.help_filter.handle_menu_action_hovered)
         self._main_window.menuSettings.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
+        self._main_window.submenuPyMOLStyle.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        self._main_window.submenuPyMOLStyle.aboutToHide.connect(self.help_filter.handle_menu_action_hovered)
+        self._main_window.submenuPyMOLQuality.hovered.connect(self.help_filter.handle_menu_action_hovered)
+        self._main_window.submenuPyMOLQuality.aboutToHide.connect(self.help_filter.handle_menu_action_hovered)
         self._main_window.menuAbout.hovered.connect(self.help_filter.handle_menu_action_hovered)
         self._main_window.menuAbout.aboutToHide.connect(self.help_filter.handle_menu_about_to_hide)
         logger.info("Connected hover help for all menu items")
