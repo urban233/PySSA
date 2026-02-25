@@ -87,6 +87,7 @@ class UserPyMOL:
             tmp_session_path, a_pymol_session
         )
         self._embedded_cmd.load(tmp_session_path)
+        self._embedded_cmd.scene("base", "recall")
         self._current_object = a_current_object
         self._current_session_name = a_current_object.get_name()
         self._current_scene_name = "base"

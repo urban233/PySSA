@@ -147,6 +147,7 @@ class IconManager:
         LOGO = "LOGO"
         HIGHLIGHT_MOUSE_CURSOR = "HIGHLIGHT_MOUSE_CURSOR"
         CODE_BLOCKS = "CODE_BLOCKS"
+        ARROWS_OUTPUT = "ARROWS_OUTPUT"
 
     # <editor-fold desc="Class attributes">
     _instance = None

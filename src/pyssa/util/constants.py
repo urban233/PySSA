@@ -505,6 +505,10 @@ PYMOL_STYLE_LEGACY = {
     "ribbon_width": 3.0,
     # Sticks settings
     "stick_radius": 0.25,
+    # Mesh settings
+    "set mesh_width": 1.0,
+    # Dot settings
+    "dot_radius": 0,
     # Ray trace settings
     "ray_trace_mode": 1,
     "ray_transparency_contrast": 0.4,
@@ -545,6 +549,10 @@ PYMOL_STYLE_DEFAULT = {
     "ribbon_width": 3.0,
     # Sticks settings
     "stick_radius": 0.25,
+    # Mesh settings
+    "set mesh_width": 1.0,
+    # Dot settings
+    "dot_radius": 0,
     # Ray trace settings
     "ray_trace_mode": 1,
     "ray_transparency_contrast": 0.4,
@@ -588,6 +596,10 @@ PYMOL_STYLE_MAESTRO_LIKE = {
     "ribbon_width": 10,
     # Sticks settings
     "stick_radius": 0.15,
+    # Mesh settings
+    "set mesh_width": 0.5,
+    # Dot settings
+    "dot_radius": 0.03,
     # Ray trace settings
     "ray_trace_mode": 1,
     "ray_transparency_contrast": 0.4,

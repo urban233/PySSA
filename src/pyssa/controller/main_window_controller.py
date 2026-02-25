@@ -482,6 +482,10 @@ class MainWindowController:
         self._main_window.viewer_toolbar_actions.get("hide_all").get_action().triggered.connect(
             self.__slot_hide_all_representations
         )
+        self._main_window.viewer_toolbar_actions.get("fit_view").get_action().triggered.connect(
+            self.__slot_fit_view
+        )
+
         # # </editor-fold>
         # <editor-fold desc="Color slots">
         self._main_window.viewer_toolbar_actions.get("color").get_action().triggered.connect(
@@ -1109,6 +1113,11 @@ class MainWindowController:
         if toolbar_action_hide_all: toolbar_action_hide_all.get_action().setEnabled(
             has_loaded_session and has_active_protein_selection
         )
+
+        toolbar_action_fit_view = self._main_window.viewer_toolbar_actions.get("fit_view")
+        if toolbar_action_fit_view: toolbar_action_fit_view.get_action().setEnabled(
+            has_loaded_session
+        )
         # </editor-fold>
 
         # <editor-fold desc="Color">
@@ -1583,7 +1592,7 @@ class MainWindowController:
     def __slot_protein_hotspots(self):
         self._user_pymol.get_cmd_module().show("sticks", "sele")
         self._user_pymol.get_cmd_module().color("atomic", "sele and not elem C")
-        self._user_pymol.get_cmd_module().color("grey70", "sele and elem C")
+        self._user_pymol.get_cmd_module().color("grey50", "sele and elem C")
         self._user_pymol.get_cmd_module().zoom("sele")
     # </editor-fold>
 
@@ -2371,6 +2380,15 @@ class MainWindowController:
         tmp_reprs = ["cartoon", "sticks", "ribbon", "lines", "spheres", "dots", "mesh", "surface"]
         for tmp_repr in tmp_reprs:
             self._user_pymol.get_cmd_module().hide(tmp_repr, "sele")
+
+    def __slot_fit_view(self):
+        if isinstance(self._user_pymol.get_currently_loaded_object(), protein.Protein):
+            self._user_pymol.get_cmd_module().orient(self._user_pymol.get_currently_loaded_object().get_name())
+            self._user_pymol.get_cmd_module().center(self._user_pymol.get_currently_loaded_object().get_name())
+        elif isinstance(self._user_pymol.get_currently_loaded_object(), protein_pair.ProteinPair):
+            tmp_protein_pair: protein_pair.ProteinPair = self._user_pymol.get_currently_loaded_object()
+            self._user_pymol.get_cmd_module().orient(tmp_protein_pair.protein_1.get_name())
+            self._user_pymol.get_cmd_module().center(tmp_protein_pair.protein_1.get_name())
 
     # </editor-fold>
 

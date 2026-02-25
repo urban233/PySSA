@@ -241,6 +241,9 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
       "hide_all": quick_access_bar_action.QuickAccessBarAction(
         "Hide All Representations", "left", 8, None, IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF)
       ),
+      "fit_view": quick_access_bar_action.QuickAccessBarAction(
+        "Fit View", "left", 8, None, IconManager.instance().get_icon(IconManager.Icons.ARROWS_OUTPUT)
+      ),
       "color": quick_access_bar_action.QuickAccessBarAction(
         "Color", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.PALETTE)
       ),
@@ -375,6 +378,17 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.selection_show_hide_menu.addAction(self.selection_clear_action)
     # </editor-fold>
 
+    # <editor-fold desc="Color Grid">
+    self.color_grid = color_grid.PyMOLColorGrid()
+    self.color_config = psa_color_config.PSAColorConfig(self.color_grid)
+    self.color_config.btn_white_bg.setObjectName("popup_color_bg_white")
+    self.color_config.btn_grey_bg.setObjectName("popup_color_bg_grey")
+    self.color_config.btn_black_bg.setObjectName("popup_color_bg_black")
+    self.color_config.btn_color_by_elements.setObjectName("popup_color_by_elements")
+    self.color_grid_menu = dropdown_menu.DropDownMenu()
+    self.color_grid_action = QtWidgets.QWidgetAction(None)
+    # </editor-fold>
+
     # <editor-fold desc="Clean">
     self.clean_solvent_organic_menu = dropdown_menu.DropDownMenu()
     self.clean_solvent_action = QtGui.QAction(
@@ -387,17 +401,6 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.clean_organic_action.setObjectName("popup_clean_organic")
     self.clean_solvent_organic_menu.addAction(self.clean_solvent_action)
     self.clean_solvent_organic_menu.addAction(self.clean_organic_action)
-    # </editor-fold>
-
-    # <editor-fold desc="Color Grid">
-    self.color_grid = color_grid.PyMOLColorGrid()
-    self.color_config = psa_color_config.PSAColorConfig(self.color_grid)
-    self.color_config.btn_white_bg.setObjectName("popup_color_bg_white")
-    self.color_config.btn_grey_bg.setObjectName("popup_color_bg_grey")
-    self.color_config.btn_black_bg.setObjectName("popup_color_bg_black")
-    self.color_config.btn_color_by_elements.setObjectName("popup_color_by_elements")
-    self.color_grid_menu = dropdown_menu.DropDownMenu()
-    self.color_grid_action = QtWidgets.QWidgetAction(None)
     # </editor-fold>
 
     # <editor-fold desc="Jobs">
