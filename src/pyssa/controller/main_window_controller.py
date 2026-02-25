@@ -37,6 +37,7 @@ from typing import Union
 import pymol
 import requests
 
+from src.pyssa.gui.ui.styles.icon_manager import IconManager
 # import pywinctl
 
 from src.pyssa.internal.pymol.pml_worker import PmlWorker
@@ -2499,6 +2500,9 @@ class MainWindowController:
         )
 
     def __slot_open_completed_jobs_popup(self):
+        self._main_window.viewer_toolbar_actions.get("notifications").update_icon(
+            IconManager.instance().get_icon(IconManager.Icons.NOTIFICATIONS)
+        )
         self._main_window.complete_jobs_menu.exec(
             self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("notifications"))
         )
@@ -2637,6 +2641,9 @@ class MainWindowController:
                 )
             case _:
                 logger.warning(f"Unhandled job type: {descriptor.job_type}")
+        self._main_window.viewer_toolbar_actions.get("notifications").update_icon(
+            IconManager.instance().get_icon(IconManager.Icons.NOTIFICATIONS_UNREAD)
+        )
 
     # <editor-fold desc="Handle specific job results">
     def _handle_distance_analysis_job_result(
