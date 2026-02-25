@@ -2,7 +2,7 @@
 Utility module to load hover help texts from external HTML files.
 
 This module reads help content from HTML files stored in the
-docs/pyssa-documentation/docs/help/hover_help directory structure.
+docs/pyssa-documentation/docs/help/help directory structure.
 """
 import logging
 from pathlib import Path
@@ -123,10 +123,10 @@ def load_help_texts() -> Dict[str, str]:
     help_map = {}
 
     # Determine the base path for help files
-    # Navigate from src/pyssa/util/ to docs/pyssa-documentation/docs/help/hover_help/
+    # Navigate from src/pyssa/util/ to docs/pyssa-documentation/docs/help/help/
     current_file = Path(__file__)
     project_root = current_file.parent.parent.parent.parent
-    help_base_dir = project_root / "docs" / "pyssa-documentation" / "docs" / "help" / "hover_help"
+    help_base_dir = project_root / "docs" / "pyssa-documentation" / "docs" / "help" / "help"
 
     if help_base_dir.exists():
         # Load help texts from files
