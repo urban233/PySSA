@@ -145,11 +145,14 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.action_restore_settings = QtGui.QAction("Restore", self)
     self.action_restore_settings.setObjectName("action_restore_settings")
     # </editor-fold>
+
     self.submenuPyMOLStyle = QtWidgets.QMenu("PyMOL Style", self.menuSettings)
+    self.submenuPyMOLStyle.setObjectName("action_pymol_style_settings")
     self.action_pymol_default_style = QtGui.QAction("Default", self.submenuPyMOLStyle)
     self.action_pymol_maestro_style = QtGui.QAction("Maestro-like", self.submenuPyMOLStyle)
     self.action_pymol_legacy_style = QtGui.QAction("Legacy", self.submenuPyMOLStyle)
     self.submenuPyMOLQuality = QtWidgets.QMenu("PyMOL Quality", self.menuSettings)
+    self.submenuPyMOLQuality.setObjectName("action_pymol_quality_settings")
     self.action_pymol_maximum_performance = QtGui.QAction("Maximum Performance", self.submenuPyMOLQuality)
     self.action_pymol_reasonable_performance = QtGui.QAction("Reasonable Performance", self.submenuPyMOLQuality)
     self.action_pymol_reasonable_quality = QtGui.QAction("Reasonable Quality", self.submenuPyMOLQuality)
