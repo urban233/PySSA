@@ -141,7 +141,7 @@ class MainWindowController:
         )
         self._active_jobs_controller.show_active_jobs()
         self._complete_jobs_controller = job_popup_controller.JobPopupController(
-            self._main_window.complete_jobs, self._app_state.job_model
+            self._main_window.complete_jobs, self._app_state.job_model, False
         )
         self._complete_jobs_controller.show_completed_jobs()
         self.feedback_timer = QtCore.QTimer()

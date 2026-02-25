@@ -246,6 +246,21 @@ class JobModel(QtCore.QAbstractTableModel):
     del self._entries[row]
     self.endRemoveRows()
 
+  def remove_completed_jobs(self) -> None:
+    completed_statuses = {
+      enums.JobStatus.FINISHED,
+      enums.JobStatus.FAILED,
+      enums.JobStatus.CANCELLED,
+    }
+
+    rows_to_remove = [
+      i for i, entry in enumerate(self._entries)
+      if entry.status in completed_statuses
+    ]
+
+    for row in reversed(rows_to_remove):
+      self.remove_job(row)
+
   def get_descriptor(self, row: int) -> job_descriptor.JobDescriptor:
     """Return the ``JobDescriptor`` for a given row.
 
