@@ -313,7 +313,8 @@ class MainWindowController:
         logger.info("Connected hover help for all menu items")
 
         self.refresh_ui()
-        # self.open_welcome_screen()
+        if not constants.PYDEBUG:
+            self.check_for_updates()
 
     # <editor-fold desc="Private methods">
     def _connect_all_signals_with_their_slots(self) -> None:
@@ -400,6 +401,7 @@ class MainWindowController:
         self._main_window.action_show_log_in_explorer.triggered.connect(self.__slot_open_logs)
         self._main_window.action_clear_logs.triggered.connect(self.__slot_clear_all_log_files)
         self._main_window.action_get_demo_projects.triggered.connect(self.__slot_get_demo_projects)
+        self._main_window.action_check_for_updates.triggered.connect(self.__slot_check_for_updates)
         self._main_window.action_about.triggered.connect(self.__slot_open_about)
         # </editor-fold>
 
@@ -1939,6 +1941,79 @@ class MainWindowController:
             self._status_bar_manager.show_error_message(
                 "An unknown error occurred!"
             )
+
+    def __slot_check_for_updates(self) -> None:
+        """Slot method for the QAction that checks if updates are avaliable."""
+        self.check_for_updates()
+
+    def check_for_updates(self) -> None:
+        """Checks if an update is available."""
+        try:
+            if tools.check_internet_connectivity():
+                tools.download_file(constants.VERSION_HISTORY_URL, constants.VERSION_HISTORY_FILEPATH)
+                tmp_latest_release = tools.get_latest_release(constants.VERSION_HISTORY_FILEPATH)
+                tmp_current_version = constants.VERSION_NUMBER[1:]
+                if tmp_current_version == tmp_latest_release["version"]:
+                    self._status_bar_manager.show_temporary_message("No update available.")
+                    return
+                tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+                    "A new version is available. Update now?", "Update Available", custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                )
+                tmp_dialog.exec()
+                if not tmp_dialog.response:
+                    return
+
+                def download_update_file(progress_callback, is_cancelled):
+                    tools.download_file(
+                        tmp_latest_release["releaseUrl"],
+                        constants.UPDATE_SETUP_FILEPATH
+                    )
+                    return 0
+
+                def on_success(result):
+                    self._main_window.blockSignals(True)
+                    tmp_message = "PySSA now closes to apply the update."
+                    tmp_jobs_are_running = self._app_state.job_scheduler.has_running_jobs()
+                    if tmp_jobs_are_running:
+                        tmp_message = "There are still jobs running.\nThe progress of the running job(s) are lost!"
+                    custom_message_box.CustomMessageBoxOk(
+                        tmp_message,
+                        "Update PySSA",
+                        custom_message_box.CustomMessageBoxIcons.WARNING.value,
+                    )
+                    tmp_dialog.exec()
+                    if tmp_jobs_are_running:
+                        subprocess.run(["wsl", "--terminate", "almaColabfold9"], creationflags=subprocess.CREATE_NO_WINDOW)
+                        filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
+                        constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
+                    self._main_window.close()
+                    subprocess.Popen(constants.UPDATE_SETUP_FILEPATH)
+
+                def on_error(exc):
+                    logger.exception("Failed to download the update.", exc_info=exc)
+                    QtWidgets.QMessageBox.critical(
+                        self._main_window,
+                        "Update PySSA",
+                        "Failed to download the update. Please try again.",
+                    )
+                    self._app_state.status_bar_manager.show_error_message("Failed to download the update. Please try again.")
+
+                (
+                    thread_runtime.get_singleton_thread_runtime()
+                    .run(download_update_file)
+                    .on_success(on_success)
+                    .on_error(on_error)
+                    .start()
+                )
+                self._app_state.status_bar_manager.show_permanent_message(
+                    "Downloading update ...", True
+                )
+
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._status_bar_manager.show_error_message(
+                "An unknown error occurred!"
+            )
     # </editor-fold>
 
     def __slot_toggle_help_panel(self):
@@ -2666,26 +2741,6 @@ class MainWindowController:
         )
 
     # <editor-fold desc="Handle specific job results">
-    def _handle_distance_analysis_job_result(
-            self,
-            descriptor: "job_descriptor.JobDescriptor",
-            result: dict[str, Union[list["protein_pair.ProteinPair"], bool]]
-    ):
-        if descriptor.is_hot:
-            # Results belong to the hot project
-            for tmp_protein_pair in result["protein_pairs"]:
-                self._app_state.project.add_protein_pair(tmp_protein_pair)
-                self._app_state.pyssa_objects_model.add_protein_pair(tmp_protein_pair)
-                self._app_state.hot_db.write_queue.submit(
-                    WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
-                )
-        else:
-            # Results belong to a cold project
-            for tmp_protein_pair in result["protein_pairs"]:
-                descriptor.cold_handle.submit(
-                    WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
-                )
-
     def _handle_prediction_job_result(
             self,
             descriptor: "job_descriptor.JobDescriptor",
@@ -2708,19 +2763,16 @@ class MainWindowController:
                     WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
                 )
 
-    def _handle_prediction_and_distance_analysis_job_result(
+    def _handle_distance_analysis_job_result(
             self,
             descriptor: "job_descriptor.JobDescriptor",
-            result: dict[str, Union[bool, list["protein.Protein"], list["protein_pair.ProteinPair"]]]
+            result: dict[str, Union[list["protein_pair.ProteinPair"], bool]]
     ):
         if descriptor.is_hot:
-            for tmp_protein in result["predicted_proteins"]:
-                self._app_state.project.add_existing_protein(tmp_protein)
-                self._app_state.pyssa_objects_model.add_protein(tmp_protein)
-                self._app_state.hot_db.write_queue.submit(
-                    WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
-                )
+            # Results belong to the hot project
+            current_project_id = self._app_state.project.get_id()
             for tmp_protein_pair in result["protein_pairs"]:
+                tmp_protein_pair.db_project_id = current_project_id
                 self._app_state.project.add_protein_pair(tmp_protein_pair)
                 self._app_state.pyssa_objects_model.add_protein_pair(tmp_protein_pair)
                 self._app_state.hot_db.write_queue.submit(
@@ -2728,11 +2780,44 @@ class MainWindowController:
                 )
         else:
             # Results belong to a cold project
+            project_id = descriptor.cold_handle._db.get_project_id(descriptor.project_name)
+            for tmp_protein_pair in result["protein_pairs"]:
+                tmp_protein_pair.db_project_id = project_id
+                descriptor.cold_handle.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
+                )
+
+    def _handle_prediction_and_distance_analysis_job_result(
+            self,
+            descriptor: "job_descriptor.JobDescriptor",
+            result: dict[str, Union[bool, list["protein.Protein"], list["protein_pair.ProteinPair"]]]
+    ):
+        if descriptor.is_hot:
+            current_project_id = self._app_state.project.get_id()
             for tmp_protein in result["predicted_proteins"]:
+                tmp_protein.db_project_id = current_project_id
+                self._app_state.project.add_existing_protein(tmp_protein)
+                self._app_state.pyssa_objects_model.add_protein(tmp_protein)
+                self._app_state.hot_db.write_queue.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
+                )
+            for tmp_protein_pair in result["protein_pairs"]:
+                tmp_protein_pair.db_project_id = current_project_id
+                self._app_state.project.add_protein_pair(tmp_protein_pair)
+                self._app_state.pyssa_objects_model.add_protein_pair(tmp_protein_pair)
+                self._app_state.hot_db.write_queue.submit(
+                    WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
+                )
+        else:
+            # Results belong to a cold project
+            project_id = descriptor.cold_handle._db.get_project_id(descriptor.project_name)
+            for tmp_protein in result["predicted_proteins"]:
+                tmp_protein.db_project_id = project_id
                 descriptor.cold_handle.submit(
                     WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
                 )
             for tmp_protein_pair in result["protein_pairs"]:
+                tmp_protein_pair.db_project_id = project_id
                 descriptor.cold_handle.submit(
                     WriteOperation(OperationType.INSERT_PROTEIN_PAIR, tmp_protein_pair)
                 )

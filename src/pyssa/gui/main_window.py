@@ -155,8 +155,6 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.action_pymol_reasonable_quality = QtGui.QAction("Reasonable Quality", self.submenuPyMOLQuality)
     self.action_pymol_maximum_quality = QtGui.QAction("Maximum Quality", self.submenuPyMOLQuality)
 
-    # self.submenuPyMOLStyle.menuAction().setVisible(False)
-
     # <editor-fold desc="About/Help Actions">
     self.action_documentation = QtGui.QAction("Documentation", self)
     self.action_documentation.setObjectName("action_documentation")
@@ -168,6 +166,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.action_clear_logs.setObjectName("action_clear_logs")
     self.action_about = QtGui.QAction("About", self)
     self.action_about.setObjectName("action_about")
+    self.action_check_for_updates = QtGui.QAction("Check for Updates", self)
     # </editor-fold>
     # </editor-fold>
 
@@ -552,6 +551,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.menuAbout.addAction(self.action_show_log_in_explorer)
     self.menuAbout.addAction(self.action_clear_logs)
     self.menuAbout.addSeparator()
+    self.menuAbout.addAction(self.action_check_for_updates)
     self.menuAbout.addAction(self.action_about)
     # </editor-fold>
 
