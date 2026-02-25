@@ -25,7 +25,7 @@ import logging
 from src.pyssa.gui import app_state
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import Qt
-from src.pyssa.gui.ui.views import open_project_view
+from src.pyssa.gui.ui.views import open_project_view, help_view
 from src.pyssa.model import psa_objects_model
 from src.pyssa.util import ui_util, exception
 from src.pyssa.logging_pyssa import log_levels, log_handlers
@@ -100,6 +100,10 @@ class OpenProjectViewController(QtCore.QObject):
   def _open_help_for_dialog(self) -> None:
     """Opens the help page for this dialog."""
     logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
+    tmp_dialog = help_view.HelpView(
+      "<h2>Open Project</h2>"
+    )
+    tmp_dialog.exec()
 
   def _validate_open_search(self, the_entered_text: str) -> None:
     """Filters the project list as the user types.
@@ -193,6 +197,7 @@ class OpenProjectViewController(QtCore.QObject):
       .run(load_project)
       .on_success(on_success)
       .on_error(on_error)
+      .start()
     )
     self._view.close()
     self._app_state.status_bar_manager.show_permanent_message(

@@ -64,7 +64,8 @@ class CreateProjectView(QtWidgets.QDialog):
     self.ui.btn_help.setText("")
     self.ui.btn_new_create_project.setEnabled(False)
     styles.color_bottom_frame_button(self.ui.btn_new_create_project)
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     self.setWindowTitle("Create Project")
     self.setWindowFlags(

@@ -53,6 +53,8 @@ class UserPyMOL:
         self._embedded_cmd = a_pymol_widget.cmd
         """Embedded instance of the cmd module"""
         self._current_object: "protein.Protein | protein_pair.ProteinPair | None" = None
+        self._current_session_name: str = ""
+        self._current_scene_name: str = ""
         # </editor-fold>
         self._development_setup()
 
@@ -68,6 +70,15 @@ class UserPyMOL:
     def get_currently_loaded_object(self) -> "protein.Protein | protein_pair.ProteinPair | None":
         return self._current_object
 
+    def get_current_session_name(self) -> str:
+        return self._current_session_name
+
+    def get_current_scene_name(self) -> str:
+        return self._current_scene_name
+
+    def set_current_scene_name(self, a_scene_name: str) -> None:
+        self._current_scene_name = a_scene_name
+
     def load_session(self, a_pymol_session: str, a_current_object: "protein.Protein | protein_pair.ProteinPair") -> None:
         tmp_cache_dir = pathlib.Path(constants.CACHE_PYMOL_SESSION_DIR)
         tmp_cache_dir.mkdir(parents=True, exist_ok=True)
@@ -77,6 +88,8 @@ class UserPyMOL:
         )
         self._embedded_cmd.load(tmp_session_path)
         self._current_object = a_current_object
+        self._current_session_name = a_current_object.get_name()
+        self._current_scene_name = "base"
 
     def save_session(self) -> str:
         """Saves the current PyMOL session as a Base64-encoded string."""
@@ -89,6 +102,8 @@ class UserPyMOL:
     def reinitialize_session(self):
         self._embedded_cmd.reinitialize()
         self._current_object = None
+        self._current_session_name = ""
+        self._current_scene_name = ""
 
     def color_protein_pair_by_rmsd(
             self, a_protein_pair: "protein_pair.ProteinPair"

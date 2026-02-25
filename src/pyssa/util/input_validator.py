@@ -167,11 +167,11 @@ def find_match_in_model(
   """
   tmp_exactly_matched_items = a_model.findItems(
       a_text_to_search_for,
-      QtCore.Qt.MatchExactly,
+      QtCore.Qt.MatchFlag.MatchExactly,
   )
   tmp_partial_matched_items = a_model.findItems(
       a_text_to_search_for,
-      QtCore.Qt.MatchContains,
+      QtCore.Qt.MatchFlag.MatchContains,
   )
   if len(tmp_exactly_matched_items) == 1:
     return tmp_exactly_matched_items

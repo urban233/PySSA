@@ -47,7 +47,7 @@ import os
 import numpy as np
 from src.pyssa.gui.user_pymol import UserPyMOL
 from src.pyssa.internal.pymol.worker_command import CommandType, WorkerCommand
-from src.pyssa.util import constants
+from src.pyssa.util import constants, enums
 
 logger = logging.getLogger(__name__)
 
@@ -510,25 +510,36 @@ def _create_new_session(pymol_instance: pymol2.PyMOL, a_pdb_filepath: str) -> st
     tmp_protein_name = pathlib.Path(a_pdb_filepath).name.replace(".pdb", "")
     pymol_instance.cmd.load(filename=str(a_pdb_filepath), object=tmp_protein_name)
     pymol_instance.cmd.bg_color("black")
-    
-    pymol_instance.cmd.set("valence", 0)
-    pymol_instance.cmd.set("scene_buttons", 0)
-    pymol_instance.cmd.set("ray_trace_mode", 1)
-    pymol_instance.cmd.set("antialias", 1)
-    pymol_instance.cmd.set("ambient", 0.5)
-    pymol_instance.cmd.set("cartoon_fancy_helices", 1)
-    pymol_instance.cmd.set("cartoon_discrete_colors", 1)
-    pymol_instance.cmd.set("cartoon_sampling", 14)
-    pymol_instance.cmd.set("spec_power", 350)
-    pymol_instance.cmd.set("spec_reflect", 0.2)
-    pymol_instance.cmd.set("ray_transparency_contrast", 0.4)
-    pymol_instance.cmd.set("ray_transparency_oblique", 1.0)
-    pymol_instance.cmd.set("ray_transparency_oblique_power", 4.0)
-    pymol_instance.cmd.set("ray_trace_color", "black")
+
+    for tmp_style_keys in constants.PYMOL_QUALITY_MAXIMUM_QUALITY.keys():
+      pymol_instance.cmd.do(
+        f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_MAXIMUM_QUALITY[tmp_style_keys]}"
+      )
+
+    for tmp_style_keys in constants.PYMOL_STYLE_DEFAULT.keys():
+      pymol_instance.cmd.do(
+        f"set {tmp_style_keys}, {constants.PYMOL_STYLE_DEFAULT[tmp_style_keys]}"
+      )
+
+    # pymol_instance.cmd.set("valence", 0)
+    # pymol_instance.cmd.set("scene_buttons", 0)
+    # pymol_instance.cmd.set("ray_trace_mode", 1)
+    # pymol_instance.cmd.set("antialias", 1)
+    # pymol_instance.cmd.set("ambient", 0.5)
+    # pymol_instance.cmd.set("cartoon_fancy_helices", 1)
+    # pymol_instance.cmd.set("cartoon_discrete_colors", 1)
+    # pymol_instance.cmd.set("cartoon_sampling", 14)
+    # pymol_instance.cmd.set("spec_power", 350)
+    # pymol_instance.cmd.set("spec_reflect", 0.2)
+    # pymol_instance.cmd.set("ray_transparency_contrast", 0.4)
+    # pymol_instance.cmd.set("ray_transparency_oblique", 1.0)
+    # pymol_instance.cmd.set("ray_transparency_oblique_power", 4.0)
+    # pymol_instance.cmd.set("ray_trace_color", "black")
     pymol_instance.cmd.unset("depth_cue")
     pymol_instance.cmd.color("green", tmp_protein_name)
     pymol_instance.cmd.reset()
     pymol_instance.cmd.scene("base", action="store")
+    pymol_instance.cmd.scene("__scratch__", action="store")
     
     session_filepath = pathlib.Path(f"{constants.SCRATCH_DIR}/{tmp_protein_name}_session.pse")
     pymol_instance.cmd.save(str(session_filepath))
@@ -562,7 +573,7 @@ def _get_chains(pymol_instance: pymol2.PyMOL, a_pdb_filepath: str) -> list[tuple
       fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\\n"):]
       complete_sequence_of_chain = (tmp_protein_name, fasta_sequence_of_chain_without_header.replace("\\n", ""))
       
-      chains_of_protein.append((tmp_chain, complete_sequence_of_chain, "PROTEIN" if is_protein_chain else "NON_PROTEIN"))
+      chains_of_protein.append((tmp_chain, complete_sequence_of_chain, enums.ChainTypeEnum.PROTEIN_CHAIN.value if is_protein_chain else enums.ChainTypeEnum.NON_PROTEIN_CHAIN.value))
     return chains_of_protein
   except Exception as e:
     logger.error(f"Get chains failed: {e}")

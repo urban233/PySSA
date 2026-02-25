@@ -54,7 +54,8 @@ class ImportSequenceView(QtWidgets.QDialog):
     styles.color_bottom_frame_button(self.ui.btn_import_sequence)
     self.ui.lbl_status.setText("")
     self.ui.btn_choose_fasta_file.setToolTip("Click to add a .fasta file")
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
     self.ui.btn_help.setIconSize(
         self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))

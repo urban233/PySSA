@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 import logging
 
 from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.util import exception
 from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_handlers, log_levels
@@ -111,6 +112,9 @@ class SettingsViewController(QtCore.QObject):
     self._view.ui.box_ray_texture.setCurrentIndex(
       self._settings_manager.settings.image_ray_texture
     )
+    self._view.ui.cb_pyssa_expert_mode.setChecked(
+      self._settings_manager.settings.pyssa_expert_mode
+    )
 
   # </editor-fold>
 
@@ -187,7 +191,6 @@ class SettingsViewController(QtCore.QObject):
     self._settings_manager.settings.set_cutoff(
         self._view.ui.dspb_cutoff.value()
     )
-    # self._settings_manager.settings.color_vision_mode = self._view.ui.cb_color_vision_mode.currentText()
     self._settings_manager.settings.image_background_color = (
         self._view.ui.box_bg_color.currentText()
     )
@@ -201,10 +204,31 @@ class SettingsViewController(QtCore.QObject):
     self._settings_manager.settings.image_ray_texture = (
         self._view.ui.box_ray_texture.currentIndex()
     )
+    if self._settings_manager.settings.pyssa_expert_mode == False and self._view.ui.cb_pyssa_expert_mode.isChecked() == True:
+      tmp_activated_expert_mode = True
+    else:
+      tmp_activated_expert_mode = False
+    self._settings_manager.settings.pyssa_expert_mode = (
+      self._view.ui.cb_pyssa_expert_mode.isChecked()
+    )
 
     self._settings_manager.settings.serialize_settings()
     logging.info("Settings were successfully saved.")
     self._view.close()
+
+    if tmp_activated_expert_mode:
+      tmp_msg = """
+      You have activated the PySSA expert mode. You must keep this in mind:\n
+      #1) Features can and will break data integrity if not used carefully.\n
+      #2) Think before you use any of the features.\n
+      #3) With great power comes great responsibility.\n
+      """
+      tmp_dialog = custom_message_box.CustomMessageBoxOk(
+        tmp_msg,
+        "Activate Expert Mode",
+        custom_message_box.CustomMessageBoxIcons.WARNING.value,
+      )
+      tmp_dialog.exec()
 
     # Rebuild the workspace model inside the app state and trigger a UI update
     if hasattr(self._app_state, "_build_workspace_model"):

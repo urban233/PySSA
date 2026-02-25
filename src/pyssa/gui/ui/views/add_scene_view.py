@@ -40,39 +40,64 @@ class AddSceneView(QtWidgets.QDialog):
     """Constructor."""
     QtWidgets.QDialog.__init__(self, parent)
 
-    self.lbl_description = QtWidgets.QLabel("New PyMOL scene name")
-    self.line_edit_scene_name = custom_line_edit.CustomLineEdit()
+    self.top_frame = QtWidgets.QFrame()
+    self.lbl_description = QtWidgets.QLabel("Enter a new scene name")
+    self.line_edit_scene_name = custom_line_edit.CustomLineEditWithMaxLength(30)
     self.lbl_status = QtWidgets.QLabel("")
+    self.bottom_frame = QtWidgets.QFrame()
     self.btn_add_scene = QtWidgets.QPushButton("Add")
     self.btn_cancel = QtWidgets.QPushButton("Cancel")
 
-    self.layout_user_input = QtWidgets.QVBoxLayout()
+    self.layout_user_input = QtWidgets.QVBoxLayout(self.top_frame)
     self.layout_user_input.addWidget(self.lbl_description)
     self.layout_user_input.addWidget(self.line_edit_scene_name)
+    self.layout_user_input.addWidget(self.lbl_status)
+    self.layout_user_input.setContentsMargins(8, 8, 8, 2)
 
-    self.layout_confirmation = (
-        QtWidgets.QHBoxLayout()
-    )  # Use QHBoxLayout for the button
-    self.layout_confirmation.addWidget(self.lbl_status)
-    self.layout_confirmation.addStretch(
-        1
-    )  # Add stretchable space before the button
+    self.layout_confirmation = QtWidgets.QHBoxLayout(self.bottom_frame)
+    self.layout_confirmation.addStretch()
     self.layout_confirmation.addWidget(self.btn_add_scene)
     self.layout_confirmation.addWidget(self.btn_cancel)
 
     self.layout_complete = QtWidgets.QVBoxLayout()
-    self.layout_complete.addLayout(self.layout_user_input)
-    self.layout_complete.addLayout(self.layout_confirmation)
+    self.layout_complete.setContentsMargins(0, 0, 0, 0)
+    self.layout_complete.addWidget(self.top_frame)
+    self.layout_complete.addWidget(self.bottom_frame)
 
     self.setLayout(self.layout_complete)
 
-    self.setMaximumSize(600, 80)
-    self.setMinimumWidth(250)
-    self.resize(450, 80)
+    self.setMaximumSize(600, 70)
+    self.setMinimumWidth(450)
+    self.resize(450, 70)
 
     self.btn_cancel.clicked.connect(self.close)
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    self.bottom_frame.setStyleSheet(
+      """
+      QFrame {
+        background-color: #f7f8fa;
+        border-style: solid;
+        border-width: 1px;
+        border-radius: 6px;
+        border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+        border-top-color: #ebecf0;
+        border-top-left-radius: 0px;
+        border-top-right-radius: 0px;
+    }
+      """
+    )
+    self.lbl_status.setStyleSheet(
+      """
+      QLabel {
+        background-color: #f3f3f3;
+        border: none;
+        color: #ba1a1a; 
+        font-size: 11px;
+      }
+      """
+    )
+    styles.color_bottom_frame_button(self.btn_add_scene)
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )

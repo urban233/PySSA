@@ -8,8 +8,7 @@ jobs and one for completed (finished/failed/cancelled) jobs.
 from __future__ import annotations
 
 from typing import Optional
-
-from src.pyssa.gui.qt import QtWidgets, QtCore
+from src.pyssa.gui.qt import QtWidgets, QtCore, QtGui
 
 
 class JobPanel(QtWidgets.QWidget):
@@ -27,24 +26,33 @@ class JobPanel(QtWidgets.QWidget):
     super().__init__(parent)
     self._lbl_jobs = QtWidgets.QLabel("Active Jobs")
     self._table_view = self._create_table_view()
+    self.btn_clear_history = QtWidgets.QPushButton("Clear History")
+    self.btn_open_result = QtWidgets.QPushButton("Open Result")
     self._build_ui()
     self.setMinimumSize(450, 250)
 
-  # ------------------------------------------------------------------
-  # UI construction
-  # ------------------------------------------------------------------
-
   def _build_ui(self) -> None:
     """Assemble the panel layout with two labelled table views."""
-    layout = QtWidgets.QVBoxLayout(self)
-    layout.setContentsMargins(8, 8, 8, 8)
-    layout.setSpacing(6)
+    tmp_layout = QtWidgets.QVBoxLayout(self)
+    tmp_layout.setContentsMargins(8, 8, 8, 8)
+    tmp_layout.setSpacing(6)
 
     self._lbl_jobs.setStyleSheet("font-weight: bold; font-size: 12px;")
-    layout.addWidget(self._lbl_jobs)
-    layout.addWidget(self._table_view, stretch=1)
+    tmp_layout.addWidget(self._lbl_jobs)
+    tmp_layout.addWidget(self._table_view, stretch=1)
 
-    self.setLayout(layout)
+    self.button_container_widget = QtWidgets.QWidget()
+    tmp_button_row_layout = QtWidgets.QHBoxLayout(self.button_container_widget)
+    tmp_button_row_layout.setContentsMargins(0, 0, 0, 0)
+    tmp_button_row_layout.addStretch()
+    tmp_button_row_layout.addWidget(self.btn_open_result)
+    tmp_button_row_layout.addWidget(self.btn_clear_history)
+    self.btn_open_result.setEnabled(False)
+    self.btn_clear_history.setEnabled(False)
+
+    tmp_layout.addWidget(self.button_container_widget)
+
+    self.setLayout(tmp_layout)
     self.setStyleSheet(
       """
       JobPanel {
@@ -76,6 +84,9 @@ class JobPanel(QtWidgets.QWidget):
       }
       """
     )
+
+  def get_table_view(self):
+    return self._table_view
 
   def show_active_jobs(self, an_active_proxy):
     self._lbl_jobs.setText("Active Jobs")
@@ -109,10 +120,6 @@ class JobPanel(QtWidgets.QWidget):
     view.setAlternatingRowColors(True)
     view.setShowGrid(False)
     return view
-
-  # ------------------------------------------------------------------
-  # Public helpers
-  # ------------------------------------------------------------------
 
   def show_below(self, widget: QtWidgets.QWidget) -> None:
     """Position the panel below *widget* and show it.

@@ -40,8 +40,9 @@ from pmg_qt import keymapping
 
 from src.pyssa.controller import main_window_controller, welcome_screen_view_controller
 from src.pyssa.gui import user_pymol
+from src.pyssa.gui.ui.styles import styles
 
-from src.pyssa.gui.ui.views import pyssa_objects_panel, welcome_screen_view, help_panel
+from src.pyssa.gui.ui.views import pyssa_objects_panel, welcome_screen_view, help_panel, project_overview_panel
 
 from src.pyssa.gui.ui.styles.icon_manager import IconManager
 from src.pyssa.gui.qt import QtCore
@@ -78,6 +79,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.menuResults = QtWidgets.QMenu("Results", self)
     self.menuImage = QtWidgets.QMenu("Image", self)
     self.menuHotspots = QtWidgets.QMenu("Hotspots", self)
+    self.menuExpert = QtWidgets.QMenu("Expert", self)
     self.menuSettings = QtWidgets.QMenu("Settings", self)
     self.menuAbout = QtWidgets.QMenu("Help", self)
     # </editor-fold>
@@ -134,11 +136,24 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # </editor-fold>
 
     # <editor-fold desc="Settings Actions">
+    # --- Expert Actions ---
+    self.action_run_pml_script = QtGui.QAction("Run PyMOL Script", self)
+
+    # --- Settings Actions ---
     self.action_edit_settings = QtGui.QAction("Edit", self)
     self.action_edit_settings.setObjectName("action_edit_settings")
     self.action_restore_settings = QtGui.QAction("Restore", self)
     self.action_restore_settings.setObjectName("action_restore_settings")
     # </editor-fold>
+    self.submenuPyMOLStyle = QtWidgets.QMenu("PyMOL Style", self.menuSettings)
+    self.action_pymol_default_style = QtGui.QAction("Default", self.submenuPyMOLStyle)
+    self.action_pymol_maestro_style = QtGui.QAction("Maestro-like", self.submenuPyMOLStyle)
+    self.action_pymol_legacy_style = QtGui.QAction("Legacy", self.submenuPyMOLStyle)
+    self.submenuPyMOLQuality = QtWidgets.QMenu("PyMOL Quality", self.menuSettings)
+    self.action_pymol_reasonable_performance = QtGui.QAction("Reasonable Performance", self.submenuPyMOLQuality)
+    self.action_pymol_maximum_quality = QtGui.QAction("Maximum Quality", self.submenuPyMOLQuality)
+
+    # self.submenuPyMOLStyle.menuAction().setVisible(False)
 
     # <editor-fold desc="About/Help Actions">
     self.action_documentation = QtGui.QAction("Documentation", self)
@@ -219,8 +234,14 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
       "surface": quick_access_bar_action.QuickAccessBarAction(
         "Surface", "left", 8, None, IconManager.instance().get_icon(IconManager.Icons.SURFACE_REPR)
       ),
+      "hide_all": quick_access_bar_action.QuickAccessBarAction(
+        "Hide All Representations", "left", 8, None, IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF)
+      ),
       "color": quick_access_bar_action.QuickAccessBarAction(
         "Color", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.PALETTE)
+      ),
+      "selection": quick_access_bar_action.QuickAccessBarAction(
+        "Selection", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.HIGHLIGHT_MOUSE_CURSOR)
       ),
       "clean": quick_access_bar_action.QuickAccessBarAction(
         "Clean", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.MOP)
@@ -230,7 +251,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
       ),
       "notifications": quick_access_bar_action.QuickAccessBarAction(
         "Notifications", "left", 0, None, IconManager.instance().get_icon(IconManager.Icons.NOTIFICATIONS)
-      ),
+      )
     }
     # </editor-fold>
 
@@ -331,6 +352,22 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.surface_show_hide_menu.addAction(self.surface_hide_action)
     # </editor-fold>
 
+    # <editor-fold desc="Selection">
+    self.selection_show_hide_menu = dropdown_menu.DropDownMenu()
+    self.selection_show_action = QtGui.QAction(
+      IconManager.instance().get_icon(IconManager.Icons.VISIBILITY), "Show"
+    )
+    self.selection_hide_action = QtGui.QAction(
+      IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF), "Hide"
+    )
+    self.selection_clear_action = QtGui.QAction(
+      IconManager.instance().get_icon(IconManager.Icons.DELETE), "Clear"
+    )
+    self.selection_show_hide_menu.addAction(self.selection_show_action)
+    self.selection_show_hide_menu.addAction(self.selection_hide_action)
+    self.selection_show_hide_menu.addAction(self.selection_clear_action)
+    # </editor-fold>
+
     # <editor-fold desc="Clean">
     self.clean_solvent_organic_menu = dropdown_menu.DropDownMenu()
     self.clean_solvent_action = QtGui.QAction(
@@ -410,6 +447,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
 
     # <editor-fold desc="Panels">
     self.left_side_panel_stacked_widget = QtWidgets.QStackedWidget()
+    self.project_overview_panel = project_overview_panel.ProjectOverviewPanel()
     self.pyssa_objects_panel = pyssa_objects_panel.PySSAObjectsPanel()
     self.pyssa_objects_panel.setObjectName("pyssa_objects_panel")
     self.help_panel = help_panel.HelpPanel()
@@ -433,7 +471,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
       None,
       None,
       list(self.viewer_toolbar_actions.values()),
-      self.pymolwidget, self
+      self.pymolwidget, self.project_overview_panel, self
     )
 
     self.tool_window_layout.set_right_panel_hidden(True)
@@ -450,6 +488,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self._add_menu_style()
     base_style = "QMainWindow {background-color: #ebecf0;}"
     self.setStyleSheet(base_style)
+    # styles.inject_local_appdata_path_into_stylesheet()
 
   # <editor-fold desc="Private methods">
   def _setup_menu(self):
@@ -487,9 +526,20 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     # --- Hotspots Menu ---
     self.menuHotspots.addAction(self.action_protein_regions)
 
+    # --- Expert Menu ---
+    self.menuExpert.addAction(self.action_run_pml_script)
+
     # --- Settings Menu ---
     self.menuSettings.addAction(self.action_edit_settings)
     self.menuSettings.addAction(self.action_restore_settings)
+    self.menuSettings.addSeparator()
+    self.menuSettings.addMenu(self.submenuPyMOLStyle)
+    self.submenuPyMOLStyle.addAction(self.action_pymol_default_style)
+    self.submenuPyMOLStyle.addAction(self.action_pymol_maestro_style)
+    self.submenuPyMOLStyle.addAction(self.action_pymol_legacy_style)
+    self.menuSettings.addMenu(self.submenuPyMOLQuality)
+    self.submenuPyMOLQuality.addAction(self.action_pymol_reasonable_performance)
+    self.submenuPyMOLQuality.addAction(self.action_pymol_maximum_quality)
 
     # --- About/Help Menu ---
     self.menuAbout.addAction(self.action_documentation)
@@ -508,6 +558,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     menubar.addMenu(self.menuResults)
     menubar.addMenu(self.menuImage)
     menubar.addMenu(self.menuHotspots)
+    menubar.addMenu(self.menuExpert)
     menubar.addMenu(self.menuSettings)
     menubar.addMenu(self.menuAbout)
     # </editor-fold>
@@ -791,7 +842,8 @@ def exec_app():
   pymol.cmd.set("internal_gui", 0)
   pymol.cmd.set("internal_feedback", 0)
 
-  window.show()
+  # window.show()
+  window.showMaximized()
 
   # window.raise_()
   #

@@ -32,7 +32,7 @@ from Bio import SeqIO
 
 from src.pyssa.gui.ui.views import pyssa_objects_panel
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
-from src.pyssa.gui import user_pymol, app_state
+from src.pyssa.gui import user_pymol, app_state, name_registry
 from src.pyssa.gui.qt import QtCore, QtWidgets
 from src.pyssa.io_pyssa import bio_data
 from src.pyssa.logging_pyssa import log_levels, log_handlers
@@ -61,7 +61,6 @@ class PySSAObjectsPanelController(QtCore.QObject):
     self._app_state = the_app_state
     self._panel = a_pyssa_objects_panel
     self._user_pymol: "user_pymol.UserPyMOL" = a_user_pymol
-    self._model = the_app_state.pyssa_objects_model
 
     # Holds the most recently resolved selection snapshot so that slot methods
     # can access the current selection without re-querying the Qt model.
@@ -76,6 +75,10 @@ class PySSAObjectsPanelController(QtCore.QObject):
     # </editor-fold>
     self._set_model()
     self._connect_all_signals_with_their_slots()
+
+  @property
+  def _model(self) -> "psa_objects_model.PSAObjectsModel":
+      return self._app_state.pyssa_objects_model
 
   def _set_model(self) -> None:
     self._panel.tree_view.setModel(self._model)
@@ -377,6 +380,9 @@ class PySSAObjectsPanelController(QtCore.QObject):
       for pair in list(snapshot.raw_protein_pairs):
         project.delete_specific_protein_pair(pair.name)
         hot_db.delete_protein_pair_full(pair.get_id())
+        self._app_state.name_registry.release(
+          name_registry.PROTEIN_PAIR, pair.name
+        )
         self._model.remove_protein_pair(pair)
         logger.info("Deleted protein pair '%s'.", pair.name)
 
@@ -384,16 +390,13 @@ class PySSAObjectsPanelController(QtCore.QObject):
       for protein_obj in list(snapshot.raw_standalone_proteins):
         protein_name = protein_obj.get_molecule_object()
         logger.info("Attempting to delete protein '%s' with ID=%s", protein_name, protein_obj.get_id())
-
-        # First delete from project (removes from in-memory list)
         project.delete_specific_protein(protein_name)
         logger.info("Deleted protein '%s' from project", protein_name)
-
-        # Then delete from database
         hot_db.delete_protein_full(protein_obj.get_id())
         logger.info("Deleted protein '%s' (ID=%s) from database", protein_name, protein_obj.get_id())
-
-        # Finally remove from UI model
+        self._app_state.name_registry.release(
+          name_registry.PROTEIN, protein_name
+        )
         self._model.remove_protein(protein_obj)
         logger.info("Deleted protein '%s' from model/UI", protein_name)
 
@@ -401,6 +404,9 @@ class PySSAObjectsPanelController(QtCore.QObject):
       for seq_name in list(snapshot.raw_sequences):
         project.delete_specific_sequence(seq_name)
         hot_db.delete_sequence(seq_name)
+        self._app_state.name_registry.release(
+          name_registry.SEQUENCE, seq_name
+        )
         self._model.remove_sequence(seq_name)
         logger.info("Deleted sequence '%s'.", seq_name)
 

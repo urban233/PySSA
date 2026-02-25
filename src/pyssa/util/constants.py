@@ -48,11 +48,10 @@ if PYDEBUG:
     print(PROGRAM_SRC_PATH)
     DATA_PATH = pathlib.Path(PROGRAM_SRC_PATH / "pyssa/data")
 else:
-    PROGRAM_BIN_ROOT_PATH: pathlib.Path = pathlib.Path(sys.executable).parent
-    PYTHON_LIB_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "lib")
+    PROGRAM_BIN_ROOT_PATH: pathlib.Path = pathlib.Path(sys.executable).parent.parent.parent
+    PYTHON_LIB_PATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "cpython-3.11.14/python/Lib/site-packages/")
     PROGRAM_SRC_PATH: pathlib.Path = pathlib.Path(PYTHON_LIB_PATH / "src")
-    # TODO: Check if this path is correct if deployed
-    DATA_PATH = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "data")
+    DATA_PATH = pathlib.Path(PROGRAM_SRC_PATH / "pyssa/data")
 
 AUXILIARY_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "aux_pymol.exe")
 USER_PYMOL_FILEPATH: pathlib.Path = pathlib.Path(PROGRAM_BIN_ROOT_PATH / "user_pymol" / "Open-Source-PyMOL.exe")
@@ -470,6 +469,227 @@ chain_dict_reverse = {
     'X': 23,
     'Y': 24,
     'Z': 25,
+}
+
+PYMOL_STYLE_LEGACY = {
+    "valence": 0,
+    "scene_buttons": 0,
+    "antialias": 2,
+    # Lighting
+    "ambient": 0.5,
+    "reflect": 0.45,
+    "direct": 0.45,
+    "spec_direct": 0,
+    "spec_direct_power": 55,
+    "light_count": 2,
+    "edit_light": 1,
+    "spec_count": -1,
+    "shininess": 55,
+    "spec_power": 350,
+    "spec_reflect": 0.2,
+    "specular": 1,
+    "specular_intensity": 0.5,
+    # Cartoon settings
+    "cartoon_fancy_helices": 1,
+    "cartoon_discrete_colors": 1,
+    "cartoon_sampling": 14,
+    "cartoon_rect_width": 0.4,
+    "cartoon_rect_length": 1.5,
+    "cartoon_highlight_color": -1,
+    # Ribbon settings
+    "ribbon_sampling": 1,
+    # Raises a key error
+    # "ribbon_smooth": 0,
+    "ribbon_as_cylinders": 0,
+    "ribbon_width": 3.0,
+    # Sticks settings
+    "stick_radius": 0.25,
+    # Ray trace settings
+    "ray_trace_mode": 1,
+    "ray_transparency_contrast": 0.4,
+    "ray_transparency_oblique": 1.0,
+    "ray_transparency_oblique_power": 4.0,
+    "ray_trace_color": "black",
+}
+
+PYMOL_STYLE_DEFAULT = {
+    "valence": 0,
+    "scene_buttons": 0,
+    "antialias": 2,
+    # Lighting
+    "ambient": 0.5,
+    "reflect": 0.45,
+    "direct": 0.45,
+    "spec_direct": 0,
+    "spec_direct_power": 55,
+    "light_count": 2,
+    "edit_light": 1,
+    "spec_count": -1,
+    "shininess": 55,
+    "spec_power": 350,
+    "spec_reflect": 0.2,
+    "specular": 1,
+    "specular_intensity": 0.5,
+    # Cartoon settings
+    "cartoon_fancy_helices": 1,
+    "cartoon_discrete_colors": 1,
+    "cartoon_sampling": 14,
+    "cartoon_rect_width": 0.4,
+    "cartoon_rect_length": 1.5,
+    "cartoon_highlight_color": -1,
+    # Ribbon settings
+    "ribbon_sampling": 1,
+    # Raises a key error
+    # "ribbon_smooth": 0,
+    "ribbon_as_cylinders": 0,
+    "ribbon_width": 3.0,
+    # Sticks settings
+    "stick_radius": 0.25,
+    # Ray trace settings
+    "ray_trace_mode": 1,
+    "ray_transparency_contrast": 0.4,
+    "ray_transparency_oblique": 1.0,
+    "ray_transparency_oblique_power": 4.0,
+    "ray_trace_color": "black",
+}
+
+PYMOL_STYLE_MAESTRO_LIKE = {
+    "valence": 1,
+    "scene_buttons": 0,
+    "antialias": 2,
+    # Lighting
+    "ambient": 0.20,
+    "reflect": -0.2,
+    "direct": 1.0,
+    "spec_direct": 0.2,
+    "spec_direct_power": 62,
+    "light_count": 2,
+    "edit_light": 1,
+    "spec_count": -1,
+    "shininess": 70.5,
+    "spec_reflect": 0.75,
+    "specular": 0.35,
+    "specular_intensity": 0.5,
+    # Cartoon settings
+    "cartoon_fancy_helices": 0,
+    "cartoon_oval_width": 0.2,
+    "cartoon_oval_length": 0.85,
+    "cartoon_oval_quality": 50,
+    "cartoon_rect_width": 0.2,
+    "cartoon_rect_length": 1,
+    "cartoon_sampling": 20,
+    "cartoon_discrete_colors": 1,
+    "cartoon_highlight_color": "grey60",
+    # Ribbon settings
+    "ribbon_sampling": 40,
+    # Raises a key error
+    # "ribbon_smooth": 1,
+    "ribbon_as_cylinders": 1,
+    "ribbon_width": 10,
+    # Sticks settings
+    "stick_radius": 0.15,
+    # Ray trace settings
+    "ray_trace_mode": 1,
+    "ray_transparency_contrast": 0.4,
+    "ray_transparency_oblique": 1.0,
+    "ray_transparency_oblique_power": 4.0,
+    "ray_trace_color": "black",
+}
+
+# This is said to be the settings for maximum quality
+# The values are coming from the open-source PyMOL "Maximum Quality" preset
+PYMOL_QUALITY_MAXIMUM_QUALITY = {
+    # Rendering / general
+    "line_smooth": 1,
+    "depth_cue": 1,
+    "specular": 1.0,
+    "surface_quality": 1,
+    "transparency_mode": 2,
+    "use_shaders": 1,
+
+    # For me, this is rather a question of aesthetics than actual quality
+    # Sampling
+    # "cartoon_sampling": 14,
+    # "ribbon_sampling": 30,
+
+    # Shader usage
+    "cartoon_use_shader": 1,
+    "cgo_use_shader": 1,
+    "dash_use_shader": 1,
+    "dot_use_shader": 1,
+    "line_use_shader": 1,
+    "mesh_use_shader": 1,
+    "nb_spheres_use_shader": 1,
+    "nonbonded_use_shader": 1,
+    "ribbon_use_shader": 1,
+    "sphere_use_shader": 1,
+    "stick_use_shader": 1,
+    "surface_use_shader": 1,
+
+    # Cylinders rendering
+    "render_as_cylinders": 1,
+    "alignment_as_cylinders": 1,
+    "cartoon_nucleic_acid_as_cylinders": 1,
+    "dash_as_cylinders": 1,
+    "line_as_cylinders": 1,
+    "mesh_as_cylinders": 1,
+    "nonbonded_as_cylinders": 1,
+    # For me, this is rather a question of aesthetics than actual quality
+    # "ribbon_as_cylinders": 1,
+    "stick_as_cylinders": 1,
+
+    # Sphere / dot settings
+    "dot_as_spheres": 1,
+    "stick_ball": 0,
+    "sphere_mode": 9,
+    "nb_spheres_quality": 3,
+}
+
+PYMOL_QUALITY_REASONABLE_PERFORMANCE = {
+    # Rendering / general
+    "line_smooth": 0,
+    "depth_cue": 0,
+    "specular": 1,
+    "surface_quality": 0,
+    "transparency_mode": 2,
+    "use_shaders": 1,  # assuming shaders enabled since you call enable_all_shaders
+
+    # For me, this is rather a question of aesthetics than actual quality
+    # Sampling
+    # "cartoon_sampling": 6,
+    # "ribbon_sampling": 1,
+
+    # Shader usage
+    "cartoon_use_shader": 1,
+    "cgo_use_shader": 1,
+    "dash_use_shader": 1,
+    "dot_use_shader": 1,
+    "line_use_shader": 1,
+    "mesh_use_shader": 1,
+    "nb_spheres_use_shader": 1,
+    "nonbonded_use_shader": 1,
+    "ribbon_use_shader": 1,
+    "sphere_use_shader": 1,
+    "stick_use_shader": 1,
+    "surface_use_shader": 1,
+
+    # Cylinders rendering
+    "render_as_cylinders": 1,
+    "alignment_as_cylinders": 0,
+    "cartoon_nucleic_acid_as_cylinders": 0,
+    "dash_as_cylinders": 0,
+    "line_as_cylinders": 0,
+    "mesh_as_cylinders": 0,
+    "nonbonded_as_cylinders": 0,
+    # For me, this is rather a question of aesthetics than actual quality
+    # "ribbon_as_cylinders": 0,
+    "stick_as_cylinders": 1,
+
+    # Sphere / dot settings
+    "dot_as_spheres": 0,
+    "stick_ball": 0,
+    "sphere_mode": 9,
+    "nb_spheres_quality": 3,
 }
 
 PYMOL_REPR_STATES_WITH_INDICES = {

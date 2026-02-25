@@ -60,7 +60,8 @@ class WelcomeScreenView(QtWidgets.QDialog):
       self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
     )
     self.ui.btn_help.setText("")
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     styles.color_bottom_frame_button(self.ui.btn_new_project)
     styles.color_bottom_frame_button(self.ui.btn_open_project)
     original_pixmap = QtGui.QPixmap(

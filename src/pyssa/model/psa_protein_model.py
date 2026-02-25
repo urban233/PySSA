@@ -119,6 +119,50 @@ class PSAProteinModel(ProteinSubtreeMixin, base_tree_model.BaseTreeModel):
     hierarchy_map = self._build_hierarchy_map(chempy_model)
     self._add_protein_node(a_protein, scenes=scenes, hierarchy_map=hierarchy_map)
 
+  def update_protein_node(
+          self,
+          protein_item: QtGui.QStandardItem,
+          a_protein: "protein.Protein",
+  ) -> None:
+    """Update an existing Protein node with full atom-level hierarchy.
+
+    Args:
+        protein_item: The QStandardItem of the protein.
+        a_protein: The protein object.
+    """
+    scenes = self._fetch_scenes_for_protein(a_protein)
+    if not scenes:
+      scenes = ["base"]
+
+    chempy_model = self._fetch_chempy_model_for_protein(a_protein)
+    hierarchy_map = self._build_hierarchy_map(chempy_model)
+    
+    protein_item.removeRows(0, protein_item.rowCount())
+
+    scenes_header = self._append_header_node(protein_item, LABEL_SCENES)
+    self._append_scenes_from_list(scenes_header, scenes)
+
+    chains_header = self._append_header_node(protein_item, LABEL_CHAINS)
+
+    if hierarchy_map is not None:
+      chain_object_lookup = {chain.chain_letter: chain for chain in a_protein.chains}
+      chains_for_this_protein = hierarchy_map.get(a_protein.get_molecule_object(), {})
+      self._populate_chain_hierarchy(
+        chains_header, chains_for_this_protein, chain_object_lookup=chain_object_lookup
+      )
+    else:
+      for chain in a_protein.chains:
+        chain_node = self.add_node(
+          a_parent_node=chains_header,
+          an_item_name=chain.chain_letter,
+          an_item_type_value=TYPE_CHAIN,
+          an_item_object_value=chain,
+        )
+        chain_node.setData(
+          chain.pymol_parameters[enums.PymolParameterEnum.COLOR.value],
+          enums.ModelEnum.CHAIN_COLOR_ROLE,
+        )
+
   def add_protein_from_chempy_model(self, a_chempy_protein: Indexed) -> None:
     """Add a protein from a chempy Indexed model (full hierarchy, no scenes).
 
@@ -151,6 +195,27 @@ class PSAProteinModel(ProteinSubtreeMixin, base_tree_model.BaseTreeModel):
         logger.info("Protein '%s' added to the model.", obj_name)
       except Exception as exc:
         logger.error("Failed to add protein '%s': %s", obj_name, exc, exc_info=True)
+
+  def add_temporary_protein(
+          self,
+          a_protein: "protein.Protein"
+  ) -> None:
+    """Add a minimal protein node suitable for temporary models.
+    
+    This avoids querying PyMOL for scenes or full atomic hierarchies.
+    It builds a flat structure exposing only chains, with a "generic" scene.
+    
+    Args:
+        a_protein: The protein object.
+        
+    Raises:
+        exception.IllegalArgumentError: If ``a_protein`` is ``None``.
+    """
+    if a_protein is None:
+      logger.error("a_protein is None.")
+      raise exception.IllegalArgumentError("a_protein is None.")
+
+    self._add_protein_node(a_protein, scenes=["generic"], hierarchy_map=None)
 
   # ------------------------------------------------------------------
   # Public API — scene management

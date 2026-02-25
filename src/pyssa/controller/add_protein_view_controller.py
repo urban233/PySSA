@@ -245,7 +245,7 @@ class AddProteinViewController(QtCore.QObject):
           "Open existing protein",
           QtCore.QDir.homePath(),
           "PDB Files (*.pdb)",
-      )
+        )
       if file_name == ("", ""):
         self._view.ui.lbl_status.setText("No file has been selected.")
       else:
@@ -307,7 +307,6 @@ class AddProteinViewController(QtCore.QObject):
         self._app_state.project.add_existing_protein(result)
         # Use incremental update instead of full rebuild to preserve tree state
         self._app_state.pyssa_objects_model.add_protein(result)
-        self._app_state.hot_db.insert_protein_full(result)
         self._app_state.status_bar_manager.show_permanent_message("", False)
         self._app_state.status_bar_manager.show_temporary_message("Protein imported.")
         
@@ -324,7 +323,13 @@ class AddProteinViewController(QtCore.QObject):
           True
         )
 
-    thread_runtime.get_singleton_thread_runtime().run(import_task).on_success(on_success).on_error(on_error)
+    (
+      thread_runtime.get_singleton_thread_runtime()
+      .run(import_task)
+      .on_success(on_success)
+      .on_error(on_error)
+      .start()
+    )
     self._app_state.status_bar_manager.show_permanent_message(
       "Importing protein ...", True
     )

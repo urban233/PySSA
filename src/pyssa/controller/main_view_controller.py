@@ -6825,7 +6825,7 @@ class MainViewController:
           the_app_state
         )
       )
-      self._external_controller.restore_ui()
+      self._external_controller.restore_default_view()
       self._external_controller.get_view().show()
     except Exception as e:
       logger.error(f"An error occurred: {e}")

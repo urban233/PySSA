@@ -68,7 +68,7 @@ class Protein:
   _pdb_data: list[dict]
   """A list of pdb information."""
 
-  db_project_id: int
+  db_project_id: int = 0
   """The project id from the database."""
 
   # </editor-fold>
@@ -307,6 +307,10 @@ class Protein:
       if tmp_chain.chain_type != "non_protein_chain":
         tmp_chain.chain_sequence.name = a_value
     self.pymol_selection.molecule_object = a_value
+
+  def get_name(self) -> str:
+    """Gets the name of the protein."""
+    return self._pymol_molecule_object
 
   def get_all_sequences(self) -> list["sequence.Sequence"]:
     """Gets all sequences of the protein as list of sequences.

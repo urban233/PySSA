@@ -21,13 +21,16 @@
 #
 """Module for the add scene view controller."""
 import logging
+from typing import TYPE_CHECKING
 
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.ui.views import add_scene_view
 
-from src.pyssa.controller import interface_manager
 from src.pyssa.logging_pyssa import log_levels, log_handlers
 from src.pyssa.util import exception
+
+if TYPE_CHECKING:
+  from src.pyssa.gui import app_state
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -38,7 +41,7 @@ class AddSceneViewController(QtCore.QObject):
   """Class for the AddSceneViewController."""
 
   def __init__(
-      self, the_app_state: "app_state.AppState", a_parent=None
+      self, the_app_state: "app_state.AppState", currently_loaded_object, a_parent=None
   ) -> None:
     """Constructor.
 
@@ -59,27 +62,16 @@ class AddSceneViewController(QtCore.QObject):
     super().__init__()
     self._app_state = the_app_state
     self._view = add_scene_view.AddSceneView(a_parent)
-
-    from src.pyssa.gui import main_window
-    try:
-      from src.pyssa.internal.pymol.pml_worker import PmlWorker
-      from src.pyssa.internal.pymol.pml_enums import PmlCommand
-      interface_manager = main_window.controller._interface_manager
-      session_filepath = interface_manager.pymol_session_manager.current_pymol_session.filepath
-      
-      with PmlWorker.session(PmlWorker.cache_session(session_filepath, "fetch_scenes")) as worker:
-          self._all_current_scenes = worker.do(PmlCommand.GET_SCENE_LIST, sync=True) or []
-    except Exception as e:
-      logger.error(f"Failed to fetch scenes: {e}")
-      self._all_current_scenes = []
-
-    self._view.lbl_status.setStyleSheet("color: #ba1a1a; font-size: 11px;")
+    self._all_current_scenes = self._app_state.pyssa_objects_model.get_scene_names(
+      currently_loaded_object
+    )
+    self._entered_scene_name = ""
     self._connect_all_ui_elements_to_slot_functions()
 
   def get_view(self):
     return self._view
 
-  def restore_ui(self) -> None:
+  def restore_default_view(self) -> None:
     """Restores the UI."""
     self._view.line_edit_scene_name.clear()
     self._view.line_edit_scene_name.setStyleSheet(
@@ -99,35 +91,8 @@ class AddSceneViewController(QtCore.QObject):
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked."
     )
-    scene_name = self._view.line_edit_scene_name.text()
+    self._entered_scene_name = self._view.line_edit_scene_name.text()
     self._view.close()
-
-    from src.pyssa.gui import main_window
-    interface_manager = main_window.controller._interface_manager
-    interface_manager.block_gui()
-
-    from src.pyssa.internal.task import pymol_session_async
-    from src.pyssa.internal.thread.thread_api import thread_runtime
-
-    def do_work(progress_callback, is_cancelled):
-      return pymol_session_async.create_new_scene(scene_name, interface_manager.pymol_session_manager)
-
-    def on_success(result):
-      interface_manager.stop_wait_cursor()
-      interface_manager.refresh_main_view()
-
-    def on_error(exc):
-      interface_manager.stop_wait_cursor()
-      interface_manager.refresh_main_view()
-      logger.error(f"Failed to append scene in PyMOL: {exc}")
-      interface_manager.status_bar_manager.show_error_message("An unknown error occurred while adding scene!")
-
-    (
-      thread_runtime.get_singleton_thread_runtime()
-      .run(do_work)
-      .on_success(on_success)
-      .on_error(on_error)
-    )
 
   def _validate_scene_name(self, text: str) -> None:
     """Validates the scene name entered by the user.
@@ -156,9 +121,20 @@ class AddSceneViewController(QtCore.QObject):
       self._view.line_edit_scene_name.setStyleSheet(
           """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
       )
+    elif len(new_text) == 30:
+      self._view.btn_add_scene.setEnabled(False)
+      self._view.lbl_status.setText(
+          "The maximum length of a scene name is 30 characters."
+      )
+      self._view.line_edit_scene_name.setStyleSheet(
+        """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
+      )
     else:
       self._view.btn_add_scene.setEnabled(True)
       self._view.lbl_status.setText("")
       self._view.line_edit_scene_name.setStyleSheet(
           """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
       )
+
+  def get_scene_name(self):
+    return self._entered_scene_name

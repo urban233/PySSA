@@ -28,7 +28,9 @@ Version: 2.0.0
 import logging
 import os
 import pathlib
+import re
 import shutil
+import subprocess
 from io import BytesIO
 from typing import Union
 
@@ -37,6 +39,13 @@ import requests
 
 # import pywinctl
 
+from src.pyssa.internal.pymol.pml_worker import PmlWorker
+from src.pyssa.internal.pymol.pml_enums import PmlCommand
+from src.pyssa.io_pyssa.db_pyssa.write_queue import WriteOperation, OperationType
+from src.pyssa.io_pyssa import bio_data, filesystem_io
+from src.pyssa.internal.data_structures import protein, project
+from src.pyssa.util import enums
+
 from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import QtGui
@@ -44,7 +53,7 @@ from src.pyssa.gui.qt import QtGui
 from src.pyssa.controller import settings_manager, create_project_view_controller, open_project_view_controller, \
     pyssa_objects_panel_controller, welcome_screen_view_controller, help_panel_controller, \
     status_bar_manager, job_popup_controller, predict_protein_view_controller, settings_view_controller, \
-    distance_analysis_view_controller, results_view_controller
+    distance_analysis_view_controller, results_view_controller, add_scene_view_controller
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.gui.ui.custom_filters import help_event_filter
 from src.pyssa.util import help_text_loader
@@ -133,15 +142,24 @@ class MainWindowController:
         )
         self._active_jobs_controller.show_active_jobs()
         self._complete_jobs_controller = job_popup_controller.JobPopupController(
-            self._main_window.complete_jobs, self._app_state.job_model
+            self._main_window.complete_jobs, self._app_state.job_model, False
         )
         self._complete_jobs_controller.show_completed_jobs()
         self.feedback_timer = QtCore.QTimer()
         self.feedback_timer.setSingleShot(True)
         self._is_syncing_selection: bool = False
+        self._cached_pymol_selection_string: str = ""
+        self._cached_selection_active_object = None
+        
+        self._auto_save_timer = QtCore.QTimer()
+        self._auto_save_timer.setSingleShot(True)
+        self._auto_save_timer.timeout.connect(self.save_pymol_session_to_project)
+        
         self._tree_context_menu = tree_context_menu.TreeContextMenu()
         self._register_tree_context_menu_actions()
         self._current_selection_snapshot: "selection_snapshot.SelectionSnapshot | None" = None
+
+        self._last_pymol_script_dir = QtCore.QDir.homePath()
         # self.custom_progress_signal = custom_signals.ProgressSignal()
         # self.abort_signal = custom_signals.AbortSignal()
         # self.thread_pool = QtCore.QThreadPool()
@@ -294,12 +312,12 @@ class MainWindowController:
         logger.info("Connected hover help for all menu items")
 
         self.refresh_ui()
-        self.open_welcome_screen()
+        # self.open_welcome_screen()
 
     # <editor-fold desc="Private methods">
     def _connect_all_signals_with_their_slots(self) -> None:
         """Connects all relevant widget signals with their appropriate slots."""
-        # self._main_window.dialogClosed.connect(self.__slot_close_application)
+        self._main_window.dialogClosed.connect(self.__slot_close_application)
 
         # <editor-fold desc="Project menu">
         self._main_window.action_new_project.triggered.connect(self.__slot_create_project)
@@ -309,9 +327,10 @@ class MainWindowController:
         self._main_window.action_import_project.triggered.connect(self.__slot_import_project)
         self._main_window.action_export_project.triggered.connect(self.__slot_export_current_project)
         self._main_window.action_close_project.triggered.connect(self.__slot_close_project)
+        self._main_window.action_exit_application.triggered.connect(
+            self.__slot_exit_application
+        )
         # </editor-fold>
-        # TODO: Add the right slot method! ;)
-        # self._main_window.action_exit_application.triggered.connect(self.)
 
         # <editor-fold desc="Prediction menu">
         self._main_window.action_predict_monomer.triggered.connect(self.__slot_predict_monomer)
@@ -338,6 +357,12 @@ class MainWindowController:
         )
         # </editor-fold>
 
+        # <editor-fold desc="Expert menu">
+        self._main_window.action_run_pml_script.triggered.connect(
+            self.__slot_run_pml_script
+        )
+        # </editor-fold>
+
         # <editor-fold desc="Settings menu">
         self._main_window.action_edit_settings.triggered.connect(
             self.__slot_open_settings_dialog
@@ -345,6 +370,22 @@ class MainWindowController:
         self._main_window.action_restore_settings.triggered.connect(
             self.__slot_restore_settings
         )
+        self._main_window.action_pymol_default_style.triggered.connect(
+            self.__slot_pymol_default_style
+        )
+        self._main_window.action_pymol_maestro_style.triggered.connect(
+            self.__slot_pymol_maestro_style
+        )
+        self._main_window.action_pymol_legacy_style.triggered.connect(
+            self.__slot_pymol_legacy_style
+        )
+        self._main_window.action_pymol_reasonable_performance.triggered.connect(
+            self.__slot_pymol_reasonable_performance_style
+        )
+        self._main_window.action_pymol_maximum_quality.triggered.connect(
+            self.__slot_pymol_maximum_quality_style
+        )
+
         # </editor-fold>
 
         # <editor-fold desc="Help menu">
@@ -363,7 +404,7 @@ class MainWindowController:
         # # </editor-fold>
         # # <editor-fold desc="Scene slots">
         self._main_window.viewer_toolbar_actions.get("create_scene").get_action().triggered.connect(
-            self.__slot_save_scene
+            self.__slot_create_scene
         )
         self._main_window.viewer_toolbar_actions.get("save_scene").get_action().triggered.connect(
             self.__slot_update_scene
@@ -419,8 +460,11 @@ class MainWindowController:
         )
         self._main_window.surface_show_action.triggered.connect(self.__slot_show_as_surface)
         self._main_window.surface_hide_action.triggered.connect(self.__slot_hide_surface)
+        self._main_window.viewer_toolbar_actions.get("hide_all").get_action().triggered.connect(
+            self.__slot_hide_all_representations
+        )
         # # </editor-fold>
-        # # <editor-fold desc="Color slots">
+        # <editor-fold desc="Color slots">
         self._main_window.viewer_toolbar_actions.get("color").get_action().triggered.connect(
             self.__slot_display_color_grid
         )
@@ -529,18 +573,15 @@ class MainWindowController:
         self._main_window.color_config.btn_black_bg.clicked.connect(
             lambda: self.__slot_apply_bg_color("black")
         )
-        # # </editor-fold>
-        # # <editor-fold desc="Selection slots">
-        # self._main_window.show_sele_rb_panel_item.get_action().triggered.connect(
-        #     self.__slot_show_sele
-        # )
-        # self._main_window.hide_sele_rb_panel_item.get_action().triggered.connect(
-        #     self.__slot_hide_sele
-        # )
-        # self._main_window.clear_sele_rb_panel_item.get_action().triggered.connect(
-        #     self.__slot_clear_sele
-        # )
-        # # </editor-fold>
+        # </editor-fold>
+        # <editor-fold desc="Selection slots">
+        self._main_window.viewer_toolbar_actions.get("selection").get_action().triggered.connect(
+            self.__slot_display_selection_options
+        )
+        self._main_window.selection_show_action.triggered.connect(self.__slot_show_sele)
+        self._main_window.selection_hide_action.triggered.connect(self.__slot_hide_sele)
+        self._main_window.selection_clear_action.triggered.connect(self.__slot_clear_sele)
+        # </editor-fold>
         self._main_window.viewer_toolbar_actions.get("clean").get_action().triggered.connect(
             self.__slot_display_clean_options
         )
@@ -887,6 +928,10 @@ class MainWindowController:
 
     # </editor-fold>
 
+    def _trigger_auto_save(self) -> None:
+        """Trigger the auto-save timer after a PyMOL-altering interaction."""
+        self._auto_save_timer.start(5000)
+
     def open_welcome_screen(self):
         if not self._dialog_controllers.__contains__("welcome_screen"):
             self._dialog_controllers["welcome_screen"] = welcome_screen_view_controller.WelcomeScreenViewController(
@@ -906,94 +951,128 @@ class MainWindowController:
         passed selection snapshot to unconditionally set every relevant widget
         property (e.g. enabling predicting monomer only if monomers exist and/or are selected).
         """
-        has_project = self._app_state.has_open_project()
-        project = self._app_state.project
+        # A hot project is the project that is currently loaded and shown to the user.
+        has_hot_project: bool = self._app_state.has_open_project()
+        tmp_project: "project.Project" = self._app_state.project
+        is_pyssa_expert = self._app_state.get_settings().pyssa_expert_mode
 
         # Derived booleans from detailed project data.
-        has_sequences = has_project and len(project.sequences) > 0
-        has_monomer_sequences_in_project = has_sequences and any("," not in s for s in project.sequences)
-        has_multimer_sequences_in_project = has_sequences and any("," in s for s in project.sequences)
+        has_sequences: bool = has_hot_project and len(tmp_project.sequences) > 0
+        has_monomer_sequences_in_project: bool = has_sequences and any("," not in s for s in tmp_project.sequences)
+        has_multimer_sequences_in_project: bool = has_sequences and any("," in s for s in tmp_project.sequences)
 
-        has_proteins = has_project and len(project.proteins) > 0
-        has_protein_pairs = has_project and len(project.protein_pairs) > 0
-        has_any_objects = has_sequences or has_proteins or has_protein_pairs
-        has_running_jobs = len(self._app_state._cold_dbs) > 0
+        has_proteins: bool = has_hot_project and len(tmp_project.proteins) > 0
+        has_protein_pairs: bool = has_hot_project and len(tmp_project.protein_pairs) > 0
+        has_running_jobs: bool = self._app_state.job_scheduler.has_running_jobs()
         if self._user_pymol.get_currently_loaded_object() is None:
-            has_loaded_session = False
+            has_loaded_session: bool = False
         else:
-            has_loaded_session = True
-
-        # -- Project menu actions ------------------------------------------
-        # Actions that replace or manage the active project context are always available.
-        self._main_window.action_new_project.setEnabled(True)
-        self._main_window.action_open_project.setEnabled(True)
-        self._main_window.action_use_project.setEnabled(True)
-        self._main_window.action_delete_project.setEnabled(True)
-        self._main_window.action_import_project.setEnabled(True)
-
-        # Export and close specifically act upon the *current* project.
-        self._main_window.action_export_project.setEnabled(has_project)
-        self._main_window.action_close_project.setEnabled(has_project)
-        # action_exit_application is always enabled.
+            has_loaded_session: bool = True
+        is_base_scene: bool = self._user_pymol.get_current_scene_name() == "base"
 
         # -- Selection Snapshot context ------------------------------------
-        has_active_monomer_selection = snapshot.has_monomer_sequences if snapshot else False
-        has_active_multimer_selection = snapshot.has_multimer_sequences if snapshot else False
+        has_active_monomer_sequence_selection = snapshot.has_monomer_sequences if snapshot else False
+        has_active_multimer_sequence_selection = snapshot.has_multimer_sequences if snapshot else False
         has_active_protein_selection = len(snapshot.distinct_proteins) > 0 if snapshot else False
         has_active_pair_selection = len(snapshot.raw_protein_pairs) > 0 if snapshot else False
         has_active_pair_child_selection = len(snapshot.raw_protein_pair_children) > 0 if snapshot else False
         has_active_scene_selection = len(snapshot.raw_scenes) > 0 if snapshot else False
-
-        # -- Top-level menus -----------------------------------------------
-        self._main_window.menuPrediction.setEnabled(has_project)
+        tools.debug_print(f"has_active_scene_selection: {has_active_scene_selection}", 2)
         # Prediction needs an input sequence to execute. Prefer active selection, fallback to project existence.
-        can_predict_monomer = has_active_monomer_selection or has_monomer_sequences_in_project
-        can_predict_multimer = has_active_multimer_selection or has_multimer_sequences_in_project
+        can_predict_monomer = has_active_monomer_sequence_selection or has_monomer_sequences_in_project
+        can_predict_multimer = has_active_multimer_sequence_selection or has_multimer_sequences_in_project
+
+        # Distance analysis operations computationally require 3D structure models.
+        can_analyze = has_proteins
+
+        # <editor-fold desc="Project menu">
+        # Actions that replace or manage the active project context are always available.
+        self._main_window.action_new_project.setEnabled(not has_hot_project)
+        self._main_window.action_open_project.setEnabled(not has_hot_project)
+        self._main_window.action_use_project.setEnabled(has_hot_project)
+        self._main_window.action_delete_project.setEnabled(not has_hot_project)
+        self._main_window.action_import_project.setEnabled(not has_hot_project)
+        # Export and close specifically act upon the *current* project.
+        self._main_window.action_export_project.setEnabled(has_hot_project)
+        self._main_window.action_close_project.setEnabled(has_hot_project)
+        self._main_window.action_exit_application.setEnabled(True)
+        # </editor-fold>
+
+        # <editor-fold desc="Prediction menu">
+        self._main_window.menuPrediction.setEnabled(has_hot_project and can_predict_monomer or can_predict_multimer)
         self._main_window.action_predict_monomer.setEnabled(can_predict_monomer)
         self._main_window.action_predict_multimer.setEnabled(can_predict_multimer)
+        # </editor-fold>
 
-        self._main_window.menuAnalysis.setEnabled(has_project)
-        # Distance analysis operations computationally require 3D structure models.
-        can_analyze = has_active_protein_selection or has_active_pair_selection or (has_proteins or has_protein_pairs)
+        # <editor-fold desc="Distance analysis menu">
+        self._main_window.menuAnalysis.setEnabled(has_hot_project and can_analyze)
         self._main_window.action_distance_analysis.setEnabled(can_analyze)
+        # </editor-fold>
 
-        self._main_window.menuResults.setEnabled(has_project)
+        # <editor-fold desc="Results menu">
+        self._main_window.menuResults.setEnabled(has_hot_project and has_protein_pairs)
         # Results summaries aggregate data from protein pair analysis/predictions.
-        self._main_window.action_results_summary.setEnabled(has_active_pair_selection or has_active_pair_child_selection or (has_protein_pairs and not snapshot))
+        self._main_window.action_results_summary.setEnabled(has_active_pair_selection or has_active_pair_child_selection)
+        # </editor-fold>
 
-        self._main_window.menuImage.setEnabled(has_project)
-        # Rendering commands mathematically require actual PyMOL coordinates.
-        can_image = has_active_protein_selection or has_active_pair_child_selection or (has_proteins and not snapshot)
-        self._main_window.action_preview_image.setEnabled(can_image)
-        self._main_window.action_ray_tracing_image.setEnabled(can_image)
-        self._main_window.action_simple_image.setEnabled(can_image)
+        # <editor-fold desc="Image menu">
+        self._main_window.menuImage.setEnabled(has_hot_project and has_loaded_session)
+        self._main_window.action_preview_image.setEnabled(has_hot_project and has_loaded_session)
+        self._main_window.action_ray_tracing_image.setEnabled(has_hot_project and has_loaded_session)
+        self._main_window.action_simple_image.setEnabled(has_hot_project and has_loaded_session)
+        # </editor-fold>
 
-        self._main_window.menuHotspots.setEnabled(has_project)
-        # Protein region generation acts upon 3D coordinates.
-        self._main_window.action_protein_regions.setEnabled(can_image)
-        # Settings and Help menus are always enabled.
+        # <editor-fold desc="Hotspots menu">
+        self._main_window.menuHotspots.setEnabled(has_hot_project and has_loaded_session)
+        # Think about using also a selection because this is nearly mandatory
+        # for the feature to truly work.
+        self._main_window.action_protein_regions.setEnabled(has_hot_project and has_loaded_session)
+        # </editor-fold>
 
-        # -- Viewer toolbar actions ----------------------------------------
-        # Base scene and session commands act on the project environment.
+        # <editor-fold desc="Expert menu">
+        self._main_window.menuExpert.menuAction().setVisible(is_pyssa_expert)
+        # </editor-fold>
+
+        # <editor-fold desc="Settings menu">
+        self._main_window.menuSettings.setEnabled(True)
+        self._main_window.action_edit_settings.setEnabled(True)
+        self._main_window.action_restore_settings.setEnabled(True)
+        self._main_window.submenuPyMOLStyle.setEnabled(has_loaded_session)
+        self._main_window.submenuPyMOLQuality.setEnabled(has_loaded_session)
+        # </editor-fold>
+
+        # <editor-fold desc="Help menu">
+        self._main_window.menuAbout.setEnabled(True)
+        self._main_window.action_documentation.setEnabled(True)
+        self._main_window.action_get_demo_projects.setEnabled(True)
+        self._main_window.action_show_log_in_explorer.setEnabled(True)
+        self._main_window.action_clear_logs.setEnabled(True)
+        self._main_window.action_about.setEnabled(True)
+        # </editor-fold>
+
+        # <editor-fold desc="Session management">
         toolbar_action_open_session = self._main_window.viewer_toolbar_actions.get("open_session")
-        if toolbar_action_open_session: toolbar_action_open_session.get_action().setEnabled(has_project)
-
-        toolbar_action_create_scene = self._main_window.viewer_toolbar_actions.get("create_scene")
-        if toolbar_action_create_scene: toolbar_action_create_scene.get_action().setEnabled(
-            has_project and can_image and has_loaded_session
+        if toolbar_action_open_session: toolbar_action_open_session.get_action().setEnabled(
+            has_hot_project and
+            (has_proteins or has_protein_pairs) and
+            (has_active_protein_selection or has_active_pair_selection or has_active_pair_child_selection)
         )
+        # </editor-fold>
+
+        # <editor-fold desc="Scene management">
+        toolbar_action_create_scene = self._main_window.viewer_toolbar_actions.get("create_scene")
+        if toolbar_action_create_scene: toolbar_action_create_scene.get_action().setEnabled(has_loaded_session)
 
         toolbar_action_save_scene = self._main_window.viewer_toolbar_actions.get("save_scene")
-        if toolbar_action_save_scene: toolbar_action_save_scene.get_action().setEnabled(
-            has_active_scene_selection and has_loaded_session
-        )
+        if toolbar_action_save_scene: toolbar_action_save_scene.get_action().setEnabled(has_loaded_session)
 
         toolbar_action_delete_scene = self._main_window.viewer_toolbar_actions.get("delete_scene")
         if toolbar_action_delete_scene: toolbar_action_delete_scene.get_action().setEnabled(
-            has_active_scene_selection and has_loaded_session
+            has_loaded_session and has_active_scene_selection and not is_base_scene
         )
+        # </editor-fold>
 
-        # PyMOL representation tools need a 3D structural model in the wrapper.
+        # <editor-fold desc="PyMOL representation">
         _protein_level_toolbar_keys = [
             "cartoon", "sticks", "ribbon", "lines", "spheres", "dots",
             "mesh", "surface", "color",
@@ -1001,40 +1080,89 @@ class MainWindowController:
         for key in _protein_level_toolbar_keys:
             toolbar_action = self._main_window.viewer_toolbar_actions.get(key)
             if toolbar_action is not None:
-                toolbar_action.get_action().setEnabled(can_image)
+                toolbar_action.get_action().setEnabled(
+                    has_loaded_session and (
+                            has_active_protein_selection or has_active_pair_selection or has_active_pair_child_selection
+                    )
+                )
 
-        # General viewer state indicators are active.
+        toolbar_action_hide_all = self._main_window.viewer_toolbar_actions.get("hide_all")
+        if toolbar_action_hide_all: toolbar_action_hide_all.get_action().setEnabled(
+            has_loaded_session and has_active_protein_selection
+        )
+        # </editor-fold>
+
+        # <editor-fold desc="Color">
+        toolbar_action_color = self._main_window.viewer_toolbar_actions.get("color")
+        if toolbar_action_color: toolbar_action_color.get_action().setEnabled(
+            has_loaded_session and (
+                    has_active_protein_selection or has_active_pair_selection or has_active_pair_child_selection
+            )
+        )
+        # </editor-fold>
+
+        # <editor-fold desc="Selection">
+        toolbar_action_selection = self._main_window.viewer_toolbar_actions.get("selection")
+        if toolbar_action_selection: toolbar_action_selection.get_action().setEnabled(
+            has_loaded_session
+        )
+        # </editor-fold>
+
+        # <editor-fold desc="Clean protein">
+        toolbar_action_clean = self._main_window.viewer_toolbar_actions.get("clean")
+        if toolbar_action_clean: toolbar_action_clean.get_action().setEnabled(
+            has_loaded_session and has_active_protein_selection
+        )
+        # </editor-fold>
+
+        # <editor-fold desc="Job management">
         _status_level_toolbar_keys = ["running_jobs", "notifications"]
         for key in _status_level_toolbar_keys:
             toolbar_action = self._main_window.viewer_toolbar_actions.get(key)
             if toolbar_action is not None:
                 toolbar_action.get_action().setEnabled(True)
+        # </editor-fold>
 
-        # -- PySSA Objects Panel toolbar -----------------------------------
+        # <editor-fold desc="PySSA Objects Panel toolbar">
         panel = self._main_window.pyssa_objects_panel
         # Importing sequences or structural files requires an open project.
-        panel.import_file_action.get_action().setEnabled(has_project)
-        panel.add_sequence_action.get_action().setEnabled(has_project)
+        panel.import_file_action.get_action().setEnabled(has_hot_project)
+        panel.add_sequence_action.get_action().setEnabled(has_hot_project)
         # Exporting or deleting explicitly requires at least one object to export/delete.
-        panel.export_file_action.get_action().setEnabled(has_any_objects)
-        panel.delete_object_action.get_action().setEnabled(has_any_objects)
+        panel.export_file_action.get_action().setEnabled(
+            has_active_monomer_sequence_selection or has_active_multimer_sequence_selection or has_active_protein_selection
+        )
+        panel.delete_object_action.get_action().setEnabled(
+            has_active_monomer_sequence_selection or has_active_multimer_sequence_selection or has_active_protein_selection or has_active_pair_selection
+        )
+        # </editor-fold>
 
-        # -- First-pass model binding --------------------------------------
+        # <editor-fold desc="First-pass model binding">
         if self._app_state.is_first_pass():
             panel.tree_view.setModel(self._app_state.pyssa_objects_model)
             # Reconnect selection signal after model is replaced
             self._pyssa_objects_panel_controller._connect_selection_signal()
+        # </editor-fold>
 
-        # -- Tree context menu ---------------------------------------------
+        # <editor-fold desc="Tree context menu">
         self._tree_context_menu.configure(snapshot)
+        # </editor-fold>
 
-        # -- Window title --------------------------------------------------
-        if has_project:
+        # <editor-fold desc="Window title">
+        if has_hot_project:
             self._main_window.setWindowTitle(
-                f"PySSA \u2014 {project.get_project_name()}"
+                f"PySSA \u2014 {tmp_project.get_project_name()}"
             )
         else:
             self._main_window.setWindowTitle("PySSA")
+        # </editor-fold>
+
+        self._main_window.project_overview_panel.set_project_name(
+            self._app_state.project.get_project_name() if self._app_state.has_open_project() else ""
+        )
+        self._main_window.tool_window_layout.set_left_panel_hidden(not has_hot_project)
+        self._main_window.project_overview_panel.set_session_name(self._user_pymol.get_current_session_name())
+        self._main_window.project_overview_panel.set_scene_name(self._user_pymol.get_current_scene_name())
 
     # <editor-fold desc="Slot methods">
     # <editor-fold desc="Project menu">
@@ -1167,6 +1295,7 @@ class MainWindowController:
                 .run(import_project_task)
                 .on_success(on_success)
                 .on_error(on_error)
+                .start()
             )
             self._app_state.status_bar_manager.show_permanent_message(
                 "Importing project ...", True
@@ -1221,6 +1350,7 @@ class MainWindowController:
                     .run(export_project_task)
                     .on_success(on_success)
                     .on_error(on_error)
+                    .start()
                 )
                 self._app_state.status_bar_manager.show_permanent_message(
                     "Importing project ...", True
@@ -1236,8 +1366,8 @@ class MainWindowController:
 
     def __slot_close_project(self):
         if self._app_state.has_open_project():
+            self._user_pymol.reinitialize_session()
             self._app_state.close_project()
-            self._user_pymol.get_cmd_module().reinitialize()
     # </editor-fold>
 
     # <editor-fold desc="Prediction menu">
@@ -1478,6 +1608,41 @@ class MainWindowController:
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def __slot_pymol_default_style(self):
+        for tmp_style_keys in constants.PYMOL_STYLE_DEFAULT.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_STYLE_DEFAULT[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
+
+    def __slot_pymol_maestro_style(self):
+        for tmp_style_keys in constants.PYMOL_STYLE_MAESTRO_LIKE.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_STYLE_MAESTRO_LIKE[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
+
+    def __slot_pymol_legacy_style(self):
+        for tmp_style_keys in constants.PYMOL_STYLE_LEGACY.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_STYLE_LEGACY[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
+
+    def __slot_pymol_reasonable_performance_style(self):
+        for tmp_style_keys in constants.PYMOL_QUALITY_REASONABLE_PERFORMANCE.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_REASONABLE_PERFORMANCE[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
+
+    def __slot_pymol_maximum_quality_style(self):
+        for tmp_style_keys in constants.PYMOL_QUALITY_MAXIMUM_QUALITY.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_QUALITY_MAXIMUM_QUALITY[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
     # </editor-fold>
 
     # <editor-fold desc="Help menu">
@@ -1725,6 +1890,7 @@ class MainWindowController:
                 .run(download_demo_projects_task)
                 .on_success(on_success)
                 .on_error(on_error)
+                .start()
             )
 
             # Show progress message
@@ -1774,6 +1940,10 @@ class MainWindowController:
         standalone_proteins = grouped_context['standalone_proteins']
         pair_proteins = grouped_context['pair_proteins']
 
+        # Clear the cached selection since we are opening a session
+        self._cached_pymol_selection_string = ""
+        self._cached_selection_active_object = None
+
         # Determine session context and log appropriate information
         if protein_pairs:
             # Protein pairs are selected - session is bound to the pair
@@ -1801,6 +1971,7 @@ class MainWindowController:
         else:
             # No selection - operate on all objects
             logger.info("Opening session for all objects (no specific selection)")
+        self.refresh_ui(self._get_current_snapshot())
 
         # Example implementation (replace with actual logic)
         # with pml_worker.PmlWorker.session(pml_worker.PmlWorker.cache_user_session(self._user_pymol, "my_test")) as worker:
@@ -1830,28 +2001,28 @@ class MainWindowController:
     # </editor-fold>
 
     # # <editor-fold desc="Scene slots">
-    def __slot_save_scene(self) -> None:
-        """Saves a PyMOL scene.
+    def __slot_create_scene(self) -> None:
+        """Creates a PyMOL scene.
 
         The scene includes the current view and all visible objects.
         Selection context is available via _get_current_snapshot() if needed.
         """
-        tmp_input_dialog = QtWidgets.QInputDialog()
-        tmp_name, ok_pressed = tmp_input_dialog.getText(
-            self._main_window,
-            "Scene Name",
-            "Enter A Scene Name:",
-            text="",
+        self._dialog_controllers["add_scene_dialog"] = add_scene_view_controller.AddSceneViewController(
+            self._app_state, self._user_pymol.get_currently_loaded_object()
         )
-        if not ok_pressed or not tmp_name.strip():
-            return
-        tmp_scene_name = tmp_name.strip()
+        self._dialog_controllers["add_scene_dialog"].restore_default_view()
+        self._dialog_controllers["add_scene_dialog"].get_view().exec()
 
+        tmp_scene_name = self._dialog_controllers["add_scene_dialog"].get_scene_name()
+        if tmp_scene_name == "":
+            return
         self._user_pymol.get_cmd_module().scene(key=tmp_scene_name, action="append")
 
         self._app_state.pyssa_objects_model.add_scene(
             tmp_scene_name, self._user_pymol.get_currently_loaded_object()
         )
+        self._user_pymol.set_current_scene_name(tmp_scene_name)
+        self.refresh_ui(self._get_current_snapshot())
 
         # # Log selection context for debugging
         # snapshot = self._get_current_snapshot()
@@ -1864,17 +2035,34 @@ class MainWindowController:
         if snapshot:
             for tmp_raw_scene in snapshot.raw_scenes:
                 self._user_pymol.get_cmd_module().scene(tmp_raw_scene, "recall")
+                self._user_pymol.set_current_scene_name(tmp_raw_scene)
                 # Log scene recall
                 logger.info(f"Recalled scene: {tmp_raw_scene}")
+        self.refresh_ui(self._get_current_snapshot())
 
     def __slot_update_scene(self):
         """Update the currently selected PyMOL scene and refresh its thumbnail."""
         snapshot = self._get_current_snapshot()
         if snapshot:
             for tmp_raw_scene in snapshot.raw_scenes:
-                self._user_pymol.get_cmd_module().scene(tmp_raw_scene, "update")
+                if tmp_raw_scene == "base":
+                    self._user_pymol.get_cmd_module().scene("__scratch__", "update")
+                    self._user_pymol.get_cmd_module().scene("__scratch__", "recall")
+                    self._user_pymol.set_current_scene_name("__scratch__")
+                    self.refresh_ui(self._get_current_snapshot())
+                else:
+                    self._user_pymol.get_cmd_module().scene(tmp_raw_scene, "update")
                 # Log scene recall
                 logger.info(f"Updated scene: {tmp_raw_scene}")
+
+        tmp_current_scene_name = self._user_pymol.get_current_scene_name()
+        if tmp_current_scene_name == "base":
+            self._user_pymol.get_cmd_module().scene("__scratch__", "update")
+            self._user_pymol.get_cmd_module().scene("__scratch__", "recall")
+            self._user_pymol.set_current_scene_name("__scratch__")
+            self.refresh_ui(self._get_current_snapshot())
+        else:
+            self._user_pymol.get_cmd_module().scene(tmp_current_scene_name, "update")
 
     def __slot_delete_scene(self):
         """Deletes the currently selected PyMOL scene and removes it from the list."""
@@ -1887,6 +2075,9 @@ class MainWindowController:
                 self._app_state.pyssa_objects_model.remove_scene(
                     tmp_raw_scene, self._user_pymol.get_currently_loaded_object()
                 )
+            self._user_pymol.get_cmd_module().scene("base", "recall")
+            self._user_pymol.set_current_scene_name("base")
+        self.refresh_ui(self._get_current_snapshot())
 
     # # </editor-fold>
 
@@ -1904,10 +2095,12 @@ class MainWindowController:
     def __slot_show_as_cartoon(self) -> None:
         """Shows the `pyssa_sele` selection in cartoon representation."""
         self._user_pymol.get_cmd_module().show("cartoon", "sele")
+        self._trigger_auto_save()
 
     def __slot_hide_cartoon(self) -> None:
         """Hides the cartoon representation of the `sele` selection."""
         self._user_pymol.get_cmd_module().hide("cartoon", "sele")
+        self._trigger_auto_save()
 
     # </editor-fold>
 
@@ -1924,10 +2117,12 @@ class MainWindowController:
     def __slot_show_as_sticks(self) -> None:
         """Shows the `pyssa_sele` selection in sticks representation."""
         self._user_pymol.get_cmd_module().show("sticks", "sele")
+        self._trigger_auto_save()
 
     def __slot_hide_sticks(self) -> None:
         """Hides the sticks representation of the `pyssa_sele` selection."""
         self._user_pymol.get_cmd_module().hide("sticks", "sele")
+        self._trigger_auto_save()
 
     # </editor-fold>
 
@@ -1944,10 +2139,12 @@ class MainWindowController:
     def __slot_show_as_ribbon(self) -> None:
         """Shows the `sele` selection in ribbon representation."""
         self._user_pymol.get_cmd_module().show("ribbon", "sele")
+        self._trigger_auto_save()
 
     def __slot_hide_ribbon(self) -> None:
         """Hides the ribbon representation of the `sele` selection."""
         self._user_pymol.get_cmd_module().hide("ribbon", "sele")
+        self._trigger_auto_save()
     # </editor-fold>
 
     # <editor-fold desc="Lines representation">
@@ -1963,10 +2160,12 @@ class MainWindowController:
     def __slot_show_as_lines(self) -> None:
         """Shows the `sele` selection in lines representation."""
         self._user_pymol.get_cmd_module().show("lines", "sele")
+        self._trigger_auto_save()
 
     def __slot_hide_lines(self) -> None:
         """Hides the lines representation of the `sele` selection."""
         self._user_pymol.get_cmd_module().hide("lines", "sele")
+        self._trigger_auto_save()
     # </editor-fold>
 
     # <editor-fold desc="Spheres representation">
@@ -1982,10 +2181,12 @@ class MainWindowController:
     def __slot_show_as_spheres(self) -> None:
         """Shows the `pyssa_sele` selection in spheres representation."""
         self._user_pymol.get_cmd_module().show("spheres", "sele")
+        self._trigger_auto_save()
 
     def __slot_hide_spheres(self) -> None:
         """Hides the spheres representation of the `sele` selection."""
         self._user_pymol.get_cmd_module().hide("spheres", "sele")
+        self._trigger_auto_save()
 
     # </editor-fold>
 
@@ -2002,10 +2203,12 @@ class MainWindowController:
     def __slot_show_as_dots(self) -> None:
         """Shows the `sele` selection in dots representation."""
         self._user_pymol.get_cmd_module().show("dots", "sele")
+        self._trigger_auto_save()
 
     def __slot_hide_dots(self) -> None:
         """Hides the dots representation of the `sele` selection."""
         self._user_pymol.get_cmd_module().hide("dots", "sele")
+        self._trigger_auto_save()
     # </editor-fold>
 
     # <editor-fold desc="Mesh representation">
@@ -2046,6 +2249,12 @@ class MainWindowController:
         self._user_pymol.get_cmd_module().hide("surface", "sele")
 
     # </editor-fold>
+
+    def __slot_hide_all_representations(self):
+        tmp_reprs = ["cartoon", "sticks", "ribbon", "lines", "spheres", "dots", "mesh", "surface"]
+        for tmp_repr in tmp_reprs:
+            self._user_pymol.get_cmd_module().hide(tmp_repr, "sele")
+
     # </editor-fold>
 
     # <editor-fold desc="Color slots">
@@ -2064,11 +2273,13 @@ class MainWindowController:
     def __slot_apply_color(self, a_color_name) -> None:
         """Colors the default sele selection in the given color."""
         self._user_pymol.get_cmd_module().color(a_color_name, "sele")
+        self._trigger_auto_save()
 
     def __slot_apply_color_by_elements(self) -> None:
         """Colors the default sele selection in the given color."""
         self._user_pymol.get_cmd_module().color("atomic", "sele and not elem C")
-        self._user_pymol.get_cmd_module().color("grey70", "sele and elem C")
+        self._user_pymol.get_cmd_module().color("grey50", "sele and elem C")
+        self._trigger_auto_save()
 
     def __slot_apply_bg_color(self, a_color_name) -> None:
         """Colors the viewer background in the given color."""
@@ -2082,8 +2293,17 @@ class MainWindowController:
                 self._main_window.tool_window_layout.apply_viewer_background("#000000")
             case _:
                 logger.error(f"The color name {a_color_name} is not available as bg color!")
+        self._trigger_auto_save()
 
     # </editor-fold>
+
+    def __slot_display_selection_options(self):
+        try:
+            self._main_window.selection_show_hide_menu.exec(
+                self._get_viewer_tool_bar_action_pos(self._main_window.viewer_toolbar_actions.get("selection"))
+            )
+        except Exception as e:
+            logger.error(e.__str__())
 
     def __slot_display_clean_options(self):
         try:
@@ -2093,23 +2313,117 @@ class MainWindowController:
         except Exception as e:
             logger.error(e.__str__())
 
-
     def __slot_clean_solvent(self):
+        active_object = self._user_pymol.get_currently_loaded_object()
         self._user_pymol.get_cmd_module().remove("solvent")
+        self._run_protein_structure_update_async(active_object)
 
     def __slot_clean_organic(self):
+        active_object = self._user_pymol.get_currently_loaded_object()
         self._user_pymol.get_cmd_module().remove("organic")
+        self._run_protein_structure_update_async(active_object)
+
+    def _run_protein_structure_update_async(self, active_object):
+        if not active_object or not isinstance(active_object, protein.Protein):
+            self._trigger_auto_save()
+            return
+
+        # Retrieve current session string to pass to the worker
+        session_str = self._user_pymol.save_session()
+        
+        # Show loading indicator in status bar
+        self._app_state.status_bar_manager.show_permanent_message("Synchronizing structure data...", True)
+        
+        def background_task(progress_callback, is_cancelled):
+            # 1. Update structure via PmlWorker
+            tmp_reply_data = PmlWorker.one_shot_do(
+                PmlCommand.CLEAN_PROTEIN_UPDATE_STRUCTURE,
+                args=(session_str, active_object.get_molecule_object())
+            )
+            if not tmp_reply_data or tmp_reply_data[0] == "":
+                raise ValueError("Clean protein failed inside PyMOL.")
+                
+            new_session, tmp_pdb_filepath = tmp_reply_data
+            
+            # 2. Parse new PDB data
+            tmp_pdb_data, tmp_more_than_one_ca = bio_data.parse_pdb_file(tmp_pdb_filepath)
+            
+            # 3. Update the protein object in memory
+            active_object.pymol_session = new_session
+            active_object.set_pdb_data(tmp_pdb_data)
+            
+            # 4. Use new Database API (ProjectWriteQueue) to persist changes
+            hot_db = self._app_state.hot_db
+            if hot_db:
+                hot_db.write_queue.submit(
+                    WriteOperation(OperationType.UPDATE_PROTEIN_SESSION, active_object)
+                )
+                
+                # Update PDB atoms
+                hot_db.write_queue.submit(
+                    WriteOperation(OperationType.UPDATE_PROTEIN_PDB_DATA, active_object) # We need to verify if this operation type exists, else we write a custom operation
+                )
+
+                # Find and remove non-protein chains
+                for tmp_chain in active_object.chains:
+                    if tmp_chain.chain_type == enums.ChainTypeEnum.NON_PROTEIN_CHAIN.value:
+                        hot_db.write_queue.submit(
+                            WriteOperation(OperationType.DELETE_CHAIN, (active_object.get_id(), tmp_chain.get_id()))
+                        )
+                
+            return "Success"
+
+        def on_success(result):
+            # Trigger a UI refresh to rebuild the tree view
+            if isinstance(active_object, protein.Protein):
+                self._app_state.pyssa_objects_model.update_protein(active_object)
+            self._trigger_auto_save()
+            self._app_state.status_bar_manager.show_permanent_message("", False)
+            self.refresh_ui(self._get_current_snapshot())
+            
+        def on_error(exc):
+            logger.exception("Failed to update structure data.", exc_info=exc)
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                f"An error occurred while updating the structure:\n\n{exc}",
+                "Update Structure",
+                custom_message_box.CustomMessageBoxIcons.ERROR.value,
+            )
+            tmp_dialog.exec()
+            self._app_state.status_bar_manager.show_permanent_message("", False)
+            
+        (
+            thread_runtime.get_singleton_thread_runtime()
+            .run(background_task)
+            .on_success(on_success)
+            .on_error(on_error)
+            .start()
+        )
 
     # <editor-fold desc="Selection slots">
     def __slot_show_sele(self) -> None:
         """Highlights the selection in PyMOL"""
-        self._user_pymol.get_cmd_module().select("sele", enable=1)
+        current_obj = self._user_pymol.get_currently_loaded_object()
+        if self._cached_pymol_selection_string and current_obj and current_obj == self._cached_selection_active_object:
+            try:
+                self._user_pymol.get_cmd_module().select(
+                    "sele",
+                    selection=self._cached_pymol_selection_string,
+                    enable=1
+                )
+                self.feedback_timer.start(100)
+            except Exception as e:
+                logger.warning(f"Failed to restore cached selection '{self._cached_pymol_selection_string}': {e}")
+                self._user_pymol.get_cmd_module().select("sele", enable=1)
+        else:
+            self._user_pymol.get_cmd_module().select("sele", enable=1)
 
     def __slot_hide_sele(self) -> None:
         """Hides the selection highlighting in PyMOL"""
         self._user_pymol.get_cmd_module().select("sele", enable=0)
 
     def __slot_clear_sele(self) -> None:
+        self._cached_pymol_selection_string = ""
+        self._cached_selection_active_object = None
         self._user_pymol.get_cmd_module().select("sele", "none", enable=0)
         self.feedback_timer.start(100)
 
@@ -2122,29 +2436,6 @@ class MainWindowController:
         """PyMOL single left click event."""
         try:
             self.feedback_timer.start(100)
-        except Exception as e:
-            print(e.__str__())
-
-    # TODO: Refactor below
-    def update_protein_structure_tree_view(self) -> None:
-        """Updates the protein structure tree view in the side panel."""
-        try:
-            selection_strings = []
-            self._user_pymol.get_cmd_module().select(
-                "sele", enable=1
-            )  # Highlights the selection even if clicked on the PyMOL "canvas"
-            atoms = self._user_pymol.get_cmd_module().get_model("sele")
-            for at in atoms.atom:
-                selection_strings.append(
-                    self.parse_selection_string(
-                        f"/1nb1//{at.chain}/{at.resi}+{str(at.resn)}/{at.name}"  # TODO: The hard-coded 3bmp can be fixed by storing the active protein name in some sort of pymol manager
-                    )
-                )  # TODO: Needs more work!
-            self._main_window.pyssa_objects_panel.tree_view.selectionModel().clearSelection()
-            self.select_item(
-                self._main_window.pyssa_objects_panel.tree_view,
-                selection_strings,
-            )
         except Exception as e:
             print(e.__str__())
 
@@ -2218,6 +2509,8 @@ class MainWindowController:
         # to prevent an infinite feedback loop.
         if not self._is_syncing_selection:
             if snapshot.pymol_selection_string:
+                self._cached_pymol_selection_string = snapshot.pymol_selection_string
+                self._cached_selection_active_object = self._user_pymol.get_currently_loaded_object()
                 try:
                     self._user_pymol.get_cmd_module().select(
                         "sele",
@@ -2301,6 +2594,21 @@ class MainWindowController:
         finally:
             self._is_syncing_selection = False
 
+    def __slot_run_pml_script(self):
+        formats = [
+            'PyMOL Command Script (*.pml)',
+            'Python Script (*.py)',
+        ]
+        file_name = QtWidgets.QFileDialog.getOpenFileName(
+            self._main_window,
+            "Open PyMOL script file",
+            self._last_pymol_script_dir,
+            ";;".join(formats),
+        )
+        if file_name != ("", ""):
+            self._last_pymol_script_dir = os.path.dirname(str(file_name[0]))
+            self._user_pymol.get_cmd_module().run(str(file_name[0]))
+
     # </editor-fold>
 
     # <editor-fold desc="Handle job results">
@@ -2347,14 +2655,18 @@ class MainWindowController:
             result: dict[str, Union[list["protein.Protein"], bool]]
     ):
         if descriptor.is_hot:
+            current_project_id = self._app_state.project.get_id()
             for tmp_protein in result["predicted_proteins"]:
+                tmp_protein.db_project_id = current_project_id
                 self._app_state.project.add_existing_protein(tmp_protein)
                 self._app_state.pyssa_objects_model.add_protein(tmp_protein)
                 self._app_state.hot_db.write_queue.submit(
                     WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
                 )
         else:
+            project_id = descriptor.cold_handle._db.get_project_id(descriptor.project_name)
             for tmp_protein in result["predicted_proteins"]:
+                tmp_protein.db_project_id = project_id
                 descriptor.cold_handle.submit(
                     WriteOperation(OperationType.INSERT_PROTEIN, tmp_protein)
                 )
@@ -2393,7 +2705,10 @@ class MainWindowController:
             descriptor: "job_descriptor.JobDescriptor",
             result: dict
     ):
-        print("Hi")
+        # Until now, there is no implementation needed after the ray-tracing job.
+        # However, it might be helpful to have such a method scaffold for
+        # later use.
+        pass
     # </editor-fold>
     # </editor-fold>
 
@@ -2433,15 +2748,34 @@ class MainWindowController:
         except Exception as e:
             logger.error(f"Failed to capture or trigger PyMOL session save: {e}")
 
-    def shutdown_application_processes(self) -> None:
+    def _close_all(self):
+        self._main_window.blockSignals(True)
+        tmp_message = "Are you sure you want to close PySSA?"
+        tmp_jobs_are_running = self._app_state.job_scheduler.has_running_jobs()
+        if tmp_jobs_are_running:
+            tmp_message = "There are still jobs running.\nAre you sure you want to close PySSA?\n\n The progress of the running job(s) are lost!"
+        tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+            tmp_message,
+            "Close PySSA",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value,
+        )
+        tmp_dialog.exec()
+        if tmp_dialog.response:
+            if tmp_jobs_are_running:
+                subprocess.run(["wsl", "--terminate", "almaColabfold9"], creationflags=subprocess.CREATE_NO_WINDOW)
+                filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
+                constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
+            self._main_window.close()
+
+    def __slot_exit_application(self) -> None:
         """Closes all threads and process as well as the application itself."""
-        # if not pyssa_constants.FRONTEND_ONLY:
-        #   # TODO: Add correct pyssa_core logic here
-        #   raise NotImplementedError()
-        # self.aux_pymol_client.shutdown_service()
-        # self._pymol_worker_connection.send(worker_command.WorkerCommand("", "shutdown", ()))
-        # self._pymol_worker_process.join()
-        self._main_window.close()
+        self._close_all()
+
+    def __slot_close_application(self, return_value: tuple[str, QtGui.QCloseEvent]):
+        _, tmp_event = return_value
+        self._close_all()
+        tmp_event.accept()
+
 
     def _get_viewer_tool_bar_action_pos(self, an_action) -> QtCore.QPoint:
         """Return a global point beneath the toolbar button for the given action.

@@ -86,6 +86,13 @@
            </layout>
           </item>
           <item>
+           <widget class="QCheckBox" name="cb_pyssa_expert_mode">
+            <property name="text">
+             <string>Enable PySSA expert mode (resets every program launch)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="verticalSpacer">
             <property name="orientation">
              <enum>Qt::Vertical</enum>

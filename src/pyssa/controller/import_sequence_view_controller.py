@@ -292,14 +292,16 @@ class ImportSequenceViewController(QtCore.QObject):
 
     def import_task(progress_callback, is_cancelled):
       logger.debug("Importing sequences.")
-      return copy.deepcopy(self._parsed_seq_records)
+      tmp_seq_records = []
+      for tmp_seq_record in self._parsed_seq_records:
+        tmp_seq_records.append(copy.deepcopy(tmp_seq_record))
+      return tmp_seq_records
         # for tmp_seq_record in self._parsed_seq_records:
         #     logger.info(
         #       f"Adding new sequence {tmp_seq_record.name} with {tmp_seq_record.seq} to the current project."
         #     )
 
-
-    def on_success(result: list[SeqRecord]):
+    def on_success(result: list):
         for tmp_seq_record in result:
             self._app_state.project.sequences.append(tmp_seq_record)
             self._app_state.pyssa_objects_model.add_sequence(tmp_seq_record)
@@ -320,7 +322,13 @@ class ImportSequenceViewController(QtCore.QObject):
           "Failed to import sequence(s)", True
         )
 
-    thread_runtime.get_singleton_thread_runtime().run(import_task).on_success(on_success).on_error(on_error)
+    (
+      thread_runtime.get_singleton_thread_runtime()
+      .run(import_task)
+      .on_success(on_success)
+      .on_error(on_error)
+      .start()
+    )
     self._app_state.status_bar_manager.show_permanent_message(
       "Importing sequence(s) ...", True
     )

@@ -63,6 +63,7 @@ class PySSAObjectsPanel(base_side_panel.BaseSidePanel):
         self.tree_view: QtWidgets.QTreeView = QtWidgets.QTreeView()
         # </editor-fold>
         self._setup_panel_extra_ui()
+        self.setMinimumWidth(250)
     # </editor-fold>
 
     def get_toolbar(self) -> "quick_access_bar.QuickAccessBar":
@@ -167,7 +168,7 @@ class PySSAObjectsPanel(base_side_panel.BaseSidePanel):
         # self._setup_expand_collapse_header()
         self._setup_tree_view()
         # self._set_icons()
-        self._setup_extra_styles()
+        # self._setup_extra_styles()
         self._setup_container_widget()
         # This panel should always be shown to make it easier for the end-user
         self.btn_close.hide()

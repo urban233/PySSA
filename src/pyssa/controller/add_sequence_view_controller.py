@@ -21,6 +21,9 @@
 #
 """Module for the add sequence view controller."""
 import logging
+from copy import deepcopy
+
+from Bio import Seq
 
 from src.pyssa.gui.qt import QtCore
 from src.pyssa.gui.qt import Qt
@@ -28,7 +31,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
   from src.pyssa.gui import app_state
 
-from src.pyssa.util import input_validator, constants, exception
+from src.pyssa.util import input_validator, exception
 from src.pyssa.logging_pyssa import log_levels, log_handlers
 
 logger = logging.getLogger(__file__)
@@ -69,6 +72,8 @@ class AddSequenceViewController(QtCore.QObject):
         "color: #ba1a1a; font-size: 11px;"
     )
     self._sequence_names = self._convert_sequence_model_into_set()
+    self._entered_seq_name = ""
+    self._entered_seq = ""
     self._connect_all_ui_elements_to_slot_functions()
     self.restore_default_view()
 
@@ -220,22 +225,35 @@ class AddSequenceViewController(QtCore.QObject):
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked."
     )
-    tmp_seq_name = self._view.ui.le_seq_name.text()
-    tmp_sequence = self._view.ui.le_protein_seq.toPlainText()
+    self._entered_seq_name = self._view.ui.le_seq_name.text()
+    self._entered_seq = self._view.ui.le_protein_seq.toPlainText()
 
     from src.pyssa.internal.thread.thread_api import thread_runtime
     from Bio import SeqRecord
 
     def add_sequence(progress_callback, is_cancelled):
-      tmp_seq_record = SeqRecord.SeqRecord(tmp_sequence, id=tmp_seq_name, name=tmp_seq_name)
+      print("Adding sequence")
+      tmp_seq_name = deepcopy(self._entered_seq_name)
+      print("Deep copied seq name")
+      tmp_seq = Seq.Seq(deepcopy(self._entered_seq))
+      print("Deep copied seq")
+      tmp_seq_record = SeqRecord.SeqRecord(
+        tmp_seq, id=tmp_seq_name, name=tmp_seq_name
+      )
+      print("Created seq record")
+      # tmp_seq_record = SeqRecord.SeqRecord(
+      #   Seq.Seq(self._entered_seq), id=self._entered_seq_name, name=self._entered_seq_name
+      # )
       return tmp_seq_record
 
-    def on_success(result: SeqRecord.SeqRecord):
-      self._app_state.project.sequences.append(result)
-      self._app_state.pyssa_objects_model.add_sequence(result)
+    def on_success(result):
+      print("Running on success")
+      tmp_seq_record = result
+      self._app_state.project.sequences.append(tmp_seq_record)
+      self._app_state.pyssa_objects_model.add_sequence(tmp_seq_record)
       self._app_state.hot_db.insert_sequence(
-        str(result.id),
-        str(result.seq),
+        str(tmp_seq_record.id),
+        str(tmp_seq_record.seq),
         result.name,
         self._app_state.project.get_id()
       )
@@ -256,6 +274,7 @@ class AddSequenceViewController(QtCore.QObject):
       .run(add_sequence)
       .on_success(on_success)
       .on_error(on_error)
+      .start()
     )
     self._view.close()
     self._app_state.status_bar_manager.show_permanent_message(

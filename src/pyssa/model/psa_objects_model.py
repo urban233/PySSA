@@ -210,6 +210,35 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
       lambda: self._proteins_model.add_protein_from_protein_object(a_protein),
     )
 
+  def update_protein(
+          self,
+          a_protein: "protein.Protein"
+  ) -> None:
+    """Update a standalone protein under the "Proteins" section in-place.
+
+    Args:
+        a_protein: The protein to update.
+
+    Raises:
+        exception.IllegalArgumentError: If any argument is ``None``.
+    """
+    if a_protein is None:
+      logger.error("a_protein is None.")
+      raise exception.IllegalArgumentError("a_protein is None.")
+
+    target_id = a_protein.get_id()
+    for row in range(self._proteins_section.rowCount()):
+      item = self._proteins_section.child(row)
+      stored = item.data(enums.ModelEnum.OBJECT_ROLE)
+      if stored is not None and stored.get_id() == target_id:
+        self._with_root(
+          self._proteins_model,
+          self._proteins_section,
+          lambda: self._proteins_model.update_protein_node(item, a_protein),
+        )
+        return
+    logger.warning("Protein to update not found in the model.")
+
   def add_protein_pair(
           self,
           a_protein_pair: "protein_pair.ProteinPair",
@@ -284,6 +313,31 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
 
     return new_pair
 
+  def add_temporary_protein(
+          self,
+          a_protein: "protein.Protein"
+  ) -> None:
+    """Add a standalone protein minimally (without PyMOL query).
+    
+    Delegates to the Proteins sub-model to append a simple layout
+    of just the protein and its chains for temporary UIs.
+
+    Args:
+        a_protein: The protein to add.
+
+    Raises:
+        exception.IllegalArgumentError: If any argument is ``None``.
+    """
+    if a_protein is None:
+      logger.error("a_protein is None.")
+      raise exception.IllegalArgumentError("a_protein is None.")
+
+    self._with_root(
+      self._proteins_model,
+      self._proteins_section,
+      lambda: self._proteins_model.add_temporary_protein(a_protein),
+    )
+
   # ------------------------------------------------------------------
   # Public API — removing items
   # ------------------------------------------------------------------
@@ -309,8 +363,7 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
         self._sequences_section.removeRow(row)
         return
 
-    logger.error(f"Sequence not found in model.")
-    raise ValueError("Sequence not found in model.")
+    logger.warning(f"Sequence not found in model during removal.")
 
   def remove_protein(self, a_protein: "protein.Protein") -> None:
     """Remove a protein from the "Proteins" section.
@@ -327,15 +380,15 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
       raise exception.IllegalArgumentError("a_protein is None.")
 
     target_name = a_protein.get_molecule_object()
+    target_id = a_protein.get_id()
     for row in range(self._proteins_section.rowCount()):
       item = self._proteins_section.child(row)
       stored = item.data(enums.ModelEnum.OBJECT_ROLE)
-      if stored is not None and stored.get_molecule_object() == target_name:
+      if stored is not None and stored.get_id() == target_id:
         self._proteins_section.removeRow(row)
         return
 
-    logger.error("Protein '%s' not found in model.", target_name)
-    raise ValueError("Protein not found in model.")
+    logger.warning("Protein '%s' not found in model during removal.", target_name)
 
   def remove_protein_pair(self, a_protein_pair: "protein_pair.ProteinPair") -> None:
     """Remove a protein pair from the "Protein Pairs" section.
@@ -352,15 +405,15 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
       raise exception.IllegalArgumentError("a_protein_pair is None.")
 
     target_name = a_protein_pair.name
+    target_id = a_protein_pair.get_id()
     for row in range(self._protein_pairs_section.rowCount()):
       item = self._protein_pairs_section.child(row)
       stored = item.data(enums.ModelEnum.OBJECT_ROLE)
-      if stored is not None and stored.name == target_name:
+      if stored is not None and stored.get_id() == target_id:
         self._protein_pairs_section.removeRow(row)
         return
 
-    logger.error("Protein pair '%s' not found in model.", target_name)
-    raise ValueError("Protein pair not found in model.")
+    logger.warning("Protein pair '%s' not found in model during removal.", target_name)
 
   # ------------------------------------------------------------------
   # Public API — scene management (delegates to protein/pair sub-models)
@@ -476,6 +529,56 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
 
     sub_model = self._scene_capable_sub_model_for_index(target_index)
     return sub_model.check_if_scratch_scene_exists(target_index)
+
+  def get_scene_names(self, target: "protein.Protein | protein_pair.ProteinPair") -> list[str]:
+    """Return a list of all scene names for a specific protein or protein pair.
+
+    Args:
+        target: The protein or protein pair to query.
+
+    Returns:
+        A list of scene names.
+
+    Raises:
+        exception.IllegalArgumentError: If ``target`` is ``None``.
+        ValueError: If the target object is not found in the model.
+    """
+    if target is None:
+      logger.error("target is None.")
+      raise exception.IllegalArgumentError("target is None.")
+
+    target_index = self._find_object_index(target)
+    if target_index is None or not target_index.isValid():
+      logger.error("Target object not found in model.")
+      raise ValueError("Target object not found in model.")
+
+    target_item = self.itemFromIndex(target_index)
+    scenes_header = self._find_scenes_header_item(target_item)
+    if scenes_header is None:
+      return []
+
+    return [scenes_header.child(row).text() for row in range(scenes_header.rowCount())]
+
+  def get_all_scene_names(self) -> list[str]:
+    """Return a combined list of all scene names across all proteins and protein pairs.
+
+    Returns:
+        A list of all scene names in the entire model.
+    """
+    scene_names: list[str] = []
+
+    def _gather_scenes_from_section(section: QtGui.QStandardItem) -> None:
+      for row in range(section.rowCount()):
+        item = section.child(row)
+        scenes_header = self._find_scenes_header_item(item)
+        if scenes_header is not None:
+          for scene_row in range(scenes_header.rowCount()):
+            scene_names.append(scenes_header.child(scene_row).text())
+
+    _gather_scenes_from_section(self._proteins_section)
+    _gather_scenes_from_section(self._protein_pairs_section)
+
+    return scene_names
 
   # ------------------------------------------------------------------
   # Public API — protein lookup

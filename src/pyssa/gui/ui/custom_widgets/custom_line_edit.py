@@ -48,6 +48,33 @@ class CustomLineEdit(QtWidgets.QLineEdit):
     super(CustomLineEdit, self).keyPressEvent(event)
 
 
+class CustomLineEditWithMaxLength(QtWidgets.QLineEdit):
+  """A custom line edit widget that allows only a subset of chars."""
+
+  def __init__(self, max_length: int = 20):
+    super().__init__()
+    self.setMaxLength(max_length)
+
+  def keyPressEvent(self, event) -> None:
+    """Overrides keyPressEvent of QLineEdit class."""
+    # Get the key code
+    key_text = event.text()
+
+    # Check if the key is allowed, Backspace is allowed, or if it's an empty string (allowing empty input)
+    allowed_chars = set(
+      "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-"
+    )
+    if (
+            key_text not in allowed_chars
+            and key_text != ""
+            and event.key() != QtCore.Qt.Key_Backspace
+    ):
+      # Ignore the key event
+      return
+
+    # Call the base class implementation to handle other keys
+    super(CustomLineEditWithMaxLength, self).keyPressEvent(event)
+
 # class CustomLineEditForEnteringNumbers(QtWidgets.QLineEdit):
 #     def keyPressEvent(self, event):
 #         print("Hello")

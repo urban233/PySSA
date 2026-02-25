@@ -80,6 +80,8 @@ class Settings:
     self.proteins_tab_use_combobox_for_colors: int = 0  # or "1"
     self.protein_pairs_tab_use_toggle: int = 1  # or "0"
     self.protein_pairs_tab_use_combobox_for_colors: int = 0  # or "1"
+    # Volatile settings (reset every program launch)
+    self.pyssa_expert_mode = False
 
   def serialize_settings(self) -> None:
     """Serializes the protein object."""

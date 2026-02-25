@@ -58,7 +58,8 @@ class SettingsView(QtWidgets.QDialog):
     self.ui.spb_cycles.setMinimumWidth(80)
     self.ui.dspb_cutoff.setMinimumWidth(80)
     styles.color_bottom_frame_button(self.ui.btn_ok)
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     self.setWindowTitle("Settings")
     self.setWindowFlags(

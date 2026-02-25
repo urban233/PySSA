@@ -54,7 +54,8 @@ class FastaFileImportPreviewView(QtWidgets.QDialog):
     self.ui.btn_cancel.clicked.connect(self.close)
     self.setWindowTitle("FASTA File Import Preview")
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.resize(900, 600)
     # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
     self.setWindowFlags(
