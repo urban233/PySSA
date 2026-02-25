@@ -471,6 +471,47 @@ chain_dict_reverse = {
     'Z': 25,
 }
 
+PYMOL_STYLE_LEGACY = {
+    "valence": 0,
+    "scene_buttons": 0,
+    "antialias": 2,
+    # Lighting
+    "ambient": 0.5,
+    "reflect": 0.45,
+    "direct": 0.45,
+    "spec_direct": 0,
+    "spec_direct_power": 55,
+    "light_count": 2,
+    "edit_light": 1,
+    "spec_count": -1,
+    "shininess": 55,
+    "spec_power": 350,
+    "spec_reflect": 0.2,
+    "specular": 1,
+    "specular_intensity": 0.5,
+    # Cartoon settings
+    "cartoon_fancy_helices": 1,
+    "cartoon_discrete_colors": 1,
+    "cartoon_sampling": 14,
+    "cartoon_rect_width": 0.4,
+    "cartoon_rect_length": 1.5,
+    "cartoon_highlight_color": -1,
+    # Ribbon settings
+    "ribbon_sampling": 1,
+    # Raises a key error
+    # "ribbon_smooth": 0,
+    "ribbon_as_cylinders": 0,
+    "ribbon_width": 3.0,
+    # Sticks settings
+    "stick_radius": 0.25,
+    # Ray trace settings
+    "ray_trace_mode": 1,
+    "ray_transparency_contrast": 0.4,
+    "ray_transparency_oblique": 1.0,
+    "ray_transparency_oblique_power": 4.0,
+    "ray_trace_color": "black",
+}
+
 PYMOL_STYLE_DEFAULT = {
     "valence": 0,
     "scene_buttons": 0,

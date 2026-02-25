@@ -530,6 +530,56 @@ class PSAObjectsModel(base_tree_model.BaseTreeModel):
     sub_model = self._scene_capable_sub_model_for_index(target_index)
     return sub_model.check_if_scratch_scene_exists(target_index)
 
+  def get_scene_names(self, target: "protein.Protein | protein_pair.ProteinPair") -> list[str]:
+    """Return a list of all scene names for a specific protein or protein pair.
+
+    Args:
+        target: The protein or protein pair to query.
+
+    Returns:
+        A list of scene names.
+
+    Raises:
+        exception.IllegalArgumentError: If ``target`` is ``None``.
+        ValueError: If the target object is not found in the model.
+    """
+    if target is None:
+      logger.error("target is None.")
+      raise exception.IllegalArgumentError("target is None.")
+
+    target_index = self._find_object_index(target)
+    if target_index is None or not target_index.isValid():
+      logger.error("Target object not found in model.")
+      raise ValueError("Target object not found in model.")
+
+    target_item = self.itemFromIndex(target_index)
+    scenes_header = self._find_scenes_header_item(target_item)
+    if scenes_header is None:
+      return []
+
+    return [scenes_header.child(row).text() for row in range(scenes_header.rowCount())]
+
+  def get_all_scene_names(self) -> list[str]:
+    """Return a combined list of all scene names across all proteins and protein pairs.
+
+    Returns:
+        A list of all scene names in the entire model.
+    """
+    scene_names: list[str] = []
+
+    def _gather_scenes_from_section(section: QtGui.QStandardItem) -> None:
+      for row in range(section.rowCount()):
+        item = section.child(row)
+        scenes_header = self._find_scenes_header_item(item)
+        if scenes_header is not None:
+          for scene_row in range(scenes_header.rowCount()):
+            scene_names.append(scenes_header.child(scene_row).text())
+
+    _gather_scenes_from_section(self._proteins_section)
+    _gather_scenes_from_section(self._protein_pairs_section)
+
+    return scene_names
+
   # ------------------------------------------------------------------
   # Public API — protein lookup
   # ------------------------------------------------------------------

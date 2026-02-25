@@ -250,6 +250,9 @@ class MainWindowController:
         self._main_window.action_pymol_maestro_style.triggered.connect(
             self.__slot_pymol_maestro_style
         )
+        self._main_window.action_pymol_legacy_style.triggered.connect(
+            self.__slot_pymol_legacy_style
+        )
         self._main_window.action_pymol_reasonable_performance.triggered.connect(
             self.__slot_pymol_reasonable_performance_style
         )
@@ -1456,6 +1459,13 @@ class MainWindowController:
             )
         self._trigger_auto_save()
 
+    def __slot_pymol_legacy_style(self):
+        for tmp_style_keys in constants.PYMOL_STYLE_LEGACY.keys():
+            self._user_pymol.get_cmd_module().do(
+                f"set {tmp_style_keys}, {constants.PYMOL_STYLE_LEGACY[tmp_style_keys]}"
+            )
+        self._trigger_auto_save()
+
     def __slot_pymol_reasonable_performance_style(self):
         for tmp_style_keys in constants.PYMOL_QUALITY_REASONABLE_PERFORMANCE.keys():
             self._user_pymol.get_cmd_module().do(
@@ -1833,14 +1843,15 @@ class MainWindowController:
         The scene includes the current view and all visible objects.
         Selection context is available via _get_current_snapshot() if needed.
         """
-        if not self._dialog_controllers.__contains__("add_scene_dialog"):
-            self._dialog_controllers["add_scene_dialog"] = add_scene_view_controller.AddSceneViewController(
-                self._app_state
-            )
+        self._dialog_controllers["add_scene_dialog"] = add_scene_view_controller.AddSceneViewController(
+            self._app_state, self._user_pymol.get_currently_loaded_object()
+        )
         self._dialog_controllers["add_scene_dialog"].restore_default_view()
         self._dialog_controllers["add_scene_dialog"].get_view().exec()
 
         tmp_scene_name = self._dialog_controllers["add_scene_dialog"].get_scene_name()
+        if tmp_scene_name == "":
+            return
         self._user_pymol.get_cmd_module().scene(key=tmp_scene_name, action="append")
 
         self._app_state.pyssa_objects_model.add_scene(

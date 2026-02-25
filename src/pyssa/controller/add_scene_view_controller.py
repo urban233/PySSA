@@ -41,7 +41,7 @@ class AddSceneViewController(QtCore.QObject):
   """Class for the AddSceneViewController."""
 
   def __init__(
-      self, the_app_state: "app_state.AppState", a_parent=None
+      self, the_app_state: "app_state.AppState", currently_loaded_object, a_parent=None
   ) -> None:
     """Constructor.
 
@@ -62,8 +62,9 @@ class AddSceneViewController(QtCore.QObject):
     super().__init__()
     self._app_state = the_app_state
     self._view = add_scene_view.AddSceneView(a_parent)
-    # TODO: This needs more work
-    self._all_current_scenes = []
+    self._all_current_scenes = self._app_state.pyssa_objects_model.get_scene_names(
+      currently_loaded_object
+    )
     self._entered_scene_name = ""
     self._connect_all_ui_elements_to_slot_functions()
 
