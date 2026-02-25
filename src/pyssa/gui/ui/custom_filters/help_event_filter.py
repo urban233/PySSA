@@ -1,4 +1,5 @@
 from src.pyssa.gui.qt import QtCore, QtGui
+from src.pyssa.gui.ui.views import help_panel
 import logging
 
 logger = logging.getLogger(__name__)
@@ -62,7 +63,7 @@ class HelpEventFilter(QtCore.QObject):
     super().__init__()
     self.help_browser = help_browser
     self.help_map = help_map
-    self.help_panel = help_panel
+    self.help_panel: "help_panel.HelpPanel" = help_panel
 
   def eventFilter(self, obj, event):
     if event.type() == QtCore.QEvent.Type.Enter:
@@ -85,6 +86,7 @@ class HelpEventFilter(QtCore.QObject):
     help_text = self.help_map.get(object_name, "")
     if help_text:
       self.help_browser.setHtml(help_text)
+      self.help_panel.set_help_panel_header()
 
   def handle_menu_about_to_hide(self):
     """Handle when  menu is about to close."""

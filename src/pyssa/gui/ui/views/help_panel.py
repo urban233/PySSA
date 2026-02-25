@@ -89,6 +89,10 @@ class HelpPanel(base_side_panel.BaseSidePanel):
 
             category_item.setExpanded(True)
 
+    def set_help_panel_header(self, header_text: str) -> None:
+        """Sets the header text for the help panel."""
+        self.lbl_header.setText(f"Help \u2014 {header_text}")
+
     def filter_help_topics(self, search_text: str) -> None:
         """Filters the tree view based on the search text.
 

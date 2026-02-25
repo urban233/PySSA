@@ -358,12 +358,15 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
     self.selection_show_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY), "Show"
     )
+    self.selection_show_action.setObjectName("popup_show_selection")
     self.selection_hide_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.VISIBILITY_OFF), "Hide"
     )
+    self.selection_hide_action.setObjectName("popup_hide_selection")
     self.selection_clear_action = QtGui.QAction(
       IconManager.instance().get_icon(IconManager.Icons.DELETE), "Clear"
     )
+    self.selection_clear_action.setObjectName("popup_clear_selection")
     self.selection_show_hide_menu.addAction(self.selection_show_action)
     self.selection_show_hide_menu.addAction(self.selection_hide_action)
     self.selection_show_hide_menu.addAction(self.selection_clear_action)
