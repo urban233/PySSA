@@ -43,7 +43,7 @@ class UseProjectViewController(QtCore.QObject):
   """Class for the UseProjectViewController."""
 
   def __init__(
-      self, the_app_state: "app_state.AppState"
+      self, the_app_state: "app_state.AppState", a_parent=None
   ) -> None:
     """Constructor.
 
@@ -62,7 +62,7 @@ class UseProjectViewController(QtCore.QObject):
 
     super().__init__()
     self._app_state = the_app_state
-    self._view = use_project_view.UseProjectView()
+    self._view = use_project_view.UseProjectView(a_parent)
     self._initialize_ui()
     self._fill_projects_list_view()
     self._fill_projects_combobox()

@@ -40,7 +40,7 @@ __docformat__ = "google"
 class OpenProjectViewController(QtCore.QObject):
   """Controller for the Open Project dialog."""
 
-  def __init__(self, the_app_state: "app_state.AppState") -> None:
+  def __init__(self, the_app_state: "app_state.AppState", a_parent=None) -> None:
     """Constructor.
 
     Args:
@@ -48,7 +48,7 @@ class OpenProjectViewController(QtCore.QObject):
     """
     super().__init__()
     self._app_state = the_app_state
-    self._view = open_project_view.OpenProjectView()
+    self._view = open_project_view.OpenProjectView(a_parent)
     self._fill_projects_list_view()
     self._project_names = self._convert_model_into_set()
     self._connect_all_ui_elements_to_slot_functions()

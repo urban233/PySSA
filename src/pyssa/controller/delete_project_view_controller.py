@@ -41,7 +41,7 @@ class DeleteProjectViewController(QtCore.QObject):
   """Class for the DeleteProjectViewController."""
 
   def __init__(
-      self, the_app_state: "app_state.AppState"
+      self, the_app_state: "app_state.AppState", a_parent=None
   ) -> None:
     """Constructor.
 
@@ -59,7 +59,7 @@ class DeleteProjectViewController(QtCore.QObject):
     # </editor-fold>
     super().__init__()
     self._app_state = the_app_state
-    self._view = delete_project_view.DeleteProjectView()
+    self._view = delete_project_view.DeleteProjectView(a_parent)
     self._fill_projects_list_view()
     self._connect_all_ui_elements_to_slot_functions()
     self.restore_default_view()

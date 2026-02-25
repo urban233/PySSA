@@ -1188,7 +1188,7 @@ class MainWindowController:
     def __slot_create_project(self):
         if not self._dialog_controllers.__contains__("create_project"):
             self._dialog_controllers["create_project"] = create_project_view_controller.CreateProjectViewController(
-                self._app_state
+                self._app_state, self._main_window
             )
             # Install hover help event filter on the dialog
             dialog_view = self._dialog_controllers["create_project"].get_view()
@@ -1200,7 +1200,7 @@ class MainWindowController:
     def __slot_open_project(self):
         if not self._dialog_controllers.__contains__("open_project"):
             self._dialog_controllers["open_project"] = open_project_view_controller.OpenProjectViewController(
-                self._app_state
+                self._app_state, self._main_window
             )
             # Install hover help event filter on the dialog
             dialog_view = self._dialog_controllers["open_project"].get_view()
@@ -1213,7 +1213,7 @@ class MainWindowController:
         if not self._dialog_controllers.__contains__("delete_project"):
             from src.pyssa.controller import delete_project_view_controller
             self._dialog_controllers["delete_project"] = delete_project_view_controller.DeleteProjectViewController(
-                self._app_state
+                self._app_state, self._main_window
             )
             # Install hover help event filter on the dialog
             dialog_view = self._dialog_controllers["delete_project"].get_view()
@@ -1226,7 +1226,7 @@ class MainWindowController:
         if not self._dialog_controllers.__contains__("use_project"):
             from src.pyssa.controller import use_project_view_controller
             self._dialog_controllers["use_project"] = use_project_view_controller.UseProjectViewController(
-                self._app_state
+                self._app_state, self._main_window
             )
             # Install hover help event filter on the dialog
             dialog_view = self._dialog_controllers["use_project"].get_view()
@@ -1490,7 +1490,7 @@ class MainWindowController:
     def __slot_distance_analysis(self):
         if not self._dialog_controllers.__contains__("distance_analysis_dialog"):
             self._dialog_controllers["distance_analysis_dialog"] = distance_analysis_view_controller.DistanceAnalysisViewController(
-                self._app_state
+                self._app_state, self._main_window
             )
             # Install hover help event filter on the dialog
             dialog_view = self._dialog_controllers["distance_analysis_dialog"].get_view()
@@ -1591,7 +1591,7 @@ class MainWindowController:
     def __slot_open_settings_dialog(self):
         if not self._dialog_controllers.__contains__("settings_dialog"):
             self._dialog_controllers["settings_dialog"] = settings_view_controller.SettingsViewController(
-                self._app_state
+                self._app_state, self._main_window
             )
             # Install hover help event filter on the dialog
             dialog_view = self._dialog_controllers["settings_dialog"].get_view()

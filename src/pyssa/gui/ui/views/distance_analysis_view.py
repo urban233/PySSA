@@ -68,3 +68,4 @@ class DistanceAnalysisView(QtWidgets.QDialog):
     # Set objectName for hover help
     self.setObjectName("DistanceAnalysisDialog")
     self.setToolTip("")
+    self.resize(400, 500)
