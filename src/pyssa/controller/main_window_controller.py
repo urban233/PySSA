@@ -2889,6 +2889,8 @@ class MainWindowController:
                 filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
                 constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
             self._main_window.close()
+            return True
+        return False
 
     def __slot_exit_application(self) -> None:
         """Closes all threads and process as well as the application itself."""
@@ -2896,8 +2898,11 @@ class MainWindowController:
 
     def __slot_close_application(self, return_value: tuple[str, QtGui.QCloseEvent]):
         _, tmp_event = return_value
-        self._close_all()
-        tmp_event.accept()
+        if self._app_state.job_scheduler.has_running_jobs():
+            subprocess.run(["wsl", "--terminate", "almaColabfold9"], creationflags=subprocess.CREATE_NO_WINDOW)
+            filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
+            constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
+        self._main_window.close()
 
     def _get_viewer_tool_bar_action_pos(self, an_action) -> QtCore.QPoint:
         """Return a global point beneath the toolbar button for the given action.

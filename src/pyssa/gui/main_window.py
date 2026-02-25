@@ -720,7 +720,7 @@ class MainWindow(QtWidgets.QMainWindow, PyMOLDesktopGUI):
   def closeEvent(self, event):
     # Emit the custom signal when the window is closed
     self.dialogClosed.emit(("", event))
-    self.cmd.quit()
+    # self.cmd.quit()
 
   def pymolviewport(self, w, h):
     cw, ch = self.cmd.get_viewport()
