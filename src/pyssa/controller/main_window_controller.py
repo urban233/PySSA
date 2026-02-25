@@ -1924,7 +1924,7 @@ class MainWindowController:
         layout = self._main_window.tool_window_layout
         layout.set_right_panel_hidden(not layout.is_right_panel_hidden)
 
-    # <editor-fold desc="Session ribbon slots">
+    # <editor-fold desc="PyMOL viewer toolbar slots">
     # <editor-fold desc="Session slots">
     def __slot_open_session(self) -> None:
         """Opens a PyMOL session based on the current selection.
@@ -2066,6 +2066,16 @@ class MainWindowController:
 
     def __slot_delete_scene(self):
         """Deletes the currently selected PyMOL scene and removes it from the list."""
+        confirm_box = custom_message_box.CustomMessageBoxDelete(
+            "Are you sure you want to permanently delete the selected scene(s)?\n"
+            "This action cannot be undone.",
+            "Confirm Deletion",
+            custom_message_box.CustomMessageBoxIcons.DANGEROUS.value,
+        )
+        confirm_box.exec()
+        if not confirm_box.response:
+            logger.info("Deletion cancelled by user.")
+            return
         snapshot = self._get_current_snapshot()
         if snapshot:
             for tmp_raw_scene in snapshot.raw_scenes:
@@ -2775,7 +2785,6 @@ class MainWindowController:
         _, tmp_event = return_value
         self._close_all()
         tmp_event.accept()
-
 
     def _get_viewer_tool_bar_action_pos(self, an_action) -> QtCore.QPoint:
         """Return a global point beneath the toolbar button for the given action.
