@@ -27,7 +27,8 @@ class JobPanel(QtWidgets.QWidget):
     self._lbl_jobs = QtWidgets.QLabel("Active Jobs")
     self._table_view = self._create_table_view()
     self.btn_clear_history = QtWidgets.QPushButton("Clear History")
-    self.btn_open_result = QtWidgets.QPushButton("Open Result")
+    # At this moment there is only the special case of opening an image as a result
+    self.btn_open_result = QtWidgets.QPushButton("Open Image")
     self._build_ui()
     self.setMinimumSize(450, 250)
 

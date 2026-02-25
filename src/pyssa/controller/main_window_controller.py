@@ -939,7 +939,7 @@ class MainWindowController:
 
     def _trigger_auto_save(self) -> None:
         """Trigger the auto-save timer after a PyMOL-altering interaction."""
-        self._auto_save_timer.start(5000)
+        self._auto_save_timer.start(2000)
 
     def open_welcome_screen(self):
         if not self._dialog_controllers.__contains__("welcome_screen"):
