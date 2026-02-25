@@ -67,6 +67,7 @@ class AddSequenceView(QtWidgets.QDialog):
     self.setWindowModality(Qt.WindowModal)
 
   def _initalize_ui(self):
+    self.ui.le_seq_name.setMaxLength(40)
     self.ui.btn_next.setEnabled(False)
     self.ui.lbl_status.setText("")
     self.ui.lbl_protein_seq.hide()
