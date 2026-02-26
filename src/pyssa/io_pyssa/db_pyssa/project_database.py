@@ -213,6 +213,19 @@ class ProjectDatabase:
     # ------------------------------------------------------------------
 
     def get_project_id(self, name: str) -> int | None:
+        """Retrieves the unique identifier of a project based on its name.
+
+        Args:
+            name: The name of the project whose ID is being retrieved. Must be a non-empty string.
+
+        Returns:
+            The unique identifier of the project if it exists, or None if no project with
+            the provided name is found.
+
+        Raises:
+        ValueError
+            If the provided project name is an empty string.
+        """
         if not name:
             raise ValueError("Project name cannot be empty")
         with self._conn() as db:

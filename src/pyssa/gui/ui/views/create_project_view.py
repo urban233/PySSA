@@ -74,7 +74,7 @@ class CreateProjectView(QtWidgets.QDialog):
     # Clear any tooltips - help should only appear in Help Panel
     self.setToolTip("")
     # Ensure objectName is set for hover help
-    self.setObjectName("Dialog")
+    self.setObjectName("CreateNewProjectDialog")
 
   def closeEvent(self, event) -> None:
     """Closes the dialog (with the closeEvent) and emits the 'dialogClosed' signal."""
