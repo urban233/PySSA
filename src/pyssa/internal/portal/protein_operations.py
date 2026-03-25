@@ -22,10 +22,9 @@
 """Module for protein operations in pymol."""
 import logging
 
-import zmq
-
-from src.auxiliary_pymol import auxiliary_pymol_client
-from src.pyssa.internal.data_structures import chain, job
+from src.pyssa.internal.pymol.pml_worker import PmlWorker
+from src.pyssa.internal.pymol.pml_enums import PmlCommand
+from src.pyssa.internal.data_structures import chain
 from src.pyssa.util import enums, exception
 from src.pyssa.util import protein_util
 from src.pyssa.logging_pyssa import log_handlers
@@ -37,14 +36,12 @@ __docformat__ = "google"
 
 
 def get_protein_chains(
-    a_pdb_filepath: str, the_main_socket: zmq.Socket, a_socket: zmq.Socket
+    a_pdb_filepath: str
 ) -> list["chain.Chain"]:
   """Divides the chains from a protein, into protein and non-protein chains.
 
   Args:
       a_pdb_filepath: A string representing the path to the PDB file.
-      the_main_socket: A ZMQ socket object used for communication with the main server.
-      a_socket: A ZMQ socket object used for communication with the auxiliary PyMOL server.
 
   Returns:
       A list of Chain objects representing the protein chains obtained from the PDB file.
@@ -58,27 +55,14 @@ def get_protein_chains(
     raise exception.IllegalArgumentError(
         "a_pdb_filepath is either None or an empty string."
     )
-  if the_main_socket is None:
-    logger.error("the_main_socket is None.")
-    raise exception.IllegalArgumentError("the_main_socket is None.")
-  if a_socket is None:
-    logger.error("a_socket is None.")
-    raise exception.IllegalArgumentError("a_socket is None.")
 
   # </editor-fold>
 
-  tmp_job_description = job.GeneralPurposeJobDescription(
-      enums.JobShortDescription.GET_ALL_CHAINS_OF_GIVEN_PROTEIN
+  tmp_data = PmlWorker.one_shot_do(
+      PmlCommand.GET_CHAINS, args=(str(a_pdb_filepath),)
   )
-  tmp_job_description.setup_dict(
-      {enums.JobDescriptionKeys.PDB_FILEPATH.value: str(a_pdb_filepath)}
-  )
-  tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-      the_main_socket,
-      a_socket,
-      tmp_job_description,
-  )
-  tmp_data: list[tuple] = tmp_reply["data"]
+  if not tmp_data:
+      tmp_data = []
   tmp_chains_of_protein: list[chain.Chain] = []
   for tmp_chain_object_values in tmp_data:
     tmp_chain_letter, tmp_sequence_object_values, tmp_chain_type = (

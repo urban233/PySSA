@@ -22,7 +22,7 @@
 """Module for sequence table delegates."""
 import logging
 
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtWidgets
 
 from src.pyssa.logging_pyssa import log_handlers
 

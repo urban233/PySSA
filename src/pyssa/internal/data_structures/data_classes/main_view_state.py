@@ -25,7 +25,7 @@
 
 """Old class implementation."""
 # from dataclasses import dataclass
-# from PyQt5 import QtCore
+# from src.pyssa.gui.qt import QtCore
 #
 # from pyssa.internal.data_structures import protein, protein_pair
 #

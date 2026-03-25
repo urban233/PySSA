@@ -24,7 +24,7 @@ import logging
 import os
 from typing import Callable
 
-import pywinctl
+# import pywinctl
 import zmq
 
 from src.application_process import application_process_manager
@@ -1246,9 +1246,9 @@ class UserPyMOLConnector:
         logger.warning(
             "PyMOL cannot handle anymore requests. An exception will now be raised and PyMOL will be restarted.."
         )
-        pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[
-            0
-        ].close()
+        # pywinctl.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[
+        #     0
+        # ].close()
         raise pyssa_exception.PyMOLNotRespondingError()
       i += 1
 

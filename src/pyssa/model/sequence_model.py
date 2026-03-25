@@ -21,8 +21,9 @@
 #
 """Module contains the sequence model."""
 import logging
+from warnings import deprecated
 
-from PyQt5 import QtGui
+from src.pyssa.gui.qt import QtGui
 
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import exception
@@ -32,6 +33,7 @@ logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 
+@deprecated("Use PSASequenceModel instead.")
 class SequenceModel(QtGui.QStandardItemModel):
   """Contains the sequences of the project in form of a QStandardItemModel."""
 

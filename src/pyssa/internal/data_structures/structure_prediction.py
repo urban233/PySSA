@@ -26,13 +26,13 @@ import shutil
 import logging
 from typing import Optional
 
-import zmq
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 
-from src.auxiliary_pymol import auxiliary_pymol_client
+from src.pyssa.internal.pymol.pml_worker import PmlWorker
+from src.pyssa.internal.pymol.pml_enums import PmlCommand
 from src.pyssa.controller import database_manager
 from src.pyssa.internal.data_structures.data_classes import prediction_protein_info
-from src.pyssa.internal.data_structures import protein, job
+from src.pyssa.internal.data_structures import protein
 from src.pyssa.internal.data_structures import project
 from src.pyssa.internal.data_structures.data_classes import prediction_configuration
 from src.pyssa.internal.data_processing import data_transformer
@@ -222,9 +222,6 @@ class StructurePrediction:
 
   def add_proteins_to_project(
       self,
-      the_main_socket: zmq.Socket,
-      a_socket: zmq.Socket,
-      the_general_purpose_socket: zmq.Socket,
       best_prediction_models: list,
       a_project: "project.Project",
       the_project_lock: QtCore.QMutex,
@@ -232,9 +229,6 @@ class StructurePrediction:
     """Add proteins to a project.
 
     Args:
-        the_main_socket (zmq.Socket): The main socket.
-        a_socket (zmq.Socket): A socket.
-        the_general_purpose_socket (zmq.Socket): The general purpose socket.
         best_prediction_models (list): The best prediction models.
         a_project (project.Project): A project.
         the_project_lock (QtCore.QMutex): The project lock.
@@ -243,17 +237,6 @@ class StructurePrediction:
         exception.IllegalArgumentError: If any of the arguments are None.
     """
     # <editor-fold desc="Checks">
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if a_socket is None:
-      logger.error("a_socket is None.")
-      raise exception.IllegalArgumentError("a_socket is None.")
-    if the_general_purpose_socket is None:
-      logger.error("the_general_purpose_socket is None.")
-      raise exception.IllegalArgumentError(
-          "the_general_purpose_socket is None."
-      )
     if best_prediction_models is None:
       logger.error("best_prediction_models is None.")
       raise exception.IllegalArgumentError("best_prediction_models is None.")
@@ -273,9 +256,7 @@ class StructurePrediction:
         f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb"
       )
       tmp_protein.add_protein_structure_data_from_local_pdb_file(
-        tmp_pdb_filepath,
-        the_main_socket,
-        the_general_purpose_socket,
+        tmp_pdb_filepath
       )
       try:
         bio_data.build_pdb_file(tmp_protein.get_pdb_data(), str(tmp_pdb_filepath))
@@ -297,12 +278,11 @@ class StructurePrediction:
         logger.error(f"Something went wrong when creating the pdb file.: {e.__str__()}")
         raise RuntimeError("Something went wrong when creating the pdb file.")
 
-      tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-          the_main_socket,
-          a_socket,
-          job.PredictionJobDescription(str(tmp_pdb_filepath)),
+      tmp_reply_data = PmlWorker.one_shot_do(
+          PmlCommand.CREATE_NEW_SESSION,
+          args=(str(tmp_pdb_filepath),),
       )
-      tmp_protein.pymol_session = tmp_reply["data"][0]
+      tmp_protein.pymol_session = tmp_reply_data
 
       with database_manager.DatabaseManager(
           str(a_project.get_database_filepath())

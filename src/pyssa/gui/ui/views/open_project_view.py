@@ -23,10 +23,10 @@
 import os
 import glob
 
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.forms.auto_generated import auto_open_project_view
 from src.pyssa.gui.ui.styles import styles
@@ -61,13 +61,17 @@ class OpenProjectView(QtWidgets.QDialog):
         self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
     )
     self.ui.btn_help.setText("")
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     styles.color_bottom_frame_button(self.ui.btn_open_project)
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     self.setWindowTitle("Open Project")
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
+    # Set objectName for hover help
+    self.setObjectName("OpenProjectDialog")
+    self.setToolTip("")
 
   def closeEvent(self, event) -> None:
     """Closes the dialog (with the closeEvent) and emits the 'dialogClosed' signal."""

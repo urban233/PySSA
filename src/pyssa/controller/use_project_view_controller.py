@@ -23,10 +23,13 @@
 import logging
 import pathlib
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5 import QtWidgets
-from src.pyssa.controller import database_manager
+from src.pyssa.gui import app_state
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.ui.views import use_project_view, help_view
+
+from src.pyssa.io_pyssa.db_pyssa import ProjectDatabase
 from src.pyssa.util import input_validator, constants, enums, exception
 from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_levels, log_handlers
@@ -39,42 +42,51 @@ __docformat__ = "google"
 class UseProjectViewController(QtCore.QObject):
   """Class for the UseProjectViewController."""
 
-  user_input = QtCore.pyqtSignal(tuple)
-  """Singal used to transfer data back to the previous window."""
-
   def __init__(
-      self, the_interface_manager: "interface_manager.InterfaceManager"
+      self, the_app_state: "app_state.AppState", a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        the_app_state (app_state.AppState): The AppState object.
 
     Raises:
-        exception.IllegalArgumentError: If `the_interface_manager` is None.
+        exception.IllegalArgumentError: If `the_app_state` is None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
 
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager = the_interface_manager
-    self._view = the_interface_manager.get_use_project_view()
+    self._app_state = the_app_state
+    self._view = use_project_view.UseProjectView(a_parent)
     self._initialize_ui()
     self._fill_projects_list_view()
     self._fill_projects_combobox()
     self._project_names: set = self._convert_model_into_set()
     self._connect_all_ui_elements_to_slot_functions()
 
+  def get_view(self):
+    return self._view
+
+  def restore_default_view(self) -> None:
+    self._initialize_ui()
+    self._fill_projects_list_view()
+    self._fill_projects_combobox()
+    self._set_ui_loading(False)
+
   def _open_help_for_dialog(self) -> None:
     """Opens the help dialog for the corresponding dialog."""
     logger.log(
       log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
-    self._interface_manager.help_manager.open_use_project_page()
+    tmp_dialog = help_view.HelpView(
+      constants.HELP_TEXT_MAP["UseProjectDialog"]
+    )
+    tmp_dialog.exec()
 
   def _convert_model_into_set(self) -> set:
     """Converts the model data into a set of project names.
@@ -146,7 +158,7 @@ class UseProjectViewController(QtCore.QObject):
   def _fill_projects_list_view(self) -> None:
     """Lists all projects."""
     self._view.ui.list_use_existing_projects.setModel(
-        self._interface_manager.get_workspace_projects()
+        self._app_state.workspace.get_model()
     )
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
@@ -397,11 +409,15 @@ class UseProjectViewController(QtCore.QObject):
     """Fills the combo box with the available projects from the workspace."""
     gui_utils.fill_combo_box(
         self._view.ui.cb_choose_project,
-        self._interface_manager.get_workspace_projects_as_list(),
+        self._app_state.workspace.get_projects_as_string_list(),
     )
+    current_project_name = ""
+    if self._app_state.has_open_project():
+        current_project_name = self._app_state.project.get_project_name()
+
     self._view.ui.cb_choose_project.setCurrentIndex(
         self._view.ui.cb_choose_project.findText(
-            self._interface_manager.get_current_project().get_project_name()
+            current_project_name
         ),
     )
 
@@ -409,26 +425,27 @@ class UseProjectViewController(QtCore.QObject):
     """Lists all proteins of the selected project."""
     if self._view.ui.cb_choose_project.currentText() == "":
       return
+    
+    selected_project_name = self._view.ui.cb_choose_project.currentText()
     tmp_database_filepath: str = str(
-        pathlib.Path(
-            f"{self._interface_manager.get_application_settings().get_workspace_path()}/{self._view.ui.cb_choose_project.currentText()}.db",
-        ),
+       self._app_state.workspace.construct_project_db_path(selected_project_name)
     )
-    with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
-      tmp_project = db_manager.get_project_as_object(
-          self._view.ui.cb_choose_project.currentText(),
-          self._interface_manager.get_application_settings().get_workspace_path(),
-          self._interface_manager.get_application_settings(),
+
+    source_db = ProjectDatabase(db_path=tmp_database_filepath, project_id=selected_project_name)
+    
+    try:
+      tmp_project = source_db.service.load_project(
+          selected_project_name, 
+          self._app_state.get_settings().workspace_path,
+          self._app_state.get_settings()
       )
-      for tmp_protein in tmp_project.proteins:
-        tmp_pdb_atom_db_data = db_manager.get_pdb_atoms_of_protein(
-            tmp_protein.get_id()
-        )
-        pdb_atom_dict = [
-            {key.value: value for key, value in zip(enums.PdbAtomEnum, t)}
-            for t in tmp_pdb_atom_db_data
-        ]
-        tmp_protein.set_pdb_data(pdb_atom_dict)
+    except Exception as e:
+       logger.error(f"Failed to load source project in _list_all_proteins: {e}")
+       source_db.close()
+       return
+    
+    source_db.close()
+
     self._view.ui.list_use_available_protein_structures.clear()
     for tmp_protein in tmp_project.proteins:
       item = QtWidgets.QListWidgetItem(tmp_protein.get_molecule_object())
@@ -459,21 +476,93 @@ class UseProjectViewController(QtCore.QObject):
     )
     self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
 
+  def _set_ui_loading(self, loading: bool) -> None:
+     self._view.ui.btn_use_create_new_project.setEnabled(not loading)
+     self._view.ui.btn_use_back.setEnabled(not loading)
+     self._view.ui.list_use_selected_protein_structures.setEnabled(not loading)
+     self._view.ui.list_use_available_protein_structures.setEnabled(not loading)
+
   def create_use_project(self) -> None:
     """Uses the project by sending the `user_input` signal and closing the dialog."""
     logger.log(
-        log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create' button was clicked."
+      log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create' button was clicked."
     )
+
     tmp_proteins: list = []
     for tmp_row in range(
-        self._view.ui.list_use_selected_protein_structures.count()
+            self._view.ui.list_use_selected_protein_structures.count()
     ):
       tmp_proteins.append(
-          self._view.ui.list_use_selected_protein_structures.item(tmp_row).data(
-              enums.ModelEnum.OBJECT_ROLE
-          )
+        self._view.ui.list_use_selected_protein_structures.item(tmp_row).data(
+          enums.ModelEnum.OBJECT_ROLE
+        )
       )
-    self.user_input.emit(
-        (self._view.ui.txt_use_project_name.text(), tmp_proteins)
+
+    project_name = self._view.ui.txt_use_project_name.text()
+    db_path = str(self._app_state.workspace.construct_project_db_path(project_name))
+
+    self._set_ui_loading(True)
+
+    from src.pyssa.io_pyssa.db_pyssa import ProjectDatabase
+    from src.pyssa.model import psa_objects_model
+    from src.pyssa.internal.thread.thread_api import thread_runtime
+    import platform
+    import copy
+
+    def create_project(progress_callback, is_cancelled):
+      tmp_db = ProjectDatabase(db_path=db_path, project_id=project_name)
+      if is_cancelled():
+        tmp_db.close()
+        raise InterruptedError("Cancelled before creating project database.")
+
+      tmp_db.initialise_schema()
+      project_id = tmp_db.insert_project(name=project_name, os=platform.system())
+
+      from src.pyssa.internal.data_structures import project
+      import pathlib
+      tmp_project = project.Project(project_name, pathlib.Path(self._app_state.get_settings().workspace_path))
+      tmp_project.set_id(project_id)
+
+      if is_cancelled():
+        tmp_db.close()
+        raise InterruptedError("Cancelled after creating project.")
+
+      # Insert the copied proteins into the db, and associate them with the new project
+      for idx, tmp_protein in enumerate(tmp_proteins):
+        tmp_protein_copy = copy.deepcopy(tmp_protein)
+        tmp_protein_copy.db_project_id = project_id
+        tmp_project.add_existing_protein(tmp_protein_copy)
+        tmp_protein_copy.set_id(tmp_db.insert_protein_full(tmp_protein_copy))
+
+      tmp_pyssa_objects_model = psa_objects_model.PSAObjectsModel()
+      tmp_pyssa_objects_model.build_model(tmp_project)
+      return tmp_project, tmp_db, tmp_pyssa_objects_model
+
+    def on_success(result):
+      tmp_project, tmp_db, tmp_pyssa_objects_model = result
+      self._app_state.pyssa_objects_model = tmp_pyssa_objects_model
+      self._app_state.open_project(tmp_project, tmp_db)
+      self._app_state._build_workspace_model()
+      self._app_state.status_bar_manager.show_permanent_message("", False)
+      self._app_state.status_bar_manager.show_temporary_message("Project created.")
+
+    def on_error(exc):
+      logger.exception("Failed to create use project.", exc_info=exc)
+      self._set_ui_loading(False)
+      QtWidgets.QMessageBox.critical(
+        self._view,
+        "Failed to create project",
+        f"Could not create the project:\n{exc}",
+      )
+
+    (
+      thread_runtime.get_singleton_thread_runtime()
+      .run(create_project)
+      .on_success(on_success)
+      .on_error(on_error)
+      .start()
     )
     self._view.close()
+    self._app_state.status_bar_manager.show_permanent_message(
+      "Creating project ...", True
+    )

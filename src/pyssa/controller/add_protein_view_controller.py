@@ -22,14 +22,20 @@
 """Module for the add protein view controller."""
 import logging
 import os
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5 import QtWidgets
+from typing import TYPE_CHECKING
+
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.ui.views import add_protein_view
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.internal.thread import tasks
 from src.pyssa.internal.thread.async_pyssa import validate_async
 from src.pyssa.logging_pyssa import log_levels, log_handlers
 from src.pyssa.util import constants, tools, exception
+
+if TYPE_CHECKING:
+  from src.pyssa.gui import app_state
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -39,46 +45,48 @@ __docformat__ = "google"
 class AddProteinViewController(QtCore.QObject):
   """Class for the AddProteinViewController."""
 
-  user_input = QtCore.pyqtSignal(tuple)
-  """Singal used to transfer data back to the previous window."""
-
   def __init__(
-      self, the_interface_manager: "interface_manager.InterfaceManager"
+      self, the_app_state: "app_state.AppState", a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        the_app_state (app_state.AppState): The AppState object.
+        a_parent: Parent widget to pass to the view.
 
     Raises:
-        exception.IllegalArgumentError: If `the_interface_manager` is None.
+        exception.IllegalArgumentError: If `the_app_state` is None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
 
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager = the_interface_manager
-    self._view = the_interface_manager.get_add_protein_view()
+    self._app_state = the_app_state
+    self._view = add_protein_view.AddProteinView(a_parent)
+    self._active_task = None
     self._connect_all_ui_elements_to_slot_functions()
-    # check internet connectivity
-    if not tools.check_internet_connectivity():
-      tmp_dialog = custom_message_box.CustomMessageBoxOk(
-          "You do not have a working internet connection which is "
-          "necessary for connecting to the PDB!\n"
-          "However you can add a protein structure from "
-          "your local filesystem.",
-          "Internet Connection",
-          custom_message_box.CustomMessageBoxIcons.ERROR.value,
-      )
-      tmp_dialog.exec_()
-      self._view.ui.txt_add_protein.setEnabled(False)
-      self._view.ui.lbl_status.setText(
-          "You cannot enter a PDB ID (no working internet connection)."
-      )
+
+  def get_view(self):
+    # # check internet connectivity
+    # if not tools.check_internet_connectivity():
+    #   tmp_dialog = custom_message_box.CustomMessageBoxOk(
+    #       "You do not have a working internet connection which is "
+    #       "necessary for connecting to the PDB!\n"
+    #       "However you can add a protein structure from "
+    #       "your local filesystem.",
+    #       "Internet Connection",
+    #       custom_message_box.CustomMessageBoxIcons.ERROR.value,
+    #   )
+    #   tmp_dialog.exec()
+    #   self._view.ui.txt_add_protein.setEnabled(False)
+    #   self._view.ui.lbl_status.setText(
+    #       "You cannot enter a PDB ID (no working internet connection)."
+    #   )
+    return self._view
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
@@ -106,7 +114,7 @@ class AddProteinViewController(QtCore.QObject):
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
-    self._interface_manager.help_manager.open_protein_import_page()
+    # self._interface_manager.help_manager.open_protein_import_page()
 
   # @SLOT
   def __slot_validate_input(self, the_entered_text: str) -> None:
@@ -148,23 +156,16 @@ class AddProteinViewController(QtCore.QObject):
       )
     # checks if a pdb id was entered
     else:
-      self._active_task = tasks.LegacyTask(
-          target=validate_async.validate_add_protein_view_input,
-          args=(
-              the_entered_text,
-              0,
-          ),
-          post_func=self.__await__slot_validate_input,
-      )
-      self._active_task.start()
-      QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
+      # QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
       self._view.ui.txt_add_protein.setStyleSheet(
-          """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
+        """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
       )
       self._view.ui.lbl_status.setStyleSheet(
-          """QLabel {color: #367AF6;}""",
+        """QLabel {color: #367AF6;}""",
       )
-      self._view.ui.lbl_status.setText("Checking input ...")
+      self._view.ui.lbl_status.setText("")
+      self._view.ui.btn_add_protein.setEnabled(True)
+
 
   def __await__slot_validate_input(self, return_value: tuple) -> None:
     """Validates the input entered by the user.
@@ -206,7 +207,9 @@ class AddProteinViewController(QtCore.QObject):
       self._view.ui.txt_add_protein.setStyleSheet(
           """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
       )
-      self._view.ui.lbl_status.setText("Invalid PDB id!")
+      # self._view.ui.lbl_status.setText(
+      #   "There is an invalid PDB ID or NO internet connection is available!"
+      # )
       self._view.ui.btn_add_protein.setEnabled(False)
     elif not tmp_is_valid and tmp_type == 2:  # filepath entered
       self._view.ui.txt_add_protein.setStyleSheet(
@@ -218,7 +221,7 @@ class AddProteinViewController(QtCore.QObject):
       constants.PYSSA_LOGGER.error(
           "There is an unknown case, while validating the add protein view user input!"
       )
-    if tmp_name in self._interface_manager.watcher.protein_names_blacklist:
+    if tmp_name in [p.get_molecule_object() for p in self._app_state.project.proteins]:
       self._view.ui.txt_add_protein.setStyleSheet(
           """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
       )
@@ -226,8 +229,6 @@ class AddProteinViewController(QtCore.QObject):
           "Protein already exists in current project!"
       )
       self._view.ui.btn_add_protein.setEnabled(False)
-      self._view.ui.lbl_status.setText("")
-      self._view.ui.btn_add_protein.setEnabled(True)
     QtWidgets.QApplication.restoreOverrideCursor()
     self._view.ui.txt_add_protein.setFocus()
 
@@ -244,7 +245,7 @@ class AddProteinViewController(QtCore.QObject):
           "Open existing protein",
           QtCore.QDir.homePath(),
           "PDB Files (*.pdb)",
-      )
+        )
       if file_name == ("", ""):
         self._view.ui.lbl_status.setText("No file has been selected.")
       else:
@@ -255,47 +256,81 @@ class AddProteinViewController(QtCore.QObject):
       self._view.ui.lbl_status.setText("Loading the protein structure failed!")
 
   def __slot_add_protein(self) -> None:
-    """Adds a protein to the global variable and closes the dialog."""
+    """Adds a protein to the project and closes the dialog."""
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked."
     )
-    self._view.close()
-    self.user_input.emit(
-        (
-            self._view.ui.txt_add_protein.text(),
-            len(self._view.ui.txt_add_protein.text()),
+    from src.pyssa.internal.thread.thread_api import thread_runtime
+    from src.pyssa.internal.data_structures import protein
+    import pathlib
+
+    tmp_protein_name = self._view.ui.txt_add_protein.text()
+    tmp_name_len = len(tmp_protein_name)
+
+    if not tmp_protein_name:
+        logger.error("No protein name to import.")
+        QtWidgets.QMessageBox.critical(self._view, "Import Error", "No data received!")
+        return
+
+    self._view.ui.btn_add_protein.setEnabled(False)
+
+    def import_task(progress_callback, is_cancelled):
+        # We can load directly through user_pymol which AppState doesn't hold directly,
+        # but PyMOL runs in the same process instance namespace basically via the global cmd module.
+        # It's cleaner to access PyMOL directly here or via an established interface.
+        if tmp_name_len == 4:
+            pdb_name = tmp_protein_name.upper()
+            tmp_ref_protein = protein.Protein(pdb_name)
+            tmp_ref_protein.set_id(0) # Let the model map it later
+            tmp_ref_protein.db_project_id = self._app_state.project.get_id()
+            if not tools.check_internet_connectivity():
+              raise RuntimeError("No internet connection is available!")
+            try:
+              tmp_ref_protein.add_protein_structure_data_from_pdb_db(pdb_name)
+            except Exception as tmp_exception:
+              logger.error(tmp_exception)
+              raise RuntimeError("PDB ID is invalid!")
+        else:
+            pdb_filepath = pathlib.Path(tmp_protein_name)
+            pdb_name = pdb_filepath.name.replace(".pdb", "")
+            tmp_ref_protein = protein.Protein(pdb_name)
+            tmp_ref_protein.set_id(0)
+            tmp_ref_protein.db_project_id = self._app_state.project.get_id()
+            tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pdb_filepath)
+
+        tmp_ref_protein.create_new_pymol_session()
+        tmp_protein_id = self._app_state.hot_db.insert_protein_full(tmp_ref_protein)
+        tmp_ref_protein.set_id(tmp_protein_id)
+        return tmp_ref_protein
+        
+    def on_success(result: "protein.Protein"):
+        self._app_state.project.add_existing_protein(result)
+        # Use incremental update instead of full rebuild to preserve tree state
+        self._app_state.pyssa_objects_model.add_protein(result)
+        self._app_state.status_bar_manager.show_permanent_message("", False)
+        self._app_state.status_bar_manager.show_temporary_message("Protein imported.")
+        
+    def on_error(an_exception):
+        logger.exception("Failed to insert protein.", exc_info=an_exception)
+        QtWidgets.QMessageBox.critical(
+          self._view,
+          "Import Error",
+          f"An error occurred: {an_exception}"
         )
+        self._view.ui.btn_add_protein.setEnabled(True)
+        self._app_state.status_bar_manager.show_error_message(
+          "Import protein failed!",
+          True
+        )
+
+    (
+      thread_runtime.get_singleton_thread_runtime()
+      .run(import_task)
+      .on_success(on_success)
+      .on_error(on_error)
+      .start()
     )
-
-  def _validate_scene_name(self, text: str) -> None:
-    """Validates the given scene name and updates the UI elements accordingly.
-
-    Args:
-        text (str): The scene name to be validated.
-
-    Raises:
-        exception.IllegalArgumentError: If `text` is None.
-    """
-    # <editor-fold desc="Checks">
-    if text is None:
-      logger.error("text is None.")
-      raise exception.IllegalArgumentError("text is None.")
-
-    # </editor-fold>
-
-    new_text = "".join(char for char in text)
-    self._view.line_edit_scene_name.setText(new_text)
-    if new_text in self._all_current_scenes:
-      self._view.btn_add_scene.setEnabled(False)
-      self._view.line_edit_scene_name.setToolTip(
-          "This scene name already exists. Please enter another name."
-      )
-      self._view.line_edit_scene_name.setStyleSheet(
-          """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}""",
-      )
-    else:
-      self._view.btn_add_scene.setEnabled(True)
-      self._view.line_edit_scene_name.setToolTip("")
-      self._view.line_edit_scene_name.setStyleSheet(
-          """QLineEdit {color: #000000; border-color: #DCDBE3;}""",
-      )
+    self._app_state.status_bar_manager.show_permanent_message(
+      "Importing protein ...", True
+    )
+    self._view.close()

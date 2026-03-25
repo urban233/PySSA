@@ -22,8 +22,8 @@
 """Module for all task workers which run in separate threads."""
 import pathlib
 
-from PyQt5.QtCore import pyqtSignal
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import pyqtSignal
+from src.pyssa.gui.qt import QtCore
 
 from src.tea.util import tea_logging
 

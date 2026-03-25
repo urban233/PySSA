@@ -24,7 +24,7 @@ import os
 import pathlib
 from typing import Union
 
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 
 from src.tea.thread import task
 from src.tea.thread import task_result

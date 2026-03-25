@@ -27,7 +27,7 @@ import subprocess
 import time
 from typing import Union, Optional
 
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 
 from src.pyssa.gui.ui.custom_widgets import job_entry
 from src.pyssa.internal.data_structures import job
@@ -93,44 +93,6 @@ class JobManager:
     #     print("Socket is ready for sending data")
     # else:
     #     print("Socket is not ready for sending data")
-
-  def stop_auxiliary_pymol(self) -> None:
-    """Sends an "Abort" message to the main_socket, receives a response, and then sends a JSON message with job_type "Abort" to the main_socket again."""
-    self._main_socket.send_string("Abort")
-    response = self._main_socket.recv_string()
-    logger.debug(f"Received response: {response}")
-    message = {
-        "job_type": "Abort",
-    }
-    self._main_socket.send_json(message)
-    response = self._main_socket.recv_string()
-    logger.debug(f"Received response: {response}")
-
-  def start_auxiliary_pymol(self) -> None:
-    """Starts the auxiliary Pymol instance.
-
-    This method is used to start the auxiliary Pymol instance for advanced rendering.
-    If the DEBUGGING constant is set to True, debugging mode will be activated and the method returns.
-    """
-    if constants.DEBUGGING:
-      logger.debug("Debugging activated.")
-      return
-
-    process = subprocess.Popen(
-      [constants.AUXILIARY_PYMOL_FILEPATH],
-      creationflags=subprocess.CREATE_NO_WINDOW,
-    )
-    # process = subprocess.Popen(
-    #     [
-    #         constants.PYTHON_FILEPATH,
-    #         f"{constants.PROGRAM_SRC_PATH}\\auxiliary_pymol\\main.py",
-    #     ],
-    #     creationflags=subprocess.CREATE_NO_WINDOW,
-    # )
-    if process.poll() is None:
-      logger.debug("main.py of auxiliary pymol started correctly.")
-    else:
-      logger.debug("main.py of auxiliary pymol failed to start.")
 
   def get_general_purpose_socket_pair(self) -> tuple:
     """Gets a tuple containing the main socket and the general purpose socket.

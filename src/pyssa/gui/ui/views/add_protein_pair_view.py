@@ -20,10 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the add protein pair view."""
-from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.ui.forms.auto_generated import auto_add_protein_pair_view
 
 from src.pyssa.gui.ui.styles import styles
@@ -47,7 +47,8 @@ class AddProteinPairView(QtWidgets.QDialog):
 
     self.ui.btn_cancel.clicked.connect(self.close)
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )

@@ -22,6 +22,7 @@
 """Module for the auxiliary pymol class."""
 import os
 import pathlib
+from warnings import deprecated
 
 import pymol2
 import numpy as np
@@ -36,6 +37,7 @@ __docformat__ = "google"
 module_logger = logger.setup_logger(__file__, log_path=f"{local_constants.LOG_PATH}\\auxiliary_pymol")
 
 
+@deprecated("Use PmlWorker instead.")
 class AuxiliaryPyMOL:
     """A container for static methods that use an independent pymol instance, for each static method."""
 

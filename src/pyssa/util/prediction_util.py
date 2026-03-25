@@ -35,7 +35,7 @@ from src.pyssa.internal.data_structures.data_classes import prediction_protein_i
 from src.pyssa.logging_pyssa import log_handlers
 
 if TYPE_CHECKING:
-  from PyQt5 import QtWidgets
+  from src.pyssa.gui.qt import QtWidgets
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)

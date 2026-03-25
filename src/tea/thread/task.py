@@ -25,8 +25,8 @@ import queue
 import uuid
 from typing import Optional
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import pyqtSignal
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import pyqtSignal
 
 from src.tea.thread import action
 from src.tea.util import tea_exception, tea_enums

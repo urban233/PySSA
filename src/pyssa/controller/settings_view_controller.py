@@ -23,14 +23,17 @@
 from typing import TYPE_CHECKING
 import logging
 
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.util import exception
 from src.pyssa.util import gui_utils
 from src.pyssa.logging_pyssa import log_handlers, log_levels
 from src.pyssa.util import constants
 
+from src.pyssa.gui.ui.views import settings_view, help_view
+
 if TYPE_CHECKING:
-  from src.pyssa.controller import interface_manager
+  from src.pyssa.gui import app_state
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -40,38 +43,40 @@ __docformat__ = "google"
 class SettingsViewController(QtCore.QObject):
   """Class for the SettingsViewController."""
 
-  user_input = QtCore.pyqtSignal(tuple)
-  """Singal used to transfer data back to the previous window."""
-
   def __init__(
-      self, the_interface_manager: "interface_manager.InterfaceManager"
+      self, the_app_state: "app_state.AppState", a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        the_app_state (app_state.AppState): The AppState object.
+        a_parent: Parent widget to pass to the view.
 
     Raises:
-        exception.IllegalArgumentError: If `the_interface_manager` is None.
+        exception.IllegalArgumentError: If `the_app_state` is None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
 
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
-    self._settings_manager = the_interface_manager.get_settings_manager()
-    self._view = the_interface_manager.get_settings_view()
+    self._app_state = the_app_state
+    self._parent = a_parent
+    self._settings_manager = the_app_state._settings_manager
+    self._view = settings_view.SettingsView(a_parent)
     self._initialize_ui()
-    self.restore_ui()
+    self.restore_default_view()
     self._connect_all_ui_elements_to_slot_functions()
-    if self._interface_manager.job_manager.there_are_jobs_running():
+    if self._app_state.job_scheduler.has_running_jobs():
       self._view.ui.btn_workspace_dir.setEnabled(False)
     else:
       self._view.ui.btn_workspace_dir.setEnabled(True)
+
+  def get_view(self):
+    return self._view
 
   # <editor-fold desc="Util methods">
   def _open_help_for_dialog(self) -> None:
@@ -79,11 +84,41 @@ class SettingsViewController(QtCore.QObject):
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
-    self._interface_manager.help_manager.open_pyssa_settings_page()
+    tmp_dialog = help_view.HelpView(
+      constants.HELP_TEXT_MAP["SettingsDialog"]
+    )
+    tmp_dialog.exec()
 
-  def restore_ui(self) -> None:
+  def restore_default_view(self) -> None:
     """Restores the UI."""
     self._view.ui.tabWidget.setCurrentIndex(0)
+    self._view.ui.txt_workspace_dir.setText(
+      str(self._settings_manager.settings.get_workspace_path())
+    )
+    self._view.ui.spb_cycles.setValue(
+      int(self._settings_manager.settings.get_cycles())
+    )
+    self._view.ui.dspb_cutoff.setValue(
+      float(self._settings_manager.settings.get_cutoff())
+    )
+    self._view.ui.box_bg_color.setCurrentIndex(
+      self._view.ui.box_bg_color.findText(
+        self._settings_manager.settings.image_background_color
+      ),
+    )
+    if self._settings_manager.settings.image_renderer == "0":
+      self._view.ui.box_renderer.setCurrentIndex(0)
+    else:
+      self._view.ui.box_renderer.setCurrentIndex(1)
+    self._view.ui.box_ray_trace_mode.setCurrentIndex(
+      self._settings_manager.settings.image_ray_trace_mode
+    )
+    self._view.ui.box_ray_texture.setCurrentIndex(
+      self._settings_manager.settings.image_ray_texture
+    )
+    self._view.ui.cb_pyssa_expert_mode.setChecked(
+      self._settings_manager.settings.pyssa_expert_mode
+    )
 
   # </editor-fold>
 
@@ -122,24 +157,6 @@ class SettingsViewController(QtCore.QObject):
     gui_utils.fill_combo_box(
         self._view.ui.box_ray_texture, item_list_ray_texture
     )
-
-    # item_list = [
-    #     "normal",
-    #     "Red-green (green weak, deuteranopia)",
-    #     "Red-green (red weak, protanopia)",
-    #     "Blue-yellow (tritanopia)",
-    # ]
-    # gui_utils.fill_combo_box(self._view.ui.cb_color_vision_mode, item_list)
-    self._view.ui.txt_workspace_dir.setEnabled(False)
-    self._view.ui.txt_workspace_dir.setText(
-        str(self._settings_manager.settings.get_workspace_path())
-    )
-    self._view.ui.spb_cycles.setValue(
-        int(self._settings_manager.settings.get_cycles())
-    )
-    self._view.ui.dspb_cutoff.setValue(
-        float(self._settings_manager.settings.get_cutoff())
-    )
     # customize spin boxes
     self._view.ui.spb_cycles.setMinimum(0)
     # self._view.ui.spb_cycles.setMaximum(20) # fixme: is a maximum needed?
@@ -147,34 +164,15 @@ class SettingsViewController(QtCore.QObject):
     self._view.ui.dspb_cutoff.setMinimum(0.00)
     self._view.ui.dspb_cutoff.setMaximum(20.00)
     self._view.ui.dspb_cutoff.setSingleStep(0.1)
-    # self._view.ui.lbl_color_vision_mode.hide()
-    # self._view.ui.cb_color_vision_mode.hide()
-    #
-    # self._view.ui.cb_color_vision_mode.setCurrentIndex(
-    #     self._view.ui.cb_color_vision_mode.findText(self._settings_manager.settings.color_vision_mode)
-    # )
-    self._view.ui.box_bg_color.setCurrentIndex(
-        self._view.ui.box_bg_color.findText(
-            self._settings_manager.settings.image_background_color
-        ),
-    )
-    if self._settings_manager.settings.image_renderer == "0":
-      self._view.ui.box_renderer.setCurrentIndex(0)
-    else:
-      self._view.ui.box_renderer.setCurrentIndex(1)
-    self._view.ui.box_ray_trace_mode.setCurrentIndex(
-        self._settings_manager.settings.image_ray_trace_mode
-    )
-    self._view.ui.box_ray_texture.setCurrentIndex(
-        self._settings_manager.settings.image_ray_texture
-    )
+    self._view.ui.txt_workspace_dir.setEnabled(False)
+    # Hide the PyMOL settings tab for now
+    self._view.ui.tabWidget.setTabVisible(3, False)
 
   def _connect_all_ui_elements_to_slot_functions(self) -> None:
     """Connects all UI elements to their corresponding slot functions in the class."""
     self._view.ui.btn_workspace_dir.clicked.connect(self.choose_workspace_dir)
     self._view.ui.btn_ok.clicked.connect(self.ok_dialog)
     self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
-    self._view.ui.cb_toggle_pymol_expert_mode.clicked.connect(self.toggle_pymol_expert_mode)
 
   def choose_workspace_dir(self) -> None:
     """Opens a QFileDialog to choose a workspace directory."""
@@ -183,7 +181,7 @@ class SettingsViewController(QtCore.QObject):
         "'Choose workspace' button was clicked.",
     )
     gui_utils.choose_directory(
-        self._interface_manager.get_settings_view(),
+        self._view,
         self._view.ui.txt_workspace_dir,
     )
 
@@ -197,7 +195,6 @@ class SettingsViewController(QtCore.QObject):
     self._settings_manager.settings.set_cutoff(
         self._view.ui.dspb_cutoff.value()
     )
-    # self._settings_manager.settings.color_vision_mode = self._view.ui.cb_color_vision_mode.currentText()
     self._settings_manager.settings.image_background_color = (
         self._view.ui.box_bg_color.currentText()
     )
@@ -211,11 +208,33 @@ class SettingsViewController(QtCore.QObject):
     self._settings_manager.settings.image_ray_texture = (
         self._view.ui.box_ray_texture.currentIndex()
     )
+    if self._settings_manager.settings.pyssa_expert_mode == False and self._view.ui.cb_pyssa_expert_mode.isChecked() == True:
+      tmp_activated_expert_mode = True
+    else:
+      tmp_activated_expert_mode = False
+    self._settings_manager.settings.pyssa_expert_mode = (
+      self._view.ui.cb_pyssa_expert_mode.isChecked()
+    )
 
     self._settings_manager.settings.serialize_settings()
     logging.info("Settings were successfully saved.")
     self._view.close()
-    self.user_input.emit((0, True))
 
-  def toggle_pymol_expert_mode(self):
-    self._interface_manager.pymol_session_manager.toggle_pymol_expert_mode()
+    if tmp_activated_expert_mode:
+      tmp_msg = """
+      You have activated the PySSA expert mode. You must keep this in mind:\n
+      #1) Features can and will break data integrity if not used carefully.\n
+      #2) Think before you use any of the features.\n
+      #3) With great power comes great responsibility.\n
+      """
+      tmp_dialog = custom_message_box.CustomMessageBoxOk(
+        tmp_msg,
+        "Activate Expert Mode",
+        custom_message_box.CustomMessageBoxIcons.WARNING.value,
+      )
+      tmp_dialog.exec()
+
+    # Rebuild the workspace model inside the app state and trigger a UI update
+    if hasattr(self._app_state, "_build_workspace_model"):
+      self._app_state._build_workspace_model()
+    self._app_state._on_state_changed()

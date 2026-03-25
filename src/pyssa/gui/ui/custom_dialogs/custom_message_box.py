@@ -23,9 +23,9 @@
 import enum
 import logging
 
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtWidgets
 
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.logging_pyssa import log_handlers
@@ -141,16 +141,62 @@ class CustomMessageBoxDelete(CustomMessageBox):
     self.btn_left.setText("Delete")
     self.btn_left.setStyleSheet(
         """
-            QPushButton {
-                background-color: #ba1a1a; 
-                color: white; 
-                border: none;
-            }
-            QPushButton::pressed {
-                background-color: #410002; 
-                color: white; 
-                border: none;
-            }
+        QPushButton {
+            background-color: #ba1a1a;
+            color: #fff;
+            font-family: "Segoe UI Semibold";
+            font-size: 12px;
+            border: solid;
+            border-width: 1px;
+            border-radius: 4px;
+            border-color: #DCDCDC;
+            padding: 2px;
+            min-width: 65px;
+            max-width: 65px;
+            min-height: 15px;
+            max-height: 15px;
+            /*font-family: "Segoe UI";*/
+            /*font-size: 12px;*/
+            /*font: bold;*/
+            /*border: none;*/
+            /*border-width: 2px;*/
+            /*border-radius: 4px;*/
+            /*border-color: #DCDCDC;*/
+            /*padding: 2px;*/
+            /*min-width: 65px;*/
+            /*max-width: 65px;*/
+            /*min-height: 15px;*/
+        }
+        
+        QPushButton:disabled {
+            background-color: #fff;
+            color: #B0B0B0;
+            font-family: "Segoe UI";
+            font-size: 12px;
+            border: solid;
+            border-width: 1px;
+            border-radius: 4px;
+            border-color: #DCDCDC;
+            padding: 2px;
+            min-width: 65px;
+            max-width: 65px;
+            min-height: 15px;
+        }
+        
+        QPushButton::pressed {
+            background-color: #410002;
+            color: #fff;
+            font-family: "Segoe UI";
+            font-size: 12px;
+            border: none;
+            border-width: 2px;
+            border-radius: 4px;
+            border-color: #DCDCDC;
+            padding: 2px;
+            min-width: 65px;
+            max-width: 65px;
+            min-height: 15px;
+        }
         """
     )
     self.btn_right.setText("Cancel")

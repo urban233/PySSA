@@ -22,8 +22,7 @@
 """Module for the custom color grid widget."""
 import logging
 
-from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtWidgets import QWidget, QPushButton
+from src.pyssa.gui.qt import QtWidgets, QtGui
 
 from src.pyssa.internal.data_structures import chain
 from src.pyssa.logging_pyssa import log_handlers
@@ -208,7 +207,8 @@ class PyMOLColorGrid(QtWidgets.QWidget):
 
     stylesheet = """QPushButton {
                 background-color: %s;
-                border: none;
+                border: solid;
+                border-width: 1px;
                 border-radius: 4px;
                 min-width: 20px;
                 max-width: 20px;
@@ -233,46 +233,46 @@ class PyMOLColorGrid(QtWidgets.QWidget):
     return stylesheet  # noqa: RET504
 
   def set_all_tooltips(self) -> None:
-    """Sets tooltips for all color widgets."""
-    self.c_red.setToolTip("red")
-    self.c_tv_red.setToolTip("tv_red")
-    self.c_salomon.setToolTip("salmon")
-    self.c_raspberry.setToolTip("raspberry")
+    """Sets tooltips and objectNames for all color widgets."""
+    self.c_red.setToolTip("red");         self.c_red.setObjectName("color_red")
+    self.c_tv_red.setToolTip("tv_red");   self.c_tv_red.setObjectName("color_tv_red")
+    self.c_salomon.setToolTip("salmon");  self.c_salomon.setObjectName("color_salmon")
+    self.c_raspberry.setToolTip("raspberry"); self.c_raspberry.setObjectName("color_raspberry")
 
-    self.c_green.setToolTip("green")
-    self.c_tv_green.setToolTip("tv_green")
-    self.c_palegreen.setToolTip("palegreen")
-    self.c_forest.setToolTip("forest")
+    self.c_green.setToolTip("green");         self.c_green.setObjectName("color_green")
+    self.c_tv_green.setToolTip("tv_green");   self.c_tv_green.setObjectName("color_tv_green")
+    self.c_palegreen.setToolTip("palegreen"); self.c_palegreen.setObjectName("color_palegreen")
+    self.c_forest.setToolTip("forest");       self.c_forest.setObjectName("color_forest")
 
-    self.c_blue.setToolTip("blue")
-    self.c_tv_blue.setToolTip("tv_blue")
-    self.c_lightblue.setToolTip("lightblue")
-    self.c_skyblue.setToolTip("skyblue")
+    self.c_blue.setToolTip("blue");           self.c_blue.setObjectName("color_blue")
+    self.c_tv_blue.setToolTip("tv_blue");     self.c_tv_blue.setObjectName("color_tv_blue")
+    self.c_lightblue.setToolTip("lightblue"); self.c_lightblue.setObjectName("color_lightblue")
+    self.c_skyblue.setToolTip("skyblue");     self.c_skyblue.setObjectName("color_skyblue")
 
-    self.c_yellow.setToolTip("yellow")
-    self.c_tv_yellow.setToolTip("tv_yellow")
-    self.c_paleyellow.setToolTip("paleyellow")
-    self.c_sand.setToolTip("sand")
+    self.c_yellow.setToolTip("yellow");       self.c_yellow.setObjectName("color_yellow")
+    self.c_tv_yellow.setToolTip("tv_yellow"); self.c_tv_yellow.setObjectName("color_tv_yellow")
+    self.c_paleyellow.setToolTip("paleyellow"); self.c_paleyellow.setObjectName("color_paleyellow")
+    self.c_sand.setToolTip("sand");           self.c_sand.setObjectName("color_sand")
 
-    self.c_magenta.setToolTip("magenta")
-    self.c_purple.setToolTip("purple")
-    self.c_pink.setToolTip("pink")
-    self.c_hotpink.setToolTip("hotpink")
+    self.c_magenta.setToolTip("magenta");     self.c_magenta.setObjectName("color_magenta")
+    self.c_purple.setToolTip("purple");       self.c_purple.setObjectName("color_purple")
+    self.c_pink.setToolTip("pink");           self.c_pink.setObjectName("color_pink")
+    self.c_hotpink.setToolTip("hotpink");     self.c_hotpink.setObjectName("color_hotpink")
 
-    self.c_cyan.setToolTip("cyan")
-    self.c_aquamarine.setToolTip("aquamarine")
-    self.c_palecyan.setToolTip("palecyan")
-    self.c_teal.setToolTip("teal")
+    self.c_cyan.setToolTip("cyan");           self.c_cyan.setObjectName("color_cyan")
+    self.c_aquamarine.setToolTip("aquamarine"); self.c_aquamarine.setObjectName("color_aquamarine")
+    self.c_palecyan.setToolTip("palecyan");   self.c_palecyan.setObjectName("color_palecyan")
+    self.c_teal.setToolTip("teal");           self.c_teal.setObjectName("color_teal")
 
-    self.c_orange.setToolTip("orange")
-    self.c_tv_orange.setToolTip("tv_orange")
-    self.c_lightorange.setToolTip("lightorange")
-    self.c_olive.setToolTip("olive")
+    self.c_orange.setToolTip("orange");       self.c_orange.setObjectName("color_orange")
+    self.c_tv_orange.setToolTip("tv_orange"); self.c_tv_orange.setObjectName("color_tv_orange")
+    self.c_lightorange.setToolTip("lightorange"); self.c_lightorange.setObjectName("color_lightorange")
+    self.c_olive.setToolTip("olive");         self.c_olive.setObjectName("color_olive")
 
-    self.c_white.setToolTip("white")
-    self.c_grey_70.setToolTip("grey70")
-    self.c_grey_30.setToolTip("grey30")
-    self.c_black.setToolTip("black")
+    self.c_white.setToolTip("white");         self.c_white.setObjectName("color_white")
+    self.c_grey_70.setToolTip("grey70");      self.c_grey_70.setObjectName("color_grey70")
+    self.c_grey_30.setToolTip("grey30");      self.c_grey_30.setObjectName("color_grey30")
+    self.c_black.setToolTip("black");         self.c_black.setObjectName("color_black")
 
   def get_all_color_buttons(self) -> dict:
     """Get all color buttons.

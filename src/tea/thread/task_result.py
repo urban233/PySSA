@@ -24,7 +24,7 @@ import collections
 import pathlib
 from typing import Optional, Callable, Any
 
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 
 from src.tea.thread import task, action
 from src.tea.util import tea_logging, tea_exception, tea_enums

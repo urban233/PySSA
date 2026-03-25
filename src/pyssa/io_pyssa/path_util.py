@@ -23,7 +23,7 @@
 import logging
 import os.path
 import pathlib
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 from src.pyssa.logging_pyssa import log_handlers
 
 logger = logging.getLogger(__file__)

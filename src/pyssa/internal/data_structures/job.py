@@ -26,10 +26,8 @@ import subprocess
 from typing import Optional
 
 import zmq
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 
-from src.auxiliary_pymol import auxiliary_pymol_client
-from src.pyssa.controller import database_manager
 from src.pyssa.gui.ui.custom_widgets import job_entry
 from src.pyssa.internal.data_structures import project, structure_prediction, structure_analysis, protein_pair
 from src.pyssa.logging_pyssa import log_handlers
@@ -635,17 +633,18 @@ class RayTracingJob(Job):
         (self.job_entry_widget, "Starting rendering process ...", 33)
     )
     try:
-      auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-          self._main_socket,
-          self._socket,
-          RayTracingJobDescription(
-              self.dest_image_filepath,
-              self.cached_session_filepath,
-              self.image_ray_trace_mode,
-              self.image_ray_texture,
-              self.image_renderer,
-          ),
-      )
+      logger.warning("RayTracingJob functionality is no longer supported.")
+      # auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+      #     self._main_socket,
+      #     self._socket,
+      #     RayTracingJobDescription(
+      #         self.dest_image_filepath,
+      #         self.cached_session_filepath,
+      #         self.image_ray_trace_mode,
+      #         self.image_ray_texture,
+      #         self.image_renderer,
+      #     ),
+      # )
     except Exception as e:
       tmp_msg = f"Unknown error: {e}"
       logger.error(tmp_msg)

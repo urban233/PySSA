@@ -25,12 +25,11 @@ import logging
 from typing import Optional
 
 import numpy as np
-from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import QVBoxLayout, QWidget, QScrollArea
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backend_bases import MouseButton
 from matplotlib.figure import Figure
 from matplotlib import ticker
@@ -39,8 +38,6 @@ from src.pyssa.controller import help_manager
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.gui.ui.views import histogram_properties_view
 from src.pyssa.internal.data_structures import protein_pair
-from src.pyssa.internal.thread import tasks
-from src.pyssa.internal.thread.async_pyssa import util_async
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import pyssa_keys, enums
 from src.pyssa.util import constants
@@ -51,7 +48,7 @@ logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 
-class PlotWidget(QWidget):
+class PlotWidget(QtWidgets.QWidget):
   """Class for a custom QWidget for plotting."""
 
   def __init__(self, parent=None) -> None:  # noqa: ANN001
@@ -63,7 +60,7 @@ class PlotWidget(QWidget):
     super(PlotWidget, self).__init__(parent)
     self.figure = Figure(figsize=(9, 5.25))
     self.canvas = FigureCanvas(self.figure)
-    layout = QVBoxLayout()
+    layout = QtWidgets.QVBoxLayout()
     layout.addWidget(self.canvas)
     self.setLayout(layout)
 
@@ -317,7 +314,7 @@ class PlotView(QtWidgets.QDialog):
   def _initialize_ui(self) -> None:
     """Initializes the user interface by defining and setting up all the required UI elements such as scroll areas, plot widgets, menu bar, labels, and actions."""
     # <editor-fold desc="Define basic ui elements">
-    self.scroll_area = QScrollArea()
+    self.scroll_area = QtWidgets.QScrollArea()
     self.plot_widget_dplot = PlotWidget()
     self.plot_widget_dhistogram = PlotWidget()
     self.menubar = QtWidgets.QMenuBar(self)
@@ -489,16 +486,17 @@ class PlotView(QtWidgets.QDialog):
     self.vertical_splitter.addWidget(plot_area)
     # Right side (table)
     self.vertical_splitter.addWidget(self.container_widget)
+    self.vertical_splitter.setOrientation(Qt.Orientation.Horizontal)
     # Second splitter within the plot area to split it horizontally
     self.horizontal_splitter = QtWidgets.QSplitter()
-    plot_area_layout = QVBoxLayout()
+    plot_area_layout = QtWidgets.QVBoxLayout()
     plot_area.setLayout(plot_area_layout)
     plot_area_layout.addWidget(self.horizontal_splitter)
     # Left part of the plot area
     self.horizontal_splitter.addWidget(self.plot_widget_dplot)
     # Right part of the plot area
     self.horizontal_splitter.addWidget(self.scroll_area)
-    self.horizontal_splitter.setOrientation(0)  # Set orientation to horizontal
+    self.horizontal_splitter.setOrientation(Qt.Orientation.Vertical)  # Set orientation to horizontal
 
     self.vertical_splitter.setCollapsible(0, False)
     self.main_layout.setMenuBar(self.menubar)
@@ -1246,7 +1244,7 @@ class PlotView(QtWidgets.QDialog):
     self.hide_selected_column.triggered.connect(self._hide_selected_column)
 
     # Set the context menu for the buttons
-    self.table_view.setContextMenuPolicy(3)
+    self.table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     self.table_view.customContextMenuRequested.connect(self._show_context_menu)
 
     # <editor-fold desc="Context menu setup for histogram">

@@ -20,11 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the add protein view."""
-from PyQt5.QtCore import pyqtSignal
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import pyqtSignal
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.forms.auto_generated.auto_dialog_add_model import Ui_Dialog
 from src.pyssa.gui.ui.styles import styles
@@ -62,7 +62,8 @@ class AddProteinView(QtWidgets.QDialog):
     self.ui.btn_cancel.clicked.connect(self.close)
     self.setWindowTitle("Import Protein Structure")
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     # this flag needs to be set if the WhatsThat icon in the window bar should be hidden
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint

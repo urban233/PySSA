@@ -20,10 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the create project view."""
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.forms.auto_generated import auto_create_project_view
 from src.pyssa.gui.ui.styles import styles
@@ -64,12 +64,17 @@ class CreateProjectView(QtWidgets.QDialog):
     self.ui.btn_help.setText("")
     self.ui.btn_new_create_project.setEnabled(False)
     styles.color_bottom_frame_button(self.ui.btn_new_create_project)
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     self.setWindowTitle("Create Project")
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
+    # Clear any tooltips - help should only appear in Help Panel
+    self.setToolTip("")
+    # Ensure objectName is set for hover help
+    self.setObjectName("CreateNewProjectDialog")
 
   def closeEvent(self, event) -> None:
     """Closes the dialog (with the closeEvent) and emits the 'dialogClosed' signal."""

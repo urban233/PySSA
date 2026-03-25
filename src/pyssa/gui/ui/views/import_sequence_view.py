@@ -20,11 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the import sequence view."""
-from PyQt5.QtCore import pyqtSignal
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
+from src.pyssa.gui.qt import pyqtSignal
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtGui
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.forms.auto_generated import auto_import_sequence_view
 from src.pyssa.gui.ui.styles import styles
@@ -54,7 +54,8 @@ class ImportSequenceView(QtWidgets.QDialog):
     styles.color_bottom_frame_button(self.ui.btn_import_sequence)
     self.ui.lbl_status.setText("")
     self.ui.btn_choose_fasta_file.setToolTip("Click to add a .fasta file")
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
     self.ui.btn_help.setIconSize(
         self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))

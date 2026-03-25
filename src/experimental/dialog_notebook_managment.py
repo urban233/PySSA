@@ -19,8 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtWidgets
 from datetime import datetime
 from src.pyssa.gui.ui.forms.auto_generated.auto_dialog_notebook_managment import Ui_Dialog
 from src.pyssa.util import gui_utils

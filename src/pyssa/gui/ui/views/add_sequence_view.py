@@ -20,11 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the add sequence view."""
-from PyQt5.QtCore import pyqtSignal
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import pyqtSignal
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.ui.forms.auto_generated import auto_add_sequence_view
 from src.pyssa.gui.ui.styles import styles
 from src.pyssa.util import constants
@@ -58,7 +58,8 @@ class AddSequenceView(QtWidgets.QDialog):
     self.ui.btn_help.setText("")
     self.ui.btn_cancel.clicked.connect(self.close)
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
@@ -66,6 +67,7 @@ class AddSequenceView(QtWidgets.QDialog):
     self.setWindowModality(Qt.WindowModal)
 
   def _initalize_ui(self):
+    self.ui.le_seq_name.setMaxLength(40)
     self.ui.btn_next.setEnabled(False)
     self.ui.lbl_status.setText("")
     self.ui.lbl_protein_seq.hide()

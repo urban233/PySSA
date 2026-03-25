@@ -23,7 +23,7 @@
 import logging
 import os
 import pathlib
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import constants, global_variables, exception
 
@@ -94,6 +94,112 @@ def color_button_not_ready(button: QtWidgets.QPushButton) -> None:
     button.setStyleSheet(button_style)
 
 
+def color_bottom_frame(self):
+  self.setStyleSheet("""
+  QFrame#frame_bottom {
+        background-color: #f7f8fa;
+        border-style: solid;
+        border-width: 1px;
+        border-radius: 6px;
+        border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+        border-top-color: #ebecf0;
+        border-top-left-radius: 0px;
+        border-top-right-radius: 0px;
+    }
+    
+    QFrame#frame_bottom_2 {
+        background-color: #f7f8fa;
+        border-style: solid;
+        border-width: 1px;
+        border-radius: 6px;
+        border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+        border-top-color: #ebecf0;
+        border-top-left-radius: 0px;
+        border-top-right-radius: 0px;
+    }
+    
+    QFrame#frame_bottom_3 {
+        background-color: #f7f8fa;
+        border-style: solid;
+        border-width: 1px;
+        border-radius: 6px;
+        border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+        border-top-color: #ebecf0;
+        border-top-left-radius: 0px;
+        border-top-right-radius: 0px;
+    }
+    /*<editor-fold desc="Help button styles">*/
+    QPushButton#btn_help {
+        background-color: white;
+        /*border-style: outset;*/
+        border: none;
+        border-width: 2px;
+        border-radius: 10px;
+        padding: 2px;
+        min-width: 20px;
+        max-width: 20px;
+        min-height: 20px;
+        max-height: 20px
+    }
+    
+    QPushButton#btn_help_2 {
+        background-color: white;
+        /*border-style: outset;*/
+        border: none;
+        border-width: 2px;
+        border-radius: 10px;
+        padding: 2px;
+        min-width: 20px;
+        max-width: 20px;
+        min-height: 20px;
+        max-height: 20px
+    }
+    
+    QPushButton#btn_help_3 {
+        background-color: white;
+        /*border-style: outset;*/
+        border: none;
+        border-width: 2px;
+        border-radius: 10px;
+        padding: 2px;
+        min-width: 20px;
+        max-width: 20px;
+        min-height: 20px;
+        max-height: 20px
+    }
+    
+    QPushButton::hover#btn_help {
+        background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                    stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+        background: white;
+        color: white;
+        color: #4B91F7;
+        border: 2px solid #DCDBE3;
+    }
+    
+    QPushButton::hover#btn_help_2 {
+        background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                    stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+        background: white;
+        color: white;
+        color: #4B91F7;
+        border: 2px solid #DCDBE3;
+    }
+    
+    QPushButton::hover#btn_help_3 {
+        background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                    stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+        background: white;
+        color: white;
+        color: #4B91F7;
+        border: 2px solid #DCDBE3;
+    }
+    /*</editor-fold>*/
+  """)
+
 def set_stylesheet(self) -> None:  # noqa: ANN001
   """Sets the style sheet to the QMainWindow or a QDialog.
 
@@ -110,7 +216,7 @@ def set_stylesheet(self) -> None:  # noqa: ANN001
   ) as file:
     style = file.read()
     # Set the stylesheet of the application
-    self.setStyleSheet(style)
+    # self.setStyleSheet(style)
 
 
 def set_stylesheet_homepage(self) -> None:  # noqa: ANN001
@@ -158,8 +264,8 @@ def get_tree_view_stylesheet() -> str:
       image: arrow-down
   }}
   """
-  css_string = css_string.replace("arrow-right", f"url({local_app_data_path}/IBCI/PySSA/assets/icons/keyboard_arrow_right_w400.svg)")
-  css_string = css_string.replace("arrow-down", f"url({local_app_data_path}/IBCI/PySSA/assets/icons/keyboard_arrow_down_w400.svg)")
+  css_string = css_string.replace("arrow-right", f"url({constants.ICONS_PATH}/keyboard_arrow_right_w400.svg)")
+  css_string = css_string.replace("arrow-down", f"url({constants.ICONS_PATH}/keyboard_arrow_down_w400.svg)")
   return css_string
 
 
@@ -175,11 +281,11 @@ def inject_local_appdata_path_into_stylesheet() -> None:
       css_string = file.read()
       css_string = css_string.replace(
         "arrow-right",
-        f"url({tmp_local_app_data_path}/IBCI/PySSA/assets/icons/keyboard_arrow_right_w400.svg)"
+        f"url({constants.ICONS_PATH}/keyboard_arrow_right_w400.svg)"
       )
       css_string = css_string.replace(
         "arrow-down",
-        f"url({tmp_local_app_data_path}/IBCI/PySSA/assets/icons/keyboard_arrow_down_w400.svg)"
+        f"url({constants.ICONS_PATH}/keyboard_arrow_down_w400.svg)"
       )
 
     with open(tmp_stylesheet_path, "w", encoding="utf-8") as file:

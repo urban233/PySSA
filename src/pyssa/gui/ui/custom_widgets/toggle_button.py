@@ -21,10 +21,10 @@
 #
 """Module for the custom toggle button widget."""
 import logging
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt, pyqtSignal
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt, pyqtSignal
 
 from src.pyssa.logging_pyssa import log_handlers
 

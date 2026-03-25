@@ -22,8 +22,10 @@
 """Module for the create project view controller."""
 import logging
 
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import Qt
+from src.pyssa.gui import app_state
+from src.pyssa.gui.qt import QtCore, QtWidgets
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.ui.views import create_project_view, help_view
 from src.pyssa.util import input_validator, constants, exception
 from src.pyssa.logging_pyssa import log_levels, log_handlers
 
@@ -35,34 +37,36 @@ __docformat__ = "google"
 class CreateProjectViewController(QtCore.QObject):
   """Class for the CreateProjectViewController."""
 
-  user_input = QtCore.pyqtSignal(tuple)
-  """Singal used to transfer data back to the previous window."""
-
   def __init__(
-      self, the_interface_manager: "interface_manager.InterfaceManager"
+          self,
+          the_app_state: "app_state.AppState",
+          a_parent=None
   ) -> None:
     """Constructor.
 
     Args:
-        the_interface_manager (interface_manager.InterfaceManager): The InterfaceManager object.
+        the_app_state (app_state.AppState): The AppState object.
 
     Raises:
-        exception.IllegalArgumentError: If `the_interface_manager` is None.
+        exception.IllegalArgumentError: If `the_app_state` is None.
     """
     # <editor-fold desc="Checks">
-    if the_interface_manager is None:
-      logger.error("the_interface_manager is None.")
-      raise exception.IllegalArgumentError("the_interface_manager is None.")
+    if the_app_state is None:
+      logger.error("the_app_state is None.")
+      raise exception.IllegalArgumentError("the_app_state is None.")
 
     # </editor-fold>
 
     super().__init__()
-    self._interface_manager = the_interface_manager
-    self._view = the_interface_manager.get_create_view()
-    self._restore_ui()
+    self._app_state = the_app_state
+    self._view = create_project_view.CreateProjectView(a_parent)
+    self.restore_default_view()
     self._project_names: set = self._convert_model_into_set()
     self._connect_all_ui_elements_to_slot_functions()
     self._hide_add_protein_options()
+
+  def get_view(self):
+    return self._view
 
   # <editor-fold desc="Util methods">
   def _open_help_for_dialog(self) -> None:
@@ -70,9 +74,12 @@ class CreateProjectViewController(QtCore.QObject):
     logger.log(
       log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked."
     )
-    self._interface_manager.help_manager.open_create_project_page()
+    tmp_dialog = help_view.HelpView(
+      constants.HELP_TEXT_MAP["CreateNewProjectDialog"]
+    )
+    tmp_dialog.exec()
 
-  def _restore_ui(self) -> None:
+  def restore_default_view(self) -> None:
     """Restores the UI."""
     self._view.ui.list_create_projects_view.clearSelection()
     self._fill_projects_list_view()
@@ -89,14 +96,15 @@ class CreateProjectViewController(QtCore.QObject):
         "color: #ba1a1a; font-size: 11px;"
     )
     self._view.ui.btn_new_create_project.setEnabled(False)
-    self._view.ui.cb_new_add_reference.setCheckState(False)
+    # self._view.ui.cb_new_add_reference.setCheckState(False)
     self._view.ui.txt_new_choose_reference.clear()
     self._hide_add_protein_options()
+    self._set_ui_loading(False)
 
   def _fill_projects_list_view(self) -> None:
     """Lists all projects."""
     self._view.ui.list_create_projects_view.setModel(
-        self._interface_manager.get_workspace_projects()
+        self._app_state.workspace.get_model()
     )
 
   def _convert_model_into_set(self) -> set:
@@ -142,12 +150,71 @@ class CreateProjectViewController(QtCore.QObject):
     logger.log(
         log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create' button was clicked."
     )
+    project_name = self._view.ui.txt_new_project_name.text()
+    db_path = str(self._app_state.workspace.construct_project_db_path(project_name))
+    logger.log(
+      log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+      f"Creating project '{project_name}'.",
+    )
+    self._set_ui_loading(True)
+
+    from src.pyssa.io_pyssa.db_pyssa import ProjectDatabase
+    from src.pyssa.model import psa_objects_model
+    from src.pyssa.internal.thread.thread_api import thread_runtime
+
+    def create_project(progress_callback, is_cancelled):
+      tmp_db = ProjectDatabase(db_path=db_path, project_id=project_name)
+      if is_cancelled():
+        tmp_db.close()
+        raise InterruptedError("Cancelled before creating project database.")
+      
+      tmp_db.initialise_schema()
+      import platform
+      tmp_db.insert_project(name=project_name, os=platform.system())
+
+      from src.pyssa.internal.data_structures import project
+      import pathlib
+      tmp_project = project.Project(project_name, pathlib.Path(self._app_state.get_settings().workspace_path))
+      tmp_project.set_id(tmp_db.get_project_id(project_name))
+
+      if is_cancelled():
+        tmp_db.close()
+        raise InterruptedError("Cancelled after creating project.")
+
+      tmp_pyssa_objects_model = psa_objects_model.PSAObjectsModel()
+      tmp_pyssa_objects_model.build_model(tmp_project)
+      return tmp_project, tmp_db, tmp_pyssa_objects_model
+
+    def on_success(result):
+      tmp_project, tmp_db, tmp_pyssa_objects_model = result
+      self._app_state.pyssa_objects_model = tmp_pyssa_objects_model
+      self._app_state.open_project(tmp_project, tmp_db)
+      self._app_state._build_workspace_model()
+      self._app_state.status_bar_manager.show_permanent_message("", False)
+      self._app_state.status_bar_manager.show_temporary_message("Project created.")
+
+    def on_error(exc):
+      logger.exception("Failed to create project.", exc_info=exc)
+      self._set_ui_loading(False)
+      QtWidgets.QMessageBox.critical(
+        self._view,
+        "Failed to create project",
+        f"Could not create the project:\n{exc}",
+      )
+      self._app_state.status_bar_manager.show_error_message(
+        "Failed to create project", True
+      )
+
+    (
+      thread_runtime.get_singleton_thread_runtime()
+      .run(create_project)
+      .on_success(on_success)
+      .on_error(on_error)
+      .start()
+    )
     self._view.close()
-    self.user_input.emit(
-        (
-            self._view.ui.txt_new_project_name.text(),
-            self._view.ui.txt_new_choose_reference.text(),
-        )
+    self._app_state.status_bar_manager.show_permanent_message(
+      "Creating project ...", True
     )
 
   def _hide_add_protein_options(self) -> None:
@@ -237,3 +304,11 @@ class CreateProjectViewController(QtCore.QObject):
       self._view.ui.btn_new_create_project.setEnabled(True)
     except ValueError:
       logger.error("No file has been selected.")
+
+  def _set_ui_loading(self, loading: bool) -> None:
+    """Disables/Enables UI elements during processing."""
+    self._view.ui.btn_new_create_project.setEnabled(not loading)
+    self._view.ui.list_create_projects_view.setEnabled(not loading)
+    self._view.ui.txt_new_project_name.setEnabled(not loading)
+    self._view.ui.btn_new_choose_reference.setEnabled(not loading)
+    self._view.ui.cb_new_add_reference.setEnabled(not loading)

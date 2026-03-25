@@ -20,10 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the settings view."""
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.forms.auto_generated import auto_settings_view
 from src.pyssa.gui.ui.styles import styles
@@ -43,7 +43,8 @@ class SettingsView(QtWidgets.QDialog):
     self.ui = auto_settings_view.Ui_Dialog()
     self.ui.setupUi(self)
     self._initialize_ui()
-    self.resize(450, 600)
+    self.resize(500, 250)
+    self.setMinimumSize(500, 300)
     self.ui.btn_cancel.clicked.connect(self.close)
     self.setWindowModality(Qt.WindowModal)
 
@@ -54,10 +55,16 @@ class SettingsView(QtWidgets.QDialog):
         self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
     )
     self.ui.btn_help.setText("")
+    self.ui.spb_cycles.setMinimumWidth(80)
+    self.ui.dspb_cutoff.setMinimumWidth(80)
     styles.color_bottom_frame_button(self.ui.btn_ok)
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     self.setWindowTitle("Settings")
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
+    # Set objectName for hover help
+    self.setObjectName("SettingsDialog")
+    self.setToolTip("")

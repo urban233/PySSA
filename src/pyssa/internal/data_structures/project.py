@@ -25,7 +25,7 @@ import logging
 import pathlib
 import platform
 from typing import TYPE_CHECKING, Optional
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 import numpy as np
 from Bio import SeqRecord
 

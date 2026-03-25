@@ -24,7 +24,6 @@ import logging
 from typing import TYPE_CHECKING, Optional
 from src.pyssa.controller import pymol_session_manager
 from src.pyssa.logging_pyssa import log_handlers
-from src.pyssa.util import exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)

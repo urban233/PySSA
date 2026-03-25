@@ -20,11 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the fasta file import preview view."""
-from PyQt5.QtWidgets import QDialog
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtGui
 
 from src.pyssa.gui.ui.custom_delegates import sequence_table_delegate
 from src.pyssa.gui.ui.styles import styles
@@ -33,7 +32,7 @@ from src.pyssa.gui.ui import icon_resources  # this import is used for the icons
 from src.pyssa.gui.ui.forms.auto_generated.auto_fasta_file_import_preview_view import Ui_Dialog
 
 
-class FastaFileImportPreviewView(QDialog):
+class FastaFileImportPreviewView(QtWidgets.QDialog):
   """A QDialog that allows users to customize the fasta file import."""
 
   def __init__(self, parent=None) -> None:
@@ -55,7 +54,8 @@ class FastaFileImportPreviewView(QDialog):
     self.ui.btn_cancel.clicked.connect(self.close)
     self.setWindowTitle("FASTA File Import Preview")
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.resize(900, 600)
     # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
     self.setWindowFlags(

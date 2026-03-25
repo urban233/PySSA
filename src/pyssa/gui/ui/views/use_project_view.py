@@ -23,10 +23,10 @@
 import os
 import glob
 
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.forms.auto_generated import auto_use_project_view
 from src.pyssa.gui.ui.styles import styles
@@ -46,6 +46,8 @@ class UseProjectView(QtWidgets.QDialog):
     self.resize(450, 600)
     self.ui.btn_cancel.clicked.connect(self.close)
     self.setWindowModality(Qt.WindowModal)
+    self.setObjectName("UseProjectDialog")
+    self.setToolTip("")
 
   def _initialize_ui(self) -> None:
     """Initialize the UI elements."""
@@ -60,7 +62,8 @@ class UseProjectView(QtWidgets.QDialog):
     )
     self.ui.btn_help.setText("")
     styles.color_bottom_frame_button(self.ui.btn_use_create_new_project)
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     self.setWindowTitle("Use Project")
     self.setWindowFlags(

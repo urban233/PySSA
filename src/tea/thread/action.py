@@ -24,7 +24,7 @@ import pathlib
 import uuid
 from typing import Optional, Callable, Any
 
-from PyQt5 import QtCore
+from src.pyssa.gui.qt import QtCore
 
 from src.tea.thread import task_signals
 from src.tea.util import tea_exception

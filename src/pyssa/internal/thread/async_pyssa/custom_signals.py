@@ -23,9 +23,9 @@
 import logging
 from typing import Callable
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import pyqtSignal
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import pyqtSignal
+from src.pyssa.gui.qt import QtWidgets
 
 from src.pyssa.internal.data_structures.data_classes import job_summary
 from src.pyssa.logging_pyssa import log_handlers

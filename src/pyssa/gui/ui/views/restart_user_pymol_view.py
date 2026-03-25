@@ -20,11 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the add sequence view."""
-from PyQt5.QtCore import pyqtSignal
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import pyqtSignal
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.custom_dialogs import custom_message_box
 from src.pyssa.gui.ui.forms.auto_generated import auto_restart_user_pymol_view

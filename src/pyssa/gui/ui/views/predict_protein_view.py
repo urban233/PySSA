@@ -20,11 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the predict protein view."""
-from PyQt5.QtCore import pyqtSignal
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from src.pyssa.gui.qt import pyqtSignal
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtWidgets
 from src.pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from src.pyssa.gui.ui.forms.auto_generated import auto_predict_protein_view
 from src.pyssa.gui.ui.styles import styles
@@ -68,9 +68,13 @@ class PredictProteinView(QtWidgets.QDialog):
         self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30))
     )
     self.ui.btn_help_2.setText("")
-    styles.set_stylesheet(self)
+    # styles.set_stylesheet(self)
+    styles.color_bottom_frame(self)
     self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     self.setWindowTitle("Protein Structure Prediction")
     self.setWindowFlags(
         self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint
     )
+    # Set objectName for hover help
+    self.setObjectName("PredictProteinDialog")
+    self.setToolTip("")

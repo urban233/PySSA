@@ -22,10 +22,10 @@
 """Module for the renaming protein dialog."""
 import pathlib
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import pyqtSignal
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import pyqtSignal
 
 from src.pyssa.gui.ui.custom_widgets import custom_line_edit
 from src.pyssa.gui.ui.forms.auto_generated import auto_dialog_rename_protein

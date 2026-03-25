@@ -21,13 +21,15 @@
 #
 """Module contains the protein pairs model."""
 import logging
+from warnings import deprecated
 
 import zmq
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from src.pyssa.gui.qt import QtGui
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import Qt
 
-from src.auxiliary_pymol import auxiliary_pymol_client
+from src.pyssa.internal.pymol.pml_worker import PmlWorker
+from src.pyssa.internal.pymol.pml_enums import PmlCommand
 from src.pyssa.internal.data_structures import protein_pair, job
 from src.pyssa.logging_pyssa import log_handlers
 from src.pyssa.util import enums, exception
@@ -37,6 +39,7 @@ logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 
+@deprecated("Use PSAProteinPairModel instead.")
 class ProteinPairsModel(QtGui.QStandardItemModel):
   """Contains the protein pairs of the project in form of a QStandardItemModel."""
 
@@ -47,15 +50,11 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
   def build_model_from_scratch(
       self,
       the_protein_pair_objects: list["protein_pair.ProteinPair"],
-      the_main_socket: zmq.Socket,
-      a_socket: zmq.Socket,
   ) -> None:
     """Builds a model from scratch using the given protein objects.
 
     Args:
         the_protein_pair_objects (list[protein_pair.ProteinPair]): A list of protein objects.
-        the_main_socket (zmq.Socket): The main socket used for communication.
-        a_socket (zmq.Socket): A socket used for communication.
 
     Raises:
         exception.IllegalArgumentError: If any of the arguments are None.
@@ -64,12 +63,6 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
     if the_protein_pair_objects is None:
       logger.error("the_protein_pair_objects is None.")
       raise exception.IllegalArgumentError("the_protein_pair_objects is None.")
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if a_socket is None:
-      logger.error("a_socket is None.")
-      raise exception.IllegalArgumentError("a_socket is None.")
 
     # </editor-fold>
 
@@ -85,22 +78,12 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
 
     tmp_root_item = self.invisibleRootItem()
     for tmp_protein_pair in the_protein_pair_objects:
-      tmp_job_description = job.GeneralPurposeJobDescription(
-          enums.JobShortDescription.GET_ALL_SCENES_OF_SESSION,
-      )
-      tmp_job_description.setup_dict(
-          {
-              enums.JobDescriptionKeys.PYMOL_SESSION.value: str(
-                  tmp_protein_pair.pymol_session
-              )
-          }
-      )
-      tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-          the_main_socket,
-          a_socket,
-          tmp_job_description,
-      )
-      tmp_all_scenes = tmp_reply["data"]
+      with PmlWorker.session(
+          PmlWorker.cache_session(tmp_protein_pair.pymol_session, "fetch_scenes")
+      ) as tmp_pml_worker:
+        tmp_all_scenes = tmp_pml_worker.do(
+          PmlCommand.GET_SCENE_LIST, sync=True
+        )
 
       tmp_protein_pair_item = QtGui.QStandardItem(tmp_protein_pair.name)
       tmp_protein_pair_item.setData(
@@ -310,15 +293,11 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
   def add_protein_pair(
       self,
       a_protein_pair: "protein_pair.ProteinPair",
-      the_main_socket: zmq.Socket,
-      a_socket: zmq.Socket,
   ) -> None:
     """Add a protein pair to the data model.
 
     Args:
         a_protein_pair (protein_pair.ProteinPair): The protein pair to add.
-        the_main_socket (zmq.Socket): The main socket used for communication.
-        a_socket (zmq.Socket): A socket used for communication.
 
     Raises:
         exception.IllegalArgumentError: If any of the arguments are None.
@@ -327,31 +306,15 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
     if a_protein_pair is None:
       logger.error("a_protein_pair is None.")
       raise exception.IllegalArgumentError("a_protein_pair is None.")
-    if the_main_socket is None:
-      logger.error("the_main_socket is None.")
-      raise exception.IllegalArgumentError("the_main_socket is None.")
-    if a_socket is None:
-      logger.error("a_socket is None.")
-      raise exception.IllegalArgumentError("a_socket is None.")
 
     # </editor-fold>
 
-    tmp_job_description = job.GeneralPurposeJobDescription(
-        enums.JobShortDescription.GET_ALL_SCENES_OF_SESSION,
-    )
-    tmp_job_description.setup_dict(
-        {
-            enums.JobDescriptionKeys.PYMOL_SESSION.value: str(
-                a_protein_pair.pymol_session
-            )
-        }
-    )
-    tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-        the_main_socket,
-        a_socket,
-        tmp_job_description,
-    )
-    tmp_all_scenes = tmp_reply["data"]
+    with PmlWorker.session(
+        PmlWorker.cache_session(a_protein_pair.pymol_session, "fetch_scenes")
+    ) as tmp_pml_worker:
+      tmp_all_scenes = tmp_pml_worker.do(
+        PmlCommand.GET_SCENE_LIST, sync=True
+      )
 
     tmp_protein_pair_item = QtGui.QStandardItem(a_protein_pair.name)
     tmp_protein_pair_item.setData(a_protein_pair, enums.ModelEnum.OBJECT_ROLE)

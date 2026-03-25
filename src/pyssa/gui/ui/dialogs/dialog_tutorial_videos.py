@@ -22,9 +22,9 @@
 """Module for the tutorial video dialog."""
 import os
 import pathlib
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-from PyQt5 import QtGui
+from src.pyssa.gui.qt import QtWidgets
+from src.pyssa.gui.qt import QtCore
+from src.pyssa.gui.qt import QtGui
 from src.pyssa.gui.ui.forms.auto_generated.auto_dialog_tutorial_videos import Ui_Dialog
 from src.pyssa.util import constants
 
