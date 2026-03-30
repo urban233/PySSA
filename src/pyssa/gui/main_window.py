@@ -855,8 +855,8 @@ def exec_app():
   pymol.cmd.set("internal_gui", 0)
   pymol.cmd.set("internal_feedback", 0)
 
-  # window.show()
-  window.showMaximized()
+  window.show()
+  # window.showMaximized()
 
   # window.raise_()
   #

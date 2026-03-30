@@ -1470,6 +1470,7 @@ class MainWindowController:
                 a_parent=self._main_window,
             )
             self._dialog_controllers["predict_monomer"].get_view().installEventFilter(self.help_filter)
+        self._dialog_controllers["predict_monomer"].get_view().resize(650, 450)
         self._dialog_controllers["predict_monomer"].get_view().show()
 
     def __slot_predict_multimer(self) -> None:
@@ -1493,6 +1494,7 @@ class MainWindowController:
                 a_parent=self._main_window,
             )
             self._dialog_controllers["predict_multimer"].get_view().installEventFilter(self.help_filter)
+        self._dialog_controllers["predict_multimer"].get_view().resize(650, 450)
         self._dialog_controllers["predict_multimer"].get_view().show()
     # </editor-fold>
 
