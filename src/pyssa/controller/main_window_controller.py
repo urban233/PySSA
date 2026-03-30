@@ -2141,6 +2141,7 @@ class MainWindowController:
         )
         self._user_pymol.set_current_scene_name(tmp_scene_name)
         self.refresh_ui(self._get_current_snapshot())
+        self._trigger_auto_save()
 
         # # Log selection context for debugging
         # snapshot = self._get_current_snapshot()
@@ -2181,6 +2182,7 @@ class MainWindowController:
             self.refresh_ui(self._get_current_snapshot())
         else:
             self._user_pymol.get_cmd_module().scene(tmp_current_scene_name, "update")
+        self._trigger_auto_save()
 
     def __slot_delete_scene(self):
         """Deletes the currently selected PyMOL scene and removes it from the list."""
@@ -2206,6 +2208,7 @@ class MainWindowController:
             self._user_pymol.get_cmd_module().scene("base", "recall")
             self._user_pymol.set_current_scene_name("base")
         self.refresh_ui(self._get_current_snapshot())
+        self._trigger_auto_save()
 
     # # </editor-fold>
 
