@@ -1512,14 +1512,13 @@ class MainWindowController:
 
     # <editor-fold desc="Results menu">
     def __slot_results_summary(self):
-        if not self._dialog_controllers.__contains__("results_summary_dialog"):
-            self._dialog_controllers["results_summary_dialog"] = results_view_controller.ResultsViewController(
-                self._get_selected_protein_pairs()[0], self._app_state, self._user_pymol, self._main_window
-            )
-            # Install hover help event filter on the dialog
-            dialog_view = self._dialog_controllers["results_summary_dialog"].get_view()
-            dialog_view.installEventFilter(self.help_filter)
-            logger.info(f"Installed hover help on Results Summary dialog (objectName: {dialog_view.objectName()})")
+        self._dialog_controllers["results_summary_dialog"] = results_view_controller.ResultsViewController(
+            self._get_selected_protein_pairs()[0], self._app_state, self._user_pymol, self._main_window
+        )
+        # Install hover help event filter on the dialog
+        dialog_view = self._dialog_controllers["results_summary_dialog"].get_view()
+        dialog_view.installEventFilter(self.help_filter)
+        logger.info(f"Installed hover help on Results Summary dialog (objectName: {dialog_view.objectName()})")
         self._dialog_controllers["results_summary_dialog"].restore_default_view()
         self._dialog_controllers["results_summary_dialog"].get_view().show()
     # </editor-fold>
