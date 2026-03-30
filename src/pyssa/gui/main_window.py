@@ -826,6 +826,9 @@ def exec_app():
 
   app = QtWidgets.QApplication(sys.argv)
   app.setWindowIcon(IconManager.instance().get_icon(IconManager.Icons.LOGO))
+  # Forces the style to be LightMode only
+  if hasattr(Qt, 'ColorScheme'):
+    app.styleHints().setColorScheme(Qt.ColorScheme.Light)
   window = MainWindow()
   controller = main_window_controller.MainWindowController(window)
 
