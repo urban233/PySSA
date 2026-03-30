@@ -193,4 +193,5 @@ class DeleteProjectViewController(QtCore.QObject):
       except Exception as e:
         logger.error(f"Failed to delete project '{name}'. Reason: {e}")
 
+    self._app_state.refresh_workspace_model()
     self.restore_default_view()
