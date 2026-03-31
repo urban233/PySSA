@@ -28,7 +28,7 @@ collapsing the structure hierarchy.
 
 Authors: Martin Urban, Hannah Kullik
 
-Version: 1.4.0
+Version: 1.4.1
 
 TODO: Work in progress, this panel is not yet functional.
 """

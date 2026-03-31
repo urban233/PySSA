@@ -189,7 +189,7 @@ class CreateProjectViewController(QtCore.QObject):
       tmp_project, tmp_db, tmp_pyssa_objects_model = result
       self._app_state.pyssa_objects_model = tmp_pyssa_objects_model
       self._app_state.open_project(tmp_project, tmp_db)
-      self._app_state._build_workspace_model()
+      self._app_state.refresh_workspace_model()
       self._app_state.status_bar_manager.show_permanent_message("", False)
       self._app_state.status_bar_manager.show_temporary_message("Project created.")
 

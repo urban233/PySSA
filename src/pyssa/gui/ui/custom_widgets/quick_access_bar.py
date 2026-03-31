@@ -32,7 +32,7 @@ as a compact tool button with consistent sizing and theming.
 
 Authors: Martin Urban, Hannah Kullik
 
-Version: 1.4.0
+Version: 1.4.1
 """
 
 from typing import Optional, Dict

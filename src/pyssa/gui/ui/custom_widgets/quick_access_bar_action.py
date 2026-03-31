@@ -33,7 +33,7 @@ consistent action management across the application.
 
 Authors: Martin Urban, Hannah Kullik
 
-Version: 1.4.0
+Version: 1.4.1
 """
 
 from typing import Union

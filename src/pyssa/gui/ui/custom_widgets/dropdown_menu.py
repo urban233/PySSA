@@ -31,7 +31,7 @@ and provides enhanced user interaction for multi-selection scenarios.
 
 Authors: Martin Urban, Hannah Kullik
 
-Version: 1.4.0
+Version: 1.4.1
 """
 
 from typing import Optional

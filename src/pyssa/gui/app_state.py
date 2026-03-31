@@ -93,6 +93,7 @@ class AppState:
 
     This method populates the workspace model with project items based on the database files found in the workspace directory.
     """
+    self._workspace.get_model().clear()
     db_pattern = os.path.join(self._workspace.path, "*.db")
     tmp_root_item = self._workspace.get_model().invisibleRootItem()
     for tmp_filename in [

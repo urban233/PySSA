@@ -23,7 +23,7 @@
 
 Authors: Martin Urban, Hannah Kullik
 
-Version: 1.4.0
+Version: 1.4.1
 """
 
 import pathlib
@@ -826,6 +826,9 @@ def exec_app():
 
   app = QtWidgets.QApplication(sys.argv)
   app.setWindowIcon(IconManager.instance().get_icon(IconManager.Icons.LOGO))
+  # Forces the style to be LightMode only
+  if hasattr(Qt, 'ColorScheme'):
+    app.styleHints().setColorScheme(Qt.ColorScheme.Light)
   window = MainWindow()
   controller = main_window_controller.MainWindowController(window)
 
@@ -855,8 +858,8 @@ def exec_app():
   pymol.cmd.set("internal_gui", 0)
   pymol.cmd.set("internal_feedback", 0)
 
-  # window.show()
-  window.showMaximized()
+  window.show()
+  # window.showMaximized()
 
   # window.raise_()
   #

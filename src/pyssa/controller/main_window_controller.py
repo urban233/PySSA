@@ -1470,6 +1470,7 @@ class MainWindowController:
                 a_parent=self._main_window,
             )
             self._dialog_controllers["predict_monomer"].get_view().installEventFilter(self.help_filter)
+        self._dialog_controllers["predict_monomer"].get_view().resize(650, 450)
         self._dialog_controllers["predict_monomer"].get_view().show()
 
     def __slot_predict_multimer(self) -> None:
@@ -1493,6 +1494,7 @@ class MainWindowController:
                 a_parent=self._main_window,
             )
             self._dialog_controllers["predict_multimer"].get_view().installEventFilter(self.help_filter)
+        self._dialog_controllers["predict_multimer"].get_view().resize(650, 450)
         self._dialog_controllers["predict_multimer"].get_view().show()
     # </editor-fold>
 
@@ -1512,14 +1514,13 @@ class MainWindowController:
 
     # <editor-fold desc="Results menu">
     def __slot_results_summary(self):
-        if not self._dialog_controllers.__contains__("results_summary_dialog"):
-            self._dialog_controllers["results_summary_dialog"] = results_view_controller.ResultsViewController(
-                self._get_selected_protein_pairs()[0], self._app_state, self._user_pymol, self._main_window
-            )
-            # Install hover help event filter on the dialog
-            dialog_view = self._dialog_controllers["results_summary_dialog"].get_view()
-            dialog_view.installEventFilter(self.help_filter)
-            logger.info(f"Installed hover help on Results Summary dialog (objectName: {dialog_view.objectName()})")
+        self._dialog_controllers["results_summary_dialog"] = results_view_controller.ResultsViewController(
+            self._get_selected_protein_pairs()[0], self._app_state, self._user_pymol, self._main_window
+        )
+        # Install hover help event filter on the dialog
+        dialog_view = self._dialog_controllers["results_summary_dialog"].get_view()
+        dialog_view.installEventFilter(self.help_filter)
+        logger.info(f"Installed hover help on Results Summary dialog (objectName: {dialog_view.objectName()})")
         self._dialog_controllers["results_summary_dialog"].restore_default_view()
         self._dialog_controllers["results_summary_dialog"].get_view().show()
     # </editor-fold>
@@ -2140,6 +2141,7 @@ class MainWindowController:
         )
         self._user_pymol.set_current_scene_name(tmp_scene_name)
         self.refresh_ui(self._get_current_snapshot())
+        self._trigger_auto_save()
 
         # # Log selection context for debugging
         # snapshot = self._get_current_snapshot()
@@ -2180,6 +2182,7 @@ class MainWindowController:
             self.refresh_ui(self._get_current_snapshot())
         else:
             self._user_pymol.get_cmd_module().scene(tmp_current_scene_name, "update")
+        self._trigger_auto_save()
 
     def __slot_delete_scene(self):
         """Deletes the currently selected PyMOL scene and removes it from the list."""
@@ -2205,6 +2208,7 @@ class MainWindowController:
             self._user_pymol.get_cmd_module().scene("base", "recall")
             self._user_pymol.set_current_scene_name("base")
         self.refresh_ui(self._get_current_snapshot())
+        self._trigger_auto_save()
 
     # # </editor-fold>
 
