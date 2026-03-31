@@ -27,7 +27,7 @@ close button, and a content frame for adding custom widgets.
 
 Authors: Martin Urban, Hannah Kullik
 
-Version: 1.4.0
+Version: 1.4.1
 """
 from src.pyssa.gui.ui.styles.icon_manager import IconManager
 from src.pyssa.gui.qt import QtCore

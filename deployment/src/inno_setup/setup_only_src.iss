@@ -7,7 +7,7 @@
 [Setup]
 WizardStyle=modern
 AppName=PySSA
-AppVersion=1.4.0
+AppVersion=1.4.1
 AppCopyright=Martin Urban, Hannah Kullik, IBCI
 AppId={{192F52C3-D86D-4735-9929-C7DF599CB538}
 DefaultDirName={localappdata}\IBCI\PySSA
@@ -16,7 +16,7 @@ VersionInfoProductName=PySSA
 MinVersion=10.0.19045
 PrivilegesRequired=lowest
 OutputDir=..\..\dist
-OutputBaseFilename=pyssa_src_update_1.4.0
+OutputBaseFilename=pyssa_src_update_1.4.1
 DisableReadyPage=True
 DisableWelcomePage=False
 DisableDirPage=True
@@ -45,8 +45,8 @@ Source: "..\..\..\ib-release\sources\*"; DestDir: "{app}"; Flags: ignoreversion 
 Source: "..\..\..\ib-release\assets\logo.ico"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs;
 
 [Icons]
-Name: "{userdesktop}\PySSA 1.4.0"; Filename: "{app}\start_pyssa.bat"; IconFilename: "{app}\assets\logo.ico"
-Name: "{userstartmenu}\PySSA 1.4.0"; Filename: "{app}\start_pyssa.bat"; IconFilename: "{app}\assets\logo.ico"
+Name: "{userdesktop}\PySSA 1.4.1"; Filename: "{app}\start_pyssa.bat"; IconFilename: "{app}\assets\logo.ico"
+Name: "{userstartmenu}\PySSA 1.4.1"; Filename: "{app}\start_pyssa.bat"; IconFilename: "{app}\assets\logo.ico"
 
 [Run]
 Filename: "{app}\third_party\VC_redist.x64.exe"; Parameters: "/quiet /norestart"; Flags: runhidden waituntilterminated
@@ -54,6 +54,13 @@ Filename: "{app}\third_party\VC_redist.x64.exe"; Parameters: "/quiet /norestart"
 [UninstallRun]
 Filename: "{app}\uninstall_helper.bat"; Flags: runhidden waituntilterminated
 ;Filename: "{cmd}"; Parameters: "/C wsl --unregister almaColabfold9"
+
+[InstallDelete]
+; Remove any old desktop shortcuts starting with "PySSA"
+Type: files; Name: "{userdesktop}\PySSA*.lnk"
+
+; Remove any old start menu shortcuts starting with "PySSA"
+Type: files; Name: "{userstartmenu}\PySSA*.lnk"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"

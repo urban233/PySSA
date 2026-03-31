@@ -30,7 +30,7 @@ from src.pyssa.util import globals, enums, help_text_loader
 
 # General
 PLUGIN_NAME = 'PySSA'
-VERSION_NUMBER = "v1.4.0"  # The version number MUST be in double quotes
+VERSION_NUMBER = "v1.4.1"  # The version number MUST be in double quotes
 
 # Debugging env var
 PYDEBUG: bool = os.getenv("PYDEBUG", "0") == "1"
