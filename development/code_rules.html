@@ -1,0 +1,3548 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://mydomain.org/mysite/development/code_rules.html">
+      
+      
+        <link rel="prev" href="../use_cases.html">
+      
+      
+        <link rel="next" href="../about.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/pyssa_logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Code Rules - PySSA</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+        <script src="https://unpkg.com/iframe-worker/shim"></script>
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#pyssa-code-rules" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="PySSA" class="md-header__button md-logo" aria-label="PySSA" data-md-component="logo">
+      
+  <img src="../assets/images/pyssa_logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PySSA
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Code Rules
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../index.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../install.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../help/index.html" class="md-tabs__link">
+          
+  
+  
+  Help
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../use_cases.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Use Cases
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="code_rules.html" class="md-tabs__link">
+          
+  
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../about.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  About
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="PySSA" class="md-nav__button md-logo" aria-label="PySSA" data-md-component="logo">
+      
+  <img src="../assets/images/pyssa_logo.png" alt="logo">
+
+    </a>
+    PySSA
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Help
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Help
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PySSA - Help Center
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Project
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/project/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/project/new_project.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New Project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/project/open_project.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/project/delete_project.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Delete Project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/project/import_project.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Import Project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/project/export_project.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export Project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequences
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sequences
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/sequences/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/sequences/sequences_tab.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequences Tab
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/sequences/additional_sequence_information.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Additional Information Table
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/sequences/sequence_import.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Import Sequence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/sequences/sequence_add.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Add Sequence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/sequences/sequence_save.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Save Sequence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/sequences/sequence_delete.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Delete Sequence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proteins
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Proteins
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/proteins/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/proteins/proteins_tab.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proteins Tab
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/proteins/protein_pymol_scene_configuration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protein PyMOL Scene Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/proteins/protein_import.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Import Protein
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/proteins/protein_save.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Save Protein
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/proteins/protein_delete.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Delete Protein
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/proteins/protein_load_session.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Load Protein PyMOL Session
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/proteins/protein_add_scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Add Protein PyMOL Scene
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/proteins/protein_update_scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Update Protein PyMOL Scene
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/proteins/protein_delete_scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Delete Protein PyMOL Scene
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protein Pairs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Protein Pairs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_pairs/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_pairs/protein_pairs_tab.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protein Pairs Tab
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_pairs/protein_pair_pymol_scene_configuration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protein Pair PyMOL Scene Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_pairs/protein_pair_delete.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Delete Protein Pair
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_pairs/protein_pair_load_session.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Load Protein Pair PyMOL Session
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_pairs/protein_pair_add_scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Add Protein Pair PyMOL Scene
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_pairs/protein_pair_update_scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Update Protein Pair PyMOL Scene
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_pairs/protein_pair_delete_scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Delete Protein Pair PyMOL Scene
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protein Structure Prediction
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Protein Structure Prediction
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_structure_prediction/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_structure_prediction/colabfold.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ColabFold Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_structure_prediction/advanced_prediction_configurations.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Prediction Configurations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protein Structure Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Protein Structure Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_structure_analysis/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/protein_structure_analysis/distance_analysis.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Distance Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/results/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/results/summary.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/results/distance_data_visualizer.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DD Visualizer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hotspots
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Hotspots
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/hotspots/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/hotspots/protein_regions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protein Regions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_10" id="__nav_3_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Images
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Images
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/images/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/images/preview_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preview Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/images/ray_traced_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ray-Traced Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/images/simple_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simple Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_11" id="__nav_3_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Settings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/settings/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/settings/pyssa_settings.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PySSA Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../use_cases.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Use Cases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Rules
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="code_rules.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Description
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#linting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#type-annotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type annotation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Type annotation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#annotations-of-python-built-ins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations of Python built-ins
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotations-of-pyssa-built-ins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations of PySSA built-ins
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotations-of-library-built-ins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations of library built-ins
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotations-of-return-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations of return values
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#naming-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Naming conventions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imports
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exception-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exception handling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exception handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#argument-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Argument checks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#try-except-blocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        try-except blocks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#communication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Communication
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Communication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#qmainwindow-qdialogs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QMainWindow &amp; QDialogs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="QMainWindow &amp; QDialogs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-to" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How-to
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#threading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threading
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Threading">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Database">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-interaction-with-databasex-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic interaction with DatabaseX classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-new-sql-queries-to-the-databasethread" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding new SQL queries to the DatabaseThread
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Terminology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Terminology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#path-dir-file-filepath" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path, dir, file &amp; filepath
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#difference-between-todo-and-fixme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Difference between TODO and fixme
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code formatting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Code formatting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#editor-folds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Editor folds
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../about.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Description
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#linting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#type-annotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type annotation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Type annotation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#annotations-of-python-built-ins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations of Python built-ins
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotations-of-pyssa-built-ins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations of PySSA built-ins
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotations-of-library-built-ins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations of library built-ins
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotations-of-return-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations of return values
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#naming-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Naming conventions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imports
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exception-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exception handling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exception handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#argument-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Argument checks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#try-except-blocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        try-except blocks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#communication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Communication
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Communication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#qmainwindow-qdialogs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QMainWindow &amp; QDialogs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="QMainWindow &amp; QDialogs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-to" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How-to
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#threading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threading
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Threading">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Database">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-interaction-with-databasex-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic interaction with DatabaseX classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-new-sql-queries-to-the-databasethread" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding new SQL queries to the DatabaseThread
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Terminology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Terminology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#path-dir-file-filepath" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path, dir, file &amp; filepath
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#difference-between-todo-and-fixme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Difference between TODO and fixme
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code formatting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Code formatting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#editor-folds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Editor folds
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="pyssa-code-rules">PySSA Code Rules</h1>
+<h2 id="description">Description</h2>
+<p>Python is the main programming language of the PySSA project.
+This document describes the rules which must be followed if the
+source code gets extended.
+The rule of thumb is to follow the <a href="https://google.github.io/styleguide/pyguide.html">Google style guide for Python</a>, but anything 
+mentioned in this document <strong>overrides</strong> the Google style guide.
+These rules can be outdated or changed at any time.</p>
+<h2 id="linting">Linting</h2>
+<p>You have to run <a href="https://docs.astral.sh/ruff/">ruff</a> over your code to check any static errors.
+The configuration to use is defined in the <code>pyproject.toml</code>.
+Do <strong>NOT</strong> commit any code which is not linted with <code>ruff</code> and all ruff errors 
+are fixed.</p>
+<h2 id="type-annotation">Type annotation</h2>
+<p>Python is a dynamically typed language, but this project
+makes heavy use of type annotations.
+The decision emphasizes robust and less error-prone code.
+Therefore, you have to use Python's type annotation feature.</p>
+<h3 id="annotations-of-python-built-ins">Annotations of Python built-ins</h3>
+<p>Annotating variables using python built-ins where it is possible.
+<div class="highlight"><pre><span></span><code><span class="n">i</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">program_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;PySSA&quot;</span>
+</code></pre></div></p>
+<h3 id="annotations-of-pyssa-built-ins">Annotations of PySSA built-ins</h3>
+<p>Annotating variables using PySSA built-ins where data structures of
+PySSA are used.
+<div class="highlight"><pre><span></span><code><span class="n">protein_pairs_for_analysis</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s1">&#39;protein_pair.ProteinPair&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</code></pre></div></p>
+<h3 id="annotations-of-library-built-ins">Annotations of library built-ins</h3>
+<p>Annotating variables using library built-ins where data types of
+libraries are used.
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">distances_of_amino_acid_pairs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">([])</span>
+</code></pre></div></p>
+<h3 id="annotations-of-return-values">Annotations of return values</h3>
+<p>If a function/ method has a return value that will not be used, that
+function call needs to be wrapped inside the <code>rvoid</code> function.
+The <code>rvoid</code> function is the only function which gets imported as function
+and not as module:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyssa.util.void</span><span class="w"> </span><span class="kn">import</span> <span class="n">rvoid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyssa.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">main_window_util</span>
+
+<span class="n">rvoid</span><span class="p">(</span><span class="n">main_window_util</span><span class="o">.</span><span class="n">setup_app_settings</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app_settings</span><span class="p">))</span>  
+<span class="c1"># void indicates that there is a return value, but it is not used</span>
+</code></pre></div>
+<h2 id="naming-conventions">Naming conventions</h2>
+<ul>
+<li>Package: snake_case</li>
+<li>Module: snake_case</li>
+<li>Class: PascalCase</li>
+<li>Method: snake_case</li>
+<li>private: _ prefix (single underscore)
+  <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_create_directory_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</code></pre></div></li>
+<li>slots: __ prefix (double underscore)
+  <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__slot_open_project</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</code></pre></div></li>
+<li>Function: snake_case</li>
+<li>Variable: snake_case</li>
+<li>argument: a/an_var_name, if no specific variable is meant.
+  <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">export_protein_as_pdb_file</span><span class="p">(</span><span class="n">a_filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</code></pre></div></li>
+<li>argument: the_var_name, if a specific variable is meant.
+  <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_settings</span><span class="p">(</span><span class="n">the_app_settings</span><span class="p">:</span> <span class="s1">&#39;settings.Settings&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</code></pre></div></li>
+<li>method/function scope: tmp_ prefix
+  <div class="highlight"><pre><span></span><code><span class="o">...</span>
+<span class="n">tmp_destination_filepath</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;/home/rhel_user/scratch/log.txt&quot;</span>
+<span class="o">...</span>
+</code></pre></div></li>
+<li>Global variable: g_ prefix + snake_case</li>
+</ul>
+<h2 id="imports">Imports</h2>
+<p>Never use wildcard imports. Always import the module <strong>not</strong> the class itself.
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pymol</span><span class="w"> </span><span class="kn">import</span> <span class="n">cmd</span> <span class="c1"># Correct: Module is imported</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pymol</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span> <span class="c1"># Wrong! Wildcard import</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">exists</span> <span class="c1"># Wrong! Function/Class import</span>
+</code></pre></div>
+Use official abbreviations for common python libraries.
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+</code></pre></div></p>
+<h2 id="exception-handling">Exception handling</h2>
+<h3 id="argument-checks">Argument checks</h3>
+<p>Always check for None:
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">copy_fasta_file</span><span class="p">(</span><span class="n">a_source_filepath</span><span class="p">,</span> <span class="n">a_destination_filepath</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">a_source_filepath</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The argument &#39;a_source_filepath&#39; is illegal: </span><span class="si">{</span><span class="n">a_source_filepath</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">IllegalArgumentError</span><span class="p">(</span><span class="s2">&quot;An argument is illegal.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">a_destination_filepath</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The argument &#39;a_destination_filepath&#39; is illegal: </span><span class="si">{</span><span class="n">a_destination_filepath</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">IllegalArgumentError</span><span class="p">(</span><span class="s2">&quot;An argument is illegal.&quot;</span><span class="p">)</span>
+</code></pre></div></p>
+<p>Raise <strong>IllegalArgumentError</strong> if <em>unmodified</em> argument
+is <strong>not</strong> usable for the function/method:
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">copy_fasta_file</span><span class="p">(</span><span class="n">a_source_filepath</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="n">a_destination_filepath</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">):</span>
+  <span class="o">...</span>
+  <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">a_source_filepath</span><span class="p">):</span>  <span class="c1"># argument is unmodified</span>
+    <span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">IllegalArgumentError</span><span class="p">(</span><span class="s2">&quot;An argument is illegal.&quot;</span><span class="p">)</span>
+</code></pre></div></p>
+<p>Raise custom exception if argument
+is <em>modified</em> <strong>and</strong> is <strong>not</strong> usable for the function/method
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">copy_fasta_file</span><span class="p">(</span><span class="n">a_source_filepath</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="n">a_destination_filepath</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">):</span>
+  <span class="o">...</span>
+  <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">a_source_filepath</span><span class="o">.</span><span class="n">parent</span><span class="p">):</span>  <span class="c1"># .parent is a modified version of the argument</span>
+    <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">DirectoryNotFoundError</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</code></pre></div></p>
+<h3 id="try-except-blocks">try-except blocks</h3>
+<p>Always wrap <code>cmd</code> commands of the PyMOL API into a try-except block.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pymol</span>
+
+<span class="k">try</span><span class="p">:</span>
+  <span class="n">cmd</span><span class="o">.</span><span class="n">scene</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tmp_protein_pair</span><span class="o">.</span><span class="n">protein_1</span><span class="o">.</span><span class="n">get_molecule_object</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tmp_protein_pair</span><span class="o">.</span><span class="n">protein_2</span><span class="o">.</span><span class="n">get_molecule_object</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;recall&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">pymol</span><span class="o">.</span><span class="n">CmdException</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="o">...</span>
+</code></pre></div>
+<h2 id="communication">Communication</h2>
+<h3 id="qmainwindow-qdialogs">QMainWindow &amp; QDialogs</h3>
+<p>The communication between any QMainWindow and QDialog is done with
+signals and slots. This ensures that no unauthorized memory access violations occur.</p>
+<h4 id="how-to">How-to</h4>
+<ol>
+<li>Define a custom pyqtsignal in the QDialog class:
+<div class="highlight"><pre><span></span><code><span class="o">...</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DialogAddModel</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class for a dialog to add proteins to a project.&quot;&quot;&quot;</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A pyqtsignal that is used to hand-over the protein structure information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">return_value</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">tuple</span><span class="p">)</span>  <span class="c1"># this is a custom PyQt signal</span>
+
+    <span class="o">...</span>
+</code></pre></div></li>
+<li>Emit the signal where communication should occur.
+<div class="highlight"><pre><span></span><code><span class="o">...</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Emits a custom pyqtsignal and closes the dialog.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">return_value</span><span class="o">.</span><span class="n">emit</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">txt_add_protein</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="kc">True</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="o">...</span>
+</code></pre></div></li>
+<li>Connect the signal in the QMainWindow with the QDialog object and the slot function</li>
+</ol>
+<p><div class="highlight"><pre><span></span><code><span class="o">...</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">add_existing_protein</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;Opens a dialog to add an existing protein structure to the project.&quot;&quot;&quot;</span>
+  <span class="bp">self</span><span class="o">.</span><span class="n">tmp_dialog</span> <span class="o">=</span> <span class="n">dialog_add_model</span><span class="o">.</span><span class="n">AddProteinView</span><span class="p">()</span>
+  <span class="bp">self</span><span class="o">.</span><span class="n">tmp_dialog</span><span class="o">.</span><span class="n">return_value</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post_add_existing_protein</span><span class="p">)</span>  <span class="c1"># here is the connection</span>
+  <span class="bp">self</span><span class="o">.</span><span class="n">tmp_dialog</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+<span class="o">...</span>
+</code></pre></div>
+4. Be sure that the slot function has the value of the signal as an function argument
+<div class="highlight"><pre><span></span><code><span class="o">...</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">post_add_existing_protein</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_value</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>  <span class="c1"># in this case the value is a tuple</span>
+    <span class="o">...</span>
+</code></pre></div></p>
+<h2 id="threading">Threading</h2>
+<p>Within PySSA the custom <code>tea</code> package will be used if multithreading is necessary.
+Do <strong>NOT</strong> use the <code>Action</code> class directly only use the <code>Task</code> class!</p>
+<h3 id="usage">Usage</h3>
+<p><div class="highlight"><pre><span></span><code><span class="o">...</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">opens_project</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initiates the task to open an existing project.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_active_task</span> <span class="o">=</span> <span class="n">tasks</span><span class="o">.</span><span class="n">LegacyTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__async_open_project</span><span class="p">,</span> <span class="n">post_func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__await_open_project</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_active_task</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">__async_open_project</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Runs in the separate QThread and does CPU-bound work.&quot;&quot;&quot;</span>
+    <span class="n">tmp_project_path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_workspace_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_view</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">txt_open_selected_project</span><span class="o">.</span><span class="n">text</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;result&quot;</span><span class="p">,</span> <span class="n">project</span><span class="o">.</span><span class="n">Project</span><span class="o">.</span><span class="n">deserialize_project</span><span class="p">(</span><span class="n">tmp_project_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_application_settings</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">__await_post_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a_result</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Runs after the QThread finished.&quot;&quot;&quot;</span>
+    <span class="o">...</span>
+</code></pre></div>
+The <code>Task</code> class gets an "async" function and optionally an "await" function.
+The function that runs in the QThread must have the signature <code>__async</code>
+(double underscore). The function that runs after the QThread finished must
+have the signature <code>__await</code>.
+This design decision is based on intuition because the <code>__async</code> function
+runs <strong>asynchronous</strong> in the QThread and the <code>__await</code> function <strong>waits</strong>
+for the QThread (<code>__async</code> function) to finish,</p>
+<h2 id="database">Database</h2>
+<p>PySSA uses a SQLite database for every single project. </p>
+<h3 id="basic-interaction-with-databasex-classes">Basic interaction with DatabaseX classes</h3>
+<p>The interaction is managed through the <code>DatabaseManager</code> class.
+The interaction with the manager from a controller is done through the 
+<code>DatabaseThread</code> class. The <code>DatabaseThread</code> has a queue which 
+accepts objects of the type <code>DatabaseOperation</code>. </p>
+<p>To run an INSERT statement from a controller, you have to create
+a <code>DatabaseOperation</code> object with the <code>SQLQueryType</code> (in this case INSERT_...)
+and put it into the queue of the <code>DatabaseThread</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_delete_protein</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Deletes an existing protein from the project.&quot;&quot;&quot;</span>
+    <span class="n">tmp_protein</span><span class="p">:</span> <span class="s2">&quot;protein.Protein&quot;</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">proteins_tree_view</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">ModelEnum</span><span class="o">.</span><span class="n">OBJECT_ROLE</span><span class="p">)</span>
+
+    <span class="c1"># Below is the creation of the DatabaseOperation object</span>
+    <span class="n">tmp_database_operation</span> <span class="o">=</span> <span class="n">database_operation</span><span class="o">.</span><span class="n">DatabaseOperation</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">SQLQueryType</span><span class="o">.</span><span class="n">DELETE_EXISTING_PROTEIN</span><span class="p">,</span> 
+                                                                  <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tmp_protein</span><span class="o">.</span><span class="n">get_id</span><span class="p">()))</span>
+    <span class="c1"># Here the DatabaseOperation object will be put into the queue of the DatabaseThread</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_database_thread</span><span class="o">.</span><span class="n">put_database_operation_into_queue</span><span class="p">(</span><span class="n">tmp_database_operation</span><span class="p">)</span>
+
+    <span class="c1"># -- The rest of the function</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_interface_manager</span><span class="o">.</span><span class="n">get_current_project</span><span class="p">()</span><span class="o">.</span><span class="n">delete_specific_protein</span><span class="p">(</span><span class="n">tmp_protein</span><span class="o">.</span><span class="n">get_molecule_object</span><span class="p">())</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_interface_manager</span><span class="o">.</span><span class="n">refresh_protein_model</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_interface_manager</span><span class="o">.</span><span class="n">refresh_main_view</span><span class="p">()</span>
+</code></pre></div>
+<h3 id="adding-new-sql-queries-to-the-databasethread">Adding new SQL queries to the DatabaseThread</h3>
+<p>Every SQL statement has to be implemented in the <code>DatabaseManager</code> class!
+For proper functionality of the <code>DatabaseThread</code> class 
+it is necessary to add the SQL statements from the 
+database manager into a <em>wrapper</em> function and map this function against 
+an appropriate SQLQueryType enum.</p>
+<p>An example for a wrapper function.
+<div class="highlight"><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">__wrapper_delete_existing_protein</span><span class="p">(</span><span class="n">the_db_manager</span><span class="p">,</span> <span class="n">the_buffered_data</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
+    <span class="c1"># It is import to unpack the first element of the tuple with an _ !   </span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">tmp_protein_id</span> <span class="o">=</span> <span class="n">the_buffered_data</span>  
+    <span class="n">the_db_manager</span><span class="o">.</span><span class="n">delete_existing_protein</span><span class="p">(</span><span class="n">tmp_protein_id</span><span class="p">)</span>
+</code></pre></div></p>
+<p>An example for the mapping process
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_setup_operations_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_operations_mapping</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">enums</span><span class="o">.</span><span class="n">SQLQueryType</span><span class="o">.</span><span class="n">INSERT_NEW_PROTEIN</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__wrapper_insert_new_protein</span><span class="p">,</span>
+        <span class="n">enums</span><span class="o">.</span><span class="n">SQLQueryType</span><span class="o">.</span><span class="n">DELETE_EXISTING_PROTEIN</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__wrapper_delete_existing_protein</span>
+    <span class="p">}</span>
+</code></pre></div>
+and the SQLQueryType enum class
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SQLQueryType</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An enum for all possible sql queries for the database thread.&quot;&quot;&quot;</span>
+    <span class="n">INSERT_NEW_PROTEIN</span> <span class="o">=</span> <span class="s1">&#39;insert_new_protein&#39;</span>
+    <span class="n">DELETE_EXISTING_PROTEIN</span> <span class="o">=</span> <span class="s1">&#39;delete_existing_protein&#39;</span>
+</code></pre></div></p>
+<h2 id="terminology">Terminology</h2>
+<h3 id="path-dir-file-filepath">Path, dir, file &amp; filepath</h3>
+<ul>
+<li>Always use <code>path</code> if a directory path is meant.</li>
+<li>Always use <code>dir</code> if a directory name is meant.</li>
+<li>Always use <code>filepath</code> if an absolute path to a file is meant.</li>
+<li>Always use <code>file</code> if a name of a file is meant.</li>
+</ul>
+<h3 id="difference-between-todo-and-fixme">Difference between TODO and fixme</h3>
+<ul>
+<li>Add a <code># TODO</code> if there is a task which needs to be done.</li>
+<li>Add a <code># fixme</code> if there is an important note which needs to be quickly found.</li>
+</ul>
+<h2 id="code-formatting">Code formatting</h2>
+<p>The overall code formatting is done with the auto-formatter black.
+This will be done if the pre-commit hooks are ran.</p>
+<h3 id="editor-folds">Editor folds</h3>
+<p>Always wrap argument checks into an editor-fold (Ctrl+Alt+T).
+Example:
+<div class="highlight"><pre><span></span><code><span class="c1"># &lt;editor-fold desc=&quot;Checks&quot;&gt;</span>
+<span class="k">if</span> <span class="n">the_fasta_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;The argument filename is illegal.&quot;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">IllegalArgumentError</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="c1"># &lt;/editor-fold&gt;</span>
+</code></pre></div></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2025 PySSA - Martin Urban & Hannah Kullik
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.instant - navigation.instant.progress"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
